@@ -1,10 +1,12 @@
 package au.com.integradev.delphilint;
 
 import java.io.Serializable;
+import java.nio.file.Path;
 import org.sonar.api.SonarRuntime;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputModule;
+import org.sonar.api.batch.fs.internal.DefaultFileSystem;
 import org.sonar.api.batch.rule.ActiveRules;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.code.NewSignificantCode;
@@ -12,25 +14,33 @@ import org.sonar.api.batch.sensor.coverage.NewCoverage;
 import org.sonar.api.batch.sensor.cpd.NewCpdTokens;
 import org.sonar.api.batch.sensor.error.NewAnalysisError;
 import org.sonar.api.batch.sensor.highlighting.NewHighlighting;
+import org.sonar.api.batch.sensor.internal.SensorStorage;
 import org.sonar.api.batch.sensor.issue.NewExternalIssue;
 import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.batch.sensor.measure.NewMeasure;
 import org.sonar.api.batch.sensor.rule.NewAdHocRule;
 import org.sonar.api.batch.sensor.symbol.NewSymbolTable;
+import org.sonar.api.batch.sensor.symbol.internal.DefaultSymbolTable;
 import org.sonar.api.config.Configuration;
 import org.sonar.api.config.Settings;
 import org.sonar.api.scanner.fs.InputProject;
 import org.sonar.api.utils.Version;
+import org.sonar.plugins.delphi.symbol.SymbolTable;
 
 public class SensorLintContext implements SensorContext {
-  private final LintConfiguration configuration;
-  private final LintActiveRules activeRules;
-  private final LintFileSystem fs;
+  private final Configuration configuration;
+  private final ActiveRules activeRules;
+  private final FileSystem fs;
+  private final NewSymbolTable symbolTable;
+  private final SensorStorage storage;
 
   public SensorLintContext() {
     configuration = new LintConfiguration();
     activeRules = new LintActiveRules();
-    fs = new LintFileSystem();
+
+    fs = new LintFileSystem(Path.of("{PATH REMOVED}"));
+    storage = new LintStorage();
+    symbolTable = new DefaultSymbolTable(storage);
   }
 
   @SuppressWarnings("deprecation")
@@ -107,7 +117,7 @@ public class SensorLintContext implements SensorContext {
 
   @Override
   public NewSymbolTable newSymbolTable() {
-    return null;
+    return symbolTable;
   }
 
   @Override

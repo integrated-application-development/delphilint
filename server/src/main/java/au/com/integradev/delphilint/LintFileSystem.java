@@ -1,74 +1,34 @@
 package au.com.integradev.delphilint;
 
-import java.io.File;
 import java.nio.charset.Charset;
-import java.util.SortedSet;
-import org.jetbrains.annotations.Nullable;
-import org.sonar.api.batch.fs.FilePredicate;
-import org.sonar.api.batch.fs.FilePredicates;
-import org.sonar.api.batch.fs.FileSystem;
-import org.sonar.api.batch.fs.InputDir;
-import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.fs.internal.DefaultFilePredicates;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import org.sonar.api.batch.fs.internal.DefaultFileSystem;
+import org.sonar.api.batch.fs.internal.DefaultIndexedFile;
+import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.plugins.delphi.core.DelphiLanguage;
 
-public class LintFileSystem implements FileSystem {
+public class LintFileSystem extends DefaultFileSystem {
 
-  @Override
-  public File baseDir() {
-    return null;
-  }
+  public LintFileSystem(Path baseDir) {
+    super(baseDir);
+    setWorkDir(baseDir);
+    setEncoding(Charset.defaultCharset());
+    var pasFiles = Arrays.stream(baseDir.toFile().listFiles()).filter(file -> file.getName().endsWith("pas")).collect(
+        Collectors.toUnmodifiableList());
+    for (var file : pasFiles) {
+      add(
+          new DefaultInputFile(
+              new DefaultIndexedFile(
+                  "temp",
+                  baseDir,
+                  baseDir.relativize(file.toPath()).toString(),
+                  DelphiLanguage.KEY),
+              f -> {
+                f.setMetadata()
 
-  @Override
-  public Charset encoding() {
-    return null;
-  }
-
-  @Override
-  public File workDir() {
-    return new File(System.getProperty("java.io.tmpdir"));
-  }
-
-  @Override
-  public FilePredicates predicates() {
-    return new DefaultFilePredicates(workDir().toPath());
-  }
-
-  @Nullable
-  @Override
-  public InputFile inputFile(FilePredicate filePredicate) {
-    return null;
-  }
-
-  @SuppressWarnings("deprecation")
-  @Nullable
-  @Override
-  public InputDir inputDir(File file) {
-    return null;
-  }
-
-  @Override
-  public Iterable<InputFile> inputFiles(FilePredicate filePredicate) {
-    return null;
-  }
-
-  @Override
-  public boolean hasFiles(FilePredicate filePredicate) {
-    return false;
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public Iterable<File> files(FilePredicate filePredicate) {
-    return null;
-  }
-
-  @Override
-  public SortedSet<String> languages() {
-    return null;
-  }
-
-  @Override
-  public File resolvePath(String s) {
-    return null;
+              }));
+    }
   }
 }
