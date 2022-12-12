@@ -25,19 +25,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.delphi.plugin</groupId>
-      <artifactId>sonar-delphi-plugin</artifactId>
-      <version>5.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonarsource.sonarqube</groupId>
-      <artifactId>sonar-plugin-api</artifactId>
-      <version>7.9</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonarsource.analyzer-commons</groupId>
-      <artifactId>sonar-analyzer-commons</artifactId>
-      <version>1.25.0.1003</version>
+      <groupId>org.sonarsource.sonarlint.core</groupId>
+      <artifactId>sonarlint-analysis-engine</artifactId>
+      <version>8.11.0.56591</version>
     </dependency>
   </dependencies>
 

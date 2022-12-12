@@ -1,14 +1,18 @@
 package au.com.integradev.delphilint;
 
-import org.sonar.plugins.delphi.*;
-import org.sonar.plugins.delphi.enviroment.DefaultEnvironmentVariableProvider;
-import org.sonar.plugins.delphi.executor.DelphiMasterExecutor;
-import org.sonar.plugins.delphi.executor.DelphiPmdExecutor;
-import org.sonar.plugins.delphi.executor.DelphiSymbolTableExecutor;
-import org.sonar.plugins.delphi.msbuild.DelphiProjectHelper;
-import org.sonar.plugins.delphi.pmd.DelphiPmdConfiguration;
-import org.sonar.plugins.delphi.pmd.profile.DelphiPmdRuleSetDefinitionProvider;
-import org.sonar.plugins.delphi.pmd.violation.DelphiPmdViolationRecorder;
+import java.io.Console;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
+import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
+import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
+import org.sonarsource.sonarlint.core.analysis.container.global.GlobalAnalysisContainer;
+import org.sonarsource.sonarlint.core.analysis.container.module.ModuleContainer;
+import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
+import org.sonarsource.sonarlint.core.plugin.commons.PluginInstancesRepository;
 
 /**
  * Hello world!
@@ -16,32 +20,43 @@ import org.sonar.plugins.delphi.pmd.violation.DelphiPmdViolationRecorder;
  */
 public class App {
     public static void main( String[] args ) {
-        SensorLintContext context = new SensorLintContext();
+        var analysisGlobalConfig = AnalysisEngineConfiguration.builder()
+            .setWorkDir(Path.of("{PATH REMOVED}"))
+            .build();
 
-        DelphiProjectHelper helper = new DelphiProjectHelper(
-            context.config(),
-            context.fileSystem(),
-            new DefaultEnvironmentVariableProvider()
-        );
+        var pluginConfig =
+            new PluginInstancesRepository.Configuration(
+                Set.of(
+                    Path.of("{PATH REMOVED}")),
+                Collections.emptySet(),
+                Optional.empty());
 
-        DelphiMasterExecutor executor = new DelphiMasterExecutor(
-            new DelphiSymbolTableExecutor(),
-            new DelphiPmdExecutor(
-                context,
-                context.activeRules(),
-                new DelphiPmdConfiguration(
-                    context.fileSystem(),
-                    context.config(),
-                    new DelphiPmdRuleSetDefinitionProvider()
-                ),
-                new DelphiPmdViolationRecorder(
-                    helper,
-                    context.activeRules()
-                )
-            )
-        );
+        var loadedPlugins = new PluginInstancesRepository(pluginConfig);
 
-        DelphiSensor sensor = new DelphiSensor(helper, executor);
-        sensor.execute(context);
+        var globalContainer = new GlobalAnalysisContainer(analysisGlobalConfig, loadedPlugins);
+        globalContainer.startComponents();
+
+        System.out.println("Global container started");
+
+        var moduleContainer = new ModuleContainer(globalContainer, true);
+        moduleContainer.startComponents();
+
+        System.out.println("Module container started");
+
+        var configuration = AnalysisConfiguration.builder()
+            .build();
+
+        System.out.println("Starting analysis");
+
+        moduleContainer.analyze(configuration, issue -> System.out.println(issue.toString()), new ProgressMonitor(null));
+
+        System.out.println("Analysis complete");
+
+        moduleContainer.stopComponents();
+
+        System.out.println("Module container stopped");
+
+        globalContainer.stopComponents();
+        System.out.println("Global container stopped");
     }
 }
