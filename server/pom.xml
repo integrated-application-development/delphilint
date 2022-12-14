@@ -11,6 +11,17 @@
   <name>delphilint-server</name>
   <url>http://www.example.com</url>
 
+  <repositories>
+    <repository>
+      <id>repo</id>
+      <releases>
+        <enabled>true</enabled>
+        <checksumPolicy>ignore</checksumPolicy>
+      </releases>
+      <url>${project.baseUri}repo</url>
+    </repository>
+  </repositories>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <compiler.languageLevel>11</compiler.languageLevel>
@@ -23,6 +34,11 @@
       <artifactId>junit-jupiter</artifactId>
       <version>5.9.0</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>iad.external.sonarlint-overrides</groupId>
+      <artifactId>sonarlint-core-overrides</artifactId>
+      <version>1.2</version>
     </dependency>
     <dependency>
       <groupId>org.sonarsource.sonarlint.core</groupId>
