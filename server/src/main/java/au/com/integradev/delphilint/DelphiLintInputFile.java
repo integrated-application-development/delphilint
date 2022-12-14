@@ -12,6 +12,10 @@ public class DelphiLintInputFile implements ClientInputFile {
   private Path path;
   private Charset charset;
 
+  public DelphiLintInputFile(Path path) {
+    this(path, Charset.defaultCharset());
+  }
+
   public DelphiLintInputFile(Path path, Charset charset) {
     this.path = path;
     this.charset = charset;
