@@ -1,5 +1,6 @@
 package au.com.integradev.delphilint;
 
+import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
@@ -8,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
-import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
@@ -26,9 +26,12 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Path.of(
           "{PATH REMOVED}");
 
-  private GlobalAnalysisContainer globalContainer;
+  private final GlobalAnalysisContainer globalContainer;
+  private final SonarQubeConnection connection;
 
-  public DelphiAnalysisEngine(DelphiConfiguration delphiConfig) {
+  public DelphiAnalysisEngine(DelphiConfiguration delphiConfig, SonarQubeConnection connection) {
+    this.connection = connection;
+
     var engineConfig =
         AnalysisEngineConfiguration.builder()
             .setWorkDir(Path.of(System.getProperty("java.io.tmpdir")))
@@ -50,16 +53,20 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
   public Set<Issue> analyze(
       Path baseDir, Set<Path> inputFiles, ClientProgressMonitor progressMonitor) {
-    var config =
+
+    var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
             .addInputFiles(
                 inputFiles.stream()
                     .map(DelphiLintInputFile::new)
-                    .collect(Collectors.toUnmodifiableList()))
-            .addActiveRules(
-                new ActiveRule("delph:EmptyMethodRule", Language.DELPHI.getLanguageKey()))
-            .build();
+                    .collect(Collectors.toUnmodifiableList()));
+
+    if (connection != null) {
+      configBuilder.addActiveRules(connection.getActiveRules());
+    }
+
+    var config = configBuilder.build();
 
     var moduleContainer =
         globalContainer.getModuleRegistry().createTransientContainer(config.inputFiles());

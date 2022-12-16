@@ -1,8 +1,10 @@
 package au.com.integradev.delphilint;
 
+import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.nio.file.Path;
 import java.util.Set;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
+import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
 
 public class App {
@@ -17,7 +19,10 @@ public class App {
 
     Set<Issue> issues;
 
-    try (var engine = new DelphiAnalysisEngine(delphiConfig)) {
+    var sonarqube =
+        new SonarQubeConnection("{URL REMOVED}", "", Language.DELPHI.getLanguageKey());
+
+    try (var engine = new DelphiAnalysisEngine(delphiConfig, sonarqube)) {
       // TODO: Get paths from IDE, including main dproj file
       issues =
           engine.analyze(
