@@ -34,4 +34,8 @@ public class Response {
   public static Response pong(String data) {
     return new Response(ResponseCategory.PONG, data);
   }
+
+  public static Response invalidRequest(String message) {
+    return new Response(ResponseCategory.INVALID_REQUEST, message);
+  }
 }

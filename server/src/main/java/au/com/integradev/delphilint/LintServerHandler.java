@@ -1,5 +1,7 @@
 package au.com.integradev.delphilint;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -17,26 +19,68 @@ public class LintServerHandler implements HttpHandler {
     mapper = new ObjectMapper();
   }
 
+  private void sendJsonResponse(HttpExchange exchange, Response response) throws IOException {
+    exchange.getResponseHeaders().set("Content-Type", "application/json");
+    exchange.sendResponseHeaders(200, 0);
+    mapper.writeValue(exchange.getResponseBody(), response);
+  }
+
+  private JsonNode getRequestBodyAsJsonNode(HttpExchange exchange) throws IllegalArgumentException {
+    try {
+      return mapper.readTree(exchange.getRequestBody());
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Invalid JSON in request");
+    }
+  }
+
+  private RequestCategory getRequestCategory(JsonNode requestBody) throws IllegalArgumentException {
+    var categoryNode = requestBody.get("category");
+    if (categoryNode == null) {
+      throw new IllegalArgumentException("No category specified");
+    }
+
+    try {
+      return mapper.treeToValue(categoryNode, RequestCategory.class);
+    } catch (JsonProcessingException e) {
+      throw new IllegalArgumentException("Specified category is unknown");
+    }
+  }
+
+  private Object getRequestData(JsonNode requestBody, RequestCategory category)
+      throws IllegalArgumentException {
+    var dataNode = requestBody.get("data");
+
+    if ((dataNode == null || dataNode.isNull()) && category.getDataClass() != null) {
+      throw new IllegalArgumentException("Data in this category cannot be null");
+    } else if (category.getDataClass() != null) {
+      try {
+        return mapper.treeToValue(dataNode, category.getDataClass());
+      } catch (JsonProcessingException e) {
+        throw new IllegalArgumentException("Data is in an incorrect format");
+      }
+    } else {
+      return null;
+    }
+  }
+
   @Override
   public void handle(HttpExchange exchange) throws IOException {
-    var requestBody = mapper.readTree(exchange.getRequestBody());
+    JsonNode requestBody;
+    RequestCategory category;
+    Object data;
+    try {
+      requestBody = getRequestBodyAsJsonNode(exchange);
+      category = getRequestCategory(requestBody);
+      data = getRequestData(requestBody, category);
+    } catch (IllegalArgumentException e) {
+      sendJsonResponse(exchange, Response.invalidRequest(e.getMessage()));
+      return;
+    }
 
-    var categoryNode = requestBody.get("category");
-    if (categoryNode != null) {
-      var category = mapper.treeToValue(categoryNode, RequestCategory.class);
+    Response responseMessage = onMessage.apply(category, data);
 
-      var dataNode = requestBody.get("data");
-      Object data = null;
-      if (dataNode != null && category.getDataClass() != null) {
-        data = mapper.treeToValue(dataNode, category.getDataClass());
-      }
-
-      Response responseMessage = onMessage.apply(category, data);
-
-      if (responseMessage != null) {
-        exchange.sendResponseHeaders(200, 0);
-        mapper.writeValue(exchange.getResponseBody(), responseMessage);
-      }
+    if (responseMessage != null) {
+      sendJsonResponse(exchange, responseMessage);
     }
   }
 }

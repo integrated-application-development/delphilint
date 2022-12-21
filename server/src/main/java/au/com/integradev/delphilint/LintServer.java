@@ -46,7 +46,7 @@ public class LintServer {
       case PING:
         return Response.pong((String) data);
       default:
-        return Response.unexpectedError("Unknown request category");
+        return Response.invalidRequest("Unhandled request category");
     }
   }
 

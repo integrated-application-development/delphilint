@@ -2,6 +2,7 @@ package au.com.integradev.delphilint.messaging;
 
 public enum ResponseCategory {
   UNEXPECTED_ERROR(String.class),
+  INVALID_REQUEST(String.class),
   ANALYZE_RESULT(ResponseAnalyzeResult.class),
   ANALYZE_ERROR(String.class),
   UNINITIALIZED,
