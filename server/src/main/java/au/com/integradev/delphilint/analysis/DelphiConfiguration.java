@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint;
+package au.com.integradev.delphilint.analysis;
 
 public interface DelphiConfiguration {
   public String getBdsPath();

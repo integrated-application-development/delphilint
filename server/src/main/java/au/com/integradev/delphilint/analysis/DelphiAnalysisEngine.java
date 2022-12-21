@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint;
+package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.nio.file.Path;

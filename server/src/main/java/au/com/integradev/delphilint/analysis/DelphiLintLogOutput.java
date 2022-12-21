@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint;
+package au.com.integradev.delphilint.analysis;
 
 import org.sonarsource.sonarlint.core.commons.log.ClientLogOutput;
 

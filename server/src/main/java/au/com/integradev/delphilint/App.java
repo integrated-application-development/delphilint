@@ -1,5 +1,8 @@
 package au.com.integradev.delphilint;
 
+import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
+import au.com.integradev.delphilint.analysis.DelphiLintLogOutput;
+import au.com.integradev.delphilint.analysis.StandaloneDelphiConfiguration;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.nio.file.Path;
 import java.util.Set;
