@@ -4,50 +4,37 @@ interface
 
 uses
     System.SysUtils
-  , System.Classes
-  , IdHTTP
-  , JSON
   , ToolsAPI
+  , DelphiLintServer
+  , Vcl.Dialogs
   ;
 
 type
-  TDelphiLintMessage = record
-  public
-    Category: String;
-    Data: TJsonObject;
 
-    constructor Create(Category: String; Data: TJsonObject);
-    class function Initialize(Data: TJsonObject): TDelphiLintMessage; static;
-    class function Analyze(Data: TJsonObject): TDelphiLintMessage; static;
-  end;
-
-  TDelphiLint = class(TObject)
-  private
-    FHttp: TIdHttp;
-    FUrl: String;
-    FSonarHostUrl: String;
-
-    function Request(Req: TDelphiLintMessage): TDelphiLintMessage;
-
-  public
-    constructor Create(SonarHostUrl: String);
-    destructor Destroy; override;
-
-    procedure Initialize;
-    procedure Analyze(DelphiFiles: array of String);
-  end;
+//______________________________________________________________________________________________________________________
 
   TDelphiLintIDE = class(TObject)
   private
-    FDelphiLint: TDelphiLint;
+    FServer: TDelphiLintServer;
   public
     constructor Create;
     destructor Destroy; override;
 
-    property DelphiLint: TDelphiLint read FDelphiLint;
+    property Server: TDelphiLintServer read FServer;
   end;
 
-  TDelphiLintMenuItem = class(TNotifierObject, IOTAWizard, IOTAMenuWizard)
+//______________________________________________________________________________________________________________________
+  
+  TDelphiLintMenuItem = class(TNotifierObject, IOTAWizard, IOTAMenuWizard)  
+  public type
+    TMenuItemAction = reference to procedure;
+  private
+    FName: String;
+    FCaption: String;
+    FAction: TMenuItemAction;
+  public
+    constructor Create(Name: String; Caption: String; Action: TMenuItemAction);
+  
     function GetIDString: String;
     function GetName: String;
     function GetState: TWizardState;
@@ -55,152 +42,110 @@ type
     function GetMenuText: String;
   end;
 
+//______________________________________________________________________________________________________________________
+
 procedure Register;
 
-var
-  DelphiLintIDE: TDelphiLintIDE;
+function DelphiLintIDE: TDelphiLintIDE;
 
 implementation
 
+uses
+    System.StrUtils
+  ;
+
+var
+  G_DelphiLintIDE: TDelphiLintIDE;
+
+//______________________________________________________________________________________________________________________
+
 procedure Register;
 begin
-  RegisterPackageWizard(TDelphiLintMenuItem.Create);
+  RegisterPackageWizard(TDelphiLintMenuItem.Create(
+    'analyze',
+    'Analyze Active File with DelphiLint',
+    procedure begin
+      ShowMessage(IfThen(DelphiLintIDE.Server.Initialize, 'Server initialized', 'Server not initialized'));
+    end
+  ));
 end;
+
+//______________________________________________________________________________________________________________________
 
 constructor TDelphiLintIDE.Create;
 begin
   inherited;
-  FDelphiLint := TDelphiLint.Create('{URL REMOVED}');
+  FServer := TDelphiLintServer.Create('{URL REMOVED}');
 end;
+
+//______________________________________________________________________________________________________________________
 
 destructor TDelphiLintIDE.Destroy;
 begin
-  FreeAndNil(FDelphiLint);
+  FreeAndNil(FServer);
   inherited;
 end;
 
-{ TDelphiLint }
+//______________________________________________________________________________________________________________________
 
-constructor TDelphiLint.Create(SonarHostUrl: String);
+function DelphiLintIDE: TDelphiLintIDE;
 begin
-  FHttp := TIdHTTP.Create;
-  FUrl := 'http://localhost:14000';
-  FSonarHostUrl := SonarHostUrl;
-end;
-
-destructor TDelphiLint.Destroy;
-begin
-  FreeAndNil(FHttp);
-  inherited;
-end;
-
-procedure TDelphiLint.Analyze(DelphiFiles: array of String);
-begin
-
-end;
-
-procedure TDelphiLint.Initialize;
-const
-  C_BdsPath = '{PATH REMOVED} Files (x86)/Embarcadero/Studio/22.0';
-  C_CompilerVersion = 'VER350';
-  C_LanguageKey = 'delph';
-var
-  DataJson: TJsonObject;
-  Response: TDelphiLintMessage;
-begin
-  // See au.com.integradev.delphilint.messaging.RequestAnalyze
-  DataJson := TJSONObject.Create;
-  DataJson.AddPair('bdsPath', C_BdsPath);
-  DataJson.AddPair('compilerVersion', C_CompilerVersion);
-  DataJson.AddPair('sonarHostUrl', FSonarHostUrl);
-  DataJson.AddPair('projectKey', '');
-  DataJson.AddPair('languageKey', C_LanguageKey);
-
-  Response := Request(TDelphiLintMessage.Initialize(DataJson));
-  Assert(Response.Category = 'INITIALIZED');
-end;
-
-function TDelphiLint.Request(Req: TDelphiLintMessage): TDelphiLintMessage;
-var
-  ReqJson: TJsonObject;
-  RequestStream: TStringStream;
-  ResponseStream: TStringStream;
-  RespStr: String;
-  RespJson: TJsonObject;
-  RespDataJson: TJsonValue;
-begin
-  ReqJson := TJSONObject.Create;
-  ReqJson.AddPair('category', Req.Category);
-  ReqJson.AddPair('data', Req.Data);
-
-  RequestStream := TStringStream.Create(ReqJson.ToString);
-  ResponseStream := TStringStream.Create;
-  FHttp.Post(FUrl, RequestStream, ResponseStream);
-
-  ResponseStream.Position := 0;
-  RespStr := ResponseStream.ReadString(ResponseStream.Size);
-  RespJson := TJsonObject.ParseJSONValue(RespStr) as TJsonObject;
-
-  Result.Category := RespJson.GetValue<String>('category');
-  if RespJson.TryGetValue<TJsonValue>('data', RespDataJson) then begin
-    if RespDataJson is TJsonObject then begin
-      Result.Data := RespDataJson as TJsonObject;
-    end;
+  if not Assigned(G_DelphiLintIDE) then begin
+    G_DelphiLintIDE := TDelphiLintIDE.Create;
   end;
+
+  Result := G_DelphiLintIDE;
 end;
 
-{ TDelphiLintMessage }
+//______________________________________________________________________________________________________________________
 
-class function TDelphiLintMessage.Analyze(Data: TJsonObject): TDelphiLintMessage;
+constructor TDelphiLintMenuItem.Create(Name: String; Caption: String; Action: TMenuItemAction);
 begin
-  Result := TDelphiLintMessage.Create('ANALYZE', Data);
+  FName := Name;
+  FCaption := Caption;
+  FAction := Action;
 end;
 
-constructor TDelphiLintMessage.Create(Category: String; Data: TJsonObject);
-begin
-  Self.Category := Category;
-  Self.Data := Data;
-end;
-
-class function TDelphiLintMessage.Initialize(Data: TJsonObject): TDelphiLintMessage;
-begin
-  Result := TDelphiLintMessage.Create('INITIALIZE', Data);
-end;
-
-{ TDelphiLintMenuItem }
+//______________________________________________________________________________________________________________________
 
 procedure TDelphiLintMenuItem.Execute;
 begin
-  if not Assigned(DelphiLintIDE) then begin
-    DelphiLintIDE := TDelphiLintIDE.Create;
-  end;
-
-  DelphiLintIDE.DelphiLint.Initialize;
+  FAction;
 end;
+
+//______________________________________________________________________________________________________________________
 
 function TDelphiLintMenuItem.GetIDString: String;
 begin
-  Result := 'DelphiLint';
+  Result := 'DelphiLint|' + FName;
 end;
+
+//______________________________________________________________________________________________________________________
 
 function TDelphiLintMenuItem.GetMenuText: String;
 begin
-  Result := 'Analyze Active File with DelphiLint';
+  Result := FCaption;
 end;
+
+//______________________________________________________________________________________________________________________
 
 function TDelphiLintMenuItem.GetName: String;
 begin
-  Result := 'DelphiLint';
+  Result := FName;
 end;
+
+//______________________________________________________________________________________________________________________
 
 function TDelphiLintMenuItem.GetState: TWizardState;
 begin
   Result := [wsEnabled];
 end;
 
+//______________________________________________________________________________________________________________________
+
 initialization
 
 finalization
-  FreeAndNil(DelphiLintIDE);
+  FreeAndNil(G_DelphiLintIDE);
 
 end.
