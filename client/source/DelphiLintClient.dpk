@@ -35,6 +35,7 @@ requires
 
 contains
   DelphiLintIDE in 'DelphiLintIDE.pas' {omDelphiLintIDE: TDataModule},
-  DelphiLintServer in 'DelphiLintServer.pas';
+  DelphiLintServer in 'DelphiLintServer.pas',
+  DelphiLintData in 'DelphiLintData.pas';
 
 end.

@@ -52,6 +52,7 @@ implementation
 
 uses
     System.StrUtils
+  , DelphiLintData
   ;
 
 var
@@ -60,12 +61,43 @@ var
 //______________________________________________________________________________________________________________________
 
 procedure Register;
+const
+  C_SampleBaseDir: String = '{PATH REMOVED}';
+  C_SampleFiles: array of String = [
+    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dproj',
+    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dpr',
+    'Common/Delphi/DelphiExpectedBehaviour/DateTimeBehaviour.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviourTestSuite.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/MidasBug.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/OpenArrayBug.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/RecordFinalizationBehaviour.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/SoapBug.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/SystemMathBug.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/SystemRegularExpressionsBehaviour.pas',
+    'Common/Delphi/DelphiExpectedBehaviour/SystemSysUtilsBug.pas'];
 begin
   RegisterPackageWizard(TDelphiLintMenuItem.Create(
     'analyze',
     'Analyze Active File with DelphiLint',
-    procedure begin
+    procedure
+    var
+      Issues: TArray<TDelphiLintIssue>;
+      Issue: TDelphiLintIssue;
+    begin
       ShowMessage(IfThen(DelphiLintIDE.Server.Initialize, 'Server initialized', 'Server not initialized'));
+
+      Issues := DelphiLintIDE.Server.Analyze(C_SampleBaseDir, C_SampleFiles);
+
+      for Issue in Issues do begin
+        ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
+          Issue.FilePath,
+          Issue.Range.StartLine,
+          Issue.Range.StartLineOffset,
+          Issue.Range.EndLine,
+          Issue.Range.EndLineOffset,
+          Issue.RuleKey,
+          Issue.Message]));
+      end;
     end
   ));
 end;

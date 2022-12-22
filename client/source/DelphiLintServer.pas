@@ -7,6 +7,7 @@ uses
   , JSON
   , System.Classes
   , System.SysUtils
+  , DelphiLintData
   ;
 
 const
@@ -23,14 +24,17 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TDelphiLintMessage = record
+  TDelphiLintMessage = class(TObject)
+  private
+    FCategory: String;
+    FData: TJsonObject;
   public
-    Category: String;
-    Data: TJsonObject;
-
     constructor Create(Category: String; Data: TJsonObject);
+    destructor Destroy; override;
     class function Initialize(Data: TJsonObject): TDelphiLintMessage; static;
     class function Analyze(Data: TJsonObject): TDelphiLintMessage; static;
+    property Category: String read FCategory;
+    property Data: TJsonObject read FData;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -48,7 +52,7 @@ type
     destructor Destroy; override;
 
     function Initialize: Boolean;
-//    function Analyze(DelphiFiles: array of String): TArray<DelphiLintIssue>;
+    function Analyze(BaseDir: String; DelphiFiles: array of String): TArray<TDelphiLintIssue>;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -66,8 +70,16 @@ end;
 
 constructor TDelphiLintMessage.Create(Category: String; Data: TJsonObject);
 begin
-  Self.Category := Category;
-  Self.Data := Data;
+  FCategory := Category;
+  FData := Data;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TDelphiLintMessage.Destroy;
+begin
+  FreeAndNil(FData);
+  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -95,12 +107,45 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
-//
-//procedure TDelphiLintServer.Analyze(DelphiFiles: array of String);
-//begin
-//
-//end;
-//
+
+function TDelphiLintServer.Analyze(BaseDir: String; DelphiFiles: array of String): TArray<TDelphiLintIssue>;
+var
+  RequestJson: TJsonObject;
+  InputFilesJson: TJsonArray;
+  Response: TDelphiLintMessage;
+  IssuesJson: TJsonValue;
+  IssuesArrayJson: TJsonArray;
+  Index: Integer;
+begin
+  Assert(Initialize, 'Server could not be initialized'); // TODO: proper error handling
+
+  InputFilesJson := TJsonArray.Create;
+
+  for Index := 0 to Length(DelphiFiles) - 1 do begin
+    InputFilesJson.Add(DelphiFiles[Index]);
+  end;
+
+  // JSON representation of au.com.integradev.delphilint.messaging.RequestAnalyze
+  RequestJson := TJsonObject.Create;
+  RequestJson.AddPair('baseDir', BaseDir);
+  RequestJson.AddPair('inputFiles', InputFilesJson);
+
+  Response := Request(TDelphiLintMessage.Analyze(RequestJson));
+  Assert(Response.Category = C_AnalyzeResult); // TODO: proper error handling
+  IssuesJson := Response.Data.GetValue('issues');
+
+  if IssuesJson is TJsonArray then begin
+    IssuesArrayJson := IssuesJson as TJsonArray;
+    SetLength(Result, IssuesArrayJson.Count);
+
+    for Index := 0 to IssuesArrayJson.Count - 1 do begin
+      Result[Index] := TDelphiLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
+    end;
+  end;
+
+  FreeAndNil(Response);
+end;
+
 //______________________________________________________________________________________________________________________
 
 function TDelphiLintServer.Initialize: Boolean;
@@ -112,7 +157,7 @@ var
   DataJson: TJsonObject;
   Response: TDelphiLintMessage;
 begin
-  // JSON representation of au.com.integradev.delphilint.messaging.RequestAnalyze
+  // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
   DataJson := TJSONObject.Create;
   DataJson.AddPair('bdsPath', C_BdsPath);
   DataJson.AddPair('compilerVersion', C_CompilerVersion);
@@ -122,6 +167,8 @@ begin
 
   Response := Request(TDelphiLintMessage.Initialize(DataJson));
   Result := (Response.Category = C_Initialized);
+
+  FreeAndNil(Response);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -134,6 +181,7 @@ var
   RespStr: String;
   RespJson: TJsonObject;
   RespDataJson: TJsonValue;
+  RespCategory: String;
 begin
   ReqJson := TJSONObject.Create;
   ReqJson.AddPair('category', Req.Category);
@@ -141,17 +189,22 @@ begin
 
   RequestStream := TStringStream.Create(ReqJson.ToString);
   ResponseStream := TStringStream.Create;
+
+  FreeAndNil(Req);
+
   FHttp.Post(FServerUrl, RequestStream, ResponseStream);
 
   ResponseStream.Position := 0;
   RespStr := ResponseStream.ReadString(ResponseStream.Size);
   RespJson := TJsonObject.ParseJSONValue(RespStr) as TJsonObject;
 
-  Result.Category := RespJson.GetValue<String>('category');
-  if RespJson.TryGetValue<TJsonValue>('data', RespDataJson) then begin
-    if RespDataJson is TJsonObject then begin
-      Result.Data := RespDataJson as TJsonObject;
-    end;
+  RespCategory := RespJson.GetValue<String>('category');
+
+  if RespJson.TryGetValue<TJsonValue>('data', RespDataJson) and (RespDataJson is TJsonObject) then begin
+    Result := TDelphiLintMessage.Create(RespCategory, RespDataJson as TJsonObject);
+  end
+  else begin
+    Result := TDelphiLintMessage.Create(RespCategory, nil);
   end;
 end;
 
