@@ -9,21 +9,20 @@ import java.nio.file.Path;
 import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 
 public class DelphiLintInputFile implements ClientInputFile {
-  private Path path;
-  private Charset charset;
+  private final Path baseDir;
+  private final Path relativePath;
+  private final Charset charset;
 
-  public DelphiLintInputFile(Path path) {
-    this(path, Charset.defaultCharset());
-  }
-
-  public DelphiLintInputFile(Path path, Charset charset) {
-    this.path = path;
-    this.charset = charset;
+  public DelphiLintInputFile(Path baseDir, Path relativePath) {
+    this.baseDir = baseDir;
+    this.relativePath = relativePath;
+    // TODO: pass in charset
+    this.charset = Charset.defaultCharset();
   }
 
   @Override
   public String getPath() {
-    return path.toString();
+    return baseDir.resolve(relativePath).toString();
   }
 
   @Override
@@ -43,22 +42,23 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public InputStream inputStream() throws IOException {
-    return new FileInputStream(path.toString());
+    return new FileInputStream(baseDir.resolve(relativePath).toString());
   }
 
   @Override
   public String contents() throws IOException {
-    var inputStream = inputStream();
-    return inputStream.toString();
+    try (var inputStream = inputStream()) {
+      return inputStream.toString();
+    }
   }
 
   @Override
   public String relativePath() {
-    return path.toString();
+    return relativePath.toString();
   }
 
   @Override
   public URI uri() {
-    return path.toUri();
+    return baseDir.resolve(relativePath).toUri();
   }
 }

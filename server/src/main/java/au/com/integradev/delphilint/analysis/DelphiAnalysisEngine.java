@@ -59,7 +59,15 @@ public class DelphiAnalysisEngine implements AutoCloseable {
             .setBaseDir(baseDir)
             .addInputFiles(
                 inputFiles.stream()
-                    .map(DelphiLintInputFile::new)
+                    .map(
+                        possiblyAbsolutePath -> {
+                          if (possiblyAbsolutePath.isAbsolute()) {
+                            return baseDir.relativize(possiblyAbsolutePath);
+                          } else {
+                            return possiblyAbsolutePath;
+                          }
+                        })
+                    .map(relativePath -> new DelphiLintInputFile(baseDir, relativePath))
                     .collect(Collectors.toUnmodifiableList()));
 
     if (connection != null) {
