@@ -80,24 +80,26 @@ begin
     'analyze',
     'Analyze Active File with DelphiLint',
     procedure
-    var
-      Issues: TArray<TDelphiLintIssue>;
-      Issue: TDelphiLintIssue;
     begin
-      ShowMessage(IfThen(DelphiLintIDE.Server.Initialize, 'Server initialized', 'Server not initialized'));
+      DelphiLintIDE.Server.Analyze(
+        C_SampleBaseDir,
+        C_SampleFiles,
+        procedure(Issues: TArray<TDelphiLintIssue>)
+        var
+          Issue: TDelphiLintIssue;
+        begin
+          for Issue in Issues do begin
+            ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
+              Issue.FilePath,
+              Issue.Range.StartLine,
+              Issue.Range.StartLineOffset,
+              Issue.Range.EndLine,
+              Issue.Range.EndLineOffset,
+              Issue.RuleKey,
+              Issue.Message]));
+          end;
+        end);
 
-      Issues := DelphiLintIDE.Server.Analyze(C_SampleBaseDir, C_SampleFiles);
-
-      for Issue in Issues do begin
-        ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
-          Issue.FilePath,
-          Issue.Range.StartLine,
-          Issue.Range.StartLineOffset,
-          Issue.Range.EndLine,
-          Issue.Range.EndLineOffset,
-          Issue.RuleKey,
-          Issue.Message]));
-      end;
     end
   ));
 end;

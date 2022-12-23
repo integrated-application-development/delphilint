@@ -4,21 +4,26 @@ interface
 
 uses
     IdHTTP
+  , IdTCPClient
   , JSON
   , System.Classes
   , System.SysUtils
   , DelphiLintData
+  , System.Generics.Collections
+  , Windows
   ;
 
 const
-  C_Initialize = 'INITIALIZE';
-  C_Analyze = 'ANALYZE';
-  C_AnalyzeResult = 'ANALYZE_RESULT';
-  C_AnalyzeError = 'ANALYZE_ERROR';
-  C_Initialized = 'INITIALIZED';
-  C_Uninitialized = 'UNINITIALIZED';
-  C_InvalidRequest = 'INVALID_REQUEST';
-  C_UnexpectedError = 'UNEXPECTED_ERROR';
+  C_Ping = 1;
+  C_Pong = 5;
+  C_Initialize = 20;
+  C_Analyze = 30;
+  C_AnalyzeResult = 35;
+  C_AnalyzeError = 36;
+  C_Initialized = 25;
+  C_Uninitialized = 26;
+  C_InvalidRequest = 241;
+  C_UnexpectedError = 242;
 
 type
 
@@ -26,38 +31,58 @@ type
 
   TDelphiLintMessage = class(TObject)
   private
-    FCategory: String;
+    FCategory: Byte;
     FData: TJsonObject;
   public
-    constructor Create(Category: String; Data: TJsonObject);
+    constructor Create(Category: Byte; Data: TJsonObject);
     destructor Destroy; override;
     class function Initialize(Data: TJsonObject): TDelphiLintMessage; static;
     class function Analyze(Data: TJsonObject): TDelphiLintMessage; static;
-    property Category: String read FCategory;
+    property Category: Byte read FCategory;
     property Data: TJsonObject read FData;
   end;
 
 //______________________________________________________________________________________________________________________
 
-  TDelphiLintServer = class(TObject)
-  private
-    FHttp: TIdHttp;
-    FServerUrl: String;
-    FSonarHostUrl: String;
+  TDelphiLintResponseAction = reference to procedure (Message: TDelphiLintMessage);
+  TDelphiLintAnalyzeAction = reference to procedure(Issues: TArray<TDelphiLintIssue>);
 
-    function Request(Req: TDelphiLintMessage): TDelphiLintMessage;
+  TQueuedMessage = record
+    Req: TDelphiLintMessage;
+    OnResponse: TDelphiLintResponseAction;
+  end;
+
+  TDelphiLintServer = class(TThread)
+  private
+    FTcpClient: TIdTCPClient;
+    FSonarHostUrl: String;
+    FResponseActions: TDictionary<Integer, TDelphiLintResponseAction>;
+    FNextId: Integer;
+    FCriticalSection: TRTLCriticalSection;
+
+    procedure SendMessage(Req: TDelphiLintMessage; OnResponse: TDelphiLintResponseAction); overload;
+    procedure SendMessage(Req: TDelphiLintMessage; Id: Integer); overload;
+    procedure OnUnhandledMessage(Message: TDelphiLintMessage);
+    procedure ReceiveMessage;
 
   public
     constructor Create(SonarHostUrl: String);
     destructor Destroy; override;
 
-    function Initialize: Boolean;
-    function Analyze(BaseDir: String; DelphiFiles: array of String): TArray<TDelphiLintIssue>;
+    procedure Execute; override;
+
+    procedure Initialize;
+    procedure Analyze(BaseDir: String; DelphiFiles: array of String; OnAnalyze: TDelphiLintAnalyzeAction);
   end;
 
 //______________________________________________________________________________________________________________________
 
 implementation
+
+uses
+    IdGlobal
+  , Vcl.Dialogs
+  ;
 
 //______________________________________________________________________________________________________________________
 
@@ -68,7 +93,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TDelphiLintMessage.Create(Category: String; Data: TJsonObject);
+constructor TDelphiLintMessage.Create(Category: Byte; Data: TJsonObject);
 begin
   FCategory := Category;
   FData := Data;
@@ -93,31 +118,48 @@ end;
 
 constructor TDelphiLintServer.Create(SonarHostUrl: String);
 begin
-  FHttp := TIdHTTP.Create;
-  FServerUrl := 'http://localhost:14000';
+  inherited Create(False);
+  InitializeCriticalSection(FCriticalSection);
+  Priority := tpNormal;
+
   FSonarHostUrl := SonarHostUrl;
+  FNextId := 1;
+
+  FResponseActions := TDictionary<Integer, TDelphiLintResponseAction>.Create;
+  FTcpClient := TIdTCPClient.Create;
+  FTcpClient.Host := '127.0.0.1';
+  FTcpClient.Port := 14000;
+  FTcpClient.Connect;
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TDelphiLintServer.Destroy;
 begin
-  FreeAndNil(FHttp);
+  FreeAndNil(FTcpClient);
+  DeleteCriticalSection(FCriticalSection);
   inherited;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintServer.Analyze(BaseDir: String; DelphiFiles: array of String): TArray<TDelphiLintIssue>;
+procedure TDelphiLintServer.Execute;
+begin
+  inherited;
+  while True do begin
+    ReceiveMessage;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TDelphiLintServer.Analyze(BaseDir: String; DelphiFiles: array of String; OnAnalyze: TDelphiLintAnalyzeAction);
 var
+  Index: Integer;
   RequestJson: TJsonObject;
   InputFilesJson: TJsonArray;
-  Response: TDelphiLintMessage;
-  IssuesJson: TJsonValue;
-  IssuesArrayJson: TJsonArray;
-  Index: Integer;
 begin
-  Assert(Initialize, 'Server could not be initialized'); // TODO: proper error handling
+  Initialize;
 
   InputFilesJson := TJsonArray.Create;
 
@@ -130,32 +172,46 @@ begin
   RequestJson.AddPair('baseDir', BaseDir);
   RequestJson.AddPair('inputFiles', InputFilesJson);
 
-  Response := Request(TDelphiLintMessage.Analyze(RequestJson));
-  Assert(Response.Category = C_AnalyzeResult); // TODO: proper error handling
-  IssuesJson := Response.Data.GetValue('issues');
+  SendMessage(
+    TDelphiLintMessage.Analyze(RequestJson),
+    procedure(Response: TDelphiLintMessage)
+    var
+      IssuesJson: TJsonValue;
+      IssuesArrayJson: TJsonArray;
+      Index: Integer;
+      Issues: TArray<TDelphiLintIssue>;
+    begin
+      Assert(Response.Category = C_AnalyzeResult);
 
-  if IssuesJson is TJsonArray then begin
-    IssuesArrayJson := IssuesJson as TJsonArray;
-    SetLength(Result, IssuesArrayJson.Count);
+      IssuesJson := Response.Data.GetValue('issues');
+      if IssuesJson is TJsonArray then begin
+        IssuesArrayJson := IssuesJson as TJsonArray;
+        SetLength(Issues, IssuesArrayJson.Count);
 
-    for Index := 0 to IssuesArrayJson.Count - 1 do begin
-      Result[Index] := TDelphiLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
-    end;
-  end;
+        for Index := 0 to IssuesArrayJson.Count - 1 do begin
+          Issues[Index] := TDelphiLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
+        end;
+      end;
 
-  FreeAndNil(Response);
+      FreeAndNil(Response);
+
+      Synchronize(
+        procedure begin
+          OnAnalyze(Issues);
+        end);
+    end);
+
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintServer.Initialize: Boolean;
+procedure TDelphiLintServer.Initialize;
 const
   C_BdsPath = '{PATH REMOVED} Files (x86)/Embarcadero/Studio/22.0';
   C_CompilerVersion = 'VER350';
   C_LanguageKey = 'delph';
 var
   DataJson: TJsonObject;
-  Response: TDelphiLintMessage;
 begin
   // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
   DataJson := TJSONObject.Create;
@@ -165,47 +221,92 @@ begin
   DataJson.AddPair('projectKey', '');
   DataJson.AddPair('languageKey', C_LanguageKey);
 
-  Response := Request(TDelphiLintMessage.Initialize(DataJson));
-  Result := (Response.Category = C_Initialized);
+  SendMessage(
+    TDelphiLintMessage.Initialize(DataJson),
+    procedure(Response: TDelphiLintMessage) begin
 
-  FreeAndNil(Response);
+    end);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintServer.Request(Req: TDelphiLintMessage): TDelphiLintMessage;
-var
-  ReqJson: TJsonObject;
-  RequestStream: TStringStream;
-  ResponseStream: TStringStream;
-  RespStr: String;
-  RespJson: TJsonObject;
-  RespDataJson: TJsonValue;
-  RespCategory: String;
+procedure TDelphiLintServer.OnUnhandledMessage(Message: TDelphiLintMessage);
 begin
-  ReqJson := TJSONObject.Create;
-  ReqJson.AddPair('category', Req.Category);
-  ReqJson.AddPair('data', Req.Data);
+  ShowMessage(Format('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]));
+end;
 
-  RequestStream := TStringStream.Create(ReqJson.ToString);
-  ResponseStream := TStringStream.Create;
+//______________________________________________________________________________________________________________________
 
-  FreeAndNil(Req);
+procedure TDelphiLintServer.SendMessage(Req: TDelphiLintMessage; Id: Integer);
+var
+  DataBytes: TArray<Byte>;
+  DataByte: Byte;
+begin
+  EnterCriticalSection(FCriticalSection);
+  FTcpClient.IOHandler.Write(Req.Category);
+  FTcpClient.IOHandler.Write(Id);
 
-  FHttp.Post(FServerUrl, RequestStream, ResponseStream);
+  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
 
-  ResponseStream.Position := 0;
-  RespStr := ResponseStream.ReadString(ResponseStream.Size);
-  RespJson := TJsonObject.ParseJSONValue(RespStr) as TJsonObject;
+  FTcpClient.IOHandler.Write(Length(DataBytes));
+  for DataByte in DataBytes do begin
+    FTcpClient.IOHandler.Write(DataByte);
+  end;
+  LeaveCriticalSection(FCriticalSection);
+end;
 
-  RespCategory := RespJson.GetValue<String>('category');
+//______________________________________________________________________________________________________________________
 
-  if RespJson.TryGetValue<TJsonValue>('data', RespDataJson) and (RespDataJson is TJsonObject) then begin
-    Result := TDelphiLintMessage.Create(RespCategory, RespDataJson as TJsonObject);
+procedure TDelphiLintServer.SendMessage(Req: TDelphiLintMessage; OnResponse: TDelphiLintResponseAction);
+var
+  Id: SmallInt;
+begin
+  EnterCriticalSection(FCriticalSection);
+  Id := FNextId;
+  Inc(FNextId);
+
+  FResponseActions.Add(Id, OnResponse);
+  SendMessage(Req, Id);
+  LeaveCriticalSection(FCriticalSection);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TDelphiLintServer.ReceiveMessage;
+var
+  Id: SmallInt;
+  Category: Byte;
+  Length: Integer;
+  DataStr: String;
+  DataJsonValue: TJsonValue;
+  DataJson: TJsonObject;
+  Message: TDelphiLintMessage;
+begin
+  EnterCriticalSection(FCriticalSection);
+
+  Category := FTcpClient.IOHandler.ReadByte;
+  Id := FTcpClient.IOHandler.ReadInt32;
+  Length := FTcpClient.IOHandler.ReadInt32;
+  DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
+  DataJsonValue := TJsonObject.ParseJSONValue(DataStr);
+
+  DataJson := nil;
+  if (DataJsonValue is TJsonObject) then begin
+    DataJson := DataJsonValue as TJsonObject;
+  end;
+
+  LeaveCriticalSection(FCriticalSection);
+
+  Message := TDelphiLintMessage.Create(Category, DataJson);
+
+  if FResponseActions.ContainsKey(Id) then begin
+    FResponseActions[Id](Message);
   end
   else begin
-    Result := TDelphiLintMessage.Create(RespCategory, nil);
+    OnUnhandledMessage(Message);
   end;
 end;
+
+//______________________________________________________________________________________________________________________
 
 end.
