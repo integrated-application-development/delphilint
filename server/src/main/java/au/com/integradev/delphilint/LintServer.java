@@ -1,69 +1,168 @@
 package au.com.integradev.delphilint;
 
-import com.sun.net.httpserver.HttpServer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
 import au.com.integradev.delphilint.analysis.StandaloneDelphiConfiguration;
+import au.com.integradev.delphilint.messaging.Category;
 import au.com.integradev.delphilint.messaging.RequestAnalyze;
-import au.com.integradev.delphilint.messaging.RequestCategory;
 import au.com.integradev.delphilint.messaging.RequestInitialize;
 import au.com.integradev.delphilint.messaging.Response;
 import au.com.integradev.delphilint.messaging.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.function.Consumer;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 public class LintServer {
-  private final HttpServer server;
+  private static final Logger LOG = Loggers.get(LintServer.class);
+  private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
+  private final ObjectMapper mapper;
+  private boolean running;
 
-  public LintServer(InetSocketAddress socket) throws IOException {
+  public LintServer(int port) throws IOException {
     engine = null;
-
-    server = HttpServer.create(socket, 0);
-    server.createContext(
-        "/",
-        new LintServerHandler(
-            (category, data) -> {
-              try {
-                return processRequest(category, data);
-              } catch (Exception e) {
-                return Response.unexpectedError(e.getMessage());
-              }
-            }));
-    server.setExecutor(null);
+    serverSocket = new ServerSocket(port);
+    running = false;
+    mapper = new ObjectMapper();
   }
 
-  public void run() {
-    server.start();
+  public void run() throws IOException {
+    Socket clientSocket = serverSocket.accept();
+
+    LOG.info("Socket connected");
+
+    var out = clientSocket.getOutputStream();
+    var in = clientSocket.getInputStream();
+
+    running = true;
+    while (running) {
+      LOG.debug("Awaiting next message");
+      readStream(in, out);
+    }
+
+    LOG.info("Terminating lint server");
+
+    out.close();
+    in.close();
+    clientSocket.close();
   }
 
-  private Response processRequest(RequestCategory category, Object data) {
-    switch (category) {
-      case INITIALIZE:
-        return handleInitialize((RequestInitialize) data);
-      case ANALYZE:
-        return handleAnalyze((RequestAnalyze) data);
-      case PING:
-        return Response.pong((String) data);
-      default:
-        return Response.invalidRequest("Unhandled request category");
+  private void writeStream(OutputStream out, int id, Response response) {
+    LOG.info("Sending {}", response.getCategory());
+
+    String dataString;
+    try {
+      dataString = mapper.writeValueAsString(response.getData());
+    } catch (JsonProcessingException e) {
+      writeStream(out, id, Response.unexpectedError(e.getMessage()));
+      return;
+    }
+
+    var dataBytes = dataString.getBytes(StandardCharsets.UTF_8);
+
+    try {
+      out.write(response.getCategory().getCode());
+      out.write(ByteBuffer.allocate(4).putInt(id).array());
+      out.write(ByteBuffer.allocate(4).putInt(dataBytes.length).array());
+      out.write(dataBytes);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 
-  private Response handleAnalyze(RequestAnalyze requestAnalyze) {
-    if (engine == null) return Response.uninitialized();
+  private void readStream(InputStream in, OutputStream out) {
+    Category category;
+    int id;
+    int length;
+    String dataString;
+    try {
+      category = Category.fromCode(in.read());
+      id = ByteBuffer.wrap(in.readNBytes(4)).getInt();
+      length = ByteBuffer.wrap(in.readNBytes(4)).getInt();
+      dataString = new String(in.readNBytes(length), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+
+    LOG.info("Received {}", category);
+
+    Consumer<Response> sendMessage =
+        (response -> {
+          writeStream(out, id, response);
+        });
+
+    if (category == null) {
+      sendMessage.accept(Response.invalidRequest("Unrecognised category"));
+      return;
+    }
+
+    Object data = null;
+
+    if (category.getDataClass() != null) {
+      if (length == 0) {
+        sendMessage.accept(Response.invalidRequest("No data supplied"));
+        return;
+      }
+
+      try {
+        data = mapper.readValue(dataString, category.getDataClass());
+      } catch (JsonProcessingException e) {
+        sendMessage.accept(Response.invalidRequest("Data is in an incorrect format"));
+        return;
+      }
+    }
+
+    try {
+      processRequest(new Response(category, data), sendMessage);
+    } catch (Exception e) {
+      sendMessage.accept(Response.unexpectedError(e.getMessage()));
+    }
+  }
+
+  private void processRequest(Response message, Consumer<Response> sendMessage) {
+    switch (message.getCategory()) {
+      case INITIALIZE:
+        handleInitialize((RequestInitialize) message.getData(), sendMessage);
+        break;
+      case ANALYZE:
+        handleAnalyze((RequestAnalyze) message.getData(), sendMessage);
+        break;
+      case PING:
+        sendMessage.accept(Response.pong((String) message.getData()));
+        break;
+      default:
+        sendMessage.accept(Response.invalidRequest("Unhandled request category"));
+    }
+  }
+
+  private void handleAnalyze(RequestAnalyze requestAnalyze, Consumer<Response> sendMessage) {
+    if (engine == null) {
+      sendMessage.accept(Response.uninitialized());
+      return;
+    }
 
     try {
       var issues =
           engine.analyze(requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null);
       var result = ResponseAnalyzeResult.fromIssueSet(issues);
-      return Response.analyzeResult(result);
+      sendMessage.accept(Response.analyzeResult(result));
     } catch (Exception e) {
-      return Response.analyzeError(e.getMessage());
+      sendMessage.accept(Response.analyzeError(e.getMessage()));
     }
   }
 
-  private Response handleInitialize(RequestInitialize requestInitialize) {
+  private void handleInitialize(
+      RequestInitialize requestInitialize, Consumer<Response> sendMessage) {
     if (engine == null) {
       var delphiConfig =
           new StandaloneDelphiConfiguration(
@@ -77,6 +176,6 @@ public class LintServer {
 
       engine = new DelphiAnalysisEngine(delphiConfig, sonarqube);
     }
-    return Response.initialized();
+    sendMessage.accept(Response.initialized());
   }
 }
