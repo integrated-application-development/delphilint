@@ -21,17 +21,17 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TDelphiLintIssue = class(TObject)
+  TLintIssue = class(TObject)
   private
-    FRuleKey: String;
-    FMessage: String;
-    FFilePath: String;
+    FRuleKey: string;
+    FMessage: string;
+    FFilePath: string;
     FRange: TRange;
 
   public
-    property RuleKey: String read FRuleKey;
-    property Message: String read FMessage;
-    property FilePath: String read FFilePath;
+    property RuleKey: string read FRuleKey;
+    property Message: string read FMessage;
+    property FilePath: string read FFilePath;
     property Range: TRange read FRange;
 
     constructor FromJson(Json: TJsonObject);
@@ -53,13 +53,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TDelphiLintIssue.FromJson(Json: TJsonObject);
+constructor TLintIssue.FromJson(Json: TJsonObject);
 var
   RangeJson: TJsonValue;
 begin
-  FRuleKey := Json.GetValue<String>('ruleKey');
-  FMessage := Json.GetValue<String>('message', FRuleKey);
-  FFilePath := Json.GetValue<String>('file');
+  FRuleKey := Json.GetValue<string>('ruleKey');
+  FMessage := Json.GetValue<string>('message', FRuleKey);
+  FFilePath := Json.GetValue<string>('file');
 
   RangeJson := Json.GetValue<TJsonValue>('range', nil);
   if Assigned(RangeJson) and (RangeJson is TJsonObject) then begin

@@ -13,40 +13,40 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TDelphiLintIDE = class(TObject)
+  TLintIDE = class(TObject)
   private
-    FServer: TDelphiLintServer;
+    FServer: TLintServer;
   public
     constructor Create;
     destructor Destroy; override;
 
-    property Server: TDelphiLintServer read FServer;
+    property Server: TLintServer read FServer;
   end;
 
 //______________________________________________________________________________________________________________________
-  
-  TDelphiLintMenuItem = class(TNotifierObject, IOTAWizard, IOTAMenuWizard)  
+
+  TLintMenuItem = class(TNotifierObject, IOTAWizard, IOTAMenuWizard)
   public type
     TMenuItemAction = reference to procedure;
   private
-    FName: String;
-    FCaption: String;
+    FName: string;
+    FCaption: string;
     FAction: TMenuItemAction;
   public
-    constructor Create(Name: String; Caption: String; Action: TMenuItemAction);
-  
-    function GetIDString: String;
-    function GetName: String;
+    constructor Create(Name: string; Caption: string; Action: TMenuItemAction);
+
+    function GetIDstring: string;
+    function GetName: string;
     function GetState: TWizardState;
     procedure Execute;
-    function GetMenuText: String;
+    function GetMenuText: string;
   end;
 
 //______________________________________________________________________________________________________________________
 
 procedure Register;
 
-function DelphiLintIDE: TDelphiLintIDE;
+function LintIDE: TLintIDE;
 
 implementation
 
@@ -56,14 +56,14 @@ uses
   ;
 
 var
-  G_DelphiLintIDE: TDelphiLintIDE;
+  G_LintIDE: TLintIDE;
 
 //______________________________________________________________________________________________________________________
 
 procedure Register;
 const
-  C_SampleBaseDir: String = '{PATH REMOVED}';
-  C_SampleFiles: array of String = [
+  C_SampleBaseDir: string = '{PATH REMOVED}';
+  C_SampleFiles: array of string = [
     'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dproj',
     'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dpr',
     'Common/Delphi/DelphiExpectedBehaviour/DateTimeBehaviour.pas',
@@ -76,17 +76,17 @@ const
     'Common/Delphi/DelphiExpectedBehaviour/SystemRegularExpressionsBehaviour.pas',
     'Common/Delphi/DelphiExpectedBehaviour/SystemSysUtilsBug.pas'];
 begin
-  RegisterPackageWizard(TDelphiLintMenuItem.Create(
+  RegisterPackageWizard(TLintMenuItem.Create(
     'analyze',
     'Analyze Active File with DelphiLint',
     procedure
     begin
-      DelphiLintIDE.Server.Analyze(
+      LintIDE.Server.Analyze(
         C_SampleBaseDir,
         C_SampleFiles,
-        procedure(Issues: TArray<TDelphiLintIssue>)
+        procedure(Issues: TArray<TLintIssue>)
         var
-          Issue: TDelphiLintIssue;
+          Issue: TLintIssue;
         begin
           for Issue in Issues do begin
             ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
@@ -106,15 +106,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TDelphiLintIDE.Create;
+constructor TLintIDE.Create;
 begin
   inherited;
-  FServer := TDelphiLintServer.Create('{URL REMOVED}');
+  FServer := TLintServer.Create('{URL REMOVED}');
 end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TDelphiLintIDE.Destroy;
+destructor TLintIDE.Destroy;
 begin
   FreeAndNil(FServer);
   inherited;
@@ -122,18 +122,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function DelphiLintIDE: TDelphiLintIDE;
+function LintIDE: TLintIDE;
 begin
-  if not Assigned(G_DelphiLintIDE) then begin
-    G_DelphiLintIDE := TDelphiLintIDE.Create;
+  if not Assigned(G_LintIDE) then begin
+    G_LintIDE := TLintIDE.Create;
   end;
 
-  Result := G_DelphiLintIDE;
+  Result := G_LintIDE;
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TDelphiLintMenuItem.Create(Name: String; Caption: String; Action: TMenuItemAction);
+constructor TLintMenuItem.Create(Name: string; Caption: string; Action: TMenuItemAction);
 begin
   FName := Name;
   FCaption := Caption;
@@ -142,35 +142,35 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TDelphiLintMenuItem.Execute;
+procedure TLintMenuItem.Execute;
 begin
   FAction;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintMenuItem.GetIDString: String;
+function TLintMenuItem.GetIDstring: string;
 begin
   Result := 'DelphiLint|' + FName;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintMenuItem.GetMenuText: String;
+function TLintMenuItem.GetMenuText: string;
 begin
   Result := FCaption;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintMenuItem.GetName: String;
+function TLintMenuItem.GetName: string;
 begin
   Result := FName;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TDelphiLintMenuItem.GetState: TWizardState;
+function TLintMenuItem.GetState: TWizardState;
 begin
   Result := [wsEnabled];
 end;
@@ -180,6 +180,6 @@ end;
 initialization
 
 finalization
-  FreeAndNil(G_DelphiLintIDE);
+  FreeAndNil(G_LintIDE);
 
 end.
