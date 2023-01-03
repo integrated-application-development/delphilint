@@ -36,6 +36,7 @@ requires
 contains
   DelphiLintIDE in 'DelphiLintIDE.pas',
   DelphiLintServer in 'DelphiLintServer.pas',
-  DelphiLintData in 'DelphiLintData.pas';
+  DelphiLintData in 'DelphiLintData.pas',
+  DelphiLintLogger in 'DelphiLintLogger.pas';
 
 end.

@@ -92,6 +92,7 @@
         </DCCReference>
         <DCCReference Include="DelphiLintServer.pas"/>
         <DCCReference Include="DelphiLintData.pas"/>
+        <DCCReference Include="DelphiLintLogger.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
