@@ -10,6 +10,7 @@ uses
   , System.SysUtils
   , DelphiLintData
   , System.Generics.Collections
+  , System.SyncObjs
   , Windows
   ;
 
@@ -24,6 +25,8 @@ const
   C_Uninitialized = 26;
   C_InvalidRequest = 241;
   C_UnexpectedError = 242;
+
+  C_Timeout = 10000;
 
 type
 
@@ -58,6 +61,7 @@ type
     procedure SendMessage(Req: TLintMessage; OnResponse: TLintResponseAction); overload;
     procedure SendMessage(Req: TLintMessage; Id: Integer); overload;
     procedure OnUnhandledMessage(Message: TLintMessage);
+    // This method is NOT threadsafe and should only ever be called in the lint server thread.
     procedure ReceiveMessage;
 
   public
@@ -195,7 +199,6 @@ begin
           OnAnalyze(Issues);
         end);
     end);
-
 end;
 
 //______________________________________________________________________________________________________________________
@@ -207,6 +210,7 @@ const
   C_LanguageKey = 'delph';
 var
   DataJson: TJsonObject;
+  InitializeCompletedEvent: TEvent;
 begin
   // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
   DataJson := TJSONObject.Create;
@@ -216,11 +220,17 @@ begin
   DataJson.AddPair('projectKey', '');
   DataJson.AddPair('languageKey', C_LanguageKey);
 
+  InitializeCompletedEvent := TEvent.Create;
+
   SendMessage(
     TLintMessage.Initialize(DataJson),
     procedure(Response: TLintMessage) begin
-
+      InitializeCompletedEvent.SetEvent;
     end);
+
+  if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
+    raise Exception.Create('Initialize timed out');
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -237,17 +247,19 @@ var
   DataBytes: TArray<Byte>;
   DataByte: Byte;
 begin
-  EnterCriticalSection(FCriticalSection);
-  FTcpClient.IOHandler.Write(Req.Category);
-  FTcpClient.IOHandler.Write(Id);
-
-  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.Tostring);
-
-  FTcpClient.IOHandler.Write(Length(DataBytes));
-  for DataByte in DataBytes do begin
-    FTcpClient.IOHandler.Write(DataByte);
-  end;
-  LeaveCriticalSection(FCriticalSection);
+  EnterCriticalSection(FCriticalSection);                                    // +
+                                                                             // |
+  FTcpClient.IOHandler.Write(Req.Category);                                  // |
+  FTcpClient.IOHandler.Write(Id);                                            // |
+                                                                             // |
+  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.Tostring);                   // | CRITICAL
+                                                                             // | SECTION
+  FTcpClient.IOHandler.Write(Length(DataBytes));                             // |
+  for DataByte in DataBytes do begin                                         // |
+    FTcpClient.IOHandler.Write(DataByte);                                    // |
+  end;                                                                       // |
+                                                                             // |
+  LeaveCriticalSection(FCriticalSection);                                    // +
 end;
 
 //______________________________________________________________________________________________________________________
@@ -256,13 +268,15 @@ procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TLintResponseAc
 var
   Id: SmallInt;
 begin
-  EnterCriticalSection(FCriticalSection);
-  Id := FNextId;
-  Inc(FNextId);
+  EnterCriticalSection(FCriticalSection);        // +
+                                                 // |
+  Id := FNextId;                                 // |
+  Inc(FNextId);                                  // |  CRITICAL
+  FResponseActions.Add(Id, OnResponse);          // |  SECTION
+                                                 // |
+  LeaveCriticalSection(FCriticalSection);        // +
 
-  FResponseActions.Add(Id, OnResponse);
   SendMessage(Req, Id);
-  LeaveCriticalSection(FCriticalSection);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -277,8 +291,6 @@ var
   DataJson: TJsonObject;
   Message: TLintMessage;
 begin
-  EnterCriticalSection(FCriticalSection);
-
   Category := FTcpClient.IOHandler.ReadByte;
   Id := FTcpClient.IOHandler.ReadInt32;
   Length := FTcpClient.IOHandler.ReadInt32;
@@ -289,8 +301,6 @@ begin
   if (DataJsonValue is TJsonObject) then begin
     DataJson := DataJsonValue as TJsonObject;
   end;
-
-  LeaveCriticalSection(FCriticalSection);
 
   Message := TLintMessage.Create(Category, DataJson);
 

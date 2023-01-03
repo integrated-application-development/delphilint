@@ -60,7 +60,7 @@ var
 
 //______________________________________________________________________________________________________________________
 
-procedure Register;
+procedure AnalyzeActiveFile;
 const
   C_SampleBaseDir: string = '{PATH REMOVED}';
   C_SampleFiles: array of string = [
@@ -76,31 +76,34 @@ const
     'Common/Delphi/DelphiExpectedBehaviour/SystemRegularExpressionsBehaviour.pas',
     'Common/Delphi/DelphiExpectedBehaviour/SystemSysUtilsBug.pas'];
 begin
+  LintIDE.Server.Analyze(
+    C_SampleBaseDir,
+    C_SampleFiles,
+    procedure(Issues: TArray<TLintIssue>)
+    var
+      Issue: TLintIssue;
+    begin
+      for Issue in Issues do begin
+        ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
+          Issue.FilePath,
+          Issue.Range.StartLine,
+          Issue.Range.StartLineOffset,
+          Issue.Range.EndLine,
+          Issue.Range.EndLineOffset,
+          Issue.RuleKey,
+          Issue.Message]));
+      end;
+    end);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure Register;
+begin
   RegisterPackageWizard(TLintMenuItem.Create(
     'analyze',
     'Analyze Active File with DelphiLint',
-    procedure
-    begin
-      LintIDE.Server.Analyze(
-        C_SampleBaseDir,
-        C_SampleFiles,
-        procedure(Issues: TArray<TLintIssue>)
-        var
-          Issue: TLintIssue;
-        begin
-          for Issue in Issues do begin
-            ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
-              Issue.FilePath,
-              Issue.Range.StartLine,
-              Issue.Range.StartLineOffset,
-              Issue.Range.EndLine,
-              Issue.Range.EndLineOffset,
-              Issue.RuleKey,
-              Issue.Message]));
-          end;
-        end);
-
-    end
+    AnalyzeActiveFile
   ));
 end;
 
