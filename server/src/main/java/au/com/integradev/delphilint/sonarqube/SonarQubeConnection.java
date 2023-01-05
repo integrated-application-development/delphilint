@@ -82,6 +82,29 @@ public class SonarQubeConnection {
     return null;
   }
 
+  public Map<String, String> getRuleNamesByRuleKey() {
+    var profile = getQualityProfile();
+    if (profile == null) return Collections.emptyMap();
+
+    var rootNode =
+        getJson(
+            hostUrl
+                + "/api/rules/search?ps=500&activation=true&f=name&language="
+                + languageKey
+                + "&qprofile="
+                + profile.getKey());
+    if (rootNode == null) return Collections.emptyMap();
+
+    var rulesArray = rootNode.get("rules");
+    var ruleMap = new HashMap<String, String>();
+
+    for (var rule : rulesArray) {
+      ruleMap.put(rule.get("key").asText(), rule.get("name").asText());
+    }
+
+    return ruleMap;
+  }
+
   public Set<ActiveRule> getActiveRules() {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();

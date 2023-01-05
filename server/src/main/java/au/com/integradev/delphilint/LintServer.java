@@ -10,6 +10,7 @@ import au.com.integradev.delphilint.messaging.RequestInitialize;
 import au.com.integradev.delphilint.messaging.Response;
 import au.com.integradev.delphilint.messaging.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
+import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,17 +27,21 @@ public class LintServer {
   private static final Logger LOG = Loggers.get(LintServer.class);
   private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
+  private SonarQubeConnection sonarqube;
   private final ObjectMapper mapper;
   private boolean running;
 
   public LintServer(int port) throws IOException {
     engine = null;
+    sonarqube = null;
     serverSocket = new ServerSocket(port);
     running = false;
     mapper = new ObjectMapper();
   }
 
   public void run() throws IOException {
+    LOG.info("Awaiting socket connection");
+
     Socket clientSocket = serverSocket.accept();
 
     LOG.info("Socket connected");
@@ -154,7 +159,9 @@ public class LintServer {
     try {
       var issues =
           engine.analyze(requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null);
-      var result = ResponseAnalyzeResult.fromIssueSet(issues);
+      var result =
+          ResponseAnalyzeResult.fromIssueSet(
+              SonarQubeUtils.populateIssueMessages(sonarqube, issues));
       sendMessage.accept(Response.analyzeResult(result));
     } catch (Exception e) {
       sendMessage.accept(Response.analyzeError(e.getMessage()));
@@ -168,11 +175,13 @@ public class LintServer {
           new StandaloneDelphiConfiguration(
               requestInitialize.getBdsPath(), requestInitialize.getCompilerVersion());
 
-      var sonarqube =
-          new SonarQubeConnection(
-              requestInitialize.getSonarHostUrl(),
-              requestInitialize.getProjectKey(),
-              requestInitialize.getLanguageKey());
+      if (!requestInitialize.getSonarHostUrl().isEmpty()) {
+        sonarqube =
+            new SonarQubeConnection(
+                requestInitialize.getSonarHostUrl(),
+                requestInitialize.getProjectKey(),
+                requestInitialize.getLanguageKey());
+      }
 
       engine = new DelphiAnalysisEngine(delphiConfig, sonarqube);
     }
