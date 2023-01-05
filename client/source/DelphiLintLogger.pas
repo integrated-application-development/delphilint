@@ -11,8 +11,8 @@ type
   private
     FLogMessageGroup: IOTAMessageGroup;
 
-    constructor Create;
   public
+    constructor Create(MessageGroupName: string);
     destructor Destroy; override;
 
     procedure Title(Msg: string);
@@ -31,7 +31,7 @@ var
 function Log: TLintLogger;
 begin
   if not Assigned(G_Log) then begin
-    G_Log := TLintLogger.Create;
+    G_Log := TLintLogger.Create('Log');
   end;
 
   Result := G_Log;
@@ -44,9 +44,9 @@ begin
   (BorlandIDEServices as IOTAMessageServices).ClearMessageGroup(FLogMessageGroup);
 end;
 
-constructor TLintLogger.Create;
+constructor TLintLogger.Create(MessageGroupName: string);
 begin
-  FLogMessageGroup := (BorlandIDEServices as IOTAMessageServices).AddMessageGroup('DelphiLint');
+  FLogMessageGroup := (BorlandIDEServices as IOTAMessageServices).AddMessageGroup('DelphiLint - ' + MessageGroupName);
 end;
 
 destructor TLintLogger.Destroy;

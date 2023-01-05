@@ -11,7 +11,8 @@ uses
   , WinAPI.Windows
   , System.Classes
   , System.Generics.Collections
-  , DelphiLintData
+  , DelphiLintData     
+  , DelphiLintLogger
   ;
 
 type
@@ -22,6 +23,7 @@ type
   private
     FServer: TLintServer;
     FActiveIssues: TDictionary<string, TList<TLintIssue>>;
+    FOutputLog: TLintLogger;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     function ToWindowsPath(Path: string): string;
@@ -68,7 +70,6 @@ implementation
 
 uses
     System.StrUtils
-  , DelphiLintLogger
   , DelphiLintFileUtils
   ;
 
@@ -105,6 +106,7 @@ begin
   inherited;
   FActiveIssues := TDictionary<string, TList<TLintIssue>>.Create;
   FServer := TLintServer.Create('{URL REMOVED}');
+  FOutputLog := TLintLogger.Create('Issues');
                                                                
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -116,6 +118,7 @@ destructor TLintIDE.Destroy;
 begin
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
+  FreeAndNil(FOutputLog);
   inherited;
 end;
 
@@ -126,11 +129,13 @@ var
   Issue: TLintIssue;
   FileName: string;
 begin
+  FOutputLog.Clear;
+
   for FileName in FActiveIssues.Keys do begin
-    Log.Title(Format('[DelphiLint] %s (%d issues)', [FileName, FActiveIssues[FileName].Count]));
+    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileName, FActiveIssues[FileName].Count]));
 
     for Issue in FActiveIssues[FileName] do begin
-      Log.Info(
+      FOutputLog.Info(
         Format('%s: %s', [Issue.RuleKey, Issue.Message]),
         ToWindowsPath('{PATH REMOVED}' + FileName),
         Issue.Range.StartLine,
