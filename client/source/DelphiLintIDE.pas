@@ -136,7 +136,7 @@ begin
 
     for Issue in FActiveIssues[FileName] do begin
       FOutputLog.Info(
-        Format('%s: %s', [Issue.RuleKey, Issue.Message]),
+        Format('%s', [Issue.Message]),
         ToWindowsPath('{PATH REMOVED}' + FileName),
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);

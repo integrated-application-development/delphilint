@@ -35,14 +35,14 @@ type
   TLintMessage = class(TObject)
   private
     FCategory: Byte;
-    FData: TJsonObject;
+    FData: TJsonValue;
   public
-    constructor Create(Category: Byte; Data: TJsonObject);
+    constructor Create(Category: Byte; Data: TJsonValue);
     destructor Destroy; override;
     class function Initialize(Data: TJsonObject): TLintMessage; static;
     class function Analyze(Data: TJsonObject): TLintMessage; static;
     property Category: Byte read FCategory;
-    property Data: TJsonObject read FData;
+    property Data: TJsonValue read FData;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -94,7 +94,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintMessage.Create(Category: Byte; Data: TJsonObject);
+constructor TLintMessage.Create(Category: Byte; Data: TJsonValue);
 begin
   FCategory := Category;
   FData := Data;
@@ -180,30 +180,38 @@ begin
     TLintMessage.Analyze(RequestJson),
     procedure(Response: TLintMessage)
     var
-      IssuesJson: TJsonValue;
       IssuesArrayJson: TJsonArray;
       Index: Integer;
       Issues: TArray<TLintIssue>;
     begin
-      Assert(Response.Category = C_AnalyzeResult);
-
-      IssuesJson := Response.Data.GetValue('issues');
-      if IssuesJson is TJsonArray then begin
-        IssuesArrayJson := IssuesJson as TJsonArray;
-        SetLength(Issues, IssuesArrayJson.Count);
-
-        for Index := 0 to IssuesArrayJson.Count - 1 do begin
-          Issues[Index] := TLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
-        end;
-      end;
-
-      FreeAndNil(Response);
-
-      Synchronize(
+      Queue(
         procedure begin
-          Log.Info('Calling post-analyze action.');
-          OnAnalyze(Issues);
+          Log.Info(Format('Analysis response received (%d)', [Response.Category]));
         end);
+
+      if Response.Category <> C_AnalyzeResult then begin
+        Queue(
+          procedure begin
+            Log.Info(Format('Analyze error (%d): %s', [Response.Category, Response.Data.ToString]));
+          end);
+      end
+      else begin
+        if Response.Data.TryGetValue<TJSONArray>('issues', IssuesArrayJson) then begin
+          SetLength(Issues, IssuesArrayJson.Count);
+
+          for Index := 0 to IssuesArrayJson.Count - 1 do begin
+            Issues[Index] := TLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
+          end;
+        end;
+
+        FreeAndNil(Response);
+
+        Synchronize(
+          procedure begin
+            Log.Info('Calling post-analyze action.');
+            OnAnalyze(Issues);
+          end);
+      end;
     end);
 end;
 
@@ -233,6 +241,13 @@ begin
     TLintMessage.Initialize(DataJson),
     procedure(Response: TLintMessage) begin
       InitializeCompletedEvent.SetEvent;
+
+      if Response.Category <> C_Initialized then begin
+        Queue(
+          procedure begin
+            Log.Info(Format('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]));
+          end);
+      end;
     end);
 
   if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
@@ -297,21 +312,15 @@ var
   Length: Integer;
   DataStr: string;
   DataJsonValue: TJsonValue;
-  DataJson: TJsonObject;
   Message: TLintMessage;
 begin
   Category := FTcpClient.IOHandler.ReadByte;
   Id := FTcpClient.IOHandler.ReadInt32;
   Length := FTcpClient.IOHandler.ReadInt32;
   DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
-  DataJsonValue := TJsonObject.ParseJSONValue(DataStr);
+  DataJsonValue := TJsonValue.ParseJSONValue(DataStr);
 
-  DataJson := nil;
-  if (DataJsonValue is TJsonObject) then begin
-    DataJson := DataJsonValue as TJsonObject;
-  end;
-
-  Message := TLintMessage.Create(Category, DataJson);
+  Message := TLintMessage.Create(Category, DataJsonValue);
 
   if FResponseActions.ContainsKey(Id) then begin
     FResponseActions[Id](Message);
