@@ -2,13 +2,14 @@ unit DelphiLintFileUtils;
 
 interface
 
-function GetProjectDirectory: string;
-function GetProjectFile: string;
-function GetMainFile: string;
+function GetProjectDirectory: string; overload;
+function GetProjectDirectory(MainFile: string): string; overload;
 function GetAllFiles: TArray<string>;
+function IsPasFile(Path: string): Boolean;
 function IsMainFile(Path: string): Boolean;
 function IsDelphiSource(Path: string): Boolean;
 function IsProjectFile(Path: string): Boolean;
+procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
 
 implementation
 
@@ -23,42 +24,39 @@ uses
 //______________________________________________________________________________________________________________________
 
 function GetProjectDirectory: string;
+var
+  AllFiles: TArray<string>;
+  ProjectFile: string;
+  MainFile: string;
+  PasFiles: TArray<string>;
 begin
-  Result := TPath.GetDirectoryName(GetMainFile);
+  ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
+  Result := TPath.GetDirectoryName(MainFile);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function GetProjectFile: string;
-var
-  AllFiles: TArray<string>;
-  FilePath: string;
+function GetProjectDirectory(MainFile: string): string;
 begin
-  AllFiles := GetAllFiles;
-            
-  Result := '';
-  for FilePath in AllFiles do begin
-    if isProjectFile(FilePath) then begin
-      Result := FilePath;
-    end;
-  end;
-end;   
+  Result := TPath.GetDirectoryName(MainFile);
+end;
 
 //______________________________________________________________________________________________________________________
 
-function GetMainFile: string;
+function GetPasFiles(Files: TArray<string>): TArray<string>;
 var
-  AllFiles: TArray<string>;
+  PasFiles: TStringList;
   FilePath: string;
 begin
-  AllFiles := GetAllFiles;
-                 
-  Result := '';
-  for FilePath in AllFiles do begin
-    if IsMainFile(FilePath) then begin
-      Result := FilePath;
+  PasFiles := TStringList.Create;
+
+  for FilePath in Files do begin
+    if IsPasFile(FilePath) then begin
+      PasFiles.Add(FilePath);
     end;
   end;
+
+  Result := PasFiles.ToStringArray;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -70,9 +68,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function IsPasFile(Path: string): Boolean;
+begin
+  Result := EndsText('.pas', Path);
+end;
+
+//______________________________________________________________________________________________________________________
+
 function IsDelphiSource(Path: string): Boolean;
 begin
-  Result := EndsText('.pas', Path) or IsMainFile(Path);
+  Result := IsPasFile(Path) or IsMainFile(Path);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -102,6 +107,31 @@ begin
   end;
 
   Result := FileList.ToStringArray;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
+var
+  FilePath: string;
+  PasFilesList: TStringList;
+begin
+  AllFiles := GetAllFiles;
+  PasFilesList := TStringList.Create;
+
+  for FilePath in AllFiles do begin
+    if IsPasFile(FilePath) then begin
+      PasFilesList.Add(FilePath);
+    end
+    else if IsMainFile(FilePath) then begin
+      MainFile := FilePath;
+    end
+    else if IsProjectFile(FilePath) then begin
+     ProjectFile := FilePath;
+    end;
+  end;
+
+  PasFiles := PasFilesList.ToStringArray;
 end;
 
 end.

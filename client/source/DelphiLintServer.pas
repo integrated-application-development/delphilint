@@ -49,6 +49,7 @@ type
 
   TLintResponseAction = reference to procedure (Message: TLintMessage);
   TLintAnalyzeAction = reference to procedure(Issues: TArray<TLintIssue>);
+  TLintErrorAction = reference to procedure(Message: string);
 
   TLintServer = class(TThread)
   private
@@ -71,7 +72,7 @@ type
     procedure Execute; override;
 
     procedure Initialize;
-    procedure Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction);
+    procedure Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction; OnError: TLintErrorAction);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -140,6 +141,7 @@ end;
 destructor TLintServer.Destroy;
 begin
   FreeAndNil(FTcpClient);
+  FreeAndNil(FResponseActions);
   DeleteCriticalSection(FCriticalSection);
   inherited;
 end;
@@ -156,7 +158,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction);
+procedure TLintServer.Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction; OnError: TLintErrorAction);
 var
   Index: Integer;
   RequestJson: TJsonObject;
@@ -184,15 +186,16 @@ begin
       Index: Integer;
       Issues: TArray<TLintIssue>;
     begin
-      Queue(
+      Synchronize(
         procedure begin
           Log.Info(Format('Analysis response received (%d)', [Response.Category]));
         end);
 
       if Response.Category <> C_AnalyzeResult then begin
-        Queue(
+        Synchronize(
           procedure begin
-            Log.Info(Format('Analyze error (%d): %s', [Response.Category, Response.Data.ToString]));
+            Log.Info(Format('Analyze error (%d): %s', [Response.Category, Response.Data.AsType<string>]));
+            OnError(Response.Data.AsType<string>);
           end);
       end
       else begin
@@ -204,14 +207,14 @@ begin
           end;
         end;
 
-        FreeAndNil(Response);
-
         Synchronize(
           procedure begin
             Log.Info('Calling post-analyze action.');
             OnAnalyze(Issues);
           end);
       end;
+
+      FreeAndNil(Response);
     end);
 end;
 

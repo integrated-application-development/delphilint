@@ -24,17 +24,20 @@ type
     FServer: TLintServer;
     FActiveIssues: TDictionary<string, TList<TLintIssue>>;
     FOutputLog: TLintLogger;
+    FAnalyzing: Boolean;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     function ToWindowsPath(Path: string): string;
+    procedure OnAnalyzeResult(Issues: TArray<TLintIssue>);
+    procedure OnAnalyzeError(Message: string);
+    procedure RefreshIssues(Issues: TArray<TLintIssue>);
+    procedure DisplayIssues;
 
   public
     constructor Create;
     destructor Destroy; override;
 
     function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
-    procedure RefreshIssues(Issues: TArray<TLintIssue>);
-    procedure GenerateIssueMessages;
 
     procedure AnalyzeActiveProject;
 
@@ -79,11 +82,25 @@ var
 //______________________________________________________________________________________________________________________
 
 procedure TLintIDE.AnalyzeActiveProject;
+var
+  AllFiles: TArray<string>;
+  ProjectFile: string;
+  MainFile: string;
+  PasFiles: TArray<string>;
 begin
-  LintIDE.Server.Analyze(
-    DelphiLintFileUtils.GetProjectDirectory,
-    DelphiLintFileUtils.GetAllFiles,
-    LintIDE.RefreshIssues);
+  if not FAnalyzing then begin
+    FAnalyzing := True;
+    FOutputLog.Clear;
+    FOutputLog.Info('Analysis in progress...');
+
+    DelphiLintFileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
+
+    LintIDE.Server.Analyze(
+      DelphiLintFileUtils.GetProjectDirectory(MainFile),
+      AllFiles,
+      LintIDE.OnAnalyzeResult,
+      LintIDE.OnAnalyzeError);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -107,6 +124,7 @@ begin
   FActiveIssues := TDictionary<string, TList<TLintIssue>>.Create;
   FServer := TLintServer.Create('{URL REMOVED}');
   FOutputLog := TLintLogger.Create('Issues');
+  FAnalyzing := False;
                                                                
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -124,7 +142,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintIDE.GenerateIssueMessages;
+procedure TLintIDE.DisplayIssues;
 var
   Issue: TLintIssue;
   FileName: string;
@@ -132,12 +150,12 @@ begin
   FOutputLog.Clear;
 
   for FileName in FActiveIssues.Keys do begin
-    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileName, FActiveIssues[FileName].Count]));
+    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FActiveIssues[FileName][0].FilePath, FActiveIssues[FileName].Count]));
 
     for Issue in FActiveIssues[FileName] do begin
       FOutputLog.Info(
         Format('%s', [Issue.Message]),
-        ToWindowsPath('{PATH REMOVED}' + FileName),
+        ToWindowsPath(DelphiLintFileUtils.GetProjectDirectory + '\' + Issue.FilePath),
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);
     end;
@@ -174,6 +192,24 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintIDE.OnAnalyzeError(Message: string);
+begin
+  FAnalyzing := False;
+  FOutputLog.Clear;
+  FOutputLog.Info('Error during analysis: ' + Message);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintIDE.OnAnalyzeResult(Issues: TArray<TLintIssue>);
+begin
+  FAnalyzing := False;
+  RefreshIssues(Issues);
+  DisplayIssues;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintIDE.RefreshIssues(Issues: TArray<TLintIssue>);
 var
   Issue: TLintIssue;
@@ -192,8 +228,6 @@ begin
 
     FActiveIssues[SanitizedPath].Add(Issue);
   end;
-
-  GenerateIssueMessages;
 end;
 
 //______________________________________________________________________________________________________________________
