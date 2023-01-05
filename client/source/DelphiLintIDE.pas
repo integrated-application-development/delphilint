@@ -7,6 +7,11 @@ uses
   , ToolsAPI
   , DelphiLintServer
   , Vcl.Dialogs
+  , Vcl.Graphics
+  , WinAPI.Windows
+  , System.Classes
+  , System.Generics.Collections
+  , DelphiLintData
   ;
 
 type
@@ -16,9 +21,18 @@ type
   TLintIDE = class(TObject)
   private
     FServer: TLintServer;
+    FActiveIssues: TDictionary<string, TList<TLintIssue>>;
+
+    function ToUnixPath(Path: string; Lower: Boolean = False): string;
+    function ToWindowsPath(Path: string): string;
+
   public
     constructor Create;
     destructor Destroy; override;
+
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
+    procedure RefreshIssues(Issues: TArray<TLintIssue>);
+    procedure GenerateIssueMessages;
 
     property Server: TLintServer read FServer;
   end;
@@ -52,7 +66,7 @@ implementation
 
 uses
     System.StrUtils
-  , DelphiLintData
+  , DelphiLintLogger
   ;
 
 var
@@ -64,36 +78,18 @@ procedure AnalyzeActiveFile;
 const
   C_SampleBaseDir: string = '{PATH REMOVED}';
   C_SampleFiles: array of string = [
-    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dproj',
-    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviour.dpr',
-    'Common/Delphi/DelphiExpectedBehaviour/DateTimeBehaviour.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/DelphiExpectedBehaviourTestSuite.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/MidasBug.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/OpenArrayBug.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/RecordFinalizationBehaviour.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/SoapBug.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/SystemMathBug.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/SystemRegularExpressionsBehaviour.pas',
-    'Common/Delphi/DelphiExpectedBehaviour/SystemSysUtilsBug.pas'];
+    'DelphiLintData.pas',
+    'DelphiLintIDE.pas',
+    'DelphiLintServer.pas',
+    'DelphiLintLogger.pas',
+    'DelphiLintClient.dpk',
+    'DelphiLintClient.dproj'
+  ];
 begin
   LintIDE.Server.Analyze(
     C_SampleBaseDir,
     C_SampleFiles,
-    procedure(Issues: TArray<TLintIssue>)
-    var
-      Issue: TLintIssue;
-    begin
-      for Issue in Issues do begin
-        ShowMessage(Format('[%s, %d:%d - %d:%d] %s (%s)', [
-          Issue.FilePath,
-          Issue.Range.StartLine,
-          Issue.Range.StartLineOffset,
-          Issue.Range.EndLine,
-          Issue.Range.EndLineOffset,
-          Issue.RuleKey,
-          Issue.Message]));
-      end;
-    end);
+    LintIDE.RefreshIssues);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -112,7 +108,10 @@ end;
 constructor TLintIDE.Create;
 begin
   inherited;
+  FActiveIssues := TDictionary<string, TList<TLintIssue>>.Create;
   FServer := TLintServer.Create('{URL REMOVED}');
+
+  Log.Info('DelphiLint started.');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -120,7 +119,100 @@ end;
 destructor TLintIDE.Destroy;
 begin
   FreeAndNil(FServer);
+  FreeAndNil(FActiveIssues);
   inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintIDE.GenerateIssueMessages;
+var
+  Issue: TLintIssue;
+  FileName: string;
+begin
+  Log.Clear;
+
+  for FileName in FActiveIssues.Keys do begin
+    Log.Title(Format('[DelphiLint] %s (%d issues)', [FileName, FActiveIssues[FileName].Count]));
+
+    for Issue in FActiveIssues[FileName] do begin
+      Log.Info(
+        Format('%s: %s', [Issue.RuleKey, Issue.Message]),
+        ToWindowsPath('{PATH REMOVED}' + FileName),
+        Issue.Range.StartLine,
+        Issue.Range.StartLineOffset);
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintIDE.GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>;
+var
+  SanitizedName: string;
+  Issue: TLintIssue;
+  ResultList: TList<TLintIssue>;
+begin
+  SanitizedName := ToUnixPath(FileName);
+
+  if FActiveIssues.ContainsKey(SanitizedName) then begin
+    if Line = -1 then begin
+      Result := FActiveIssues[SanitizedName].ToArray;
+    end
+    else begin
+      ResultList := TList<TLintIssue>.Create;
+
+      for Issue in FActiveIssues[SanitizedName] do begin
+        if (Issue.Range.StartLine >= Line) and (Issue.Range.EndLine <= Line) then begin
+          ResultList.Add(Issue);
+        end;
+      end;
+
+      Result := ResultList.ToArray;
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintIDE.RefreshIssues(Issues: TArray<TLintIssue>);
+var
+  Issue: TLintIssue;
+  SanitizedPath: string;
+begin
+  FActiveIssues.Clear;
+
+  Log.Info(Format('Processing %d issues.', [Length(Issues)]));
+
+  for Issue in Issues do begin
+    SanitizedPath := ToUnixPath(Issue.FilePath, True);
+
+    if not FActiveIssues.ContainsKey(SanitizedPath) then begin
+      FActiveIssues.Add(SanitizedPath, TList<TLintIssue>.Create);
+    end;
+
+    FActiveIssues[SanitizedPath].Add(Issue);
+  end;
+
+  GenerateIssueMessages;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintIDE.ToUnixPath(Path: string; Lower: Boolean = False): string;
+begin
+  if Lower then begin
+    Path := LowerCase(Path);
+  end;
+  
+  Result := StringReplace(Path, '\', '/', [rfReplaceAll]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintIDE.ToWindowsPath(Path: string): string;
+begin
+  Result := StringReplace(Path, '/', '\', [rfReplaceAll]);
 end;
 
 //______________________________________________________________________________________________________________________

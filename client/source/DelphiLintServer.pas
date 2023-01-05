@@ -81,6 +81,7 @@ implementation
 uses
     IdGlobal
   , Vcl.Dialogs
+  , DelphiLintLogger
   ;
 
 //______________________________________________________________________________________________________________________
@@ -129,6 +130,8 @@ begin
   FTcpClient.Host := '127.0.0.1';
   FTcpClient.Port := 14000;
   FTcpClient.Connect;
+
+  Log.Info('Server connected.');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -158,6 +161,7 @@ var
   RequestJson: TJsonObject;
   InputFilesJson: TJsonArray;
 begin
+  Log.Info('Requesting analysis.');
   Initialize;
 
   InputFilesJson := TJsonArray.Create;
@@ -196,6 +200,7 @@ begin
 
       Synchronize(
         procedure begin
+          Log.Info('Calling post-analyze action.');
           OnAnalyze(Issues);
         end);
     end);
@@ -212,6 +217,8 @@ var
   DataJson: TJsonObject;
   InitializeCompletedEvent: TEvent;
 begin
+  Log.Info('Requesting initialization.');
+
   // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
   DataJson := TJSONObject.Create;
   DataJson.AddPair('bdsPath', C_BdsPath);
@@ -231,13 +238,15 @@ begin
   if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
     raise Exception.Create('Initialize timed out');
   end;
+
+  Log.Info('Initialization complete.');
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintServer.OnUnhandledMessage(Message: TLintMessage);
 begin
-  ShowMessage(Format('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]));
+  Log.Info(Format('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]));
 end;
 
 //______________________________________________________________________________________________________________________
