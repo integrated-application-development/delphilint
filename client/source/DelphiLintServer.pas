@@ -3,8 +3,7 @@ unit DelphiLintServer;
 interface
 
 uses
-    IdHTTP
-  , IdTCPClient
+    IdTCPClient
   , JSON
   , System.Classes
   , System.SysUtils
@@ -81,7 +80,6 @@ implementation
 
 uses
     IdGlobal
-  , Vcl.Dialogs
   , DelphiLintLogger
   , ToolsAPI
   ;

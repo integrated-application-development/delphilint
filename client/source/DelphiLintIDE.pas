@@ -74,6 +74,7 @@ implementation
 uses
     System.StrUtils
   , DelphiLintFileUtils
+  , System.Generics.Defaults
   ;
 
 var
@@ -144,15 +145,17 @@ end;
 
 procedure TLintIDE.DisplayIssues;
 var
+  FileIssues: TArray<TLintIssue>;
   Issue: TLintIssue;
   FileName: string;
 begin
   FOutputLog.Clear;
 
   for FileName in FActiveIssues.Keys do begin
-    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FActiveIssues[FileName][0].FilePath, FActiveIssues[FileName].Count]));
+    FileIssues := GetIssues(FileName);
+    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
 
-    for Issue in FActiveIssues[FileName] do begin
+    for Issue in FileIssues do begin
       FOutputLog.Info(
         Format('%s', [Issue.Message]),
         ToWindowsPath(DelphiLintFileUtils.GetProjectDirectory + '\' + Issue.FilePath),
@@ -160,6 +163,13 @@ begin
         Issue.Range.StartLineOffset);
     end;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function OrderByStartLine(const Left, Right: TLintIssue): Integer;
+begin
+  Result := TComparer<Integer>.Default.Compare(Left.Range.StartLine, Right.Range.StartLine);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -175,6 +185,7 @@ begin
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
+      TArray.Sort<TLintIssue>(Result, TComparer<TLintIssue>.Construct(OrderByStartLine));
     end
     else begin
       ResultList := TList<TLintIssue>.Create;
@@ -185,6 +196,7 @@ begin
         end;
       end;
 
+      ResultList.Sort(TComparer<TLintIssue>.Construct(OrderByStartLine));
       Result := ResultList.ToArray;
     end;
   end;
