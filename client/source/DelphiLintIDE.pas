@@ -34,6 +34,8 @@ type
     procedure RefreshIssues(Issues: TArray<TLintIssue>);
     procedure GenerateIssueMessages;
 
+    procedure AnalyzeActiveProject;
+
     property Server: TLintServer read FServer;
   end;
 
@@ -67,6 +69,7 @@ implementation
 uses
     System.StrUtils
   , DelphiLintLogger
+  , DelphiLintFileUtils
   ;
 
 var
@@ -74,21 +77,11 @@ var
 
 //______________________________________________________________________________________________________________________
 
-procedure AnalyzeActiveFile;
-const
-  C_SampleBaseDir: string = '{PATH REMOVED}';
-  C_SampleFiles: array of string = [
-    'DelphiLintData.pas',
-    'DelphiLintIDE.pas',
-    'DelphiLintServer.pas',
-    'DelphiLintLogger.pas',
-    'DelphiLintClient.dpk',
-    'DelphiLintClient.dproj'
-  ];
+procedure TLintIDE.AnalyzeActiveProject;
 begin
   LintIDE.Server.Analyze(
-    C_SampleBaseDir,
-    C_SampleFiles,
+    DelphiLintFileUtils.GetProjectDirectory,
+    DelphiLintFileUtils.GetAllFiles,
     LintIDE.RefreshIssues);
 end;
 
@@ -97,9 +90,11 @@ end;
 procedure Register;
 begin
   RegisterPackageWizard(TLintMenuItem.Create(
-    'analyze',
-    'Analyze Active File with DelphiLint',
-    AnalyzeActiveFile
+    'analyzeproject',
+    'Analyze Project with DelphiLint',
+    procedure begin
+      LintIDE.AnalyzeActiveProject;
+    end
   ));
 end;
 
@@ -110,7 +105,8 @@ begin
   inherited;
   FActiveIssues := TDictionary<string, TList<TLintIssue>>.Create;
   FServer := TLintServer.Create('{URL REMOVED}');
-
+                                                               
+  Log.Clear;
   Log.Info('DelphiLint started.');
 end;
 
@@ -130,8 +126,6 @@ var
   Issue: TLintIssue;
   FileName: string;
 begin
-  Log.Clear;
-
   for FileName in FActiveIssues.Keys do begin
     Log.Title(Format('[DelphiLint] %s (%d issues)', [FileName, FActiveIssues[FileName].Count]));
 

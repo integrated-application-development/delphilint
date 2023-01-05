@@ -82,6 +82,7 @@ uses
     IdGlobal
   , Vcl.Dialogs
   , DelphiLintLogger
+  , ToolsAPI
   ;
 
 //______________________________________________________________________________________________________________________
@@ -210,7 +211,6 @@ end;
 
 procedure TLintServer.Initialize;
 const
-  C_BdsPath = '{PATH REMOVED} Files (x86)/Embarcadero/Studio/22.0';
   C_CompilerVersion = 'VER350';
   C_LanguageKey = 'delph';
 var
@@ -221,7 +221,7 @@ begin
 
   // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
   DataJson := TJSONObject.Create;
-  DataJson.AddPair('bdsPath', C_BdsPath);
+  DataJson.AddPair('bdsPath', (BorlandIDEServices as IOTAServices).GetRootDirectory);
   DataJson.AddPair('compilerVersion', C_CompilerVersion);
   DataJson.AddPair('sonarHostUrl', FSonarHostUrl);
   DataJson.AddPair('projectKey', '');
