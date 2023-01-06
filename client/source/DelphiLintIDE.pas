@@ -23,6 +23,7 @@ type
   private
     FServer: TLintServer;
     FActiveIssues: TDictionary<string, TList<TLintIssue>>;
+    FLastAnalyzedFiles: TStringList;
     FOutputLog: TLintLogger;
     FAnalyzing: Boolean;
 
@@ -96,6 +97,9 @@ begin
 
     DelphiLintFileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
+    FLastAnalyzedFiles.Clear;
+    FLastAnalyzedFiles.AddStrings(AllFiles);
+
     LintIDE.Server.Analyze(
       DelphiLintFileUtils.GetProjectDirectory(MainFile),
       AllFiles,
@@ -126,6 +130,7 @@ begin
   FServer := TLintServer.Create('{URL REMOVED}');
   FOutputLog := TLintLogger.Create('Issues');
   FAnalyzing := False;
+  FLastAnalyzedFiles := TStringList.Create;
                                                                
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -138,6 +143,7 @@ begin
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
+  FreeAndNil(FLastAnalyzedFiles);
   inherited;
 end;
 
@@ -148,16 +154,18 @@ var
   FileIssues: TArray<TLintIssue>;
   Issue: TLintIssue;
   FileName: string;
+  Stale: Boolean;
 begin
   FOutputLog.Clear;
 
   for FileName in FActiveIssues.Keys do begin
     FileIssues := GetIssues(FileName);
     FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
+    Stale := FLastAnalyzedFiles.IndexOf(FileName) = -1;
 
     for Issue in FileIssues do begin
       FOutputLog.Info(
-        Format('%s', [Issue.Message]),
+        Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
         ToWindowsPath(DelphiLintFileUtils.GetProjectDirectory + '\' + Issue.FilePath),
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);
@@ -227,15 +235,25 @@ var
   Issue: TLintIssue;
   SanitizedPath: string;
 begin
-  FActiveIssues.Clear;
-
   Log.Info(Format('Processing %d issues.', [Length(Issues)]));
+
+  FLastAnalyzedFiles.Clear;
 
   for Issue in Issues do begin
     SanitizedPath := ToUnixPath(Issue.FilePath, True);
 
-    if not FActiveIssues.ContainsKey(SanitizedPath) then begin
-      FActiveIssues.Add(SanitizedPath, TList<TLintIssue>.Create);
+    if FLastAnalyzedFiles.IndexOf(SanitizedPath) = -1 then begin
+      // This is the first issue in this file that we've found this run
+      FLastAnalyzedFiles.Add(SanitizedPath);
+
+      if FActiveIssues.ContainsKey(SanitizedPath) then begin
+        // This filepath has old issues in it, so we want to clear it out
+        FActiveIssues[SanitizedPath].Clear;
+      end
+      else begin
+        // There's no space allocated for this filepath - allocate it
+        FActiveIssues.Add(SanitizedPath, TList<TLintIssue>.Create);
+      end;
     end;
 
     FActiveIssues[SanitizedPath].Add(Issue);
