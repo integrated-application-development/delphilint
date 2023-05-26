@@ -121,7 +121,13 @@ var
   MainFile: string;
   PasFiles: TArray<string>;
   Server: TLintServer;
+  SourceEditor: IOTASourceEditor;
 begin
+  SourceEditor := DelphiLint.FileUtils.GetCurrentSourceEditor;
+  if not Assigned(SourceEditor) then begin
+    Exit;
+  end;
+
   if not FAnalyzing then begin
     FAnalyzing := True;
     FOutputLog.Clear;
@@ -130,14 +136,14 @@ begin
     DelphiLint.FileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
     FLastAnalyzedFiles.Clear;
-    FLastAnalyzedFiles.AddStrings(AllFiles);
+    FLastAnalyzedFiles.Add(SourceEditor.FileName);
 
     Server := GetOrInitServer;
     if Assigned(Server) then begin
       Log.Info('Server connected for analysis.');
       Server.Analyze(
         DelphiLint.FileUtils.GetProjectDirectory(MainFile),
-        AllFiles,
+        [SourceEditor.FileName],
         LintIDE.OnAnalyzeResult,
         LintIDE.OnAnalyzeError);
     end
@@ -279,6 +285,7 @@ begin
   FAnalyzing := False;
   FOutputLog.Clear;
   FOutputLog.Info('Error during analysis: ' + Message);
+  ShowMessage('There was an error during analysis.' + #13#10 + Message);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -493,7 +500,7 @@ procedure TLintEditViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: 
   procedure DrawLine(const StartChar: Integer; const EndChar: Integer);
   begin
     Canvas.Pen.Color := clWebGold;
-    Canvas.Pen.Width := 2;
+    Canvas.Pen.Width := 1;
     Canvas.MoveTo(TextRect.Left + (StartChar * CellSize.Width), TextRect.Bottom - 1);
     Canvas.LineTo(TextRect.Left + (EndChar * CellSize.Width), TextRect.Bottom - 1);
   end;

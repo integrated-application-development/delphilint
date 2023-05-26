@@ -2,6 +2,10 @@ unit DelphiLint.FileUtils;
 
 interface
 
+uses
+    ToolsAPI
+  ;
+
 function GetProjectDirectory: string; overload;
 function GetProjectDirectory(MainFile: string): string; overload;
 function GetAllFiles: TArray<string>;
@@ -10,16 +14,33 @@ function IsMainFile(Path: string): Boolean;
 function IsDelphiSource(Path: string): Boolean;
 function IsProjectFile(Path: string): Boolean;
 procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
+function GetCurrentSourceEditor: IOTASourceEditor;
 
 implementation
 
 uses
-    ToolsAPI
-  , System.Classes
+    System.Classes
   , System.StrUtils
   , System.IOUtils
-  , DelphiLint.Logger
   ;
+
+
+//______________________________________________________________________________________________________________________
+
+function GetCurrentSourceEditor: IOTASourceEditor;
+var
+  Module: IOTAModule;
+  I: Integer;
+begin
+  Module := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
+  if Assigned(Module) then begin
+    for I := 0 to Module.ModuleFileCount - 1 do begin
+      if Module.ModuleFileEditors[I].QueryInterface(IOTASourceEditor, Result) = S_OK then begin
+        Break;
+      end;
+    end;
+  end;
+end;
 
 //______________________________________________________________________________________________________________________
 
