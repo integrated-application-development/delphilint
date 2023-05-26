@@ -3,7 +3,7 @@ unit DelphiLintData;
 interface
 
 uses
-    JSON
+    System.JSON
   ;
 
 type

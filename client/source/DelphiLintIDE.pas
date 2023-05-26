@@ -11,7 +11,7 @@ uses
   , WinAPI.Windows
   , System.Classes
   , System.Generics.Collections
-  , DelphiLintData     
+  , DelphiLintData
   , DelphiLintLogger
   , DockForm
   ;
@@ -309,7 +309,7 @@ begin
   if Lower then begin
     Path := LowerCase(Path);
   end;
-  
+
   Result := StringReplace(Path, '\', '/', [rfReplaceAll]);
 end;
 

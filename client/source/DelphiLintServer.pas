@@ -4,13 +4,13 @@ interface
 
 uses
     IdTCPClient
-  , JSON
+  , System.JSON
   , System.Classes
   , System.SysUtils
   , DelphiLintData
   , System.Generics.Collections
   , System.SyncObjs
-  , Windows
+  , Winapi.Windows
   ;
 
 const

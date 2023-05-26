@@ -1,0 +1,1450 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="delph">
+  <description>Sonar Profile: delph</description>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Using_regular_expressions_is_security_sensitive" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.RegularExpressions.IsMatch|System.RegularExpressions.Match|System.RegularExpressions.Matches|System.RegularExpressions.Replace|System.RegularExpressions.Split|System.RegularExpressionsCore.TPerlRegEx.Match|System.RegularExpressionsCore.TPerlRegEx.MatchAgain|System.RegularExpressionsCore.TPerlRegEx.Replace|System.RegularExpressionsCore.TPerlRegEx.ReplaceAll|System.RegularExpressionsCore.TPerlRegEx.Split|System.RegularExpressionsCore.TPerlRegEx.SplitCapture|omRegex.FindMatch|omRegex.Find|omRegex.FindNumberOfOccurrences|RegExpr.TRegExpr.Exec|RegExpr.TRegExpr.ExecNext|RegExpr.TRegExpr.ExecPos|RegExpr.TRegExpr.Split|RegExpr.TRegExpr.Replace|RegExpr.TRegExpr.ReplaceEx" />
+      <property name="message" value="Make sure that using a regular expression is safe here." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="Zero_indexed_string_properties_should_not_be_used_" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.SysUtils.TStringHelper.Chars" />
+      <property name="message" value="Remove this usage of a zero-indexed string property" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Zero_indexed_string_methods_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.SysUtils.TStringHelper.CopyTo|System.SysUtils.TStringHelper.IndexOf|System.SysUtils.TStringHelper.IndexOfAny|System.SysUtils.TStringHelper.IndexOfAnyUnquoted|System.SysUtils.TStringHelper.Insert|System.SysUtils.TStringHelper.LastDelimiter|System.SysUtils.TStringHelper.LastIndexOf|System.SysUtils.TStringHelper.LastIndexOfAny|System.SysUtils.TStringHelper.Remove|System.SysUtils.TStringHelper.Substring" />
+      <property name="message" value="Remove this usage of a zero-indexed string method" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="BuildDualCommitWorkspace_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="AppMasteryActivityModel.TAppMasteryActivityModel.BuildDualCommitWorkspace" />
+      <property name="message" value="Remove this usage of BuildDualCommitWorkspace" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EmptyBeginStatementRule" name="EmptyBeginStatementRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathTemplateRule" name="Inline_assembly_code_should_be_avoided" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Review this inline assembly code" />
+      <property name="xpath">
+        <value><![CDATA[//AsmStatementNode]]></value>
+      </property>
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TrailingWhitespaceRule" name="TrailingWhitespaceRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="EmptyVisibilitySectionRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//VisibilitySectionNode[@Visibility != 'IMPLICIT_PUBLISHED' and count(*) = 1]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenImportFilePatternRule" name="DBI_units_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="forbiddenImportSyntax" value="REGEX" />
+      <property name="forbiddenImportPattern" value=".*[\/\\]Common[\/\\]Delphi[\/\\]DBILib[\/\\].*(?&lt;!(DBIDataset|DBIObjectListDatasets|DBICustomListDataConnections))\.pas" />
+      <property name="scope" value="ALL" />
+      <property name="message" value="Remove usage of this DBI unit" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TypeAliasRule" name="TypeAliasRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.PointerNameRule" name="PointerNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ReRaiseExceptionRule" name="ReRaiseExceptionRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathTemplateRule" name="Test_methods_should_comply_with_a_naming_convention" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Rename this test method so that it begins with &quot;Test_&quot;" />
+      <property name="xpath">
+        <value><![CDATA[//TypeDeclarationNode[typeInheritsFrom('TestSuite.TTestSuite')]/ClassTypeNode/VisibilitySectionNode[@Published = 'true']/MethodDeclarationNode[@MethodKind = 'PROCEDURE' and count(MethodHeadingNode/MethodParametersNode[@Empty = 'false']) = 0]/MethodHeadingNode/MethodNameNode[not(starts-with(@Image, 'Test_'))]]]></value>
+      </property>
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InlineVarExplicitTypeRule" name="InlineVarExplicitTypeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EmptyInterfaceRule" name="EmptyInterfaceRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="EmptyFieldSectionRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//FieldSectionNode[count(FieldDeclarationNode) = 0]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CharacterToCharacterPointerCastRule" name="CharacterToCharacterPointerCastRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="RegisterPageLink_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebCustomApplication.TWebCustomApplication.SUSPECT_RegisterPageLink" />
+      <property name="message" value="Replace this with a call to TWebMVCManager.RegisterMVC." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="ObjectTypeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//TypeDeclarationNode[@Object = 'true']/SimpleNameDeclarationNode]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MethodNameRule" name="MethodNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnitNameRule" name="UnitNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="om|F|Fr|Frame" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.IfThenShortCircuitRule" name="IfThenShortCircuitRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.SuperfluousSemicolonsRule" name="SuperfluousSemicolonsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TDataValidationMsgDialog_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="DataValidationMsgDialog.SUSPECT_TomDataValidationMsgDialog" />
+      <property name="message" value="Replace the use of this type with the Authorisation Framework." />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TWebDateSelector_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebControl.TWebDateSelector" />
+      <property name="message" value="Replace this with WebControl.TWebDatePicker" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="NoSemiAfterMethodDeclarationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//MethodHeadingNode/*[last()][@Image != ";"]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InheritedMethodWithNoCodeRule" name="InheritedMethodWithNoCodeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TrackUsesOfTomWebMarkdownTextEncodeOptions" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="TWebMarkdownText.EncodeOptions" />
+      <property name="message" value="This property is vulnerable to XSS, consider refactoring to avoid usage where possible" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedImportsRule" name="UnusedImportsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="exclusions" value="Winapi.Windows|Winapi.Messages|System.SysUtils|System.Variants|System.Classes|System.Types|Vcl.Graphics|Vcl.Controls|Vcl.Forms|Vcl.Dialogs|Vcl.Mask|Vcl.ExtCtrls|FMX.Types|FMX.Controls|FMX.Forms|FMX.Dialogs|QTypes|QGraphics|QControls|QForms|QDialogs|QStdCtrls|cxGraphics|cxControls|cxLookAndFeels|cxLookAndFeelPainters|cxContainer|cxEdit|Vcl.Menus|Vcl.ComCtrls|cxDateUtils|cxCheckBox|dxScreenTip|Winapi.ShlObj|cxShellCommon|cxStyles|cxData|cxCustomData|cxDataStorage|Data.DB|cxDBData|cxFilter|cxNavigator|dxRibbonCustomizationForms|dxRibbonSkins|cxPC|dxCore|Vcl.StdCtrls|dxMapControlTypes|dxBingMapLocationDataService|dxBingMapRouteDataService|dxPDFCore|dxPDFBase|dxPDFText|dxPDFRecognizedObject|dxPDFDocument|cxClasses|dxPScxEditorProducers|dxPScxExtEditorProducers|dxPScxPageControlProducer|dxPSGlbl|dxPSUtl|dxPSEngn|dxPrnPg|dxBkgnd|dxWrap|dxPrnDev|dxPSCompsProvider|dxPSFillPatterns|dxPSEdgePatterns|dxPSPDFExportCore|dxPSPDFExport|cxDrawTextUtils|dxDateRanges|cxTL|dxGDIPlusAPI|dxGDIPlusClasses|dxRichEdit.NativeApi|dxRichEdit.Types|dxRichEdit.Options|dxRichEdit.Control|dxRichEdit.Control.SpellChecker|dxRichEdit.Dialogs.EventArgs|cxScheduler|cxSchedulerStorage|cxSchedulerCustomControls|cxSchedulerCustomResourceView|cxSchedulerDayView|cxSchedulerAgendaView|cxSchedulerDateNavigator|cxSchedulerHolidays|cxSchedulerTimeGridView|cxSchedulerUtils|cxSchedulerWeekView|cxSchedulerYearView|cxSchedulerGanttView|cxSchedulerRecurrence|cxSchedulerRibbonStyleEventEditor|cxSchedulerTreeListBrowser|dxSkinsCore|dxSpellCheckerCore|dxHashUtils|VCL.FlexCel.Core|FlexCel.XlsAdapter|FlexCel.Render|cxCalendar|cxCurrencyEdit|cxTextEdit|cxBlobEdit|cxMemo|cxRichEdit|cxCalc|cxGridLevel|dxScrollbarAnnotations|dxBarBuiltInMenu|RVUniscribeGrIn" />
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.PlatformDependentCastRule" name="PlatformDependentCastRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EmptyUnitRule" name="EmptyUnitRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="IsBadxxxPtr_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="Winapi.Windows.IsBadCodePtr|Winapi.Windows.IsBadReadPtr|Winapi.Windows.IsBadStringPtr|Winapi.Windows.IsBadWritePtr" />
+      <property name="message" value="Remove this dangerous method usage" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MemberDeclarationOrderRule" name="MemberDeclarationOrderRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ConstantNotationRule" name="ConstantNotationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="C_" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="GotoStatementRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="30min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//GotoStatementNode]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="THashTable_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="HashTable.THashTable" />
+      <property name="message" value="Remove this deprecated type usage" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Deprecated_omStrUtils_methods_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="StrUtil.SUSPECT_CreateStringList|StrUtil.SUSPECT_FreeAndNilObjectsInStringList" />
+      <property name="message" value="Remove this deprecated StrUtil method." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CompilerHintsRule" name="CompilerHintsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ConstructorCreateRule" name="ConstructorCreateRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Deprecated_HTML_Sanitisation_methods_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="StrUtil.DecodeHtmlStr|StrUtil.StripHTMLTags" />
+      <property name="message" value="Remove this deprecated function" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenEnumValueRule" name="Track_use_of_jstEncodeAllUnicodeSafe" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="jstEncodeAllUnicodeSafe" />
+      <property name="enumName" value="EncodeUtil.TJavaScriptEncodeType" />
+      <property name="message" value="Review this usage of jstEncodeAllUnicodeSafe" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.StringLiteralRegexRule" name="Paths_should_not_be_hardcoded" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this hardcoded path with configuration" />
+      <property name="scope" value="MAIN" />
+      <property name="regex" value="(?i)(\b[a-z]:\\(?:[^\\/:*?&quot;&lt;&gt;|\r\n]+\\)*[^\\/:*?&quot;&lt;&gt;|\r\n]*\b)|(^(\\\\[^/\\\]\[&quot;:;|&lt;&gt;+=,?* _]+\\[^/\\\]\[&quot;:;|&lt;&gt;+=,?*]+)((?:\\[^\\/:*?&quot;&lt;&gt;|]+)*\\?)$)" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.DateFormatSettingsRule" name="DateFormatSettingsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TooLongLineRule" name="TooLongLineRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="120" />
+      <property name="baseEffort" value="2min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="DateUtils_functions_should_be_used_instead_of_their_DateUtils_equivalent" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.DateUtils.YearSpan|System.DateUtils.YearsBetween|System.DateUtils.MonthsBetween" />
+      <property name="message" value="Replace this with a call to the DateUtil equivalent" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="RegExpr_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="omRegEx.CreateRegExpr|omRegEx.FindMatch|omRegEx.Find|omRegEx.FindNumberOfOccurrence|RegExpr.TRegExpr.Create|RegExpr.ExecRegExpr|RegExpr.ReplaceRegExpr" />
+      <property name="message" value="Replace this usage of RegExpr with System.RegularExpressions" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ObjectInvokedConstructorRule" name="ObjectInvokedConstructorRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="10min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="AccessCodeType_constants_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this AccessCodeType constant with its enum counterpart" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_PrimaryAccessType|C_SecondaryAccessType" />
+      <property name="unitName" value="AccessCode" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Free_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.TObject.Free" />
+      <property name="message" value="Replace this with a call to SysUtils.FreeAndNil" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Track_use_of_database_transactions" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="DbTransaction.TDbTransaction.CreateAndBegin|WSDBAdapter.TWSDBAdapter.BeginTransaction|PostgresAdapter." />
+      <property name="message" value="Review this usage of database transactions" />
+      <property name="scope" value="MAIN" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EnumNameRule" name="EnumNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="T" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="C_RecTypeMasked_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Remove this usage of C_RecTypeMasked" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_RecTypeMasked" />
+      <property name="unitName" value="DDConst" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="Track_uses_of_TomTestMastery_InTest" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="omTestMastery.TTestMastery.InTest" />
+      <property name="message" value="Track uses of TTestMastery.InTest" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.RedundantBooleanRule" name="RedundantBooleanRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TCurrencyEdit_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="rxCurrEdit.TCurrencyEdit" />
+      <property name="message" value="Replace this type with TcxCurrencyEdit" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MemoryManagementRule" name="MemoryManagementRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="memoryFunctions" value="Mem.TMem.Local&lt;T&gt;|Mem.TMem.Managed&lt;T&gt;|Mem.TMem.Unmanaged&lt;T&gt;" />
+      <property name="whitelist" value="CreateNew" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.DestructorDestroyRule" name="DestructorDestroyRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="TWebTooltipConfig_AddHtmlTooltip_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebTooltip.TWebTooltipConfig.AddHtmlTooltip" />
+      <property name="message" value="Replace with TWebTooltipConfig.AddTooltip" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TWebTooltip_Lines_banned" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebTooltip.TWebTooltip.Lines" />
+      <property name="message" value="Refactor this property by adding components as children to this instance of TWebTooltip" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InlineLoopVarExplicitTypeRule" name="InlineLoopVarExplicitTypeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ClassNameRule" name="ClassNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="T|TForm|TFrame|E" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CompilerWarningsRule" name="CompilerWarningsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Deprecated_JavaScript_Encoding_methods_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebTransactOnlineUtil.MakeJavascriptSafe|IOMAWebModel.TIOMAWebModel.MakeJavascriptSafe" />
+      <property name="message" value="Replace with EncodeUtil.EncodeForJavaScript" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.HelperNameRule" name="HelperNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="helperPrefixes" value="T" />
+      <property name="extendedTypePrefixes" value="T|E|T|E" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.LegacyInitializationSectionRule" name="LegacyInitializationSectionRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="EmptyTypeSectionRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//TypeSectionNode[count(*) = 0]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnitLevelKeywordIndentationRule" name="UnitLevelKeywordIndentationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathTemplateRule" name="Published_sections_of_Test_Suites_should_only_contain_tests" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="xpath">
+        <value><![CDATA[//TypeDeclarationNode[typeInheritsFrom('TestSuite.TTestSuite')]/ClassTypeNode/VisibilitySectionNode[@Published = 'true']/*[name() != 'VisibilityNode' and (name() != 'MethodDeclarationNode' or (@MethodKind != 'PROCEDURE' and count(MethodHeadingNode/MethodParametersNode[@Empty = 'false']) = 0))]]]></value>
+      </property>
+      <property name="message" value="Remove this member from the published section of the Test Suite" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.FreeAndNilTObjectRule" name="FreeAndNilTObjectRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TSimpleCryptography_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="SimpleCryptographie.TSimpleCryptography" />
+      <property name="message" value="Remove this deprecated type usage" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TWebJavaScript_Script_tracked" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebControl.TWebJavaScript.Script" />
+      <property name="message" value="&#x9;This property is vulnerable to XSS, consider refactoring to avoid usage where possible" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="C_SoftHyphen_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Remove this usage of C_SoftHyphen" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_SoftHyphen" />
+      <property name="unitName" value="StrUtil" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenImportFilePatternRule" name="DatabaseObject_base_units_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="forbiddenImportPattern" value="**/Transact/Delphi/Common/DatabaseObjects/Source/*Bases.pas" />
+      <property name="scope" value="ALL" />
+      <property name="whitelistPattern" value="**/Transact/Delphi/Common/DatabaseObjects/Source/*.pas" />
+      <property name="forbiddenImportSyntax" value="GLOB" />
+      <property name="message" value="Replace this DatabaseObject base unit with the derived unit" />
+      <property name="whitelistSyntax" value="GLOB" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="PrivilegeType_constants_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this PrivilegeType constant with its enum counterpart" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_NoAccessUserPrivilege|C_ReadOnlyUserPrivilege|C_ReadWriteUserPrivilege" />
+      <property name="unitName" value="WebTransactOnlineConst" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="GetMobileInstructionDataset_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="IARStrategy.TIARStrategy.SUSPECT_GetMobileInstructionDataset" />
+      <property name="message" value="Replace this with a call to TIARStrategy.SetupDisplayForMobile." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TabulationCharactersRule" name="TabulationCharactersRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="PrivilegeType_constants_should_not_be_used__omPrivilegeTypes_" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this PrivilegeType constant with its enum counterpart" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_FullFunctionality|C_ViewOnly|C_None" />
+      <property name="unitName" value="PrivilegeType" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="Using_the_FTP_protocol_is_security_sensitive" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="FTPAccessor.TFTPAccessor|SFTPAccessor.TSFTPAccessor" />
+      <property name="message" value="Review this usage of the FTP protocol" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.StringLiteralRegexRule" name="Key_store_SQL_functions_should_only_be_used_by_TOL" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Remove this usage of a key store SQL function" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value="(?i).*\b(TOL_AddToKeyStore|TOL_BulkAddToKeyStore)\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_CondActTODO_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Complete the task associated to this CondActTODO comment" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value="(?i).*\bcondacttodo\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.VariableInitializationRule" name="VariableInitializationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CastAndFreeRule" name="CastAndFreeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_CodeReview_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Fix the problem identified by this CodeReview comment" />
+      <property name="regex" value="(?i).*\bcodereview\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.StringLiteralRegexRule" name="URLs_should_not_be_hardcoded" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this hardcoded URL" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value=".*(?!(https?:\/\/)?(www\.)?example\.(com|org|net|edu).*)(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,}).*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.VisibilitySectionOrderRule" name="VisibilitySectionOrderRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InterfaceNameRule" name="InterfaceNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="I" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="SetDistinctDatasetColumnValues_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="SQLUtil.SUSPECT_SetDistinctDatasetColumnValues" />
+      <property name="message" value="Replace this with a call to SQLUtil.CreateUniqueList." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MethodNestingDepthRule" name="MethodNestingDepthRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="depth" value="1" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InlineDeclarationCapturedByAnonymousMethodRule" name="InlineDeclarationCapturedByAnonymousMethodRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ShortIdentifiersRule" name="ShortIdentifiersRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="whitelist" value="E|X|Y|ID|Id" />
+      <property name="limit" value="3" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.PlatformDependentTruncationRule" name="PlatformDependentTruncationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.NoSemicolonRule" name="NoSemicolonRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TDualCommitWorkspace_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="DualCommitWorkspace.TDualCommitWorkspace" />
+      <property name="message" value="Remove this usage of TDualCommitWorkspace" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="System_Trunc_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.Trunc" />
+      <property name="message" value="Replace this with a call to Rounding.omTrunc" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ExplicitDefaultPropertyReferenceRule" name="ExplicitDefaultPropertyReferenceRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="2min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.DuplicatesRule" name="DuplicatesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="2min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenEnumValueRule" name="Track_use_of_etNoEncoding" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="etNoEncoding" />
+      <property name="enumName" value="TextFormatConverter.TEncodeType" />
+      <property name="message" value="Instead of inserting HTML strings into TTextFormatConverter, consider using the available helper functions on the class." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedGlobalVariablesRule" name="UnusedGlobalVariablesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenFieldRule" name="The_WORKING_directory_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="declaringType" value="TransactAppSettings.TTransactAppSettings.TTransact_Paths" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="WORKING" />
+      <property name="message" value="Replace this usage of the WORKING directory with the Stash interface" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TooManySubProceduresRule" name="TooManySubProceduresRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="3" />
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AssignedNilCheckRule" name="AssignedNilCheckRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.StringLiteralRegexRule" name="Soft_hyphens_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Remove this usage of soft hyphens" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value=".*­.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedConstantsRule" name="UnusedConstantsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Track_uses_of_Markdown_utilities" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="EncodeUtil.EncodeForMarkdown|MarkdownUtil.ConvertToHtml" />
+      <property name="message" value="Avoid using these utilities directly where possible, consider using TWebMarkdownText instead" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.VisibilityKeywordIndentationRule" name="VisibilityKeywordIndentationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="NoSemiAfterFieldDeclarationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//FieldDeclarationNode[name(parent::*) != "RecordVariantItemNode"]/*[last()][@Image != ";"]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedLocalVariablesRule" name="UnusedLocalVariablesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedPropertiesRule" name="UnusedPropertiesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MethodResultAssignedRule" name="MethodResultAssignedRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.PublicFieldsRule" name="PublicFieldsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenEnumValueRule" name="Track_use_of_connection_based_Temp_Tables" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="scope" value="MAIN" />
+      <property name="blacklist" value="ttTempPersistentForConnection" />
+      <property name="enumName" value="DDTableTypeEnum.TTableTypeEnum" />
+      <property name="message" value="Review this usage of connection-based Temp Tables" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentedOutCodeRule" name="CommentedOutCodeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="LimitRange_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="LimitRange.LimitRange" />
+      <property name="message" value="Remove this usage of LimitRange" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TooManyArgumentsRule" name="TooManyArgumentsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="10" />
+      <property name="baseEffort" value="1h" />
+      <property name="scope" value="MAIN" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TWebDBTableCell_EscapeHtml_banned" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebDBTableCell.TWebDBTableCell.EscapeHtml" />
+      <property name="message" value="Either remove this use of the EscapeHtml property, or refactor to use web components or a TWebDBLayoutPanel" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.RedundantAssignmentRule" name="RedundantAssignmentRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Test_cases_should_not_have_interdependencies" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="TestSuite.TTestSuite.DisableTestCaseShuffle" />
+      <property name="message" value="Fix the interdependencies between test cases in this test suite" />
+      <property name="scope" value="TEST" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TWebDeprecatedTextShouldNotBeUsed" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebControl.TWebDeprecatedText" />
+      <property name="message" value="Replace this type with WebControl.TWebEncodedText (or WebControl.TWebHtmlText if HTML must be permitted)" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="EmptyFinallyBlockRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//FinallyBlockNode[StatementListNode[count(*) = 0]]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ExplicitTObjectRule" name="ExplicitTObjectRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TWebList_Items_banned" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebControl.TWebList.Items" />
+      <property name="message" value="Refactor this property by adding TWebListItem components as children to this instace of TWebList" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_DelphiUpgrade_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Complete the task associated to this DelphiUpgrade comment" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value="(?i).*\bdelphiupgrade\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Using_environment_variables_is_security_sensitive" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.SysUtils.GetEnvironmentVariable|WinApi.Windows.GetEnvironmentVariable|WinApi.Windows.GetEnvironmentVariableA|WinApi.Windows.GetEnvironmentVariableW|WinApi.Windows.GetEnvironmentStrings|WinApi.Windows.GetEnvironmentStringsA|WinApi.Windows.GetEnvironmentStringsW" />
+      <property name="message" value="Make sure that environment variables are used safely here." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.TooLargeMethodRule" name="TooLargeMethodRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="100" />
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.RecordNameRule" name="RecordNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="T" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.SwallowedExceptionsRule" name="SwallowedExceptionsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="10min" />
+      <property name="scope" value="MAIN" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.PascalStyleResultRule" name="PascalStyleResultRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InlineConstExplicitTypeRule" name="InlineConstExplicitTypeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.VariableNameRule" name="VariableNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="global_prefixes" value="G" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AttributeNameRule" name="AttributeNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="attributeSuffix" value="required" />
+      <property name="baseEffort" value="15min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.LowerCaseReservedWordsRule" name="LowerCaseReservedWordsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="excludedKeywords" value="string" />
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.NoSonarRule" name="NoSonarRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.GroupedFieldDeclarationRule" name="GroupedFieldDeclarationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CyclomaticComplexityRule" name="MethodCyclomaticComplexityRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="20" />
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AssertMessageRule" name="AssertMessageRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="3min" />
+      <property name="scope" value="MAIN" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TidHTTP_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="IdHTTP.TIdHTTP" />
+      <property name="message" value="Replace this type with THttpClient" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="Track_uses_of_TomWebHtmlText" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebControl.TWebHtmlText" />
+      <property name="message" value="This type is vulnerable to XSS, consider refactoring to avoid usage where possible" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="ProcessMessages_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="Vcl.Forms.TApplication.ProcessMessages" />
+      <property name="message" value="Review this usage of ProcessMessages" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MixedNamesRule" name="MixedNamesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="DivideSafe_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="MathUtil.DivideSafe" />
+      <property name="message" value="Remove this usage of DivideSafe" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of__FIXME__comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Fix the problem identified by this FIXME comment." />
+      <property name="regex" value="(?i).*\bfixme\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EmptyMethodRule" name="EmptyMethodRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenImportFilePatternRule" name="omSqlHelpers_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="forbiddenImportSyntax" value="GLOB" />
+      <property name="forbiddenImportPattern" value="**/SqlHelper.pas" />
+      <property name="scope" value="ALL" />
+      <property name="message" value="Remove this usage of SqlHelper" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.BeginEndRequiredRule" name="BeginEndRequiredRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathBuiltinRule" name="ExtraneousArgumentListCommasRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+      <property name="builtinXPath">
+        <value><![CDATA[//ArgumentListNode/*[last() - 1][name() = "CommonDelphiNode" and @Image = ","]]]></value>
+      </property>
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.NoFunctionReturnTypeRule" name="NoFunctionReturnTypeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Deprecated_HTML_Encoding_methods_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="StrUtil.EncodeHtmlStr|HTMLUtil.HTMLEncode|Web.HTTPApp.HTMLEncode" />
+      <property name="message" value="Replace with EncodeUtil.EncodeForHtml" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_PITODO_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Complete the task associated to this PITODO comment" />
+      <property name="scope" value="ALL" />
+      <property name="regex" value="(?i).*\bpitodo\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CaseStatementSizeRule" name="CaseStatementSizeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Track_DataSave_calls" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="DataSaveClientFactorie.TDataSaveClientFactory.CreateClient" />
+      <property name="message" value="Review this usage of DataSave" />
+      <property name="scope" value="MAIN" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.GroupedParameterDeclarationRule" name="GroupedParameterDeclarationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.StringLiteralRegexRule" name="Track_Hardcoded_IDRef" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Hardcoded IDRef values must consider GDPR" />
+      <property name="regex" value=".*\bID[A-Z0-9]{8}\b.*" />
+      <property name="baseEffort" value="20min" />
+      <property name="scope" value="MAIN" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CognitiveComplexityRule" name="MethodCognitiveComplexityRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="limit" value="25" />
+      <property name="baseEffort" value="30min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AddressOfNestedMethodRule" name="AddressOfNestedMethodRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="RegisterMVCSetItem_should_not_be_used_outside_of_MVC_registration_units" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="MVCManager.TMVCManager.RegisterMVCSetItem" />
+      <property name="message" value="Move this MVC registration to an MVC registration unit" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TDateEdit_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="rxToolEdit.TDateEdit" />
+      <property name="message" value="Replace this type with TAdrockDateTimeEdit" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.DestructorWithoutInheritedStatementRule" name="DestructorWithoutInheritedStatementRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="30min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedMethodsRule" name="UnusedMethodsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TIdFTP_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="IdFTP.TIdFTP" />
+      <property name="message" value="Replace this type with TFTPAccessor" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.XPathTemplateRule" name="Members_of_Test_Suites_should_not_have_public_visibility" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="xpath">
+        <value><![CDATA[//TypeDeclarationNode[typeInheritsFrom('TestSuite.TTestSuite')]/ClassTypeNode/VisibilitySectionNode[@Visibility = 'PUBLIC' and count(*) > 1]]]></value>
+      </property>
+      <property name="message" value="Remove this public visibility section." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenImportFilePatternRule" name="Using_SecureBridge_components_is_security_sensitive_" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="forbiddenImportSyntax" value="GLOB" />
+      <property name="forbiddenImportPattern" value="**/SecureBridge/**/*.pas" />
+      <property name="scope" value="ALL" />
+      <property name="message" value="Review this usage of SecureBridge components" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_Huh_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Fix the problem identified by this huh comment." />
+      <property name="regex" value="(?i).*\bhuh\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.RedundantParenthesesRule" name="RedundantParenthesesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.InheritedTypeNameRule" name="Test_Suites_should_comply_with_a_naming_convention" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="nameRegex" value="TTestSuite_.*" />
+      <property name="message" value="Change this Test Suite's name to begin with 'TTestSuite_'" />
+      <property name="parentNameRegex" value="TTestSuite.*" />
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedFieldsRule" name="UnusedFieldsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnicodeToAnsiCastRule" name="UnicodeToAnsiCastRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.CommentRegexRule" name="Track_use_of_TODO_comments" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Complete the task associated to this TODO comment." />
+      <property name="regex" value="(?i).*\btodo\b.*" />
+      <property name="baseEffort" value="20min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.GroupedVariableDeclarationRule" name="GroupedVariableDeclarationRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.UnusedTypesRule" name="UnusedTypesRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.FieldNameRule" name="FieldNameRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="prefixes" value="F" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="Track_uses_of_omEncodeUtils_DecodeFromHtml" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="EncodeUtil.DecodeFromHtml" />
+      <property name="message" value="This function may result in output that is vulnerable to XSS attacks, please never use it where output will appear in HTML" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.MathFunctionSingleOverloadRule" name="MathFunctionSingleOverloadRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+      <property name="type" value="BUG" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenPropertyRule" name="TWebTableCell_OnFormatCell_banned" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebTable.TWebTableCell.OnFormatCell" />
+      <property name="message" value="Refactor this use of the OnFormatCell property to use other events or web components." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="Track_use_of_TAggregate" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="Datasnap.DBClient.TAggregate" />
+      <property name="message" value="Review this usage of TAggregate" />
+      <property name="scope" value="MAIN" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.RedundantCastRule" name="RedundantCastRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="2min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="FilterAll_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="Workspace.SUSPECT_FilterAll" />
+      <property name="message" value="Remove this deprecated method usage." />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="TWebDeprecatedAnchorShouldNotBeUsed" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="WebAnchor.TWebDeprecatedAnchor" />
+      <property name="message" value="Replace this type with WebAnchor.TWebAnchor" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenConstantRule" name="PINSentType_constants_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="message" value="Replace this PINSentType constant with its enum counterpart" />
+      <property name="scope" value="ALL" />
+      <property name="blacklist" value="C_PINSent|C_PINNotSent|C_PINGeneratedNotSent|C_PINNotApplicable" />
+      <property name="unitName" value="AccessCode" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="System_Round_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="System.Round" />
+      <property name="message" value="Replace this with a call to Rounding.omRound" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenImportFilePatternRule" name="Encrypting_data_is_security_sensitive_" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="forbiddenImportSyntax" value="GLOB" />
+      <property name="forbiddenImportPattern" value="**/CryptoUtil.pas" />
+      <property name="scope" value="ALL" />
+      <property name="message" value="Make sure that encrypting data is safe here" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AssignedAndFreeRule" name="AssignedAndFreeRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="Sending_HTTP_requests_is_security_sensitive" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="HttpClient.THttpClient|SoapServiceUtil.THttpRio|SOAPHTTPClient.TWebHttpRio" />
+      <property name="message" value="Review this usage of HTTP clients" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenTypeRule" name="THTTPRIO_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="Soap.SOAPHTTPClient.THTTPRIO" />
+      <property name="message" value="Replace this type with THttpRio" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="10min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ImportSpecificityRule" name="ImportSpecificityRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="exclusions" value="Winapi.Windows|Winapi.Messages|System.SysUtils|System.Variants|System.Classes|System.Types|Vcl.Graphics|Vcl.Controls|Vcl.Forms|Vcl.Dialogs|Vcl.Mask|Vcl.ExtCtrls|FMX.Types|FMX.Controls|FMX.Forms|FMX.Dialogs|QTypes|QGraphics|QControls|QForms|QDialogs|QStdCtrls|cxGraphics|cxControls|cxLookAndFeels|cxLookAndFeelPainters|cxContainer|cxEdit|Vcl.Menus|Vcl.ComCtrls|cxDateUtils|cxCheckBox|dxScreenTip|Winapi.ShlObj|cxShellCommon|cxStyles|cxData|cxCustomData|cxDataStorage|Data.DB|cxDBData|cxFilter|cxNavigator|dxRibbonCustomizationForms|dxRibbonSkins|cxPC|dxCore|Vcl.StdCtrls|dxMapControlTypes|dxBingMapLocationDataService|dxBingMapRouteDataService|dxPDFCore|dxPDFBase|dxPDFText|dxPDFRecognizedObject|dxPDFDocument|cxClasses|dxPScxEditorProducers|dxPScxExtEditorProducers|dxPScxPageControlProducer|dxPSGlbl|dxPSUtl|dxPSEngn|dxPrnPg|dxBkgnd|dxWrap|dxPrnDev|dxPSCompsProvider|dxPSFillPatterns|dxPSEdgePatterns|dxPSPDFExportCore|dxPSPDFExport|cxDrawTextUtils|dxDateRanges|cxTL|dxGDIPlusAPI|dxGDIPlusClasses|dxRichEdit.NativeApi|dxRichEdit.Types|dxRichEdit.Options|dxRichEdit.Control|dxRichEdit.Control.SpellChecker|dxRichEdit.Dialogs.EventArgs|cxScheduler|cxSchedulerStorage|cxSchedulerCustomControls|cxSchedulerCustomResourceView|cxSchedulerDayView|cxSchedulerAgendaView|cxSchedulerDateNavigator|cxSchedulerHolidays|cxSchedulerTimeGridView|cxSchedulerUtils|cxSchedulerWeekView|cxSchedulerYearView|cxSchedulerGanttView|cxSchedulerRecurrence|cxSchedulerRibbonStyleEventEditor|cxSchedulerTreeListBrowser|dxSkinsCore|dxSpellCheckerCore|dxHashUtils|VCL.FlexCel.Core|FlexCel.XlsAdapter|FlexCel.Render|cxCalendar|cxCurrencyEdit|cxTextEdit|cxBlobEdit|cxMemo|cxRichEdit|cxCalc|cxGridLevel|dxScrollbarAnnotations|dxBarBuiltInMenu|RVUniscribeGrIn" />
+      <property name="baseEffort" value="3min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.EmptyBracketsRule" name="EmptyBracketsRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="1min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.ForbiddenMethodRule" name="GetFormattedDocumentLink_should_not_be_used" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="blacklist" value="TOLTransactDocumentUtil.TTOLTransactDocumentUtil.GetFormattedDocumentLink" />
+      <property name="message" value="Use TTOLTransactDocumentUtil.SetDocumentWebAnchorProperties instead" />
+      <property name="scope" value="ALL" />
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+  <rule class="org.sonar.plugins.delphi.pmd.rules.AvoidWithRule" name="AvoidWithRule" language="delph">
+    <priority>3</priority>
+    <properties>
+      <property name="baseEffort" value="5min" />
+    </properties>
+  </rule>
+</ruleset>
