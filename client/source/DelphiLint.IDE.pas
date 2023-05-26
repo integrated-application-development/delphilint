@@ -456,17 +456,17 @@ end;
 
 procedure TLintEditorNotifier.DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditorNotifier.DockFormUpdated(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditorNotifier.DockFormVisibleChanged(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditViewNotifier.EditorIdle(const View: IOTAEditView);
@@ -505,38 +505,52 @@ procedure TLintEditViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: 
     Canvas.LineTo(TextRect.Left + (EndChar * CellSize.Width), TextRect.Bottom - 1);
   end;
 
+  procedure DrawMessage(const Msg: string);
+  begin
+    Canvas.Font.Color := clWebGold;
+    Canvas.Brush.Style := bsClear;
+    Canvas.TextOut(LineRect.Left + (2 * CellSize.Width), LineRect.Top, '!');
+    Canvas.TextOut(TextRect.Right, TextRect.Top, Msg);
+  end;
+
 var
   CurrentModule: IOTAModule;
   Issues: TArray<TLintIssue>;
   Issue: TLintIssue;
+  Msg: string;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
   Issues := LintIDE.GetIssues(CurrentModule.FileName, LineNumber);
 
-  for Issue in Issues do begin
-    DrawLine(Issue.Range.StartLineOffset, Issue.Range.EndLineOffset);
+  if Length(Issues) > 0 then begin
+    for Issue in Issues do begin
+      Msg := Msg + ' - ' + Issue.Message;
+      DrawLine(Issue.Range.StartLineOffset, Issue.Range.EndLineOffset);
+    end;
+
+    DrawMessage(Msg);
   end;
 end;
 
 procedure TLintEditorNotifier.WindowActivated(const EditWindow: INTAEditWindow);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditorNotifier.WindowCommand(const EditWindow: INTAEditWindow; Command, Param: Integer;
   var Handled: Boolean);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditorNotifier.WindowNotification(const EditWindow: INTAEditWindow; Operation: TOperation);
 begin
-
+  // Exposed for interface
 end;
 
 procedure TLintEditorNotifier.WindowShow(const EditWindow: INTAEditWindow; Show, LoadedFromDesktop: Boolean);
 begin
-
+  // Exposed for interface
 end;
 
 initialization
