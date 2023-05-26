@@ -1,4 +1,4 @@
-unit DelphiLintServer;
+unit DelphiLint.Server;
 
 interface
 
@@ -7,7 +7,7 @@ uses
   , System.JSON
   , System.Classes
   , System.SysUtils
-  , DelphiLintData
+  , DelphiLint.Data
   , System.Generics.Collections
   , System.SyncObjs
   ;
@@ -79,7 +79,7 @@ implementation
 
 uses
     IdGlobal
-  , DelphiLintLogger
+  , DelphiLint.Logger
   , ToolsAPI
   ;
 

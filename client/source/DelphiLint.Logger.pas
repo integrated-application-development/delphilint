@@ -1,4 +1,4 @@
-unit DelphiLintLogger;
+unit DelphiLint.Logger;
 
 interface
 

@@ -1,4 +1,4 @@
-unit DelphiLintData;
+unit DelphiLint.Data;
 
 interface
 

@@ -34,10 +34,10 @@ requires
   IndyProtocols;
 
 contains
-  DelphiLintIDE in 'DelphiLintIDE.pas' {omDelphiLintIDE: TDataModule},
-  DelphiLintServer in 'DelphiLintServer.pas',
-  DelphiLintData in 'DelphiLintData.pas',
-  DelphiLintLogger in 'DelphiLintLogger.pas',
-  DelphiLintFileUtils in 'DelphiLintFileUtils.pas';
+  DelphiLint.Ide in 'DelphiLint.Ide.pas' {omDelphiLintIDE: TDataModule},
+  DelphiLint.Server in 'DelphiLint.Server.pas',
+  DelphiLint.Data in 'DelphiLint.Data.pas',
+  DelphiLint.Logger in 'DelphiLint.Logger.pas',
+  DelphiLint.FileUtils in 'DelphiLint.FileUtils.pas';
 
 end.

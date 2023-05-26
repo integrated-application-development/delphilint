@@ -1,18 +1,18 @@
-unit DelphiLintIDE;
+unit DelphiLint.Ide;
 
 interface
 
 uses
     System.SysUtils
   , ToolsAPI
-  , DelphiLintServer
+  , DelphiLint.Server
   , Vcl.Dialogs
   , Vcl.Graphics
   , WinAPI.Windows
   , System.Classes
   , System.Generics.Collections
-  , DelphiLintData
-  , DelphiLintLogger
+  , DelphiLint.Data
+  , DelphiLint.Logger
   , DockForm
   ;
 
@@ -105,7 +105,7 @@ implementation
 
 uses
     System.StrUtils
-  , DelphiLintFileUtils
+  , DelphiLint.FileUtils
   , System.Generics.Defaults
   ;
 
@@ -127,13 +127,13 @@ begin
     FOutputLog.Clear;
     FOutputLog.Info('Analysis in progress...');
 
-    DelphiLintFileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
+    DelphiLint.FileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
     FLastAnalyzedFiles.Clear;
     FLastAnalyzedFiles.AddStrings(AllFiles);
 
     LintIDE.Server.Analyze(
-      DelphiLintFileUtils.GetProjectDirectory(MainFile),
+      DelphiLint.FileUtils.GetProjectDirectory(MainFile),
       AllFiles,
       LintIDE.OnAnalyzeResult,
       LintIDE.OnAnalyzeError);
@@ -201,7 +201,7 @@ begin
     for Issue in FileIssues do begin
       FOutputLog.Info(
         Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
-        ToWindowsPath(DelphiLintFileUtils.GetProjectDirectory + '\' + Issue.FilePath),
+        ToWindowsPath(DelphiLint.FileUtils.GetProjectDirectory + '\' + Issue.FilePath),
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);
     end;
@@ -224,7 +224,7 @@ var
   Issue: TLintIssue;
   ResultList: TList<TLintIssue>;
 begin
-  BaseDir := ToUnixPath(DelphiLintFileUtils.GetProjectDirectory, True);
+  BaseDir := ToUnixPath(DelphiLint.FileUtils.GetProjectDirectory, True);
   SanitizedName := ToUnixPath(FileName, True);
 
   if StartsText(BaseDir, SanitizedName) then begin
