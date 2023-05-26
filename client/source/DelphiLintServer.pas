@@ -10,7 +10,6 @@ uses
   , DelphiLintData
   , System.Generics.Collections
   , System.SyncObjs
-  , Winapi.Windows
   ;
 
 const
@@ -56,7 +55,7 @@ type
     FSonarHostUrl: string;
     FResponseActions: TDictionary<Integer, TLintResponseAction>;
     FNextId: Integer;
-    FCriticalSection: TRTLCriticalSection;
+    FTcpLock: TMutex;
 
     procedure SendMessage(Req: TLintMessage; OnResponse: TLintResponseAction); overload;
     procedure SendMessage(Req: TLintMessage; Id: Integer); overload;
@@ -119,11 +118,10 @@ end;
 constructor TLintServer.Create(SonarHostUrl: string);
 begin
   inherited Create(False);
-  InitializeCriticalSection(FCriticalSection);
-  Priority := tpNormal;
 
   FSonarHostUrl := SonarHostUrl;
   FNextId := 1;
+  FTcpLock := TMutex.Create;
 
   FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
   FTcpClient := TIdTCPClient.Create;
@@ -140,7 +138,7 @@ destructor TLintServer.Destroy;
 begin
   FreeAndNil(FTcpClient);
   FreeAndNil(FResponseActions);
-  DeleteCriticalSection(FCriticalSection);
+  FreeAndNil(FTcpLock);
   inherited;
 end;
 
@@ -272,19 +270,19 @@ var
   DataBytes: TArray<Byte>;
   DataByte: Byte;
 begin
-  EnterCriticalSection(FCriticalSection);                                    // +
-                                                                             // |
-  FTcpClient.IOHandler.Write(Req.Category);                                  // |
-  FTcpClient.IOHandler.Write(Id);                                            // |
-                                                                             // |
-  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.Tostring);                   // | CRITICAL
-                                                                             // | SECTION
-  FTcpClient.IOHandler.Write(Length(DataBytes));                             // |
-  for DataByte in DataBytes do begin                                         // |
-    FTcpClient.IOHandler.Write(DataByte);                                    // |
-  end;                                                                       // |
-                                                                             // |
-  LeaveCriticalSection(FCriticalSection);                                    // +
+  FTcpLock.Acquire();
+
+  FTcpClient.IOHandler.Write(Req.Category);
+  FTcpClient.IOHandler.Write(Id);
+
+  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.Tostring);
+
+  FTcpClient.IOHandler.Write(Length(DataBytes));
+  for DataByte in DataBytes do begin
+    FTcpClient.IOHandler.Write(DataByte);
+  end;
+
+  FTcpLock.Release();
 end;
 
 //______________________________________________________________________________________________________________________
@@ -293,13 +291,13 @@ procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TLintResponseAc
 var
   Id: SmallInt;
 begin
-  EnterCriticalSection(FCriticalSection);        // +
-                                                 // |
-  Id := FNextId;                                 // |
-  Inc(FNextId);                                  // |  CRITICAL
-  FResponseActions.Add(Id, OnResponse);          // |  SECTION
-                                                 // |
-  LeaveCriticalSection(FCriticalSection);        // +
+  FTcpLock.Acquire();
+
+  Id := FNextId;
+  Inc(FNextId);
+  FResponseActions.Add(Id, OnResponse);
+
+  FTcpLock.Release();
 
   SendMessage(Req, Id);
 end;
