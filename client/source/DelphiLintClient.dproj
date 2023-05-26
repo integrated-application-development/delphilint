@@ -84,10 +84,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="DelphiLint.IDE.pas">
-            <Form>omDelphiLintIDE</Form>
-            <DesignClass>TDataModule</DesignClass>
-        </DCCReference>
+        <DCCReference Include="DelphiLint.IDE.pas"/>
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
         <DCCReference Include="DelphiLint.Logger.pas"/>

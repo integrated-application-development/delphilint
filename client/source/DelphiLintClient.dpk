@@ -34,7 +34,7 @@ requires
   IndyProtocols;
 
 contains
-  DelphiLint.IDE in 'DelphiLint.IDE.pas' {omDelphiLintIDE: TDataModule},
+  DelphiLint.IDE in 'DelphiLint.IDE.pas',
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
