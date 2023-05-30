@@ -15,6 +15,7 @@ uses
 const
   C_Ping = 1;
   C_Pong = 5;
+  C_Quit = 15;
   C_Initialize = 20;
   C_Analyze = 30;
   C_AnalyzeResult = 35;
@@ -35,10 +36,12 @@ type
     FCategory: Byte;
     FData: TJsonValue;
   public
-    constructor Create(Category: Byte; Data: TJsonValue);
+    constructor Create(Category: Byte); overload;
+    constructor Create(Category: Byte; Data: TJsonValue); overload;
     destructor Destroy; override;
     class function Initialize(Data: TJsonObject): TLintMessage; static;
     class function Analyze(Data: TJsonObject): TLintMessage; static;
+    class function Quit: TLintMessage; static;
     property Category: Byte read FCategory;
     property Data: TJsonValue read FData;
   end;
@@ -63,6 +66,9 @@ type
     // This method is NOT threadsafe and should only ever be called in the lint server thread.
     procedure ReceiveMessage;
 
+    procedure StartExtServer(Port: Integer; ShowConsole: Boolean);
+    procedure StopExtServer;
+
   public
     constructor Create(SonarHostUrl: string);
     destructor Destroy; override;
@@ -81,6 +87,8 @@ uses
     IdGlobal
   , DelphiLint.Logger
   , ToolsAPI
+  , Winapi.Windows
+  , Winapi.ShellAPI
   ;
 
 //______________________________________________________________________________________________________________________
@@ -100,6 +108,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+constructor TLintMessage.Create(Category: Byte);
+begin
+  FCategory := Category;
+  FData := nil;
+end;
+
+//______________________________________________________________________________________________________________________
+
 destructor TLintMessage.Destroy;
 begin
   FreeAndNil(FData);
@@ -113,9 +129,16 @@ begin
   Result := TLintMessage.Create(C_Initialize, Data);
 end;
 
+class function TLintMessage.Quit: TLintMessage;
+begin
+  Result := TLintMessage.Create(C_Quit);
+end;
+
 //______________________________________________________________________________________________________________________
 
 constructor TLintServer.Create(SonarHostUrl: string);
+var
+  Port: Integer;
 begin
   inherited Create(False);
 
@@ -124,9 +147,13 @@ begin
   FTcpLock := TMutex.Create;
 
   FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
+
+  Port := 14000;
+
+  StartExtServer(Port, True);
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
-  FTcpClient.Port := 14000;
+  FTcpClient.Port := Port;
   FTcpClient.Connect;
 
   Log.Info('Server connected.');
@@ -136,6 +163,7 @@ end;
 
 destructor TLintServer.Destroy;
 begin
+  StopExtServer;
   FreeAndNil(FTcpClient);
   FreeAndNil(FResponseActions);
   FreeAndNil(FTcpLock);
@@ -270,19 +298,99 @@ var
   DataBytes: TArray<Byte>;
   DataByte: Byte;
 begin
-  FTcpLock.Acquire();
+  FTcpLock.Acquire;
 
   FTcpClient.IOHandler.Write(Req.Category);
   FTcpClient.IOHandler.Write(Id);
 
-  DataBytes := TEncoding.UTF8.GetBytes(Req.Data.Tostring);
+  if Assigned(Req.Data) then begin
+    DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
 
-  FTcpClient.IOHandler.Write(Length(DataBytes));
-  for DataByte in DataBytes do begin
-    FTcpClient.IOHandler.Write(DataByte);
+    FTcpClient.IOHandler.Write(Length(DataBytes));
+    for DataByte in DataBytes do begin
+      FTcpClient.IOHandler.Write(DataByte);
+    end;
+  end
+  else begin
+    FTcpClient.IOHandler.Write(Integer(0));
   end;
 
-  FTcpLock.Release();
+  FTcpLock.Release;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.StartExtServer(Port: Integer; ShowConsole: Boolean);
+const
+  // TODO: get this from configuration
+  C_ServerJar = '{PATH REMOVED}';
+  C_Title = 'DelphiLint Server';
+var
+  JavaHome: string;
+  JavaExe: string;
+  CommandLine: string;
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+  ErrorCode: Integer;
+begin
+  if not FileExists(C_ServerJar) then begin
+    raise Exception.CreateFmt('Server jar not found at path "%s".', [C_ServerJar]);
+  end;
+
+  JavaHome := GetEnvironmentVariable('JAVA_HOME');
+
+  if JavaHome = '' then begin
+    raise Exception.Create('JAVA_HOME not found. A JDK is required to use DelphiLint.');
+  end;
+
+  JavaExe := Format('%s\bin\java.exe', [JavaHome]);
+
+  if not FileExists(JavaExe) then begin
+    raise Exception.CreateFmt('Java executable not found at path "%s". Please update your JAVA_HOME.', [JavaExe]);
+  end;
+
+  CommandLine := Format(' -jar %s', [C_ServerJar]);
+
+  ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
+  StartupInfo.cb := SizeOf(TStartupInfo);
+
+  if ShowConsole then begin
+    StartupInfo.lpTitle := C_Title;
+  end;
+
+  if not CreateProcess(
+    PChar(JavaExe),
+    PChar(CommandLine),
+    nil,
+    nil,
+    False,
+    NORMAL_PRIORITY_CLASS or CREATE_NEW_CONSOLE,
+    nil,
+    nil,
+    StartupInfo,
+    ProcessInfo
+  ) then begin
+    ErrorCode := GetLastError;
+    raise Exception.CreateFmt(
+      'DelphiLint server could not be started (error code %d: %s)',
+      [ErrorCode, SysErrorMessage(ErrorCode)]);
+  end;
+
+  CloseHandle(ProcessInfo.hProcess);
+  CloseHandle(ProcessInfo.hThread);
+
+  Sleep(1000);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.StopExtServer;
+begin
+  SendMessage(
+    TLintMessage.Quit,
+    procedure(Msg: TLintMessage)
+    begin
+    end);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -291,13 +399,13 @@ procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TLintResponseAc
 var
   Id: SmallInt;
 begin
-  FTcpLock.Acquire();
+  FTcpLock.Acquire;
 
   Id := FNextId;
   Inc(FNextId);
   FResponseActions.Add(Id, OnResponse);
 
-  FTcpLock.Release();
+  FTcpLock.Release;
 
   SendMessage(Req, Id);
 end;
