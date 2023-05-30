@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
+import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
@@ -20,18 +21,9 @@ import org.sonarsource.sonarlint.core.plugin.commons.PluginInstancesRepository;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
   private static final Logger LOG = Loggers.get(DelphiAnalysisEngine.class);
-
-  // TODO: Get SonarDelphi jar from the SonarQube server or store locally
-  private static final Path DELPHI_PLUGIN_JAR =
-      Path.of(
-          "{PATH REMOVED}");
-
   private final GlobalAnalysisContainer globalContainer;
-  private final SonarQubeConnection connection;
 
-  public DelphiAnalysisEngine(DelphiConfiguration delphiConfig, SonarQubeConnection connection) {
-    this.connection = connection;
-
+  public DelphiAnalysisEngine(DelphiConfiguration delphiConfig) {
     var engineConfig =
         AnalysisEngineConfiguration.builder()
             .setWorkDir(Path.of(System.getProperty("java.io.tmpdir")))
@@ -52,7 +44,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   }
 
   public Set<Issue> analyze(
-      Path baseDir, Set<Path> inputFiles, ClientProgressMonitor progressMonitor) {
+      Path baseDir, Set<Path> inputFiles, ClientProgressMonitor progressMonitor, SonarQubeConnection connection) {
 
     var configBuilder =
         AnalysisConfiguration.builder()
@@ -71,7 +63,9 @@ public class DelphiAnalysisEngine implements AutoCloseable {
                     .collect(Collectors.toUnmodifiableList()));
 
     if (connection != null) {
-      configBuilder.addActiveRules(connection.getActiveRules());
+      Set<ActiveRule> activeRules = connection.getActiveRules();
+      configBuilder.addActiveRules(activeRules);
+      LOG.info("Added " + activeRules.size() + " active rules");
     }
 
     var config = configBuilder.build();

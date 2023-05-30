@@ -20,21 +20,21 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.function.Consumer;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 public class LintServer {
+  private static final String LANGUAGE_KEY = "delph";
   private static final Logger LOG = Loggers.get(LintServer.class);
   private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
-  private SonarQubeConnection sonarqube;
   private final ObjectMapper mapper;
   private boolean running;
 
   public LintServer(int port) throws IOException {
     engine = null;
-    sonarqube = null;
     serverSocket = new ServerSocket(port);
     running = false;
     mapper = new ObjectMapper();
@@ -103,9 +103,7 @@ public class LintServer {
     LOG.info("Received {}", category);
 
     Consumer<Response> sendMessage =
-        (response -> {
-          writeStream(out, id, response);
-        });
+        (response -> writeStream(out, id, response));
 
     if (category == null) {
       sendMessage.accept(Response.invalidRequest("Unrecognised category"));
@@ -162,11 +160,27 @@ public class LintServer {
     }
 
     try {
+      SonarQubeConnection sonarqube = null;
+      if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
+        sonarqube =
+            new SonarQubeConnection(
+                requestAnalyze.getSonarHostUrl(),
+                requestAnalyze.getProjectKey(),
+                LANGUAGE_KEY);
+      }
+
       var issues =
-          engine.analyze(requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null);
-      var result =
-          ResponseAnalyzeResult.fromIssueSet(
-              SonarQubeUtils.populateIssueMessages(sonarqube, issues));
+          engine.analyze(
+              requestAnalyze.getBaseDir(),
+              requestAnalyze.getInputFiles(),
+              null,
+              sonarqube);
+
+      if(sonarqube != null) {
+        issues = SonarQubeUtils.populateIssueMessages(sonarqube, issues);
+      }
+
+      ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
       sendMessage.accept(Response.analyzeResult(result));
     } catch (Exception e) {
       sendMessage.accept(Response.analyzeError(e.getMessage()));
@@ -180,15 +194,7 @@ public class LintServer {
           new StandaloneDelphiConfiguration(
               requestInitialize.getBdsPath(), requestInitialize.getCompilerVersion(), Path.of(requestInitialize.getSonarDelphiJarPath()));
 
-      if (!requestInitialize.getSonarHostUrl().isEmpty()) {
-        sonarqube =
-            new SonarQubeConnection(
-                requestInitialize.getSonarHostUrl(),
-                requestInitialize.getProjectKey(),
-                requestInitialize.getLanguageKey());
-      }
-
-      engine = new DelphiAnalysisEngine(delphiConfig, sonarqube);
+      engine = new DelphiAnalysisEngine(delphiConfig);
     }
     sendMessage.accept(Response.initialized());
   }
