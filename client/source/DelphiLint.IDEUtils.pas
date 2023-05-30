@@ -1,4 +1,4 @@
-unit DelphiLint.FileUtils;
+unit DelphiLint.IDEUtils;
 
 interface
 
@@ -16,6 +16,8 @@ function IsProjectFile(Path: string): Boolean;
 procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
 function GetCurrentSourceEditor: IOTASourceEditor;
 
+procedure RefreshEditorWindows;
+
 implementation
 
 uses
@@ -24,6 +26,12 @@ uses
   , System.IOUtils
   ;
 
+//______________________________________________________________________________________________________________________
+
+procedure RefreshEditorWindows;
+begin
+  (BorlandIDEServices as IOTAEditorServices).TopView.GetEditWindow.Form.Repaint;
+end;
 
 //______________________________________________________________________________________________________________________
 

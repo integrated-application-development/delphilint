@@ -14,11 +14,14 @@ uses
   , DelphiLint.Data
   , DelphiLint.Logger
   , DockForm
+  , DelphiLint.Events
   ;
 
 type
 
 //______________________________________________________________________________________________________________________
+
+  TIDERefreshEvent = procedure(Issues: TArray<TLintIssue>);
 
   TLintIDE = class(TObject)
   private
@@ -27,6 +30,7 @@ type
     FLastAnalyzedFiles: TStringList;
     FOutputLog: TLintLogger;
     FAnalyzing: Boolean;
+    FOnAnalysisComplete: TEventNotifier<TArray<TLintIssue>>;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     function ToWindowsPath(Path: string): string;
@@ -43,6 +47,8 @@ type
     function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
 
     procedure AnalyzeActiveProject;
+
+    property OnAnalysisComplete: TEventNotifier<TArray<TLintIssue>> read FOnAnalysisComplete;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -85,7 +91,12 @@ type
   end;
 
   TLintEditViewNotifier = class(TNotifierObject, IOTANotifier, INTAEditViewNotifier)
+  private
+    FRepaint: Boolean;
+    procedure OnAnalysisComplete(const Issues: TArray<TLintIssue>);
   public
+    constructor Create;
+    destructor Destroy; override;
     procedure EditorIdle(const View: IOTAEditView);
     procedure BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
     procedure PaintLine(const View: IOTAEditView; LineNumber: Integer;
@@ -104,8 +115,9 @@ implementation
 
 uses
     System.StrUtils
-  , DelphiLint.FileUtils
+  , DelphiLint.IDEUtils
   , System.Generics.Defaults
+  , System.Math
   ;
 
 var
@@ -123,7 +135,7 @@ var
   Server: TLintServer;
   SourceEditor: IOTASourceEditor;
 begin
-  SourceEditor := DelphiLint.FileUtils.GetCurrentSourceEditor;
+  SourceEditor := DelphiLint.IDEUtils.GetCurrentSourceEditor;
   if not Assigned(SourceEditor) then begin
     Exit;
   end;
@@ -133,7 +145,7 @@ begin
     FOutputLog.Clear;
     FOutputLog.Info('Analysis in progress...');
 
-    DelphiLint.FileUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
+    DelphiLint.IDEUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
     FLastAnalyzedFiles.Clear;
     FLastAnalyzedFiles.Add(SourceEditor.FileName);
@@ -142,7 +154,7 @@ begin
     if Assigned(Server) then begin
       Log.Info('Server connected for analysis.');
       Server.Analyze(
-        DelphiLint.FileUtils.GetProjectDirectory(MainFile),
+        DelphiLint.IDEUtils.GetProjectDirectory(MainFile),
         [SourceEditor.FileName],
         LintIDE.OnAnalyzeResult,
         LintIDE.OnAnalyzeError);
@@ -177,6 +189,7 @@ begin
   FOutputLog := TLintLogger.Create('Issues');
   FAnalyzing := False;
   FLastAnalyzedFiles := TStringList.Create;
+  FOnAnalysisComplete := TEventNotifier<TArray<TLintIssue>>.Create;
 
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -190,6 +203,7 @@ begin
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
   FreeAndNil(FLastAnalyzedFiles);
+  FreeAndNil(FOnAnalysisComplete);
 
   inherited;
 end;
@@ -213,11 +227,13 @@ begin
     for Issue in FileIssues do begin
       FOutputLog.Info(
         Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
-        ToWindowsPath(DelphiLint.FileUtils.GetProjectDirectory + '\' + Issue.FilePath),
+        ToWindowsPath(DelphiLint.IDEUtils.GetProjectDirectory + '\' + Issue.FilePath),
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);
     end;
   end;
+
+  RefreshEditorWindows;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -236,7 +252,7 @@ var
   Issue: TLintIssue;
   ResultList: TList<TLintIssue>;
 begin
-  BaseDir := ToUnixPath(DelphiLint.FileUtils.GetProjectDirectory, True);
+  BaseDir := ToUnixPath(DelphiLint.IDEUtils.GetProjectDirectory, True);
   SanitizedName := ToUnixPath(FileName, True);
 
   if StartsText(BaseDir, SanitizedName) then begin
@@ -294,6 +310,7 @@ procedure TLintIDE.OnAnalyzeResult(Issues: TArray<TLintIssue>);
 begin
   FAnalyzing := False;
   RefreshIssues(Issues);
+  FOnAnalysisComplete.Notify(Issues);
   DisplayIssues;
 end;
 
@@ -449,11 +466,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditViewNotifier.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
-begin
-  // Exposed for interface
-end;
-
 procedure TLintEditorNotifier.DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
 begin
   // Exposed for interface
@@ -469,9 +481,36 @@ begin
   // Exposed for interface
 end;
 
+constructor TLintEditViewNotifier.Create;
+begin
+  FRepaint := False;
+  LintIDE.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+end;
+
+destructor TLintEditViewNotifier.Destroy;
+begin
+  LintIDE.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  inherited;
+end;
+
+procedure TLintEditViewNotifier.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+begin
+  FRepaint := True;
+end;
+
 procedure TLintEditViewNotifier.EditorIdle(const View: IOTAEditView);
 begin
-  // Exposed for interface
+  if FRepaint then begin
+    View.GetEditWindow.Form.Repaint;
+  end;
+end;
+
+procedure TLintEditViewNotifier.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
+begin
+  if FRepaint then begin
+    FullRepaint := True;
+    FRepaint := False;
+  end;
 end;
 
 procedure TLintEditorNotifier.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
@@ -497,12 +536,24 @@ procedure TLintEditViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: 
   const TextWidth: Word; const LineAttributes: TOTAAttributeArray; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 
+  function ColumnToPx(const Col: Integer): Integer;
+  begin
+    Result := TextRect.Left + (Col + 1 - View.LeftColumn) * CellSize.Width;
+  end;
+
   procedure DrawLine(const StartChar: Integer; const EndChar: Integer);
+  var
+    StartX: Integer;
+    EndX: Integer;
   begin
     Canvas.Pen.Color := clWebGold;
     Canvas.Pen.Width := 1;
-    Canvas.MoveTo(TextRect.Left + (StartChar * CellSize.Width), TextRect.Bottom - 1);
-    Canvas.LineTo(TextRect.Left + (EndChar * CellSize.Width), TextRect.Bottom - 1);
+
+    StartX := Max(ColumnToPx(StartChar), TextRect.Left);
+    EndX := Max(ColumnToPx(EndChar), TextRect.Left);
+
+    Canvas.MoveTo(StartX, TextRect.Bottom - 1);
+    Canvas.LineTo(EndX, TextRect.Bottom - 1);
   end;
 
   procedure DrawMessage(const Msg: string);

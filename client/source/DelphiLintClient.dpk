@@ -38,6 +38,7 @@ contains
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
-  DelphiLint.FileUtils in 'DelphiLint.FileUtils.pas';
+  DelphiLint.IDEUtils in 'DelphiLint.IDEUtils.pas',
+  DelphiLint.Events in 'DelphiLint.Events.pas';
 
 end.
