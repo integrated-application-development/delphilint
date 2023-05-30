@@ -76,9 +76,14 @@ public class SonarQubeConnection {
           LOG.error("Problem parsing quality profile json: " + e.getMessage());
           return null;
         }
+      } else {
+        LOG.error("Malformed quality profile response from SonarQube");
       }
+    } else {
+      LOG.error("No default quality profile for language key " + languageKey);
     }
 
+    LOG.error("Null quality profile");
     return null;
   }
 
