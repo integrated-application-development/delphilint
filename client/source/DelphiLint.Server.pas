@@ -244,6 +244,7 @@ end;
 
 procedure TLintServer.Initialize;
 const
+  // TODO: Expose compiler version as a setting
   C_CompilerVersion = 'VER350';
   C_LanguageKey = 'delph';
 var
@@ -259,6 +260,7 @@ begin
   DataJson.AddPair('sonarHostUrl', FSonarHostUrl);
   DataJson.AddPair('projectKey', '');
   DataJson.AddPair('languageKey', C_LanguageKey);
+  DataJson.AddPair('sonarDelphiJarPath', LintSettings.SonarDelphiJar);
 
   InitializeCompletedEvent := TEvent.Create;
 
