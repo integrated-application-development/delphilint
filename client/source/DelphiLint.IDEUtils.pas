@@ -7,7 +7,6 @@ uses
   ;
 
 function GetProjectDirectory: string; overload;
-function GetProjectDirectory(MainFile: string): string; overload;
 function GetAllFiles: TArray<string>;
 function IsPasFile(Path: string): Boolean;
 function IsMainFile(Path: string): Boolean;
@@ -60,13 +59,6 @@ var
   PasFiles: TArray<string>;
 begin
   ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
-  Result := TPath.GetDirectoryName(MainFile);
-end;
-
-//______________________________________________________________________________________________________________________
-
-function GetProjectDirectory(MainFile: string): string;
-begin
   Result := TPath.GetDirectoryName(MainFile);
 end;
 

@@ -119,6 +119,8 @@ uses
   , System.Generics.Defaults
   , System.Math
   , DelphiLint.Settings
+  , DelphiLint.ProjectOptions
+  , System.IOUtils
   ;
 
 var
@@ -135,6 +137,8 @@ var
   PasFiles: TArray<string>;
   Server: TLintServer;
   SourceEditor: IOTASourceEditor;
+  ProjectOptions: TLintProjectOptions;
+  ProjectDir: string;
 begin
   SourceEditor := DelphiLint.IDEUtils.GetCurrentSourceEditor;
   if not Assigned(SourceEditor) then begin
@@ -148,6 +152,12 @@ begin
 
     DelphiLint.IDEUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
+    ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+    ProjectDir := ProjectOptions.ProjectBaseDir;
+    if ProjectDir = '' then begin
+      ProjectDir := TPath.GetDirectoryName(ProjectFile);
+    end;
+
     FLastAnalyzedFiles.Clear;
     FLastAnalyzedFiles.Add(SourceEditor.FileName);
 
@@ -155,10 +165,12 @@ begin
     if Assigned(Server) then begin
       Log.Info('Server connected for analysis.');
       Server.Analyze(
-        DelphiLint.IDEUtils.GetProjectDirectory(MainFile),
+        ProjectDir,
         [SourceEditor.FileName, ProjectFile, MainFile],
         LintIDE.OnAnalyzeResult,
-        LintIDE.OnAnalyzeError);
+        LintIDE.OnAnalyzeError,
+        ProjectOptions.SonarHostUrl,
+        ProjectOptions.ProjectKey);
     end
     else begin
       Log.Info('Server connection could not be established.');
@@ -286,7 +298,7 @@ function TLintIDE.GetOrInitServer: TLintServer;
 begin
   if not Assigned(FServer) then begin
     try
-      FServer := TLintServer.Create(LintSettings.ServerPort, '{URL REMOVED}');
+      FServer := TLintServer.Create(LintSettings.ServerPort);
     except
       ShowMessage('Server connection could not be established.');
       FServer := nil;

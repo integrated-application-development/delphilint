@@ -55,7 +55,6 @@ type
   TLintServer = class(TThread)
   private
     FTcpClient: TIdTCPClient;
-    FSonarHostUrl: string;
     FResponseActions: TDictionary<Integer, TLintResponseAction>;
     FNextId: Integer;
     FTcpLock: TMutex;
@@ -70,13 +69,19 @@ type
     procedure StopExtServer;
 
   public
-    constructor Create(Port: Integer; SonarHostUrl: string);
+    constructor Create(Port: Integer);
     destructor Destroy; override;
 
     procedure Execute; override;
 
     procedure Initialize;
-    procedure Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction; OnError: TLintErrorAction);
+    procedure Analyze(
+      BaseDir: string;
+      DelphiFiles: array of string;
+      OnAnalyze: TLintAnalyzeAction;
+      OnError: TLintErrorAction;
+      SonarHostUrl: string = '';
+      ProjectKey: string = '');
   end;
 
 //______________________________________________________________________________________________________________________
@@ -137,11 +142,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintServer.Create(Port: Integer; SonarHostUrl: string);
+constructor TLintServer.Create(Port: Integer);
 begin
   inherited Create(False);
 
-  FSonarHostUrl := SonarHostUrl;
   FNextId := 1;
   FTcpLock := TMutex.Create;
 
@@ -183,7 +187,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.Analyze(BaseDir: string; DelphiFiles: array of string; OnAnalyze: TLintAnalyzeAction; OnError: TLintErrorAction);
+procedure TLintServer.Analyze(
+  BaseDir: string;
+  DelphiFiles: array of string;
+  OnAnalyze: TLintAnalyzeAction;
+  OnError: TLintErrorAction;
+  SonarHostUrl: string = '';
+  ProjectKey: string = '');
 var
   Index: Integer;
   RequestJson: TJsonObject;
@@ -202,6 +212,8 @@ begin
   RequestJson := TJsonObject.Create;
   RequestJson.AddPair('baseDir', BaseDir);
   RequestJson.AddPair('inputFiles', InputFilesJson);
+  RequestJson.AddPair('sonarHostUrl', SonarHostUrl);
+  RequestJson.AddPair('projectKey', ProjectKey);
 
   SendMessage(
     TLintMessage.Analyze(RequestJson),
@@ -260,9 +272,6 @@ begin
   DataJson := TJSONObject.Create;
   DataJson.AddPair('bdsPath', (BorlandIDEServices as IOTAServices).GetRootDirectory);
   DataJson.AddPair('compilerVersion', C_CompilerVersion);
-  DataJson.AddPair('sonarHostUrl', FSonarHostUrl);
-  DataJson.AddPair('projectKey', '');
-  DataJson.AddPair('languageKey', C_LanguageKey);
   DataJson.AddPair('sonarDelphiJarPath', LintSettings.SonarDelphiJar);
 
   InitializeCompletedEvent := TEvent.Create;
