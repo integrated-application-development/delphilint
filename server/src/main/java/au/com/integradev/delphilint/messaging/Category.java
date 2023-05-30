@@ -3,6 +3,7 @@ package au.com.integradev.delphilint.messaging;
 public enum Category {
   PING(1, String.class),
   PONG(5, String.class),
+  QUIT(15),
   INITIALIZE(20, RequestInitialize.class),
   INITIALIZED(25),
   UNINITIALIZED(26),

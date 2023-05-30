@@ -142,6 +142,10 @@ public class LintServer {
       case ANALYZE:
         handleAnalyze((RequestAnalyze) message.getData(), sendMessage);
         break;
+      case QUIT:
+        LOG.info("Quit received, shutting down.");
+        running = false;
+        break;
       case PING:
         sendMessage.accept(Response.pong((String) message.getData()));
         break;
