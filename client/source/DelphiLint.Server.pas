@@ -147,8 +147,11 @@ begin
 
   FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
 
-  StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, True);
-  Sleep(LintSettings.ServerStartDelay);
+  if LintSettings.ServerAutoLaunch then begin
+    StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, True);
+    Sleep(LintSettings.ServerStartDelay);
+  end;
+
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
   FTcpClient.Port := Port;

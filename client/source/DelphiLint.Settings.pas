@@ -8,6 +8,7 @@ private var
   FServerPort: Integer;
   FServerJavaExe: string;
   FServerShowConsole: Boolean;
+  FServerAutoLaunch: Boolean;
   FSonarDelphiJar: string;
   FServerStartDelay: Integer;
 
@@ -26,6 +27,7 @@ public
   property SonarDelphiJar: string read FSonarDelphiJar;
   property ServerJavaExe: string read FServerJavaExe;
   property ServerStartDelay: Integer read FServerStartDelay;
+  property ServerAutoLaunch: Boolean read FServerAutoLaunch;
 end;
 
 function LintSettings: TLintSettings;
@@ -71,6 +73,7 @@ begin
     FServerPort := Ini.ReadInteger('Server', 'Port', 14000);
     FServerShowConsole := Ini.ReadBool('Server', 'ShowConsole', False);
     FServerStartDelay := Ini.ReadInteger('Server', 'StartDelay', 1000);
+    FServerAutoLaunch := Ini.ReadBool('Server', 'AutoLaunch', True);
     FSonarDelphiJar := Ini.ReadString('SonarDelphi', 'Jar', TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar'));
 
     FServerJavaExe := Ini.ReadString('Server', 'JavaExe', '');
@@ -99,6 +102,7 @@ begin
     Ini.WriteInteger('Server', 'Port', FServerPort);
     Ini.WriteBool('Server', 'ShowConsole', FServerShowConsole);
     Ini.WriteInteger('Server', 'StartDelay', FServerStartDelay);
+    Ini.WriteBool('Server', 'AutoLaunch', FServerAutoLaunch);
     Ini.WriteString('SonarDelphi', 'Jar', FSonarDelphiJar);
     Ini.WriteString('Server', 'JavaExe', FServerJavaExe);
   finally
