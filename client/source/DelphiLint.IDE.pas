@@ -155,7 +155,7 @@ begin
       Log.Info('Server connected for analysis.');
       Server.Analyze(
         DelphiLint.IDEUtils.GetProjectDirectory(MainFile),
-        [SourceEditor.FileName],
+        [SourceEditor.FileName, ProjectFile, MainFile],
         LintIDE.OnAnalyzeResult,
         LintIDE.OnAnalyzeError);
     end
