@@ -66,11 +66,11 @@ type
     // This method is NOT threadsafe and should only ever be called in the lint server thread.
     procedure ReceiveMessage;
 
-    procedure StartExtServer(Port: Integer; ShowConsole: Boolean);
+    procedure StartExtServer(Jar: string; JavaExe: string; Port: Integer; ShowConsole: Boolean);
     procedure StopExtServer;
 
   public
-    constructor Create(SonarHostUrl: string);
+    constructor Create(Port: Integer; SonarHostUrl: string);
     destructor Destroy; override;
 
     procedure Execute; override;
@@ -89,6 +89,7 @@ uses
   , ToolsAPI
   , Winapi.Windows
   , Winapi.ShellAPI
+  , DelphiLint.Settings
   ;
 
 //______________________________________________________________________________________________________________________
@@ -136,9 +137,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintServer.Create(SonarHostUrl: string);
-var
-  Port: Integer;
+constructor TLintServer.Create(Port: Integer; SonarHostUrl: string);
 begin
   inherited Create(False);
 
@@ -148,9 +147,8 @@ begin
 
   FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
 
-  Port := 14000;
-
-  StartExtServer(Port, True);
+  StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, True);
+  Sleep(LintSettings.ServerStartDelay);
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
   FTcpClient.Port := Port;
@@ -320,36 +318,24 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.StartExtServer(Port: Integer; ShowConsole: Boolean);
+procedure TLintServer.StartExtServer(Jar: string; JavaExe: string; Port: Integer; ShowConsole: Boolean);
 const
-  // TODO: get this from configuration
-  C_ServerJar = '{PATH REMOVED}';
   C_Title = 'DelphiLint Server';
 var
-  JavaHome: string;
-  JavaExe: string;
   CommandLine: string;
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
   ErrorCode: Integer;
 begin
-  if not FileExists(C_ServerJar) then begin
-    raise Exception.CreateFmt('Server jar not found at path "%s".', [C_ServerJar]);
+  if not FileExists(Jar) then begin
+    raise Exception.CreateFmt('Server jar not found at path "%s".', [Jar]);
   end;
-
-  JavaHome := GetEnvironmentVariable('JAVA_HOME');
-
-  if JavaHome = '' then begin
-    raise Exception.Create('JAVA_HOME not found. A JDK is required to use DelphiLint.');
-  end;
-
-  JavaExe := Format('%s\bin\java.exe', [JavaHome]);
 
   if not FileExists(JavaExe) then begin
-    raise Exception.CreateFmt('Java executable not found at path "%s". Please update your JAVA_HOME.', [JavaExe]);
+    raise Exception.CreateFmt('Java executable not found at path "%s".', [JavaExe]);
   end;
 
-  CommandLine := Format(' -jar %s', [C_ServerJar]);
+  CommandLine := Format(' -jar "%s" %d', [Jar, Port]);
 
   ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
   StartupInfo.cb := SizeOf(TStartupInfo);
@@ -378,8 +364,6 @@ begin
 
   CloseHandle(ProcessInfo.hProcess);
   CloseHandle(ProcessInfo.hThread);
-
-  Sleep(1000);
 end;
 
 //______________________________________________________________________________________________________________________

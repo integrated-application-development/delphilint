@@ -118,6 +118,7 @@ uses
   , DelphiLint.IDEUtils
   , System.Generics.Defaults
   , System.Math
+  , DelphiLint.Settings
   ;
 
 var
@@ -285,7 +286,7 @@ function TLintIDE.GetOrInitServer: TLintServer;
 begin
   if not Assigned(FServer) then begin
     try
-      FServer := TLintServer.Create('{URL REMOVED}');
+      FServer := TLintServer.Create(LintSettings.ServerPort, '{URL REMOVED}');
     except
       ShowMessage('Server connection could not be established.');
       FServer := nil;

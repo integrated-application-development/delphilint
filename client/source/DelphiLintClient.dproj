@@ -90,6 +90,7 @@
         <DCCReference Include="DelphiLint.Logger.pas"/>
         <DCCReference Include="DelphiLint.IDEUtils.pas"/>
         <DCCReference Include="DelphiLint.Events.pas"/>
+        <DCCReference Include="DelphiLint.Settings.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

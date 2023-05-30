@@ -39,6 +39,7 @@ contains
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
   DelphiLint.IDEUtils in 'DelphiLint.IDEUtils.pas',
-  DelphiLint.Events in 'DelphiLint.Events.pas';
+  DelphiLint.Events in 'DelphiLint.Events.pas',
+  DelphiLint.Settings in 'DelphiLint.Settings.pas';
 
 end.
