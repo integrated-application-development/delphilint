@@ -19,6 +19,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -177,7 +178,7 @@ public class LintServer {
     if (engine == null) {
       var delphiConfig =
           new StandaloneDelphiConfiguration(
-              requestInitialize.getBdsPath(), requestInitialize.getCompilerVersion());
+              requestInitialize.getBdsPath(), requestInitialize.getCompilerVersion(), Path.of(requestInitialize.getSonarDelphiJarPath()));
 
       if (!requestInitialize.getSonarHostUrl().isEmpty()) {
         sonarqube =

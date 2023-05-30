@@ -6,6 +6,7 @@ public class RequestInitialize {
   private String sonarHostUrl;
   private String projectKey;
   private String languageKey;
+  private String sonarDelphiJarPath;
 
   public String getBdsPath() {
     return bdsPath;
@@ -25,5 +26,9 @@ public class RequestInitialize {
 
   public String getLanguageKey() {
     return languageKey;
+  }
+
+  public String getSonarDelphiJarPath() {
+    return sonarDelphiJarPath;
   }
 }
