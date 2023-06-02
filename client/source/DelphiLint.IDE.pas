@@ -15,6 +15,7 @@ uses
   , DelphiLint.Logger
   , DockForm
   , DelphiLint.Events
+  , DelphiLint.ProjectOptions
   ;
 
 type
@@ -46,7 +47,13 @@ type
 
     function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
 
-    procedure AnalyzeActiveProject;
+
+    procedure AnalyzeFiles(
+      const Files: TArray<string>;
+      const BaseDir: string;
+      const SonarHostUrl: string = '';
+      const ProjectKey: string = '');
+    procedure AnalyzeActiveFile;
 
     property OnAnalysisComplete: TEventNotifier<TArray<TLintIssue>> read FOnAnalysisComplete;
   end;
@@ -119,7 +126,6 @@ uses
   , System.Generics.Defaults
   , System.Math
   , DelphiLint.Settings
-  , DelphiLint.ProjectOptions
   , System.IOUtils
   ;
 
@@ -129,13 +135,12 @@ var
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintIDE.AnalyzeActiveProject;
+procedure TLintIDE.AnalyzeActiveFile;
 var
   AllFiles: TArray<string>;
   ProjectFile: string;
   MainFile: string;
   PasFiles: TArray<string>;
-  Server: TLintServer;
   SourceEditor: IOTASourceEditor;
   ProjectOptions: TLintProjectOptions;
   ProjectDir: string;
@@ -145,36 +150,62 @@ begin
     Exit;
   end;
 
-  if not FAnalyzing then begin
-    FAnalyzing := True;
-    FOutputLog.Clear;
-    FOutputLog.Info('Analysis in progress...');
+  DelphiLint.IDEUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
 
-    DelphiLint.IDEUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
+  ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+  ProjectDir := ProjectOptions.ProjectBaseDir;
+  if ProjectDir = '' then begin
+    ProjectDir := TPath.GetDirectoryName(ProjectFile);
+  end;
 
-    ProjectOptions := TLintProjectOptions.Create(ProjectFile);
-    ProjectDir := ProjectOptions.ProjectBaseDir;
-    if ProjectDir = '' then begin
-      ProjectDir := TPath.GetDirectoryName(ProjectFile);
+  AnalyzeFiles(
+    [ProjectFile, SourceEditor.FileName],
+    ProjectDir,
+    ProjectOptions.SonarHostUrl,
+    ProjectOptions.ProjectKey);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintIDE.AnalyzeFiles(
+  const Files: TArray<string>;
+  const BaseDir: string;
+  const SonarHostUrl: string = '';
+  const ProjectKey: string = '');
+var
+  Server: TLintServer;
+  FilePath: string;
+begin
+  if FAnalyzing then begin
+    Log.Info('Already in analysis.');
+    Exit;
+  end;
+
+  FAnalyzing := True;
+  FOutputLog.Clear;
+  FOutputLog.Info('Analysis in progress...');
+
+  FLastAnalyzedFiles.Clear;
+  for FilePath in Files do begin
+    if DelphiLint.IDEUtils.IsPasFile(FilePath) or DelphiLint.IDEUtils.IsMainFile(FilePath) then begin
+      FLastAnalyzedFiles.Add(FilePath);
     end;
+  end;
 
-    FLastAnalyzedFiles.Clear;
-    FLastAnalyzedFiles.Add(SourceEditor.FileName);
-
-    Server := GetOrInitServer;
-    if Assigned(Server) then begin
-      Log.Info('Server connected for analysis.');
-      Server.Analyze(
-        ProjectDir,
-        [SourceEditor.FileName, ProjectFile, MainFile],
-        LintIDE.OnAnalyzeResult,
-        LintIDE.OnAnalyzeError,
-        ProjectOptions.SonarHostUrl,
-        ProjectOptions.ProjectKey);
-    end
-    else begin
-      Log.Info('Server connection could not be established.');
-    end;
+  Server := GetOrInitServer;
+  if Assigned(Server) then begin
+    Log.Info('Server connected for analysis.');
+    Server.Analyze(
+      BaseDir,
+      Files,
+      LintIDE.OnAnalyzeResult,
+      LintIDE.OnAnalyzeError,
+      SonarHostUrl,
+      ProjectKey);
+  end
+  else begin
+    Log.Info('Server connection could not be established.');
+    FOutputLog.Info('Analysis failed - server connection could not be established.');
   end;
 end;
 
@@ -186,7 +217,7 @@ begin
     'analyzeproject',
     'Analyze Project with DelphiLint',
     procedure begin
-      LintIDE.AnalyzeActiveProject;
+      LintIDE.AnalyzeActiveFile;
     end
   ));
 
@@ -240,7 +271,7 @@ begin
     for Issue in FileIssues do begin
       FOutputLog.Info(
         Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
-        ToWindowsPath(DelphiLint.IDEUtils.GetProjectDirectory + '\' + Issue.FilePath),
+        Issue.FilePath,
         Issue.Range.StartLine,
         Issue.Range.StartLineOffset);
     end;
@@ -260,18 +291,11 @@ end;
 
 function TLintIDE.GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>;
 var
-  BaseDir: string;
   SanitizedName: string;
   Issue: TLintIssue;
   ResultList: TList<TLintIssue>;
 begin
-  BaseDir := ToUnixPath(DelphiLint.IDEUtils.GetProjectDirectory, True);
   SanitizedName := ToUnixPath(FileName, True);
-
-  if StartsText(BaseDir, SanitizedName) then begin
-    SanitizedName := Copy(SanitizedName, Length(BaseDir) + 2);
-  end;
-
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
