@@ -63,8 +63,14 @@ public class SonarQubeConnection {
   }
 
   public QualityProfile getQualityProfile() {
-    var rootNode =
-        getJson(hostUrl + "/api/qualityprofiles/search?defaults=true&language=" + languageKey);
+    String url = hostUrl + "/api/qualityprofiles/search?language=" + languageKey;
+    if (projectKey.isEmpty()) {
+      url += "&defaults=true";
+    } else {
+      url += "&project=" + projectKey;
+    }
+
+    var rootNode = getJson(url);
 
     if (rootNode != null) {
       var profilesArray = rootNode.get("profiles");
@@ -77,6 +83,14 @@ public class SonarQubeConnection {
           return null;
         }
       } else {
+        var errorsArray = rootNode.get("errors");
+        if (errorsArray != null && errorsArray.size() > 0) {
+          var errorMessage = errorsArray.get(0).get("msg");
+          if (errorMessage != null) {
+            throw new IllegalArgumentException(
+                "Error retrieving quality profile: " + errorMessage.asText());
+          }
+        }
         LOG.error("Malformed quality profile response from SonarQube");
       }
     } else {
