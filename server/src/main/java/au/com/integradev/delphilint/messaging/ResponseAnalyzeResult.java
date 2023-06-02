@@ -1,6 +1,7 @@
 package au.com.integradev.delphilint.messaging;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,10 @@ public class ResponseAnalyzeResult {
 
   private ResponseAnalyzeResult(Set<Issue> issues) {
     this.issues = issues;
+  }
+
+  public void convertPathsToAbsolute(Path baseDir) {
+    issues.forEach(issue -> issue.file = baseDir.resolve(issue.file).toString());
   }
 
   public static ResponseAnalyzeResult fromIssueSet(

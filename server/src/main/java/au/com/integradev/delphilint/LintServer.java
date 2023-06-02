@@ -20,7 +20,6 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.function.Consumer;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -102,8 +101,7 @@ public class LintServer {
 
     LOG.info("Received {}", category);
 
-    Consumer<Response> sendMessage =
-        (response -> writeStream(out, id, response));
+    Consumer<Response> sendMessage = (response -> writeStream(out, id, response));
 
     if (category == null) {
       sendMessage.accept(Response.invalidRequest("Unrecognised category"));
@@ -164,23 +162,19 @@ public class LintServer {
       if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
         sonarqube =
             new SonarQubeConnection(
-                requestAnalyze.getSonarHostUrl(),
-                requestAnalyze.getProjectKey(),
-                LANGUAGE_KEY);
+                requestAnalyze.getSonarHostUrl(), requestAnalyze.getProjectKey(), LANGUAGE_KEY);
       }
 
       var issues =
           engine.analyze(
-              requestAnalyze.getBaseDir(),
-              requestAnalyze.getInputFiles(),
-              null,
-              sonarqube);
+              requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null, sonarqube);
 
-      if(sonarqube != null) {
+      if (sonarqube != null) {
         issues = SonarQubeUtils.populateIssueMessages(sonarqube, issues);
       }
 
       ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
+      result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
       sendMessage.accept(Response.analyzeResult(result));
     } catch (Exception e) {
       sendMessage.accept(Response.analyzeError(e.getMessage()));
@@ -192,7 +186,9 @@ public class LintServer {
     if (engine == null) {
       var delphiConfig =
           new StandaloneDelphiConfiguration(
-              requestInitialize.getBdsPath(), requestInitialize.getCompilerVersion(), Path.of(requestInitialize.getSonarDelphiJarPath()));
+              requestInitialize.getBdsPath(),
+              requestInitialize.getCompilerVersion(),
+              Path.of(requestInitialize.getSonarDelphiJarPath()));
 
       engine = new DelphiAnalysisEngine(delphiConfig);
     }
