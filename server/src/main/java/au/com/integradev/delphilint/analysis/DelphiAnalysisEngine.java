@@ -68,7 +68,10 @@ public class DelphiAnalysisEngine implements AutoCloseable {
                     .collect(Collectors.toUnmodifiableList()));
 
     if (connection != null) {
-      Set<ActiveRule> activeRules = connection.getActiveRules();
+      Set<ActiveRule> activeRules =
+          connection.getActiveRules().stream()
+              .filter(rule -> !RuleUtils.isIncompatible(rule.getRuleKey()))
+              .collect(Collectors.toSet());
       configBuilder.addActiveRules(activeRules);
       LOG.info("Added " + activeRules.size() + " active rules");
     }
