@@ -7,7 +7,8 @@ public class StandaloneDelphiConfiguration implements DelphiConfiguration {
   private final String compilerVersion;
   private final Path sonarDelphiJarPath;
 
-  public StandaloneDelphiConfiguration(String bdsPath, String compilerVersion, Path sonarDelphiJarPath) {
+  public StandaloneDelphiConfiguration(
+      String bdsPath, String compilerVersion, Path sonarDelphiJarPath) {
     this.bdsPath = bdsPath;
     this.compilerVersion = compilerVersion;
     this.sonarDelphiJarPath = sonarDelphiJarPath;

@@ -37,14 +37,19 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     var pluginInstances =
         new PluginInstancesRepository(
             new PluginInstancesRepository.Configuration(
-                Set.of(delphiConfig.getSonarDelphiJarPath()), engineConfig.getEnabledLanguages(), Optional.empty()));
+                Set.of(delphiConfig.getSonarDelphiJarPath()),
+                engineConfig.getEnabledLanguages(),
+                Optional.empty()));
 
     globalContainer = new GlobalAnalysisContainer(engineConfig, pluginInstances);
     globalContainer.startComponents();
   }
 
   public Set<Issue> analyze(
-      Path baseDir, Set<Path> inputFiles, ClientProgressMonitor progressMonitor, SonarQubeConnection connection) {
+      Path baseDir,
+      Set<Path> inputFiles,
+      ClientProgressMonitor progressMonitor,
+      SonarQubeConnection connection) {
 
     var configBuilder =
         AnalysisConfiguration.builder()

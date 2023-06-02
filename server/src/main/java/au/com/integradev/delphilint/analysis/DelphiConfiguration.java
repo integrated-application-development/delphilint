@@ -6,5 +6,6 @@ public interface DelphiConfiguration {
   public String getBdsPath();
 
   public String getCompilerVersion();
+
   public Path getSonarDelphiJarPath();
 }
