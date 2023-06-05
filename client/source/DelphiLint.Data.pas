@@ -47,8 +47,8 @@ constructor TRange.FromJson(Json: TJsonObject);
 begin
   StartLine := Json.GetValue<Integer>('startLine', 0);
   EndLine := Json.GetValue<Integer>('endLine', 0);
-  StartLineOffset := Json.GetValue<Integer>('startLineOffset', 0);
-  EndLineOffset := Json.GetValue<Integer>('endLineOffset', 0);
+  StartLineOffset := Json.GetValue<Integer>('startOffset', 0);
+  EndLineOffset := Json.GetValue<Integer>('endOffset', 0);
 end;
 
 //______________________________________________________________________________________________________________________
