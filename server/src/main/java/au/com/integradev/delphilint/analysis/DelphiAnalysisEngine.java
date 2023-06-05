@@ -1,10 +1,16 @@
 package au.com.integradev.delphilint.analysis;
 
+import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
+import au.com.integradev.delphilint.sonarqube.ConnectedList;
+import au.com.integradev.delphilint.sonarqube.ServerIssue;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
+import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sonar.api.utils.log.Logger;
@@ -17,6 +23,7 @@ import org.sonarsource.sonarlint.core.analysis.container.global.GlobalAnalysisCo
 import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.progress.ClientProgressMonitor;
 import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
+import org.sonarsource.sonarlint.core.issuetracking.Tracker;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginInstancesRepository;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
@@ -45,12 +52,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     globalContainer.startComponents();
   }
 
-  public Set<Issue> analyze(
-      Path baseDir,
-      Set<Path> inputFiles,
-      ClientProgressMonitor progressMonitor,
-      SonarQubeConnection connection) {
-
+  private AnalysisConfiguration buildConfiguration(
+      Path baseDir, Set<Path> inputFiles, SonarQubeConnection connection) {
     var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
@@ -76,14 +79,50 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       LOG.info("Added " + activeRules.size() + " active rules");
     }
 
-    var config = configBuilder.build();
+    return configBuilder.build();
+  }
+
+  public Set<Issue> analyze(
+      Path baseDir,
+      Set<Path> inputFiles,
+      ClientProgressMonitor progressMonitor,
+      SonarQubeConnection connection) {
+
+    AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection);
 
     var moduleContainer =
         globalContainer.getModuleRegistry().createTransientContainer(config.inputFiles());
+    Set<Issue> issues = new HashSet<>();
 
-    var issues = new HashSet<Issue>();
     moduleContainer.analyze(config, issues::add, new ProgressMonitor(progressMonitor));
+
+    issues = postProcessIssues(issues, connection);
+
     return issues;
+  }
+
+  private Set<Issue> postProcessIssues(Set<Issue> issues, SonarQubeConnection connection) {
+    Queue<ClientTrackable> clientTrackables =
+        SonarQubeUtils.populateIssueMessages(connection, issues).stream()
+            .map(TrackableWrappers.ClientTrackable::new)
+            .collect(Collectors.toCollection(LinkedList::new));
+    Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
+
+    ConnectedList<ServerIssue> resolvedIssues = connection.getResolvedIssues();
+    for (ServerIssue resolvedIssue : resolvedIssues) {
+      serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
+    }
+
+    Tracker<TrackableWrappers.ClientTrackable, TrackableWrappers.ServerTrackable> tracker =
+        new Tracker<>();
+    var tracking = tracker.track(() -> clientTrackables, () -> serverTrackables);
+
+    Set<Issue> returnIssues = new HashSet<>();
+    tracking
+        .getUnmatchedRaws()
+        .iterator()
+        .forEachRemaining(trackable -> returnIssues.add(trackable.getClientObject()));
+    return returnIssues;
   }
 
   @Override

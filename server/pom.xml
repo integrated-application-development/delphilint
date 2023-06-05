@@ -46,6 +46,16 @@
       <version>8.11.0.56591</version>
     </dependency>
     <dependency>
+      <groupId>org.sonarsource.sonarlint.core</groupId>
+      <artifactId>sonarlint-core</artifactId>
+      <version>8.11.0.56591</version>
+    </dependency>
+    <dependency>
+      <groupId>org.sonarsource.sonarlint.core</groupId>
+      <artifactId>sonarlint-issue-tracking</artifactId>
+      <version>8.11.0.56591</version>
+    </dependency>
+    <dependency>
     <groupId>com.fasterxml.jackson.core</groupId>
     <artifactId>jackson-databind</artifactId>
     <version>2.14.1</version>

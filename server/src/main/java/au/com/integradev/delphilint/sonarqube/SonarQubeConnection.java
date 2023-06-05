@@ -1,76 +1,39 @@
 package au.com.integradev.delphilint.sonarqube;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandler;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 
 public class SonarQubeConnection {
   private static final Logger LOG = Loggers.get(SonarQubeConnection.class);
-  private final String hostUrl;
   private final String projectKey;
   private final String languageKey;
-  private final HttpClient http;
   private final ObjectMapper jsonMapper;
-  private final XmlMapper xmlMapper;
+  private final ApiConnection api;
 
   public SonarQubeConnection(String hostUrl, String projectKey, String languageKey) {
-    this.hostUrl = hostUrl;
+    this.api = new ApiConnection(hostUrl);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
-    this.http = HttpClient.newHttpClient();
     this.jsonMapper = new ObjectMapper();
-    this.xmlMapper = new XmlMapper();
-  }
-
-  private <T> T getResponse(String url, BodyHandler<Supplier<T>> handler) {
-    var request = HttpRequest.newBuilder(URI.create(url)).build();
-
-    LOG.info("Sending request: " + url);
-
-    try {
-      var response = http.send(request, handler);
-      return response.body().get();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
-    return null;
-  }
-
-  private JsonNode getJson(String url) {
-    return getResponse(url, new JsonBodyHandler());
-  }
-
-  private <T> T getXml(String url, Class<T> clazz) {
-    return getResponse(url, new XmlBodyHandler<>(clazz));
   }
 
   public QualityProfile getQualityProfile() {
-    String url = hostUrl + "/api/qualityprofiles/search?language=" + languageKey;
+    String url = "/api/qualityprofiles/search?language=" + languageKey;
     if (projectKey.isEmpty()) {
       url += "&defaults=true";
     } else {
       url += "&project=" + projectKey;
     }
 
-    var rootNode = getJson(url);
+    var rootNode = api.getJson(url);
 
     if (rootNode != null) {
       var profilesArray = rootNode.get("profiles");
@@ -106,9 +69,8 @@ public class SonarQubeConnection {
     if (profile == null) return Collections.emptyMap();
 
     var rootNode =
-        getJson(
-            hostUrl
-                + "/api/rules/search?ps=500&activation=true&f=name&language="
+        api.getJson(
+            "/api/rules/search?ps=500&activation=true&f=name&language="
                 + languageKey
                 + "&qprofile="
                 + profile.getKey());
@@ -124,14 +86,25 @@ public class SonarQubeConnection {
     return ruleMap;
   }
 
+  public ConnectedList<ServerIssue> getResolvedIssues() {
+    if (projectKey.isEmpty()) {
+      return null;
+    }
+
+    return new ConnectedList<>(
+        api,
+        "/api/issues/search?resolved=true&componentKeys=" + projectKey,
+        "issues",
+        ServerIssue.class);
+  }
+
   public Set<ActiveRule> getActiveRules() {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();
 
     var rootNode =
-        getJson(
-            hostUrl
-                + "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language="
+        api.getJson(
+            "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language="
                 + languageKey
                 + "&qprofile="
                 + profile.getKey());

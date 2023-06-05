@@ -10,7 +10,6 @@ import au.com.integradev.delphilint.messaging.RequestInitialize;
 import au.com.integradev.delphilint.messaging.Response;
 import au.com.integradev.delphilint.messaging.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
-import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -169,15 +168,13 @@ public class LintServer {
           engine.analyze(
               requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null, sonarqube);
 
-      if (sonarqube != null) {
-        issues = SonarQubeUtils.populateIssueMessages(sonarqube, issues);
-      }
-
       ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
       result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
       sendMessage.accept(Response.analyzeResult(result));
     } catch (Exception e) {
-      sendMessage.accept(Response.analyzeError(e.getMessage()));
+      e.printStackTrace();
+      sendMessage.accept(
+          Response.analyzeError(e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
   }
 
