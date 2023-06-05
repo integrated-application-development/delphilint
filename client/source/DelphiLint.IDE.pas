@@ -16,6 +16,7 @@ uses
   , DockForm
   , DelphiLint.Events
   , DelphiLint.ProjectOptions
+  , DelphiLint.EditorSync
   ;
 
 type
@@ -47,6 +48,7 @@ type
 
     function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
 
+    procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
     procedure AnalyzeFiles(
       const Files: TArray<string>;
@@ -80,24 +82,32 @@ type
   TLintEditorNotifier = class(TNotifierObject, IOTANotifier, IOTAEditorNotifier, INTAEditServicesNotifier)
   private
     FNotifiers: TDictionary<IOTAEditView, Integer>;
+    FTrackers: TObjectDictionary<IOTAEditView, TEditorLineTracker>;
+
+    procedure OnTrackedLineChanged(const ChangedLine: TChangedLine);
+
+    procedure InitView(const View: IOTAEditView);
+    procedure DeinitView(const View: IOTAEditView);
+    function IsViewInited(const View: IOTAEditView): Boolean;
+    procedure OnAnalysisComplete(const Issues: TArray<TLintIssue>);
   public
     constructor Create;
     destructor Destroy; override;
     procedure ViewActivated(const View: IOTAEditView);
     procedure ViewNotification(const View: IOTAEditView; Operation: TOperation);
+    procedure EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
 
     procedure WindowShow(const EditWindow: INTAEditWindow; Show, LoadedFromDesktop: Boolean);
     procedure WindowNotification(const EditWindow: INTAEditWindow; Operation: TOperation);
     procedure WindowActivated(const EditWindow: INTAEditWindow);
     procedure WindowCommand(const EditWindow: INTAEditWindow; Command, Param: Integer; var Handled: Boolean);
-    procedure EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
     procedure EditorViewModified(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
     procedure DockFormVisibleChanged(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
     procedure DockFormUpdated(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
     procedure DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
   end;
 
-  TLintEditViewNotifier = class(TNotifierObject, IOTANotifier, INTAEditViewNotifier)
+  TLintViewNotifier = class(TNotifierObject, IOTANotifier, INTAEditViewNotifier)
   private
     FRepaint: Boolean;
     procedure OnAnalysisComplete(const Issues: TArray<TLintIssue>);
@@ -253,7 +263,6 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
-
 procedure TLintIDE.DisplayIssues;
 var
   FileIssues: TArray<TLintIssue>;
@@ -281,7 +290,6 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
-
 function OrderByStartLine(const Left, Right: TLintIssue): Integer;
 begin
   Result := TComparer<Integer>.Default.Compare(Left.Range.StartLine, Right.Range.StartLine);
@@ -303,15 +311,18 @@ begin
     end
     else begin
       ResultList := TList<TLintIssue>.Create;
-
-      for Issue in FActiveIssues[SanitizedName] do begin
-        if (Issue.Range.StartLine >= Line) and (Issue.Range.EndLine <= Line) then begin
-          ResultList.Add(Issue);
+      try
+        for Issue in FActiveIssues[SanitizedName] do begin
+          if (Issue.Range.StartLine >= Line) and (Issue.Range.EndLine <= Line) then begin
+            ResultList.Add(Issue);
+          end;
         end;
-      end;
 
-      ResultList.Sort(TComparer<TLintIssue>.Construct(OrderByStartLine));
-      Result := ResultList.ToArray;
+        ResultList.Sort(TComparer<TLintIssue>.Construct(OrderByStartLine));
+        Result := ResultList.ToArray;
+      finally
+        FreeAndNil(ResultList);
+      end;
     end;
   end;
 end;
@@ -403,6 +414,36 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintIDE.UpdateIssueLine(FilePath: string; OriginalLine, NewLine: Integer);
+var
+  SanitizedPath: string;
+  Issue: TLintIssue;
+  Delta: Integer;
+  Index: Integer;
+  NewRange: TRange;
+begin
+  SanitizedPath := ToUnixPath(FilePath, True);
+
+  Delta := NewLine - OriginalLine;
+
+  Log.Info(Format('Updating line from %d to %d', [OriginalLine, NewLine]));
+
+  if FActiveIssues.ContainsKey(SanitizedPath) then begin
+    for Index := 0 to FActiveIssues[SanitizedPath].Count - 1 do begin
+      Issue := FActiveIssues[SanitizedPath][Index];
+
+      if Issue.Range.StartLine = OriginalLine then begin
+        NewRange := Issue.Range;
+        NewRange.StartLine := NewRange.StartLine + Delta;
+        NewRange.EndLine := NewRange.EndLine + Delta;
+        Issue.Range := NewRange;
+      end;
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function LintIDE: TLintIDE;
 begin
   if not Assigned(G_LintIDE) then begin
@@ -457,19 +498,28 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
+//
+// TLintViewNotifier
+//
+//______________________________________________________________________________________________________________________
+
 
 constructor TLintEditorNotifier.Create;
 begin
   FNotifiers := TDictionary<IOTAEditView, Integer>.Create;
+  FTrackers := TObjectDictionary<IOTAEditView, TEditorLineTracker>.Create;
+
+  LintIDE.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+
   Log.Info('Editor notifier created');
 end;
-
-//______________________________________________________________________________________________________________________
 
 destructor TLintEditorNotifier.Destroy;
 var
   View: IOTAEditView;
 begin
+  LintIDE.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+
   for View in FNotifiers.Keys do begin
     if Assigned(View) then begin
       View.RemoveNotifier(FNotifiers[View]);
@@ -477,31 +527,91 @@ begin
   end;
 
   FreeAndNil(FNotifiers);
+  FreeAndNil(FTrackers);
   inherited;
 end;
 
-//______________________________________________________________________________________________________________________
+procedure TLintEditorNotifier.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+begin
+  Log.Info('View activated...');
+  if not IsViewInited(EditView) then begin
+    InitView(EditView);
+  end;
+end;
+
+procedure TLintEditorNotifier.ViewNotification(const View: IOTAEditView; Operation: TOperation);
+begin
+  if Operation = opInsert then begin
+    Log.Info('View created...');
+    InitView(View);
+  end
+  else if IsViewInited(View) then begin
+    Log.Info('View removed...');
+    DeinitView(View);
+  end;
+end;
+
+procedure TLintEditorNotifier.InitView(const View: IOTAEditView);
+var
+  Tracker: TEditorLineTracker;
+begin
+  FNotifiers.Add(View, View.AddNotifier(TLintViewNotifier.Create));
+
+  Tracker := TEditorLineTracker.Create(View.Buffer.GetEditLineTracker);
+  Tracker.OnLineChanged.AddListener(OnTrackedLineChanged);
+  FTrackers.Add(View, Tracker);
+
+  Log.Info('Initialised view for ' + View.Buffer.FileName);
+end;
+
+procedure TLintEditorNotifier.DeinitView(const View: IOTAEditView);
+begin
+  View.RemoveNotifier(FNotifiers[View]);
+  FNotifiers.Remove(View);
+  FTrackers.Remove(View);
+  Log.Info('Deinitialised view for ' + View.Buffer.FileName);
+end;
+
+function TLintEditorNotifier.IsViewInited(const View: IOTAEditView): Boolean;
+begin
+  Result := FNotifiers.ContainsKey(View);
+end;
+
+procedure TLintEditorNotifier.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+var
+  Tracker: TEditorLineTracker;
+  FileIssues: TArray<TLintIssue>;
+  Issue: TLintIssue;
+begin
+  Log.Info('Resetting tracking for ' + IntToStr(FTrackers.Count) + ' trackers.');
+
+  for Tracker in FTrackers.Values do begin
+    Log.Info('Setting tracking for tracker for ' + Tracker.FilePath);
+    Tracker.ClearTracking;
+
+    FileIssues := LintIDE.GetIssues(Tracker.FilePath);
+    for Issue in FileIssues do begin
+      Log.Info('Tracking line ' + IntToStr(Issue.Range.StartLine) + ' in ' + Issue.FilePath);
+      Tracker.TrackLine(Issue.Range.StartLine);
+    end;
+  end;
+end;
+
+procedure TLintEditorNotifier.OnTrackedLineChanged(const ChangedLine: TChangedLine);
+begin
+  Log.Info(Format('Change: %d->%d (%s)', [ChangedLine.FromLine, ChangedLine.ToLine, ChangedLine.Tracker.FilePath]));
+  LintIDE.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
+end;
+
+procedure TLintEditorNotifier.EditorViewModified(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+begin
+  // Exposed for interface
+end;
 
 procedure TLintEditorNotifier.ViewActivated(const View: IOTAEditView);
 begin
   // Exposed for interface
 end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintEditorNotifier.ViewNotification(const View: IOTAEditView; Operation: TOperation);
-begin
-  if Operation = opInsert then begin
-    Log.Info('View created');
-    FNotifiers.Add(View, View.AddNotifier(TLintEditViewNotifier.Create));
-  end
-  else if FNotifiers.ContainsKey(View) then begin
-    Log.Info('View removed');
-    FNotifiers.Remove(View);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
 
 procedure TLintEditorNotifier.DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
 begin
@@ -518,31 +628,37 @@ begin
   // Exposed for interface
 end;
 
-constructor TLintEditViewNotifier.Create;
+//______________________________________________________________________________________________________________________
+//
+// TLintViewNotifier
+//
+//______________________________________________________________________________________________________________________
+
+constructor TLintViewNotifier.Create;
 begin
   FRepaint := False;
   LintIDE.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 end;
 
-destructor TLintEditViewNotifier.Destroy;
+destructor TLintViewNotifier.Destroy;
 begin
   LintIDE.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   inherited;
 end;
 
-procedure TLintEditViewNotifier.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+procedure TLintViewNotifier.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
 begin
   FRepaint := True;
 end;
 
-procedure TLintEditViewNotifier.EditorIdle(const View: IOTAEditView);
+procedure TLintViewNotifier.EditorIdle(const View: IOTAEditView);
 begin
   if FRepaint then begin
     View.GetEditWindow.Form.Repaint;
   end;
 end;
 
-procedure TLintEditViewNotifier.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
+procedure TLintViewNotifier.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
 begin
   if FRepaint then begin
     FullRepaint := True;
@@ -550,26 +666,12 @@ begin
   end;
 end;
 
-procedure TLintEditorNotifier.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
-begin
-  Log.Info('Editor view activated');
-  if not FNotifiers.ContainsKey(EditView) then begin
-    Log.Info('View created');
-    FNotifiers.Add(EditView, EditView.AddNotifier(TLintEditViewNotifier.Create));
-  end;
-end;
-
-procedure TLintEditorNotifier.EditorViewModified(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
-begin
-  Log.Info('Editor view modified');
-end;
-
-procedure TLintEditViewNotifier.EndPaint(const View: IOTAEditView);
+procedure TLintViewNotifier.EndPaint(const View: IOTAEditView);
 begin
   // Exposed for interface
 end;
 
-procedure TLintEditViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: Integer; const LineText: PAnsiChar;
+procedure TLintViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: Integer; const LineText: PAnsiChar;
   const TextWidth: Word; const LineAttributes: TOTAAttributeArray; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 

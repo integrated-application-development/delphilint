@@ -32,7 +32,7 @@ type
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
     property FilePath: string read FFilePath;
-    property Range: TRange read FRange;
+    property Range: TRange read FRange write FRange;
 
     constructor FromJson(Json: TJsonObject);
   end;
