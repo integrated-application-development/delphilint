@@ -55,7 +55,7 @@ type
 
     procedure InitView(const View: IOTAEditView);
     function IsViewInited(const View: IOTAEditView): Boolean;
-    procedure OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+    procedure OnAnalysisComplete;
   public
     constructor Create;
     destructor Destroy; override;
@@ -66,7 +66,7 @@ type
   TLintView = class(TViewNotifierBase)
   private
     FRepaint: Boolean;
-    procedure OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+    procedure OnAnalysisComplete;
   public
     constructor Create;
     destructor Destroy; override;
@@ -78,7 +78,6 @@ type
   end;
 
 //______________________________________________________________________________________________________________________
-
 procedure Register;
 
 implementation
@@ -251,11 +250,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+procedure TLintEditor.OnAnalysisComplete;
 var
   Tracker: TEditorLineTracker;
-  FileIssues: TArray<TLintIssue>;
-  Issue: TLintIssue;
+  FileIssues: TArray<TLiveIssue>;
+  Issue: TLiveIssue;
 begin
   Log.Info('Resetting tracking for ' + IntToStr(FTrackers.Count) + ' trackers.');
 
@@ -265,8 +264,9 @@ begin
 
     FileIssues := Plugin.GetIssues(Tracker.FilePath);
     for Issue in FileIssues do begin
-      Log.Info('Tracking line ' + IntToStr(Issue.Range.StartLine) + ' in ' + Issue.FilePath);
-      Tracker.TrackLine(Issue.Range.StartLine);
+      Log.Info(Format('Tracking line %d (now %d) in %s', [Issue.StartLine, Issue.OriginalStartLine, Issue.FilePath]));
+      Tracker.TrackLine(Issue.StartLine);
+      Issue.NewLineMoveSession;
     end;
   end;
 end;
@@ -303,7 +303,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintView.OnAnalysisComplete(const Issues: TArray<TLintIssue>);
+procedure TLintView.OnAnalysisComplete;
 begin
   FRepaint := True;
 end;
@@ -363,8 +363,8 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
 
 var
   CurrentModule: IOTAModule;
-  Issues: TArray<TLintIssue>;
-  Issue: TLintIssue;
+  Issues: TArray<TLiveIssue>;
+  Issue: TLiveIssue;
   Msg: string;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
@@ -373,7 +373,7 @@ begin
   if Length(Issues) > 0 then begin
     for Issue in Issues do begin
       Msg := Msg + ' - ' + Issue.Message;
-      DrawLine(Issue.Range.StartLineOffset, Issue.Range.EndLineOffset);
+      DrawLine(Issue.StartLineOffset, Issue.EndLineOffset);
     end;
 
     DrawMessage(Msg);

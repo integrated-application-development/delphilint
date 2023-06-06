@@ -110,7 +110,7 @@ procedure TEditorLineTracker.OnNotifierTriggered(OldLine, NewLine, Data: Integer
 var
   ChangedLine: TChangedLine;
 begin
-  ChangedLine.FromLine := OldLine;
+  ChangedLine.FromLine := Data;
   ChangedLine.ToLine := NewLine;
   ChangedLine.Tracker := Self;
   FOnLineChanged.Notify(ChangedLine);
@@ -120,7 +120,7 @@ end;
 
 procedure TEditorLineTracker.TrackLine(Line: Integer);
 begin
-  FTracker.AddLine(Line, 1);
+  FTracker.AddLine(Line, Line);
   Log.Info('Line ' + IntToStr(Line) + ' tracked');
 end;
 

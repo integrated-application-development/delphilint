@@ -12,19 +12,51 @@ uses
   ;
 
 type
+  TLiveIssue = class(TObject)
+  private
+    FRuleKey: string;
+    FMessage: string;
+    FFilePath: string;
+    FStartLine: Integer;
+    FEndLine: Integer;
+    FStartLineOffset: Integer;
+    FEndLineOffset: Integer;
+    FLinesMoved: Integer;
+    FLastLinesMoved: Integer;
+
+    function GetStartLine: Integer;
+    function GetEndLine: Integer;
+    function GetLinesMoved: Integer;
+
+  public
+    property RuleKey: string read FRuleKey;
+    property Message: string read FMessage;
+    property FilePath: string read FFilePath write FFilePath;
+    property OriginalStartLine: Integer read FStartLine;
+    property OriginalEndLine: Integer read FEndLine;
+    property StartLine: Integer read GetStartLine;
+    property EndLine: Integer read GetEndLine;
+    property StartLineOffset: Integer read FStartLineOffset;
+    property EndLineOffset: Integer read FEndLineOffset;
+    property LinesMoved: Integer read FLinesMoved write FLinesMoved;
+
+    constructor CreateFromData(Issue: TLintIssue);
+    procedure NewLineMoveSession;
+  end;
+
   TLintPlugin = class(TObject)
   private
     FServer: TLintServer;
-    FActiveIssues: TDictionary<string, TList<TLintIssue>>;
+    FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FLastAnalyzedFiles: TStringList;
     FOutputLog: TLintLogger;
     FAnalyzing: Boolean;
-    FOnAnalysisComplete: TEventNotifier<TArray<TLintIssue>>;
+    FOnAnalysisComplete: TEventNotifier;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     procedure OnAnalyzeResult(Issues: TArray<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
-    procedure RefreshIssues(Issues: TArray<TLintIssue>);
+    procedure SaveIssues(Issues: TArray<TLintIssue>);
     procedure DisplayIssues;
     function GetOrInitServer: TLintServer;
 
@@ -32,7 +64,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>; overload;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>; overload;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
@@ -43,7 +75,7 @@ type
       const ProjectKey: string = '');
     procedure AnalyzeActiveFile;
 
-    property OnAnalysisComplete: TEventNotifier<TArray<TLintIssue>> read FOnAnalysisComplete;
+    property OnAnalysisComplete: TEventNotifier read FOnAnalysisComplete;
   end;
 
 function Plugin: TLintPlugin;
@@ -156,11 +188,11 @@ end;
 constructor TLintPlugin.Create;
 begin
   inherited;
-  FActiveIssues := TDictionary<string, TList<TLintIssue>>.Create;
+  FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
   FOutputLog := TLintLogger.Create('Issues');
   FAnalyzing := False;
   FLastAnalyzedFiles := TStringList.Create;
-  FOnAnalysisComplete := TEventNotifier<TArray<TLintIssue>>.Create;
+  FOnAnalysisComplete := TEventNotifier.Create;
 
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -183,8 +215,8 @@ end;
 
 procedure TLintPlugin.DisplayIssues;
 var
-  FileIssues: TArray<TLintIssue>;
-  Issue: TLintIssue;
+  FileIssues: TArray<TLiveIssue>;
+  Issue: TLiveIssue;
   FileName: string;
   Stale: Boolean;
 begin
@@ -199,8 +231,8 @@ begin
       FOutputLog.Info(
         Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
         Issue.FilePath,
-        Issue.Range.StartLine,
-        Issue.Range.StartLineOffset);
+        Issue.StartLine,
+        Issue.StartLineOffset);
     end;
   end;
 
@@ -209,35 +241,35 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function OrderByStartLine(const Left, Right: TLintIssue): Integer;
+function OrderByStartLine(const Left, Right: TLiveIssue): Integer;
 begin
-  Result := TComparer<Integer>.Default.Compare(Left.Range.StartLine, Right.Range.StartLine);
+  Result := TComparer<Integer>.Default.Compare(Left.OriginalStartLine, Right.OriginalStartLine);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintPlugin.GetIssues(FileName: string; Line: Integer = -1): TArray<TLintIssue>;
+function TLintPlugin.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
 var
   SanitizedName: string;
-  Issue: TLintIssue;
-  ResultList: TList<TLintIssue>;
+  Issue: TLiveIssue;
+  ResultList: TList<TLiveIssue>;
 begin
   SanitizedName := ToUnixPath(FileName, True);
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
-      TArray.Sort<TLintIssue>(Result, TComparer<TLintIssue>.Construct(OrderByStartLine));
+      TArray.Sort<TLiveIssue>(Result, TComparer<TLiveIssue>.Construct(OrderByStartLine));
     end
     else begin
-      ResultList := TList<TLintIssue>.Create;
+      ResultList := TList<TLiveIssue>.Create;
       try
         for Issue in FActiveIssues[SanitizedName] do begin
-          if (Issue.Range.StartLine >= Line) and (Issue.Range.EndLine <= Line) then begin
+          if (Issue.StartLine >= Line) and (Issue.EndLine <= Line) then begin
             ResultList.Add(Issue);
           end;
         end;
 
-        ResultList.Sort(TComparer<TLintIssue>.Construct(OrderByStartLine));
+        ResultList.Sort(TComparer<TLiveIssue>.Construct(OrderByStartLine));
         Result := ResultList.ToArray;
       finally
         FreeAndNil(ResultList);
@@ -276,14 +308,14 @@ end;
 procedure TLintPlugin.OnAnalyzeResult(Issues: TArray<TLintIssue>);
 begin
   FAnalyzing := False;
-  RefreshIssues(Issues);
-  FOnAnalysisComplete.Notify(Issues);
+  SaveIssues(Issues);
+  FOnAnalysisComplete.Notify;
   DisplayIssues;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.RefreshIssues(Issues: TArray<TLintIssue>);
+procedure TLintPlugin.SaveIssues(Issues: TArray<TLintIssue>);
 var
   Issue: TLintIssue;
   SanitizedPath: string;
@@ -305,11 +337,11 @@ begin
       end
       else begin
         // There's no space allocated for this filepath - allocate it
-        FActiveIssues.Add(SanitizedPath, TList<TLintIssue>.Create);
+        FActiveIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
       end;
     end;
 
-    FActiveIssues[SanitizedPath].Add(Issue);
+    FActiveIssues[SanitizedPath].Add(TLiveIssue.CreateFromData(Issue));
   end;
 end;
 
@@ -329,32 +361,62 @@ end;
 procedure TLintPlugin.UpdateIssueLine(FilePath: string; OriginalLine, NewLine: Integer);
 var
   SanitizedPath: string;
-  Issue: TLintIssue;
+  Issue: TLiveIssue;
   Delta: Integer;
   Index: Integer;
-  NewRange: TRange;
 begin
   SanitizedPath := ToUnixPath(FilePath, True);
 
   Delta := NewLine - OriginalLine;
 
-  Log.Info(Format('Updating line from %d to %d', [OriginalLine, NewLine]));
+  Log.Info(Format('Updating line from %d to %d (delta %d)', [OriginalLine, NewLine, Delta]));
 
   if FActiveIssues.ContainsKey(SanitizedPath) then begin
     for Index := 0 to FActiveIssues[SanitizedPath].Count - 1 do begin
       Issue := FActiveIssues[SanitizedPath][Index];
 
-      if Issue.Range.StartLine = OriginalLine then begin
-        NewRange := Issue.Range;
-        NewRange.StartLine := NewRange.StartLine + Delta;
-        NewRange.EndLine := NewRange.EndLine + Delta;
-        Issue.Range := NewRange;
+      if Issue.OriginalStartLine = OriginalLine then begin
+        Issue.LinesMoved := Delta;
       end;
     end;
   end;
 end;
 
 //______________________________________________________________________________________________________________________
+
+constructor TLiveIssue.CreateFromData(Issue: TLintIssue);
+begin
+  FRuleKey := Issue.RuleKey;
+  FMessage := Issue.Message;
+  FFilePath := Issue.FilePath;
+  FStartLine := Issue.Range.StartLine;
+  FEndLine := Issue.Range.EndLine;
+  FStartLineOffset := Issue.Range.StartLineOffset;
+  FEndLineOFfset := Issue.Range.EndLineOffset;
+  FLinesMoved := 0;
+end;
+
+function TLiveIssue.GetStartLine: Integer;
+begin
+  Result := FStartLine + LinesMoved;
+end;
+
+function TLiveIssue.GetEndLine: Integer;
+begin
+  Result := FEndLine + LinesMoved;
+end;
+
+function TLiveIssue.GetLinesMoved: Integer;
+begin
+  Result := FLinesMoved;
+end;
+
+procedure TLiveIssue.NewLineMoveSession;
+begin
+  FStartLine := StartLine;
+  FEndLine := EndLine;
+  FLinesMoved := 0;
+end;
 
 initialization
 
