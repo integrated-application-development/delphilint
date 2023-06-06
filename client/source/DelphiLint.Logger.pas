@@ -141,4 +141,9 @@ begin
   FOnMessageGroupDeleted.Notify(Group);
 end;
 
+initialization
+
+finalization
+  FreeAndNil(G_Log);
+
 end.
