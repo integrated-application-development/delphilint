@@ -93,6 +93,7 @@
         <DCCReference Include="DelphiLint.Settings.pas"/>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
         <DCCReference Include="DelphiLint.EditorSync.pas"/>
+        <DCCReference Include="DelphiLint.Plugin.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

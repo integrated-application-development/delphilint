@@ -6,17 +6,18 @@ uses
     ToolsAPI
   , DelphiLint.Events
   , System.Generics.Collections
+  , DelphiLint.IDEUtils
   ;
 
 type
-  TOnEditorLineChanged = procedure(OldLine: Integer; NewLine: Integer; Data: Integer) of object;
+  TOnEditorLineChanged = reference to procedure(OldLine: Integer; NewLine: Integer; Data: Integer);
 
-  TEditorLineNotifier = class(TNotifierObject, IOTAEditLineNotifier)
+  TEditorLineNotifier = class(TEditLineNotifierBase)
   private
     FOnLineChanged: TOnEditorLineChanged;
   public
     constructor Create(OnLineChanged: TOnEditorLineChanged);
-    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer); override;
   end;
 
   TEditorLineTracker = class;
@@ -31,15 +32,11 @@ type
   private
     FTracker: IOTAEditLineTracker;
     FNotifier: TEditorLineNotifier;
-    FNotifierIndex: Integer;
-    FValid: Boolean;
     FPath: string;
-
+    FOnEditorClosed: TEventNotifier<TEditorLineTracker>;
     FOnLineChanged: TEventNotifier<TChangedLine>;
 
     procedure OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
-  protected
-    procedure Destroyed;
   public
     constructor Create(Tracker: IOTAEditLineTracker);
     destructor Destroy; override;
@@ -48,7 +45,7 @@ type
     procedure ClearTracking;
 
     property OnLineChanged: TEventNotifier<TChangedLine> read FOnLineChanged;
-    property Valid: Boolean read FValid;
+    property OnEditorClosed: TEventNotifier<TEditorLineTracker> read FOnEditorClosed;
     property FilePath: string read FPath;
   end;
 
@@ -59,40 +56,55 @@ uses
   , DelphiLint.Logger
   ;
 
-{ TEditorLineTracker }
+//______________________________________________________________________________________________________________________
 
 procedure TEditorLineTracker.ClearTracking;
 var
   Index: Integer;
 begin
-  for Index := 0 to FTracker.Count-1 do begin
+  for Index := FTracker.Count - 1 downto 0 do begin
     FTracker.Delete(Index);
   end;
 end;
 
+//______________________________________________________________________________________________________________________
+
 constructor TEditorLineTracker.Create(Tracker: IOTAEditLineTracker);
+var
+  NotifierIndex: Integer;
 begin
-  FTracker := Tracker;
-  FNotifier := TEditorLineNotifier.Create(OnNotifierTriggered);
-  FNotifierIndex := Tracker.AddNotifier(FNotifier);
+  FOnEditorClosed := TEventNotifier<TEditorLineTracker>.Create;
   FOnLineChanged := TEventNotifier<TChangedLine>.Create;
-  FValid := True;
   FPath := Tracker.GetEditBuffer.FileName;
+  FTracker := Tracker;
+
+  FNotifier := TEditorLineNotifier.Create(OnNotifierTriggered);
+  NotifierIndex := Tracker.AddNotifier(FNotifier);
+  FNotifier.OnOwnerFreed.AddListener(
+    procedure (const Notf: TNotifierBase) begin
+      FNotifier := nil;
+      OnEditorClosed.Notify(Self);
+    end);
+  FNotifier.OnReleased.AddListener(
+    procedure (const Notf: TNotifierBase) begin
+      FTracker.RemoveNotifier(NotifierIndex);
+    end);
 end;
+
+//______________________________________________________________________________________________________________________
 
 destructor TEditorLineTracker.Destroy;
 begin
-  if FValid then begin
-    FTracker.RemoveNotifier(FNotifierIndex);
+  if Assigned(FNotifier) then begin
+    FNotifier.Release;
   end;
+
   FreeAndNil(FOnLineChanged);
+  FreeAndNil(FOnEditorClosed);
   inherited;
 end;
 
-procedure TEditorLineTracker.Destroyed;
-begin
-  FValid := False;
-end;
+//______________________________________________________________________________________________________________________
 
 procedure TEditorLineTracker.OnNotifierTriggered(OldLine, NewLine, Data: Integer);
 var
@@ -104,24 +116,30 @@ begin
   FOnLineChanged.Notify(ChangedLine);
 end;
 
+//______________________________________________________________________________________________________________________
+
 procedure TEditorLineTracker.TrackLine(Line: Integer);
 begin
-  if FValid then begin
-    FTracker.AddLine(Line, 1);
-  end;
+  FTracker.AddLine(Line, 1);
+  Log.Info('Line ' + IntToStr(Line) + ' tracked');
 end;
 
-{ TEditorLineNotifier }
+//______________________________________________________________________________________________________________________
 
 constructor TEditorLineNotifier.Create(OnLineChanged: TOnEditorLineChanged);
 begin
+  inherited Create;
   FOnLineChanged := OnLineChanged;
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TEditorLineNotifier.LineChanged(OldLine, NewLine, Data: Integer);
 begin
   Log.Info('(line changed)');
   FOnLineChanged(OldLine, NewLine, Data);
 end;
+
+//______________________________________________________________________________________________________________________
 
 end.

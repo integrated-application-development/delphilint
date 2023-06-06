@@ -4,12 +4,28 @@ interface
 
 uses
     ToolsAPI
+  , DelphiLint.IDEUtils
+  , DelphiLint.Events
   ;
 
 type
+  TLintLogger = class;
+
+  TLoggerMessageNotifier = class(TMessageNotifierBase)
+  private
+    FOnMessageGroupDeleted: TEventNotifier<IOTAMessageGroup>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure MessageGroupDeleted(const Group: IOTAMessageGroup); override;
+
+    property OnMessageGroupDeleted: TEventNotifier<IOTAMessageGroup> read FOnMessageGroupDeleted;
+  end;
+
   TLintLogger = class(TObject)
   private
     FLogMessageGroup: IOTAMessageGroup;
+    FMessageNotifier: TLoggerMessageNotifier;
 
   public
     constructor Create(MessageGroupName: string);
@@ -24,6 +40,10 @@ type
 function Log: TLintLogger;
 
 implementation
+
+uses
+    System.SysUtils
+  ;
 
 var
   G_Log: TLintLogger;
@@ -45,13 +65,37 @@ begin
 end;
 
 constructor TLintLogger.Create(MessageGroupName: string);
+var
+  MessageServices: IOTAMessageServices;
+  NotifierIndex: Integer;
 begin
-  FLogMessageGroup := (BorlandIDEServices as IOTAMessageServices).AddMessageGroup('DelphiLint - ' + MessageGroupName);
+  MessageServices := BorlandIDEServices as IOTAMessageServices;
+
+  FLogMessageGroup := MessageServices.AddMessageGroup('DelphiLint - ' + MessageGroupName);
+  FMessageNotifier := TLoggerMessageNotifier.Create;
+  FMessageNotifier.OnMessageGroupDeleted.AddListener(
+    procedure(const Group: IOTAMessageGroup) begin
+      if Assigned(FLogMessageGroup) and (Group.Name = FLogMessageGroup.Name) then begin
+        FLogMessageGroup := nil;
+      end;
+    end);
+  NotifierIndex := MessageServices.AddNotifier(FMessageNotifier);
+  FMessageNotifier.OnReleased.AddListener(
+    procedure(const Notf: TNotifierBase) begin
+      (BorlandIDEServices as IOTAMessageServices).RemoveNotifier(NotifierIndex);
+    end);
+  FMessageNotifier.OnOwnerFreed.AddListener(
+    procedure(const Notf: TNotifierBase) begin
+      FLogMessageGroup := nil;
+    end);
 end;
 
 destructor TLintLogger.Destroy;
 begin
-  (BorlandIDEServices as IOTAMessageServices).RemoveMessageGroup(FLogMessageGroup);
+  FMessageNotifier.Release;
+  if Assigned(FLogMessageGroup) then begin
+    (BorlandIDEServices as IOTAMessageServices).RemoveMessageGroup(FLogMessageGroup);
+  end;
   inherited;
 end;
 
@@ -78,6 +122,23 @@ end;
 procedure TLintLogger.Title(Msg: string);
 begin
   (BorlandIDEServices as IOTAMessageServices).AddTitleMessage(Msg, FLogMessageGroup);
+end;
+
+constructor TLoggerMessageNotifier.Create;
+begin
+  inherited;
+  FOnMessageGroupDeleted := TEventNotifier<IOTAMessageGroup>.Create;
+end;
+
+destructor TLoggerMessageNotifier.Destroy;
+begin
+  FreeAndNil(FOnMessageGroupDeleted);
+  inherited;
+end;
+
+procedure TLoggerMessageNotifier.MessageGroupDeleted(const Group: IOTAMessageGroup);
+begin
+  FOnMessageGroupDeleted.Notify(Group);
 end;
 
 end.

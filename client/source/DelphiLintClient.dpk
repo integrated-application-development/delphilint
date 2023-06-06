@@ -42,6 +42,7 @@ contains
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
-  DelphiLint.EditorSync in 'DelphiLint.EditorSync.pas';
+  DelphiLint.EditorSync in 'DelphiLint.EditorSync.pas',
+  DelphiLint.Plugin in 'DelphiLint.Plugin.pas';
 
 end.
