@@ -152,7 +152,7 @@ begin
   FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
 
   if LintSettings.ServerAutoLaunch then begin
-    StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, True);
+    StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, LintSettings.ServerShowConsole);
     Sleep(LintSettings.ServerStartDelay);
   end;
 
@@ -340,6 +340,7 @@ var
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
   ErrorCode: Integer;
+  CreationFlags: Cardinal;
 begin
   if not FileExists(Jar) then begin
     raise Exception.CreateFmt('Server jar not found at path "%s".', [Jar]);
@@ -354,8 +355,13 @@ begin
   ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
   StartupInfo.cb := SizeOf(TStartupInfo);
 
+  CreationFlags := NORMAL_PRIORITY_CLASS;
   if ShowConsole then begin
     StartupInfo.lpTitle := C_Title;
+    CreationFlags := CreationFlags or CREATE_NEW_CONSOLE;
+  end
+  else begin
+    CreationFlags := CreationFlags or DETACHED_PROCESS;
   end;
 
   if not CreateProcess(
@@ -364,7 +370,7 @@ begin
     nil,
     nil,
     False,
-    NORMAL_PRIORITY_CLASS or CREATE_NEW_CONSOLE,
+    CreationFlags,
     nil,
     nil,
     StartupInfo,
