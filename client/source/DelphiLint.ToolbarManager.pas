@@ -55,6 +55,7 @@ uses
   , DelphiLint.Plugin
   , System.Math
   , DelphiLint.Logger
+  , System.StrUtils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -132,11 +133,11 @@ procedure TLintToolbarManager.AnalysisSucceeded(IssueCount: Integer; Outdated: B
 begin
   if IssueCount = 0 then begin
     FLintButton.ImageIndex := FImageIndexOffset + IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
-    FProgLabel.Caption := Format('No issues', [IssueCount]);
+    FProgLabel.Caption := Format('No issues%s', [IssueCount, IfThen(Outdated, ' (outdated)', '')]);
   end
   else begin
     FLintButton.ImageIndex := FImageIndexOffset + IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
-    FProgLabel.Caption := Format('%d issues', [IssueCount]);
+    FProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
   end;
   FLintButton.Hint := 'Analysis succeeded';
   FProgBar.Style := TProgressBarStyle.pbstNormal;
