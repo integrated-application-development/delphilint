@@ -3,7 +3,7 @@
         <Base>True</Base>
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <FrameworkType>None</FrameworkType>
+        <FrameworkType>VCL</FrameworkType>
         <MainSource>DelphiLintClient.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{26783A2A-7221-40E7-AD37-9319A2677FB0}</ProjectGuid>
@@ -39,7 +39,6 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
     </PropertyGroup>
@@ -94,6 +93,12 @@
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
         <DCCReference Include="DelphiLint.EditorSync.pas"/>
         <DCCReference Include="DelphiLint.Plugin.pas"/>
+        <DCCReference Include="DelphiLint.Registrar.pas"/>
+        <DCCReference Include="DelphiLint.ToolbarManager.pas">
+            <Form>LintControlsModule</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
