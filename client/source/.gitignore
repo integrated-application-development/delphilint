@@ -6,3 +6,4 @@ target/
 *.identcache
 delph.xml
 .scannerwork/
+*.delphilint
