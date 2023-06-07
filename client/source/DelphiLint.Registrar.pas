@@ -12,7 +12,6 @@ uses
   , DelphiLint.ToolbarManager
   , DelphiLint.Plugin
   , System.SysUtils
-  , Vcl.Forms
   ;
 
 var
@@ -20,6 +19,8 @@ var
   GToolbar: TLintToolbarManager;
 
 procedure Register;
+var
+  Editor: TLintEditor;
 begin
   RegisterPackageWizard(TLintMenuItem.Create(
     'analyzeproject',
@@ -29,8 +30,11 @@ begin
     end
   ));
 
-  GEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(TLintEditor.Create);
+  Editor := TLintEditor.Create;
+  GEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(Editor);
+
   GToolbar := TLintToolbarManager.Create(nil);
+  Editor.OnActiveFileChanged.AddListener(GToolbar.ActiveFileChanged);
 end;
 
 initialization

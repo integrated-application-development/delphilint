@@ -22,11 +22,9 @@ type
     FStartLineOffset: Integer;
     FEndLineOffset: Integer;
     FLinesMoved: Integer;
-    FLastLinesMoved: Integer;
 
     function GetStartLine: Integer;
     function GetEndLine: Integer;
-    function GetLinesMoved: Integer;
 
   public
     property RuleKey: string read FRuleKey;
@@ -44,14 +42,36 @@ type
     procedure NewLineMoveSession;
   end;
 
+  TFileAnalysisHistory = record
+    AnalysisTime: TDateTime;
+    Success: Boolean;
+    IssuesFound: Integer;
+    FileHash: string;
+  end;
+
+  TCurrentAnalysis = class(TObject)
+  private
+    FPaths: TArray<string>;
+  public
+    constructor Create(Paths: TArray<string>);
+    property Paths: TArray<string> read FPaths;
+  end;
+
+  TFileAnalysisStatus = (
+    fasNeverAnalyzed,
+    fasOutdatedAnalysis,
+    fasUpToDateAnalysis
+  );
+
   TLintPlugin = class(TObject)
   private
     FServer: TLintServer;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
-    FLastAnalyzedFiles: TStringList;
+    FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FOutputLog: TLintLogger;
-    FAnalyzing: Boolean;
-    FOnAnalysisComplete: TEventNotifier;
+    FCurrentAnalysis: TCurrentAnalysis;
+    FOnAnalysisComplete: TEventNotifier<TArray<string>>;
+    FOnAnalysisFailed: TEventNotifier<TArray<string>>;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     procedure OnAnalyzeResult(Issues: TArray<TLintIssue>);
@@ -59,6 +79,8 @@ type
     procedure SaveIssues(Issues: TArray<TLintIssue>);
     procedure DisplayIssues;
     function GetOrInitServer: TLintServer;
+    procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
+    function GetInAnalysis: Boolean;
 
   public
     constructor Create;
@@ -75,7 +97,14 @@ type
       const ProjectKey: string = '');
     procedure AnalyzeActiveFile;
 
-    property OnAnalysisComplete: TEventNotifier read FOnAnalysisComplete;
+    function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
+    function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+
+    property OnAnalysisComplete: TEventNotifier<TArray<string>> read FOnAnalysisComplete;
+    property OnAnalysisFailed: TEventNotifier<TArray<string>> read FOnAnalysisFailed;
+
+    property CurrentAnalysis: TCurrentAnalysis read FCurrentAnalysis;
+    property InAnalysis: Boolean read GetInAnalysis;
   end;
 
 function Plugin: TLintPlugin;
@@ -92,6 +121,8 @@ uses
   , System.Generics.Defaults
   , DelphiLint.Settings
   , Vcl.Dialogs
+  , System.Hash
+  , System.DateUtils
   ;
 
 var
@@ -133,7 +164,7 @@ begin
   end;
 
   AnalyzeFiles(
-    [ProjectFile, SourceEditor.FileName],
+    [SourceEditor.FileName],
     ProjectDir,
     ProjectOptions.SonarHostUrl,
     ProjectOptions.ProjectKey);
@@ -148,23 +179,14 @@ procedure TLintPlugin.AnalyzeFiles(
   const ProjectKey: string = '');
 var
   Server: TLintServer;
-  FilePath: string;
 begin
-  if FAnalyzing then begin
+  if Assigned(FCurrentAnalysis) then begin
     Log.Info('Already in analysis.');
     Exit;
   end;
 
-  FAnalyzing := True;
   FOutputLog.Clear;
-  FOutputLog.Info('Analysis in progress...');
-
-  FLastAnalyzedFiles.Clear;
-  for FilePath in Files do begin
-    if DelphiLint.IDEUtils.IsPasFile(FilePath) or DelphiLint.IDEUtils.IsMainFile(FilePath) then begin
-      FLastAnalyzedFiles.Add(FilePath);
-    end;
-  end;
+  FCurrentAnalysis := TCurrentAnalysis.Create(Files);
 
   Server := GetOrInitServer;
   if Assigned(Server) then begin
@@ -190,9 +212,10 @@ begin
   inherited;
   FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
   FOutputLog := TLintLogger.Create('Issues');
-  FAnalyzing := False;
-  FLastAnalyzedFiles := TStringList.Create;
-  FOnAnalysisComplete := TEventNotifier.Create;
+  FCurrentAnalysis := nil;
+  FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
+  FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
+  FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
 
   Log.Clear;
   Log.Info('DelphiLint started.');
@@ -205,8 +228,10 @@ begin
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
-  FreeAndNil(FLastAnalyzedFiles);
+  FreeAndNil(FFileAnalyses);
   FreeAndNil(FOnAnalysisComplete);
+  FreeAndNil(FOnAnalysisFailed);
+  FreeAndNil(FCurrentAnalysis);
 
   inherited;
 end;
@@ -225,11 +250,11 @@ begin
   for FileName in FActiveIssues.Keys do begin
     FileIssues := GetIssues(FileName);
     FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
-    Stale := FLastAnalyzedFiles.IndexOf(FileName) = -1;
+    Stale := GetAnalysisStatus(FileName) = fasOutdatedAnalysis;
 
     for Issue in FileIssues do begin
       FOutputLog.Info(
-        Format('%s%s', [Issue.Message, IfThen(Stale, ' (stale)', '')]),
+        Format('%s%s', [Issue.Message, IfThen(Stale, ' (outdated)', '')]),
         Issue.FilePath,
         Issue.StartLine,
         Issue.StartLineOffset);
@@ -244,6 +269,13 @@ end;
 function OrderByStartLine(const Left, Right: TLiveIssue): Integer;
 begin
   Result := TComparer<Integer>.Default.Compare(Left.OriginalStartLine, Right.OriginalStartLine);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintPlugin.GetInAnalysis: Boolean;
+begin
+  Result := Assigned(FCurrentAnalysis);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -295,11 +327,43 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.OnAnalyzeError(Message: string);
+function TLintPlugin.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
+var
+  SanitizedPath: string;
+  History: TFileAnalysisHistory;
 begin
-  FAnalyzing := False;
-  FOutputLog.Clear;
+  SanitizedPath := ToUnixPath(Path, True);
+
+  if FFileAnalyses.ContainsKey(SanitizedPath) then begin
+    History := FFileAnalyses[SanitizedPath];
+    if THashMD5.GetHashStringFromFile(Path) = History.FileHash then begin
+      Result := TFileAnalysisStatus.fasUpToDateAnalysis;
+    end
+    else begin
+      Result := TFileAnalysisStatus.fasOutdatedAnalysis;
+    end;
+  end
+  else begin
+    Result := TFileAnalysisStatus.fasNeverAnalyzed;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.OnAnalyzeError(Message: string);
+var
+  Path: string;
+begin
   FOutputLog.Info('Error during analysis: ' + Message);
+
+  for Path in FCurrentAnalysis.Paths do begin
+    RecordAnalysis(Path, False, 0);
+  end;
+
+  FOnAnalysisFailed.Notify(FCurrentAnalysis.Paths);
+
+  FreeAndNil(FCurrentAnalysis);
+
   ShowMessage('There was an error during analysis.' + #13#10 + Message);
 end;
 
@@ -307,10 +371,37 @@ end;
 
 procedure TLintPlugin.OnAnalyzeResult(Issues: TArray<TLintIssue>);
 begin
-  FAnalyzing := False;
   SaveIssues(Issues);
-  FOnAnalysisComplete.Notify;
+
+  FOnAnalysisComplete.Notify(FCurrentAnalysis.Paths);
+  FreeAndNil(FCurrentAnalysis);
+
   DisplayIssues;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
+var
+  SanitizedPath: string;
+  History: TFileAnalysisHistory;
+begin
+  History.AnalysisTime := Now;
+  History.Success := Success;
+  History.IssuesFound := IssuesFound;
+  History.FileHash := THashMD5.GetHashStringFromFile(Path);
+
+  SanitizedPath := ToUnixPath(Path, True);
+  FFileAnalyses.AddOrSetValue(SanitizedPath, History);
+
+  Log.Info(Format(
+    'Analysis recorded for %s at %s, (%s, %d issues found)',
+    [
+      Path,
+      FormatDateTime('hh:nn:ss', History.AnalysisTime),
+      IfThen(Success, 'successful', 'failure'),
+      IssuesFound
+    ]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -318,30 +409,50 @@ end;
 procedure TLintPlugin.SaveIssues(Issues: TArray<TLintIssue>);
 var
   Issue: TLintIssue;
+  LiveIssue: TLiveIssue;
   SanitizedPath: string;
+  NewIssues: TDictionary<string, TObjectList<TLiveIssue>>;
+  Path: string;
+  NewIssuesForFile: TObjectList<TLiveIssue>;
+  IssueCount: Integer;
 begin
   Log.Info(Format('Processing %d issues.', [Length(Issues)]));
 
-  FLastAnalyzedFiles.Clear;
+  NewIssues := TDictionary<string, TObjectList<TLiveIssue>>.Create;
+  try
+    // Split issues by file and convert to live issues
+    for Issue in Issues do begin
+      LiveIssue := TLiveIssue.CreateFromData(Issue);
 
-  for Issue in Issues do begin
-    SanitizedPath := ToUnixPath(Issue.FilePath, True);
-
-    if FLastAnalyzedFiles.IndexOf(SanitizedPath) = -1 then begin
-      // This is the first issue in this file that we've found this run
-      FLastAnalyzedFiles.Add(SanitizedPath);
-
-      if FActiveIssues.ContainsKey(SanitizedPath) then begin
-        // This filepath has old issues in it, so we want to clear it out
-        FActiveIssues[SanitizedPath].Clear;
-      end
-      else begin
-        // There's no space allocated for this filepath - allocate it
-        FActiveIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
+      SanitizedPath := ToUnixPath(Issue.FilePath, True);
+      if not NewIssues.ContainsKey(SanitizedPath) then begin
+        NewIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
       end;
+      NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 
-    FActiveIssues[SanitizedPath].Add(TLiveIssue.CreateFromData(Issue));
+    // Process issues per file
+    for Path in FCurrentAnalysis.Paths do begin
+      SanitizedPath := ToUnixPath(Path, True);
+
+      // Remove current active issues
+      if FActiveIssues.ContainsKey(SanitizedPath) then begin
+        FActiveIssues.Remove(SanitizedPath);
+      end;
+
+      // Add new active issues (if there are any)
+      IssueCount := 0;
+      if NewIssues.TryGetValue(SanitizedPath, NewIssuesForFile) then begin
+        FActiveIssues.Add(SanitizedPath, NewIssuesForFile);
+        IssueCount := FActiveIssues[SanitizedPath].Count;
+      end;
+
+      // Record analysis
+      RecordAnalysis(Path, True, IssueCount);
+      Log.Info(Format('%d issues recorded for %s', [IssueCount, Path]));
+    end;
+  finally
+    FreeAndNil(NewIssues);
   end;
 end;
 
@@ -354,6 +465,13 @@ begin
   end;
 
   Result := StringReplace(Path, '\', '/', [rfReplaceAll]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintPlugin.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+begin
+  Result := FFileAnalyses.TryGetValue(ToUnixPath(Path, True), History);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -406,16 +524,18 @@ begin
   Result := FEndLine + LinesMoved;
 end;
 
-function TLiveIssue.GetLinesMoved: Integer;
-begin
-  Result := FLinesMoved;
-end;
-
 procedure TLiveIssue.NewLineMoveSession;
 begin
   FStartLine := StartLine;
   FEndLine := EndLine;
   FLinesMoved := 0;
+end;
+
+{ TCurrentAnalysis }
+
+constructor TCurrentAnalysis.Create(Paths: TArray<string>);
+begin
+  FPaths := Paths;
 end;
 
 initialization

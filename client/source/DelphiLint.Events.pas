@@ -14,8 +14,7 @@ type
 
   TEventNotifier<T> = class(TObject)
   private
-    Listeners: TList<TEventListener<T>>;
-  public type
+    FListeners: TList<TEventListener<T>>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -27,8 +26,7 @@ type
 
   TEventNotifier = class(TObject)
   private
-    Listeners: TList<TEventListener>;
-  public type
+    FListeners: TList<TEventListener>;
   public
     constructor Create;
     destructor Destroy; override;
@@ -44,62 +42,64 @@ implementation
 
 constructor TEventNotifier<T>.Create;
 begin
-  Listeners := TList<TEventListener<T>>.Create;
+  FListeners := TList<TEventListener<T>>.Create;
 end;
 
 destructor TEventNotifier<T>.Destroy;
 begin
-  FreeAndNil(Listeners);
+  FreeAndNil(FListeners);
   inherited;
 end;
 
 procedure TEventNotifier<T>.AddListener(Listener: TEventListener<T>);
 begin
-  Listeners.Add(Listener);
+  FListeners.Add(Listener);
 end;
 
 procedure TEventNotifier<T>.RemoveListener(Listener: TEventListener<T>);
 begin
-  Listeners.Remove(Listener);
+  FListeners.Remove(Listener);
 end;
 
 procedure TEventNotifier<T>.Notify(const Arg: T);
 var
   Listener: TEventListener<T>;
 begin
-  for Listener in Listeners do
+  for Listener in FListeners do begin
     Listener(Arg);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
 
 constructor TEventNotifier.Create;
 begin
-  Listeners := TList<TEventListener>.Create;
+  FListeners := TList<TEventListener>.Create;
 end;
 
 destructor TEventNotifier.Destroy;
 begin
-  FreeAndNil(Listeners);
+  FreeAndNil(FListeners);
   inherited;
 end;
 
 procedure TEventNotifier.AddListener(Listener: TEventListener);
 begin
-  Listeners.Add(Listener);
+  FListeners.Add(Listener);
 end;
 
 procedure TEventNotifier.RemoveListener(Listener: TEventListener);
 begin
-  Listeners.Remove(Listener);
+  FListeners.Remove(Listener);
 end;
 
 procedure TEventNotifier.Notify;
 var
   Listener: TEventListener;
 begin
-  for Listener in Listeners do
+  for Listener in FListeners do begin
     Listener;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

@@ -51,22 +51,26 @@ type
     FTrackers: TObjectList<TEditorLineTracker>;
     FInitedViews: TList<IOTAEditView>;
 
+    FOnActiveFileChanged: TEventNotifier<string>;
+
     procedure OnTrackedLineChanged(const ChangedLine: TChangedLine);
 
     procedure InitView(const View: IOTAEditView);
     function IsViewInited(const View: IOTAEditView): Boolean;
-    procedure OnAnalysisComplete;
+    procedure OnAnalysisComplete(const Paths: TArray<string>);
   public
     constructor Create;
     destructor Destroy; override;
     procedure ViewNotification(const View: IOTAEditView; Operation: TOperation); override;
     procedure EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView); override;
+
+    property OnActiveFileChanged: TEventNotifier<string> read FOnActiveFileChanged;
   end;
 
   TLintView = class(TViewNotifierBase)
   private
     FRepaint: Boolean;
-    procedure OnAnalysisComplete;
+    procedure OnAnalysisComplete(const Paths: TArray<string>);
   public
     constructor Create;
     destructor Destroy; override;
@@ -144,6 +148,7 @@ begin
   FNotifiers := TList<TNotifierBase>.Create;
   FTrackers := TObjectList<TEditorLineTracker>.Create;
   FInitedViews := TList<IOTAEditView>.Create;
+  FOnActiveFileChanged := TEventNotifier<string>.Create;
 
   Plugin.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 
@@ -164,6 +169,7 @@ begin
   FreeAndNil(FTrackers);
   FreeAndNil(FNotifiers);
   FreeAndNil(FInitedViews);
+  FreeAndNil(FOnActiveFileChanged);
   inherited;
 end;
 
@@ -171,7 +177,10 @@ end;
 
 procedure TLintEditor.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
 begin
-  Log.Info('View activated...');
+  Log.Info('View activated for ' + EditView.Buffer.FileName);
+
+  FOnActiveFileChanged.Notify(EditView.Buffer.FileName);
+
   if not IsViewInited(EditView) then begin
     InitView(EditView);
   end;
@@ -231,7 +240,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnAnalysisComplete;
+procedure TLintEditor.OnAnalysisComplete(const Paths: TArray<string>);
 var
   Tracker: TEditorLineTracker;
   FileIssues: TArray<TLiveIssue>;
@@ -284,7 +293,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintView.OnAnalysisComplete;
+procedure TLintView.OnAnalysisComplete(const Paths: TArray<string>);
 begin
   FRepaint := True;
 end;
