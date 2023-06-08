@@ -93,12 +93,15 @@
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
         <DCCReference Include="DelphiLint.EditorSync.pas"/>
         <DCCReference Include="DelphiLint.Context.pas"/>
-        <DCCReference Include="DelphiLint.ToolbarManager.pas">
-            <Form>LintControlsModule</Form>
+        <DCCReference Include="DelphiLint.Plugin.pas">
+            <Form>LintPlugin</Form>
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
-        <DCCReference Include="DelphiLint.Plugin.pas"/>
+        <DCCReference Include="DelphiLint.ToolWindow.pas">
+            <Form>LintToolWindow</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -28,23 +28,6 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TLintMenuItem = class(TNotifierObject, IOTAWizard, IOTAMenuWizard)
-  public type
-    TMenuItemAction = reference to procedure;
-  private
-    FName: string;
-    FCaption: string;
-    FAction: TMenuItemAction;
-  public
-    constructor Create(Name: string; Caption: string; Action: TMenuItemAction);
-
-    function GetIDstring: string;
-    function GetName: string;
-    function GetState: TWizardState;
-    procedure Execute;
-    function GetMenuText: string;
-  end;
-
   TLintEditor = class(TEditorNotifierBase)
   private
     FNotifiers: TList<TNotifierBase>;
@@ -93,50 +76,6 @@ uses
   , System.IOUtils
   , DelphiLint.Context
   ;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLintMenuItem.Create(Name: string; Caption: string; Action: TMenuItemAction);
-begin
-  FName := Name;
-  FCaption := Caption;
-  FAction := Action;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintMenuItem.Execute;
-begin
-  FAction;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintMenuItem.GetIDstring: string;
-begin
-  Result := 'DelphiLint|' + FName;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintMenuItem.GetMenuText: string;
-begin
-  Result := FCaption;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintMenuItem.GetName: string;
-begin
-  Result := FName;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintMenuItem.GetState: TWizardState;
-begin
-  Result := [wsEnabled];
-end;
 
 //______________________________________________________________________________________________________________________
 

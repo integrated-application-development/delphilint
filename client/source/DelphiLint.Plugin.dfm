@@ -1,6 +1,4 @@
-object LintToolbarManager: TLintToolbarManager
-  OnCreate = DataModuleCreate
-  OnDestroy = DataModuleDestroy
+object LintPlugin: TLintPlugin
   Height = 480
   Width = 640
   object LintImages: TImageList
@@ -281,18 +279,18 @@ object LintToolbarManager: TLintToolbarManager
   object LintActions: TActionList
     Left = 120
     Top = 32
-    object ActionAnalyze: TAction
+    object ActionAnalyzeActiveFile: TAction
       Caption = 'Analyze Current File'
-      OnExecute = ActionAnalyzeExecute
+      OnExecute = ActionAnalyzeActiveFileExecute
+    end
+    object ActionShowToolWindow: TAction
+      Caption = 'Show Tool Window'
+      OnExecute = ActionShowToolWindowExecute
     end
   end
   object LintPopupMenu: TPopupMenu
     Images = LintImages
     Left = 200
     Top = 32
-    object Analyze1: TMenuItem
-      Action = ActionAnalyze
-      ImageIndex = 0
-    end
   end
 end

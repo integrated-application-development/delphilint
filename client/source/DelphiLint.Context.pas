@@ -70,6 +70,7 @@ type
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FOutputLog: TLintLogger;
     FCurrentAnalysis: TCurrentAnalysis;
+    FOnAnalysisStarted: TEventNotifier<TArray<string>>;
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
 
@@ -100,6 +101,7 @@ type
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
     function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 
+    property OnAnalysisStarted: TEventNotifier<TArray<string>> read FOnAnalysisStarted;
     property OnAnalysisComplete: TEventNotifier<TArray<string>> read FOnAnalysisComplete;
     property OnAnalysisFailed: TEventNotifier<TArray<string>> read FOnAnalysisFailed;
 
@@ -196,6 +198,7 @@ begin
 
   FOutputLog.Clear;
   FCurrentAnalysis := TCurrentAnalysis.Create(Files);
+  FOnAnalysisStarted.Notify(Files);
 
   Server := GetOrInitServer;
   if Assigned(Server) then begin
@@ -211,6 +214,7 @@ begin
   else begin
     Log.Info('Server connection could not be established.');
     FOutputLog.Info('Analysis failed - server connection could not be established.');
+    FOnAnalysisFailed.Notify(Files);
   end;
 end;
 
@@ -223,6 +227,7 @@ begin
   FOutputLog := TLintLogger.Create('Issues');
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
+  FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
 
@@ -238,6 +243,7 @@ begin
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
   FreeAndNil(FFileAnalyses);
+  FreeAndNil(FOnAnalysisStarted);
   FreeAndNil(FOnAnalysisComplete);
   FreeAndNil(FOnAnalysisFailed);
   FreeAndNil(FCurrentAnalysis);
