@@ -43,8 +43,8 @@ contains
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
   DelphiLint.EditorSync in 'DelphiLint.EditorSync.pas',
-  DelphiLint.Plugin in 'DelphiLint.Plugin.pas',
-  DelphiLint.Registrar in 'DelphiLint.Registrar.pas',
-  DelphiLint.ToolbarManager in 'DelphiLint.ToolbarManager.pas' {LintControlsModule: TDataModule};
+  DelphiLint.Context in 'DelphiLint.Context.pas',
+  DelphiLint.ToolbarManager in 'DelphiLint.ToolbarManager.pas' {LintControlsModule: TDataModule},
+  DelphiLint.Plugin in 'DelphiLint.Plugin.pas';
 
 end.

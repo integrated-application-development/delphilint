@@ -91,7 +91,7 @@ uses
   , System.Math
   , DelphiLint.Settings
   , System.IOUtils
-  , DelphiLint.Plugin
+  , DelphiLint.Context
   ;
 
 //______________________________________________________________________________________________________________________
@@ -150,7 +150,7 @@ begin
   FInitedViews := TList<IOTAEditView>.Create;
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
-  Plugin.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  LintContext.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 
   Log.Info('Editor notifier created');
 end;
@@ -165,7 +165,10 @@ begin
     Notifier.Release;
   end;
 
-  Plugin.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  if LintContextValid then begin
+    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  end;
+
   FreeAndNil(FTrackers);
   FreeAndNil(FNotifiers);
   FreeAndNil(FInitedViews);
@@ -252,7 +255,7 @@ begin
     Log.Info('Setting tracking for ' + Tracker.FilePath);
     Tracker.ClearTracking;
 
-    FileIssues := Plugin.GetIssues(Tracker.FilePath);
+    FileIssues := LintContext.GetIssues(Tracker.FilePath);
     for Issue in FileIssues do begin
       Log.Info(Format('Tracking line %d (now %d) in %s', [Issue.StartLine, Issue.OriginalStartLine, Issue.FilePath]));
       Tracker.TrackLine(Issue.StartLine);
@@ -266,7 +269,7 @@ end;
 procedure TLintEditor.OnTrackedLineChanged(const ChangedLine: TChangedLine);
 begin
   Log.Info(Format('Change: %d->%d (%s)', [ChangedLine.FromLine, ChangedLine.ToLine, ChangedLine.Tracker.FilePath]));
-  Plugin.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
+  LintContext.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -280,14 +283,14 @@ begin
   inherited;
 
   FRepaint := False;
-  Plugin.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  LintContext.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TLintView.Destroy;
 begin
-  Plugin.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   inherited;
 end;
 
@@ -358,7 +361,7 @@ var
   Msg: string;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
-  Issues := Plugin.GetIssues(CurrentModule.FileName, LineNumber);
+  Issues := LintContext.GetIssues(CurrentModule.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
     for Issue in Issues do begin

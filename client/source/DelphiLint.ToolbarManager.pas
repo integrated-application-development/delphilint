@@ -15,6 +15,7 @@ type
 
     procedure DataModuleCreate(Sender: TObject);
     procedure ActionAnalyzeExecute(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
   private const
     C_ImgDefault = 0;
     C_ImgSuccess = 1;
@@ -32,7 +33,6 @@ type
 
     procedure ResetToolbar(Toolbar: TToolBar);
     procedure CreateToolbar;
-    procedure CreateMenuItem;
     function CreateLintMenu(Owner: TComponent): TPopupMenu;
   public
     procedure AnalysisStarted;
@@ -52,7 +52,7 @@ implementation
 uses
     ToolsAPI
   , Vcl.Forms
-  , DelphiLint.Plugin
+  , DelphiLint.Context
   , System.Math
   , DelphiLint.Logger
   , System.StrUtils
@@ -64,15 +64,17 @@ procedure TLintToolbarManager.ActiveFileChanged(const Path: string);
 var
   History: TFileAnalysisHistory;
 begin
-  if not Plugin.InAnalysis then begin
-    case Plugin.GetAnalysisStatus(Path) of
+  Log.Info('Active file changed to ' + Path);
+  if not LintContext.InAnalysis then begin
+    Log.Info('Not in analysis, updating status');
+    case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
         begin
           Log.Info('File has never been analyzed, clearing.');
           AnalysisCleared;
         end;
       fasOutdatedAnalysis:
-        if Plugin.TryGetAnalysisHistory(Path, History) then begin
+        if LintContext.TryGetAnalysisHistory(Path, History) then begin
           AnalysisSucceeded(History.IssuesFound, True);
         end
         else begin
@@ -80,7 +82,7 @@ begin
           AnalysisCleared;
         end;
       fasUpToDateAnalysis:
-        if Plugin.TryGetAnalysisHistory(Path, History) then begin
+        if LintContext.TryGetAnalysisHistory(Path, History) then begin
           AnalysisSucceeded(History.IssuesFound, False);
         end
         else begin
@@ -133,7 +135,7 @@ procedure TLintToolbarManager.AnalysisSucceeded(IssueCount: Integer; Outdated: B
 begin
   if IssueCount = 0 then begin
     FLintButton.ImageIndex := FImageIndexOffset + IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
-    FProgLabel.Caption := Format('No issues%s', [IssueCount, IfThen(Outdated, ' (outdated)', '')]);
+    FProgLabel.Caption := Format('No issues%s', [IfThen(Outdated, ' (outdated)', '')]);
   end
   else begin
     FLintButton.ImageIndex := FImageIndexOffset + IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
@@ -172,24 +174,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolbarManager.CreateMenuItem;
-var
-  MenuItem: TMenuItem;
-begin
-  MenuItem := TMenuItem.Create(FToolbar);
-  MenuItem.Caption := 'Analyze';
-  MenuItem.Action := ActionAnalyze;
-  (BorlandIDEServices as INTAServices).AddActionMenu('FileExitItem', ActionAnalyze, MenuItem, False);
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintToolbarManager.CreateToolbar;
 var
   ProgPanel: TPanel;
 begin
   FToolbar := (BorlandIDEServices as INTAServices).NewToolbar('DelphiLintToolbar', 'DelphiLint');
-  ResetToolbar(FToolbar);
   FToolbar.ShowCaptions := False;
   FToolbar.AutoSize := True;
 
@@ -230,6 +219,8 @@ begin
   FProgLabel.Top := 2;
   FProgLabel.Width := 100;
   FProgLabel.Height := 16;
+
+  Log.Info('Toolbar initialised');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -241,23 +232,27 @@ begin
   NTAServices := BorlandIDEServices as INTAServices;
   FImageIndexOffset := NTAServices.AddImages(LintImages);
   CreateToolbar;
-  CreateMenuItem;
   AnalysisCleared;
 
-  Plugin.OnAnalysisComplete.AddListener(
+  LintContext.OnAnalysisComplete.AddListener(
     procedure(const Paths: TArray<string>)
     var
       History: TFileAnalysisHistory;
     begin
-      if Plugin.TryGetAnalysisHistory(Paths[0], History) then begin
+      if LintContext.TryGetAnalysisHistory(Paths[0], History) then begin
         AnalysisSucceeded(History.IssuesFound, False);
       end;
     end);
 
-  Plugin.OnAnalysisFailed.AddListener(
+  LintContext.OnAnalysisFailed.AddListener(
     procedure(const Paths: TArray<string>) begin
       AnalysisFailed;
     end);
+end;
+
+procedure TLintToolbarManager.DataModuleDestroy(Sender: TObject);
+begin
+  ResetToolbar(FToolbar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -270,8 +265,9 @@ begin
   for Index := Toolbar.ButtonCount - 1 downto 0 do begin
     Button := Toolbar.Buttons[Index];
     Toolbar.RemoveControl(Button);
-    FreeAndNil(Button);
   end;
+
+  Log.Info('Toolbar reset');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -279,7 +275,7 @@ end;
 procedure TLintToolbarManager.ActionAnalyzeExecute(Sender: TObject);
 begin
   AnalysisStarted;
-  Plugin.AnalyzeActiveFile;
+  LintContext.AnalyzeActiveFile;
 end;
 
 //______________________________________________________________________________________________________________________

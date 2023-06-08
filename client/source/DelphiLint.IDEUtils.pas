@@ -77,6 +77,26 @@ type
     procedure MessageGroupDeleted(const Group: IOTAMessageGroup); virtual;
   end;
 
+  TModuleNotifierBase = class abstract(TNotifierBase, IOTAModuleNotifier90)
+  public
+    // IOTAModuleNotifier
+    function CheckOverwrite: Boolean; virtual;
+    procedure ModuleRenamed(const NewName: string); virtual;
+
+    // IOTAModuleNotifier80
+    function AllowSave: Boolean; virtual;
+    function GetOverwriteFileNameCount: Integer; virtual;
+    function GetOverwriteFileName(Index: Integer): string; virtual;
+    procedure SetSaveFileName(const FileName: string); virtual;
+
+    property OverwriteFileNameCount: Integer read GetOverwriteFileNameCount;
+    property OverwriteFileNames[Index: Integer]: string read GetOverwriteFileName;
+
+    // IOTAModuleNotifier90
+    procedure BeforeRename(const OldFileName, NewFileName: string); virtual;
+    procedure AfterRename(const OldFileName, NewFileName: string); virtual;
+  end;
+
 implementation
 
 uses
@@ -329,6 +349,52 @@ begin
 end;
 
 procedure TMessageNotifierBase.MessageGroupDeleted(const Group: IOTAMessageGroup);
+begin
+  // Empty default implementation
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TModuleNotifierBase.AfterRename(const OldFileName, NewFileName: string);
+begin
+  // Empty default implementation
+end;
+
+function TModuleNotifierBase.AllowSave: Boolean;
+begin
+  // Empty default implementation
+  Result := True;
+end;
+
+procedure TModuleNotifierBase.BeforeRename(const OldFileName, NewFileName: string);
+begin
+  // Empty default implementation
+end;
+
+function TModuleNotifierBase.CheckOverwrite: Boolean;
+begin
+  // Empty default implementation
+  Result := True;
+end;
+
+function TModuleNotifierBase.GetOverwriteFileName(Index: Integer): string;
+begin
+  // Empty default implementation
+  Result := '';
+end;
+
+function TModuleNotifierBase.GetOverwriteFileNameCount: Integer;
+begin
+  // Empty default implementation
+  Result := 0;
+end;
+
+procedure TModuleNotifierBase.ModuleRenamed(const NewName: string);
+begin
+  // Empty default implementation
+end;
+
+procedure TModuleNotifierBase.SetSaveFileName(const FileName: string);
 begin
   // Empty default implementation
 end;
