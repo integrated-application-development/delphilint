@@ -13,19 +13,19 @@ type
     ProgLabel: TLabel;
     ProgBar: TProgressBar;
     FileNameLabel: TLabel;
-    IssueTreeView: TTreeView;
     LintButton: TBitBtn;
     ProgImage: TImage;
+    IssueListBox: TListBox;
+    LintButtonPanel: TPanel;
     procedure FormCreate(Sender: TObject);
-    procedure LintButtonClick(Sender: TObject);
-  private const
-    CNotAnalyzable = 'n/a';
-    CNoFileSelected = '';
   private
     FCurrentPath: string;
 
     function IsFileScannable(const Path: string): Boolean;
-    procedure UpdateFileNameLabel;
+    procedure UpdateFileNameLabel(NewText: string = '');
+
+    procedure RefreshIssueView;
+    procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
   public
     class procedure CreateInstance;
     class procedure RemoveInstance;
@@ -57,6 +57,7 @@ uses
   , System.StrUtils
   , System.IOUtils
   , DelphiLint.IDEUtils
+  , DelphiLint.IssueFrame
   ;
 
 var
@@ -159,17 +160,22 @@ function TLintToolWindow.IsFileScannable(const Path: string): Boolean;
     FileList: TStringList;
   begin
     Project := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
-    FileList := TStringList.Create;
-    try
-      Project.GetCompleteFileList(FileList);
-      Result := FileList.IndexOf(Path) <> -1;
-    finally
-      FreeAndNil(FileList);
+    if Assigned(Project) then begin
+      FileList := TStringList.Create;
+      try
+        Project.GetCompleteFileList(FileList);
+        Result := FileList.IndexOf(Path) <> -1;
+      finally
+        FreeAndNil(FileList);
+      end;
+    end
+    else begin
+      Result := False;
     end;
   end;
 
 begin
-  Result := IsPasFile(Path) and IsProjectFile;
+  Result := (Path <> '') and IsPasFile(Path) and IsProjectFile;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -206,6 +212,8 @@ var
 begin
   (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
 
+  IssueListBox.OnDrawItem := OnDrawIssueItem;
+
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
       AnalysisStarted;
@@ -229,21 +237,21 @@ begin
   Editor := GetCurrentSourceEditor;
   if Assigned(Editor) then begin
     ChangeActiveFile(Editor.FileName);
+  end
+  else begin
+    UpdateFileNameLabel('No file selected');
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolWindow.UpdateFileNameLabel;
+procedure TLintToolWindow.UpdateFileNameLabel(NewText: string = '');
 begin
-  if FCurrentPath = CNoFileSelected then begin
-    FileNameLabel.Caption := 'No file selected';
-  end
-  else if FCurrentPath = CNotAnalyzable then begin
-    FileNameLabel.Caption := 'File not analyzable';
+  if NewText = '' then begin
+    FileNameLabel.Caption := TPath.GetFileName(FCurrentPath);
   end
   else begin
-    FileNameLabel.Caption := TPath.GetFileName(FCurrentPath);
+    FileNameLabel.Caption := NewText;
   end;
 end;
 
@@ -287,10 +295,11 @@ begin
     end;
   end
   else begin
-    FCurrentPath := CNotAnalyzable;
+    FCurrentPath := '';
     AnalysisCleared;
-    UpdateFileNameLabel;
+    UpdateFileNameLabel('File not analyzable');
     LintButton.Enabled := False;
+    RefreshIssueView;
   end;
 end;
 
@@ -302,7 +311,7 @@ begin
   LintButton.Hint := 'Scan current file';
   ProgLabel.Caption := 'Not analyzed';
   ProgBar.Hide;
-  Repaint;
+  RefreshIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -313,7 +322,6 @@ begin
   LintButton.Hint := 'Error occurred during analysis';
   ProgLabel.Caption := 'Failed';
   ProgBar.Hide;
-  Repaint;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -346,14 +354,47 @@ begin
   Plugin.LintImages.GetIcon(ImageIndex, ProgImage.Picture.Icon);
   LintButton.Hint := 'Analysis succeeded';
   ProgBar.Hide;
-  Repaint;
+  RefreshIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolWindow.LintButtonClick(Sender: TObject);
+procedure TLintToolWindow.OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+var
+  Canvas: TCanvas;
+  Issue: TLiveIssue;
+  ListBox: TListBox;
+  LocationText: string;
+  LocationWidth: Integer;
 begin
-  LintContext.AnalyzeActiveFile;
+  ListBox := Control as TListBox;
+
+  Canvas := ListBox.Canvas;
+  Issue := TLiveIssue(ListBox.Items.Objects[Index]);
+  Canvas.FillRect(Rect);
+
+  LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
+  LocationWidth := Canvas.TextWidth(LocationText);
+  Canvas.TextOut(Rect.Left + 4, Rect.Top + 4, LocationText);
+  Canvas.Font.Style := [fsBold];
+  Canvas.TextOut(Rect.Left + 4 + LocationWidth, Rect.Top + 4, Issue.Message);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.RefreshIssueView;
+var
+  Issues: TArray<TLiveIssue>;
+  Issue: TLiveIssue;
+begin
+  IssueListBox.Clear;
+
+  if FCurrentPath <> '' then begin
+    Issues := LintContext.GetIssues(FCurrentPath);
+    for Issue in Issues do begin
+      IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

@@ -12,18 +12,6 @@ object LintToolWindow: TLintToolWindow
   Font.Style = []
   OnCreate = FormCreate
   TextHeight = 15
-  object IssueTreeView: TTreeView
-    Left = 0
-    Top = 51
-    Width = 484
-    Height = 265
-    Align = alClient
-    BevelInner = bvNone
-    BevelOuter = bvNone
-    BorderStyle = bsNone
-    Indent = 19
-    TabOrder = 0
-  end
   object LintPanel: TPanel
     Left = 0
     Top = 0
@@ -35,10 +23,7 @@ object LintToolWindow: TLintToolWindow
     Color = clNone
     ParentBackground = False
     ShowCaption = False
-    TabOrder = 1
-    DesignSize = (
-      484
-      51)
+    TabOrder = 0
     object ProgLabel: TLabel
       Left = 30
       Top = 26
@@ -78,17 +63,48 @@ object LintToolWindow: TLintToolWindow
       MarqueeInterval = 30
       TabOrder = 0
     end
-    object LintButton: TBitBtn
-      Left = 387
-      Top = 7
+    object LintButtonPanel: TPanel
+      AlignWithMargins = True
+      Left = 394
+      Top = 0
       Width = 84
-      Height = 24
-      Action = LintPlugin.ActionAnalyzeActiveFile
-      Anchors = [akTop, akRight]
-      Caption = 'Analyze'
-      Images = LintPlugin.LintImages
-      ParentDoubleBuffered = True
+      Height = 51
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 6
+      Margins.Bottom = 0
+      Align = alRight
+      AutoSize = True
+      BevelOuter = bvNone
+      Caption = 'LintButtonPanel'
+      ShowCaption = False
       TabOrder = 1
+      DesignSize = (
+        84
+        51)
+      object LintButton: TBitBtn
+        Left = 0
+        Top = 7
+        Width = 84
+        Height = 24
+        Action = LintPlugin.ActionAnalyzeActiveFile
+        Anchors = [akTop, akRight]
+        Caption = 'Analyze'
+        Images = LintPlugin.LintImages
+        ParentDoubleBuffered = True
+        TabOrder = 0
+      end
     end
+  end
+  object IssueListBox: TListBox
+    Left = 0
+    Top = 51
+    Width = 484
+    Height = 265
+    Style = lbOwnerDrawFixed
+    Align = alClient
+    BorderStyle = bsNone
+    ItemHeight = 20
+    TabOrder = 1
   end
 end

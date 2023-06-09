@@ -44,7 +44,8 @@ contains
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
   DelphiLint.EditorSync in 'DelphiLint.EditorSync.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
-  DelphiLint.Plugin in 'DelphiLint.Plugin.pas',
-  DelphiLint.ToolWindow in 'DelphiLint.ToolWindow.pas';
+  DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
+  DelphiLint.ToolWindow in 'DelphiLint.ToolWindow.pas' {LintToolWindow},
+  DelphiLint.IssueFrame in 'DelphiLint.IssueFrame.pas' {LintIssueFrame: TFrame};
 
 end.
