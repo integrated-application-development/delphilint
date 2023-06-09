@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ComCtrls, System.ImageList, Vcl.ImgList, DelphiLint.Plugin,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, DelphiLint.Plugin,
   Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus, Vcl.Buttons;
 
 type
@@ -63,6 +63,7 @@ begin
   end;
 
   RegisterDesktopFormClass(TLintToolWindow, FormInstance.Name, FormInstance.Name);
+  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintToolWindow);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -149,8 +150,6 @@ begin
   DeskSection := Name;
   AutoSave := True;
   SaveStateNecessary := True;
-
-  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -174,6 +173,8 @@ procedure TLintToolWindow.FormCreate(Sender: TObject);
 var
   Editor: IOTASourceEditor;
 begin
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
+
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
       AnalysisStarted;
