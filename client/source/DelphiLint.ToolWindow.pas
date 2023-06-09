@@ -5,19 +5,27 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, DelphiLint.Plugin,
-  Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus, Vcl.Buttons;
+  Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus, Vcl.Buttons, Vcl.VirtualImage;
 
 type
   TLintToolWindow = class(TDockableForm)
-    LintToolBar: TGridPanel;
     LintPanel: TPanel;
-    LintButton: TSpeedButton;
     ProgLabel: TLabel;
     ProgBar: TProgressBar;
     FileNameLabel: TLabel;
     IssueTreeView: TTreeView;
+    LintButton: TBitBtn;
+    ProgImage: TImage;
     procedure FormCreate(Sender: TObject);
     procedure LintButtonClick(Sender: TObject);
+  private const
+    CNotAnalyzable = 'n/a';
+    CNoFileSelected = '';
+  private
+    FCurrentPath: string;
+
+    function IsFileScannable(const Path: string): Boolean;
+    procedure UpdateFileNameLabel;
   public
     class procedure CreateInstance;
     class procedure RemoveInstance;
@@ -143,6 +151,29 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintToolWindow.IsFileScannable(const Path: string): Boolean;
+
+  function IsProjectFile: Boolean;
+  var
+    Project: IOTAProject;
+    FileList: TStringList;
+  begin
+    Project := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
+    FileList := TStringList.Create;
+    try
+      Project.GetCompleteFileList(FileList);
+      Result := FileList.IndexOf(Path) <> -1;
+    finally
+      FreeAndNil(FileList);
+    end;
+  end;
+
+begin
+  Result := IsPasFile(Path) and IsProjectFile;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TLintToolWindow.Create(Owner: TComponent);
 begin
   inherited;
@@ -195,11 +226,24 @@ begin
       AnalysisFailed;
     end);
 
-  AnalysisCleared;
-
   Editor := GetCurrentSourceEditor;
   if Assigned(Editor) then begin
-    FileNameLabel.Caption := TPath.GetFileName(Editor.FileName);
+    ChangeActiveFile(Editor.FileName);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.UpdateFileNameLabel;
+begin
+  if FCurrentPath = CNoFileSelected then begin
+    FileNameLabel.Caption := 'No file selected';
+  end
+  else if FCurrentPath = CNotAnalyzable then begin
+    FileNameLabel.Caption := 'File not analyzable';
+  end
+  else begin
+    FileNameLabel.Caption := TPath.GetFileName(FCurrentPath);
   end;
 end;
 
@@ -209,11 +253,15 @@ procedure TLintToolWindow.ChangeActiveFile(const Path: string);
 var
   History: TFileAnalysisHistory;
 begin
-  FileNameLabel.Caption := TPath.GetFileName(Path);
+  if LintContext.InAnalysis then begin
+    Exit;
+  end;
 
-  Log.Info('Active file changed to ' + Path);
-  if not LintContext.InAnalysis then begin
-    Log.Info('Not in analysis, updating status');
+  if IsFileScannable(Path) then begin
+    FCurrentPath := Path;
+    UpdateFileNameLabel;
+    LintButton.Enabled := True;
+
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
         begin
@@ -237,6 +285,12 @@ begin
           AnalysisCleared;
         end;
     end;
+  end
+  else begin
+    FCurrentPath := CNotAnalyzable;
+    AnalysisCleared;
+    UpdateFileNameLabel;
+    LintButton.Enabled := False;
   end;
 end;
 
@@ -244,52 +298,55 @@ end;
 
 procedure TLintToolWindow.AnalysisCleared;
 begin
-  LintButton.ImageIndex := C_ImgDefault;
+  Plugin.LintImages.GetIcon(C_ImgDefault, ProgImage.Picture.Icon);
   LintButton.Hint := 'Scan current file';
   ProgLabel.Caption := 'Not analyzed';
   ProgBar.Hide;
-  LintToolBar.Repaint;
+  Repaint;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolWindow.AnalysisFailed;
 begin
-  LintButton.ImageIndex := C_ImgError;
+  Plugin.LintImages.GetIcon(C_ImgError, ProgImage.Picture.Icon);
   LintButton.Hint := 'Error occurred during analysis';
   ProgLabel.Caption := 'Failed';
   ProgBar.Hide;
-  LintToolBar.Repaint;
+  Repaint;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolWindow.AnalysisStarted;
 begin
-  LintButton.ImageIndex := C_ImgWorking;
+  Plugin.LintImages.GetIcon(C_ImgWorking, ProgImage.Picture.Icon);
   LintButton.Hint := 'Analysis in progress';
   ProgLabel.Caption := 'Analyzing';
   ProgBar.Show;
   ProgBar.Style := TProgressBarStyle.pbstNormal;
   ProgBar.Style := TProgressBarStyle.pbstMarquee;
-  LintToolBar.Repaint;
+  Repaint;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolWindow.AnalysisSucceeded(IssueCount: Integer; Outdated: Boolean);
+var
+  ImageIndex: Integer;
 begin
   if IssueCount = 0 then begin
-    LintButton.ImageIndex := IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
+    ImageIndex := IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
     ProgLabel.Caption := Format('No issues%s', [IfThen(Outdated, ' (outdated)', '')]);
   end
   else begin
-    LintButton.ImageIndex := IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
+    ImageIndex := IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
     ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
   end;
+  Plugin.LintImages.GetIcon(ImageIndex, ProgImage.Picture.Icon);
   LintButton.Hint := 'Analysis succeeded';
   ProgBar.Hide;
-  LintToolBar.Repaint;
+  Repaint;
 end;
 
 //______________________________________________________________________________________________________________________

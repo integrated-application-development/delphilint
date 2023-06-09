@@ -277,10 +277,12 @@ object LintPlugin: TLintPlugin
       000000000000}
   end
   object LintActions: TActionList
+    Images = LintImages
     Left = 120
     Top = 32
     object ActionAnalyzeActiveFile: TAction
-      Caption = 'Analyze Current File'
+      Caption = 'Analyze'
+      ImageIndex = 4
       OnExecute = ActionAnalyzeActiveFileExecute
     end
     object ActionShowToolWindow: TAction

@@ -30,9 +30,15 @@ type
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
+
+    procedure Init;
   end;
 
 procedure Register;
+
+function Plugin: TLintPlugin;
+var
+  GPlugin: TLintPlugin;
 
 implementation
 
@@ -47,8 +53,6 @@ uses
   , DelphiLint.IDEUtils
   ;
 
-var
-  GPlugin: TLintPlugin;
 
 //______________________________________________________________________________________________________________________
 
@@ -73,10 +77,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-
 procedure Register;
 begin
   GPlugin := TLintPlugin.Create(nil);
+  GPlugin.Init;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -84,7 +88,12 @@ end;
 constructor TLintPlugin.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
+end;
 
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.Init;
+begin
   FEditor := TLintEditor.Create;
   FEditor.OnOwnerFreed.AddListener(
     procedure(const Notf: TNotifierBase) begin
