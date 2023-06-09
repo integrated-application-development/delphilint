@@ -7,3 +7,4 @@ target/
 delph.xml
 .scannerwork/
 *.delphilint
+__recovery/
