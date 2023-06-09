@@ -5,15 +5,17 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ToolWin, Vcl.ComCtrls, System.ImageList, Vcl.ImgList, DelphiLint.Plugin,
-  Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus;
+  Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus, Vcl.Buttons;
 
 type
   TLintToolWindow = class(TDockableForm)
-    LintToolBar: TToolBar;
-    LintButton: TToolButton;
-    ProgPanel: TPanel;
+    LintToolBar: TGridPanel;
+    LintPanel: TPanel;
+    LintButton: TSpeedButton;
     ProgLabel: TLabel;
     ProgBar: TProgressBar;
+    FileNameLabel: TLabel;
+    IssueTreeView: TTreeView;
     procedure FormCreate(Sender: TObject);
     procedure LintButtonClick(Sender: TObject);
   public
@@ -45,6 +47,8 @@ uses
   , DelphiLint.Logger
   , System.Math
   , System.StrUtils
+  , System.IOUtils
+  , DelphiLint.IDEUtils
   ;
 
 var
@@ -145,6 +149,8 @@ begin
   DeskSection := Name;
   AutoSave := True;
   SaveStateNecessary := True;
+
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -165,6 +171,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolWindow.FormCreate(Sender: TObject);
+var
+  Editor: IOTASourceEditor;
 begin
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
@@ -187,6 +195,11 @@ begin
     end);
 
   AnalysisCleared;
+
+  Editor := GetCurrentSourceEditor;
+  if Assigned(Editor) then begin
+    FileNameLabel.Caption := TPath.GetFileName(Editor.FileName);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -195,6 +208,8 @@ procedure TLintToolWindow.ChangeActiveFile(const Path: string);
 var
   History: TFileAnalysisHistory;
 begin
+  FileNameLabel.Caption := TPath.GetFileName(Path);
+
   Log.Info('Active file changed to ' + Path);
   if not LintContext.InAnalysis then begin
     Log.Info('Not in analysis, updating status');
@@ -231,8 +246,7 @@ begin
   LintButton.ImageIndex := C_ImgDefault;
   LintButton.Hint := 'Scan current file';
   ProgLabel.Caption := 'Not analyzed';
-  ProgBar.Style := TProgressBarStyle.pbstNormal;
-  ProgBar.Position := 0;
+  ProgBar.Hide;
   LintToolBar.Repaint;
 end;
 
@@ -243,8 +257,7 @@ begin
   LintButton.ImageIndex := C_ImgError;
   LintButton.Hint := 'Error occurred during analysis';
   ProgLabel.Caption := 'Failed';
-  ProgBar.Style := TProgressBarStyle.pbstNormal;
-  ProgBar.Position := 0;
+  ProgBar.Hide;
   LintToolBar.Repaint;
 end;
 
@@ -255,8 +268,9 @@ begin
   LintButton.ImageIndex := C_ImgWorking;
   LintButton.Hint := 'Analysis in progress';
   ProgLabel.Caption := 'Analyzing';
+  ProgBar.Show;
+  ProgBar.Style := TProgressBarStyle.pbstNormal;
   ProgBar.Style := TProgressBarStyle.pbstMarquee;
-  ProgBar.Position := 50;
   LintToolBar.Repaint;
 end;
 
@@ -273,8 +287,7 @@ begin
     ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
   end;
   LintButton.Hint := 'Analysis succeeded';
-  ProgBar.Style := TProgressBarStyle.pbstNormal;
-  ProgBar.Position := 100;
+  ProgBar.Hide;
   LintToolBar.Repaint;
 end;
 
