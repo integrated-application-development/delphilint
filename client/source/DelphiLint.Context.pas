@@ -386,8 +386,8 @@ procedure TLintContext.OnAnalyzeResult(Issues: TArray<TLintIssue>);
 begin
   SaveIssues(Issues);
 
-  FreeAndNil(FCurrentAnalysis);
   FOnAnalysisComplete.Notify(FCurrentAnalysis.Paths);
+  FreeAndNil(FCurrentAnalysis);
 
   DisplayIssues;
 end;
