@@ -21,17 +21,14 @@ interface
 uses
     System.SysUtils
   , ToolsAPI
-  , DelphiLint.Server
   , Vcl.Dialogs
   , Vcl.Graphics
-  , WinAPI.Windows
+  , Winapi.Windows
   , System.Classes
   , System.Generics.Collections
   , DelphiLint.Data
-  , DelphiLint.Logger
   , DockForm
   , DelphiLint.Events
-  , DelphiLint.ProjectOptions
   , DelphiLint.EditorSync
   , DelphiLint.IDEUtils
   ;
@@ -94,12 +91,9 @@ type
 implementation
 
 uses
-    System.StrUtils
-  , System.Generics.Defaults
-  , System.Math
-  , DelphiLint.Settings
-  , System.IOUtils
+    System.Math
   , DelphiLint.Context
+  , DelphiLint.Logger
   ;
 
 //______________________________________________________________________________________________________________________
