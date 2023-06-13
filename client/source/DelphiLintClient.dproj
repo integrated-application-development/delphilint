@@ -65,7 +65,7 @@
         <DCC_DcuOutput>.\target\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
-        <Debugger_HostApplication>{PATH REMOVED} Files (x86)\Embarcadero\Studio\22.0\bin\bds.exe</Debugger_HostApplication>
+        <Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\bds.exe</Debugger_HostApplication>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
