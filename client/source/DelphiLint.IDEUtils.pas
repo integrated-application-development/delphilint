@@ -77,7 +77,7 @@ type
     procedure MessageGroupDeleted(const Group: IOTAMessageGroup); virtual;
   end;
 
-  TModuleNotifierBase = class abstract(TNotifierBase, IOTAModuleNotifier90)
+  TModuleNotifierBase = class abstract(TNotifierBase, IOTAModuleNotifier90, IOTAModuleNotifier)
   public
     // IOTAModuleNotifier
     function CheckOverwrite: Boolean; virtual;

@@ -64,6 +64,15 @@ type
       const Canvas: TCanvas; const TextRect: TRect; const LineRect: TRect; const CellSize: TSize); override;
   end;
 
+  TLintModuleSaveBlocker = class(TModuleNotifierBase)
+  private
+    FMessage: string;
+  public
+    constructor Create(Message: string);
+
+    function AllowSave: Boolean; override;
+  end;
+
 //______________________________________________________________________________________________________________________
 
 implementation
@@ -300,6 +309,25 @@ begin
 
     DrawMessage(Msg);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintModuleSaveBlocker.AllowSave: Boolean;
+begin
+  // This notifier method is seemingly non-functional
+
+  Log.Info('AllowSave checked');
+  if FMessage <> '' then begin
+    ShowMessage(FMessage);
+  end;
+  Result := False;
+end;
+
+constructor TLintModuleSaveBlocker.Create(Message: string);
+begin
+  inherited Create;
+  FMessage := Message;
 end;
 
 end.
