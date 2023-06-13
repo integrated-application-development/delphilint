@@ -262,7 +262,7 @@ begin
   end;
 
   AnalyzeFiles(
-    [SourceEditor.FileName],
+    [SourceEditor.FileName, ProjectFile],
     ProjectDir,
     ProjectOptions.SonarHostUrl,
     ProjectOptions.ProjectKey);
