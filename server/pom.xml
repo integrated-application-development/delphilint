@@ -7,9 +7,36 @@
   <groupId>au.com.integradev.delphilint</groupId>
   <artifactId>delphilint-server</artifactId>
   <version>1.0-SNAPSHOT</version>
+  
+  <name>DelphiLint Server</name>
+  <description>Code analysis server for SonarDelphi</description>
+  <inceptionYear>2023</inceptionYear>
+  <url>https://github.com/Integrated-Application-Development/delphilint</url>
 
-  <name>delphilint-server</name>
-  <url>http://www.example.com</url>
+  <organization>
+    <name>Integrated Application Development</name>
+    <url>https://www.integradev.com.au/</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <id>ejh</id>
+      <name>Elliot Hillary</name>
+      <email>ehillary@integradev.com.au</email>
+      <organization>Integrated Application Development</organization>
+      <organizationUrl>https://www.integradev.com.au/</organizationUrl>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <compiler.languageLevel>11</compiler.languageLevel>
+    <maven.compiler.release>11</maven.compiler.release>
+  </properties>
 
   <repositories>
     <repository>
@@ -21,13 +48,7 @@
       <url>${project.baseUri}repo</url>
     </repository>
   </repositories>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <compiler.languageLevel>11</compiler.languageLevel>
-    <maven.compiler.release>11</maven.compiler.release>
-  </properties>
-
+  
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
