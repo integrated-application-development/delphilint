@@ -202,7 +202,6 @@ begin
 
   Server := GetOrInitServer;
   if Assigned(Server) then begin
-    Log.Info('Server connected for analysis.');
     Server.Analyze(
       BaseDir,
       Files,
@@ -212,7 +211,6 @@ begin
       ProjectKey);
   end
   else begin
-    Log.Info('Server connection could not be established.');
     FOutputLog.Info('Analysis failed - server connection could not be established.');
     FOnAnalysisFailed.Notify(Files);
   end;
@@ -232,7 +230,7 @@ begin
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
 
   Log.Clear;
-  Log.Info('DelphiLint started.');
+  Log.Info('Context initialised.');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -431,8 +429,6 @@ var
   NewIssuesForFile: TObjectList<TLiveIssue>;
   IssueCount: Integer;
 begin
-  Log.Info(Format('Processing %d issues.', [Length(Issues)]));
-
   NewIssues := TDictionary<string, TObjectList<TLiveIssue>>.Create;
   try
     // Split issues by file and convert to live issues
@@ -464,7 +460,6 @@ begin
 
       // Record analysis
       RecordAnalysis(Path, True, IssueCount);
-      Log.Info(Format('%d issues recorded for %s', [IssueCount, Path]));
     end;
   finally
     FreeAndNil(NewIssues);

@@ -121,7 +121,6 @@ end;
 procedure TEditorLineTracker.TrackLine(Line: Integer);
 begin
   FTracker.AddLine(Line, Line);
-  Log.Info('Line ' + IntToStr(Line) + ' tracked');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -136,7 +135,6 @@ end;
 
 procedure TEditorLineNotifier.LineChanged(OldLine, NewLine, Data: Integer);
 begin
-  Log.Info('(line changed)');
   FOnLineChanged(OldLine, NewLine, Data);
 end;
 

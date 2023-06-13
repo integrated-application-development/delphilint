@@ -119,8 +119,6 @@ end;
 
 procedure TLintEditor.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
 begin
-  Log.Info('View activated for ' + EditView.Buffer.FileName);
-
   FOnActiveFileChanged.Notify(EditView.Buffer.FileName);
 
   if not IsViewInited(EditView) then begin
@@ -133,7 +131,6 @@ end;
 procedure TLintEditor.ViewNotification(const View: IOTAEditView; Operation: TOperation);
 begin
   if Operation = opInsert then begin
-    Log.Info('View created...');
     InitView(View);
   end;
 end;
@@ -169,8 +166,6 @@ begin
     end);
 
   FInitedViews.Add(View);
-
-  Log.Info('Initialised view for ' + View.Buffer.FileName);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -188,15 +183,11 @@ var
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
 begin
-  Log.Info('Resetting tracking for ' + IntToStr(FTrackers.Count) + ' trackers.');
-
   for Tracker in FTrackers do begin
-    Log.Info('Setting tracking for ' + Tracker.FilePath);
     Tracker.ClearTracking;
 
     FileIssues := LintContext.GetIssues(Tracker.FilePath);
     for Issue in FileIssues do begin
-      Log.Info(Format('Tracking line %d (now %d) in %s', [Issue.StartLine, Issue.OriginalStartLine, Issue.FilePath]));
       Tracker.TrackLine(Issue.StartLine);
       Issue.NewLineMoveSession;
     end;
@@ -207,7 +198,6 @@ end;
 
 procedure TLintEditor.OnTrackedLineChanged(const ChangedLine: TChangedLine);
 begin
-  Log.Info(Format('Change: %d->%d (%s)', [ChangedLine.FromLine, ChangedLine.ToLine, ChangedLine.Tracker.FilePath]));
   LintContext.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
 end;
 

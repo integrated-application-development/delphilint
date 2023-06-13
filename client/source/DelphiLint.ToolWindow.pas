@@ -272,10 +272,7 @@ begin
 
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
-        begin
-          Log.Info('File has never been analyzed, clearing.');
           AnalysisCleared;
-        end;
       fasOutdatedAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
           AnalysisSucceeded(History.IssuesFound, True);
