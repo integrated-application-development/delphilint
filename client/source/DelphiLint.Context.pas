@@ -94,9 +94,9 @@ type
     FSaveBlockers: TDictionary<IOTAModule, TLintModuleSaveBlocker>;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
-    procedure OnAnalyzeResult(Issues: TArray<TLintIssue>);
+    procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
-    procedure SaveIssues(Issues: TArray<TLintIssue>);
+    procedure SaveIssues(Issues: TObjectList<TLintIssue>);
     procedure DisplayIssues;
     function GetOrInitServer: TLintServer;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
@@ -481,10 +481,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.OnAnalyzeResult(Issues: TArray<TLintIssue>);
+procedure TLintContext.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
 begin
-  UnblockSavingForAnalysisFiles;
-  SaveIssues(Issues);
+  try
+    SaveIssues(Issues);
+  finally
+    FreeAndNil(Issues);
+  end;
 
   FOnAnalysisComplete.Notify(FCurrentAnalysis.Paths);
   FreeAndNil(FCurrentAnalysis);
@@ -519,7 +522,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.SaveIssues(Issues: TArray<TLintIssue>);
+procedure TLintContext.SaveIssues(Issues: TObjectList<TLintIssue>);
 var
   Issue: TLintIssue;
   LiveIssue: TLiveIssue;

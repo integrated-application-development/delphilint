@@ -50,39 +50,57 @@ type
   TLintMessage = class(TObject)
   private
     FCategory: Byte;
-    FData: TJsonValue;
+    FData: TJSONValue;
   public
     constructor Create(Category: Byte); overload;
-    constructor Create(Category: Byte; Data: TJsonValue); overload;
+    constructor Create(Category: Byte; Data: TJSONValue); overload;
     destructor Destroy; override;
-    class function Initialize(Data: TJsonObject): TLintMessage; static;
-    class function Analyze(Data: TJsonObject): TLintMessage; static;
+    class function Initialize(
+      BdsPath: string;
+      CompilerVersion: string;
+      SonarDelphiJarPath: string
+    ): TLintMessage; static;
+    class function Analyze(
+      BaseDir: string;
+      InputFiles: TArray<string>;
+      SonarHostUrl: string = '';
+      ProjectKey: string = ''
+    ): TLintMessage; static;
     class function Quit: TLintMessage; static;
     property Category: Byte read FCategory;
-    property Data: TJsonValue read FData;
+    property Data: TJSONValue read FData;
   end;
 
 //______________________________________________________________________________________________________________________
 
-  TLintResponseAction = reference to procedure (Message: TLintMessage);
-  TLintAnalyzeAction = reference to procedure(Issues: TArray<TLintIssue>);
-  TLintErrorAction = reference to procedure(Message: string);
+  TResponseAction = reference to procedure (const Message: TLintMessage);
+  TAnalyzeResultAction = reference to procedure(Issues: TObjectList<TLintIssue>);
+  TAnalyzeErrorAction = reference to procedure(Message: string);
 
   TLintServer = class(TThread)
   private
     FTcpClient: TIdTCPClient;
-    FResponseActions: TDictionary<Integer, TLintResponseAction>;
+    FResponseActions: TDictionary<Integer, TResponseAction>;
     FNextId: Integer;
     FTcpLock: TMutex;
 
-    procedure SendMessage(Req: TLintMessage; OnResponse: TLintResponseAction); overload;
+    procedure SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil); overload;
     procedure SendMessage(Req: TLintMessage; Id: Integer); overload;
     procedure OnUnhandledMessage(Message: TLintMessage);
-    // This method is NOT threadsafe and should only ever be called in the lint server thread.
     procedure ReceiveMessage;
 
     procedure StartExtServer(Jar: string; JavaExe: string; Port: Integer; ShowConsole: Boolean);
     procedure StopExtServer;
+
+    procedure OnInitializeResponse(
+      const Response: TLintMessage;
+      InitializeEvent: TEvent
+    );
+    procedure OnAnalyzeResponse(
+      Response: TLintMessage;
+      OnResult: TAnalyzeResultAction;
+      OnError: TAnalyzeErrorAction
+    );
 
   public
     constructor Create(Port: Integer);
@@ -93,9 +111,9 @@ type
     procedure Initialize;
     procedure Analyze(
       BaseDir: string;
-      DelphiFiles: array of string;
-      OnAnalyze: TLintAnalyzeAction;
-      OnError: TLintErrorAction;
+      DelphiFiles: TArray<string>;
+      OnResult: TAnalyzeResultAction;
+      OnError: TAnalyzeErrorAction;
       SonarHostUrl: string = '';
       ProjectKey: string = '');
   end;
@@ -109,20 +127,12 @@ uses
   , DelphiLint.Logger
   , ToolsAPI
   , Winapi.Windows
-  , Winapi.ShellAPI
   , DelphiLint.Settings
   ;
 
 //______________________________________________________________________________________________________________________
 
-class function TLintMessage.Analyze(Data: TJsonObject): TLintMessage;
-begin
-  Result := TLintMessage.Create(C_Analyze, Data);
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLintMessage.Create(Category: Byte; Data: TJsonValue);
+constructor TLintMessage.Create(Category: Byte; Data: TJSONValue);
 begin
   FCategory := Category;
   FData := Data;
@@ -146,10 +156,52 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-class function TLintMessage.Initialize(Data: TJsonObject): TLintMessage;
+class function TLintMessage.Initialize(
+  BdsPath: string;
+  CompilerVersion: string;
+  SonarDelphiJarPath: string
+): TLintMessage;
+var
+  Json: TJSONObject;
 begin
-  Result := TLintMessage.Create(C_Initialize, Data);
+  // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
+  Json := TJSONObject.Create;
+  Json.AddPair('bdsPath', BdsPath);
+  Json.AddPair('compilerVersion', CompilerVersion);
+  Json.AddPair('sonarDelphiJarPath', SonarDelphiJarPath);
+
+  Result := TLintMessage.Create(C_Initialize, Json);
 end;
+
+//______________________________________________________________________________________________________________________
+
+class function TLintMessage.Analyze(
+  BaseDir: string;
+  InputFiles: TArray<string>;
+  SonarHostUrl: string = '';
+  ProjectKey: string = ''
+): TLintMessage;
+var
+  InputFilesJson: TJSONArray;
+  Json: TJSONObject;
+  InputFile: string;
+begin
+  // JSON representation of au.com.integradev.delphilint.messaging.RequestAnalyze
+  InputFilesJson := TJSONArray.Create;
+  for InputFile in InputFiles do begin
+    InputFilesJson.Add(InputFile);
+  end;
+
+  Json := TJSONObject.Create;
+  Json.AddPair('baseDir', BaseDir);
+  Json.AddPair('inputFiles', InputFilesJson);
+  Json.AddPair('sonarHostUrl', SonarHostUrl);
+  Json.AddPair('projectKey', ProjectKey);
+
+  Result := TLintMessage.Create(C_Analyze, Json);
+end;
+
+//______________________________________________________________________________________________________________________
 
 class function TLintMessage.Quit: TLintMessage;
 begin
@@ -165,7 +217,7 @@ begin
   FNextId := 1;
   FTcpLock := TMutex.Create;
 
-  FResponseActions := TDictionary<Integer, TLintResponseAction>.Create;
+  FResponseActions := TDictionary<Integer, TResponseAction>.Create;
 
   if LintSettings.ServerAutoLaunch then begin
     StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, LintSettings.ServerShowConsole);
@@ -203,113 +255,115 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.Analyze(
-  BaseDir: string;
-  DelphiFiles: array of string;
-  OnAnalyze: TLintAnalyzeAction;
-  OnError: TLintErrorAction;
-  SonarHostUrl: string = '';
-  ProjectKey: string = '');
-var
-  Index: Integer;
-  RequestJson: TJsonObject;
-  InputFilesJson: TJsonArray;
-begin
-  Log.Info('Requesting analysis.');
-  Initialize;
-
-  InputFilesJson := TJsonArray.Create;
-
-  for Index := 0 to Length(DelphiFiles) - 1 do begin
-    InputFilesJson.Add(DelphiFiles[Index]);
-  end;
-
-  // JSON representation of au.com.integradev.delphilint.messaging.RequestAnalyze
-  RequestJson := TJsonObject.Create;
-  RequestJson.AddPair('baseDir', BaseDir);
-  RequestJson.AddPair('inputFiles', InputFilesJson);
-  RequestJson.AddPair('sonarHostUrl', SonarHostUrl);
-  RequestJson.AddPair('projectKey', ProjectKey);
-
-  SendMessage(
-    TLintMessage.Analyze(RequestJson),
-    procedure(Response: TLintMessage)
-    var
-      IssuesArrayJson: TJsonArray;
-      Index: Integer;
-      Issues: TArray<TLintIssue>;
-    begin
-      Synchronize(
-        procedure begin
-          Log.Info(Format('Analysis response received (%d)', [Response.Category]));
-        end);
-
-      if Response.Category <> C_AnalyzeResult then begin
-        Synchronize(
-          procedure begin
-            Log.Info(Format('Analyze error (%d): %s', [Response.Category, Response.Data.AsType<string>]));
-            OnError(Response.Data.AsType<string>);
-          end);
-      end
-      else begin
-        if Response.Data.TryGetValue<TJSONArray>('issues', IssuesArrayJson) then begin
-          SetLength(Issues, IssuesArrayJson.Count);
-
-          for Index := 0 to IssuesArrayJson.Count - 1 do begin
-            Issues[Index] := TLintIssue.FromJson(IssuesArrayJson[Index] as TJsonObject);
-          end;
-        end;
-
-        Synchronize(
-          procedure begin
-            Log.Info('Calling post-analyze action.');
-            OnAnalyze(Issues);
-          end);
-      end;
-
-      FreeAndNil(Response);
-    end);
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintServer.Initialize;
 const
   // TODO: Expose compiler version as a setting
   C_CompilerVersion = 'VER350';
   C_LanguageKey = 'delph';
 var
-  DataJson: TJsonObject;
+  InitializeMsg: TLintMessage;
   InitializeCompletedEvent: TEvent;
 begin
   Log.Info('Requesting initialization.');
 
-  // JSON representation of au.com.integradev.delphilint.messaging.RequestInitialize
-  DataJson := TJSONObject.Create;
-  DataJson.AddPair('bdsPath', (BorlandIDEServices as IOTAServices).GetRootDirectory);
-  DataJson.AddPair('compilerVersion', C_CompilerVersion);
-  DataJson.AddPair('sonarDelphiJarPath', LintSettings.SonarDelphiJar);
+  InitializeMsg := TLintMessage.Initialize(
+    (BorlandIDEServices as IOTAServices).GetRootDirectory,
+    C_CompilerVersion,
+    LintSettings.SonarDelphiJar);
 
   InitializeCompletedEvent := TEvent.Create;
+  try
+    SendMessage(
+      InitializeMsg,
+      procedure(const Response: TLintMessage) begin
+        OnInitializeResponse(Response, InitializeCompletedEvent);
+      end);
 
-  SendMessage(
-    TLintMessage.Initialize(DataJson),
-    procedure(Response: TLintMessage) begin
-      InitializeCompletedEvent.SetEvent;
+    if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
+      raise Exception.Create('Initialize timed out');
+    end;
 
-      if Response.Category <> C_Initialized then begin
-        Queue(
-          procedure begin
-            Log.Info(Format('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]));
-          end);
-      end;
-    end);
+    Log.Info('Initialization complete.');
+  finally
+    FreeAndNil(InitializeCompletedEvent);
+  end;
+end;
 
-  if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
-    raise Exception.Create('Initialize timed out');
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.OnInitializeResponse(const Response: TLintMessage; InitializeEvent: TEvent);
+begin
+  if Assigned(InitializeEvent) then begin
+    InitializeEvent.SetEvent;
   end;
 
-  Log.Info('Initialization complete.');
+  if Response.Category <> C_Initialized then begin
+    Log.Info(Format('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.Analyze(
+  BaseDir: string;
+  DelphiFiles: TArray<string>;
+  OnResult: TAnalyzeResultAction;
+  OnError: TAnalyzeErrorAction;
+  SonarHostUrl: string = '';
+  ProjectKey: string = '');
+begin
+  Log.Info('Requesting analysis.');
+  Initialize;
+
+  SendMessage(
+    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey),
+    procedure (const Response: TLintMessage) begin
+      OnAnalyzeResponse(Response, OnResult, OnError);
+    end);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.OnAnalyzeResponse(
+  Response: TLintMessage;
+  OnResult: TAnalyzeResultAction;
+  OnError: TAnalyzeErrorAction
+);
+var
+  IssuesArrayJson: TJSONArray;
+  Index: Integer;
+  Issues: TObjectList<TLintIssue>;
+  ErrorMsg: string;
+  ErrorCat: Byte;
+begin
+  Log.Info(Format('Analysis response received (%d)', [Response.Category]));
+
+  if Response.Category <> C_AnalyzeResult then begin
+    ErrorMsg := Response.Data.AsType<string>;
+    ErrorCat := Response.Category;
+    Log.Info(Format('Analyze error (%d): %s', [ErrorCat, ErrorMsg]));
+    Synchronize(
+      procedure begin
+        OnError(ErrorMsg);
+      end);
+  end
+  else begin
+    IssuesArrayJson := Response.Data.GetValue<TJSONArray>('issues');
+    try
+      Issues := TObjectList<TLintIssue>.Create;
+      for Index := 0 to IssuesArrayJson.Count - 1 do begin
+        Issues.Add(TLintIssue.FromJson(IssuesArrayJson[Index] as TJSONObject));
+      end;
+    finally
+      FreeAndNil(IssuesArrayJson);
+    end;
+
+    Log.Info('Calling post-analyze action.');
+    Synchronize(
+      procedure begin
+        OnResult(Issues);
+      end);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -327,23 +381,24 @@ var
   DataByte: Byte;
 begin
   FTcpLock.Acquire;
+  try
+    FTcpClient.IOHandler.Write(Req.Category);
+    FTcpClient.IOHandler.Write(Id);
 
-  FTcpClient.IOHandler.Write(Req.Category);
-  FTcpClient.IOHandler.Write(Id);
+    if Assigned(Req.Data) then begin
+      DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
 
-  if Assigned(Req.Data) then begin
-    DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
-
-    FTcpClient.IOHandler.Write(Length(DataBytes));
-    for DataByte in DataBytes do begin
-      FTcpClient.IOHandler.Write(DataByte);
+      FTcpClient.IOHandler.Write(Length(DataBytes));
+      for DataByte in DataBytes do begin
+        FTcpClient.IOHandler.Write(DataByte);
+      end;
+    end
+    else begin
+      FTcpClient.IOHandler.Write(Integer(0));
     end;
-  end
-  else begin
-    FTcpClient.IOHandler.Write(Integer(0));
+  finally
+    FTcpLock.Release;
   end;
-
-  FTcpLock.Release;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -406,26 +461,25 @@ end;
 
 procedure TLintServer.StopExtServer;
 begin
-  SendMessage(
-    TLintMessage.Quit,
-    procedure(Msg: TLintMessage)
-    begin
-    end);
+  SendMessage(TLintMessage.Quit);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TLintResponseAction);
+procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil);
 var
-  Id: SmallInt;
+  Id: Integer;
 begin
   FTcpLock.Acquire;
-
-  Id := FNextId;
-  Inc(FNextId);
-  FResponseActions.Add(Id, OnResponse);
-
-  FTcpLock.Release;
+  try
+    Id := FNextId;
+    Inc(FNextId);
+    if Assigned(OnResponse) then begin
+      FResponseActions.Add(Id, OnResponse);
+    end;
+  finally
+    FTcpLock.Release;
+  end;
 
   SendMessage(Req, Id);
 end;
@@ -438,22 +492,30 @@ var
   Category: Byte;
   Length: Integer;
   DataStr: string;
-  DataJsonValue: TJsonValue;
+  DataJsonValue: TJSONValue;
   Message: TLintMessage;
 begin
   Category := FTcpClient.IOHandler.ReadByte;
-  Id := FTcpClient.IOHandler.ReadInt32;
-  Length := FTcpClient.IOHandler.ReadInt32;
-  DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
-  DataJsonValue := TJsonValue.ParseJSONValue(DataStr);
+  FTcpLock.Acquire;
+  try
+    Id := FTcpClient.IOHandler.ReadInt32;
+    Length := FTcpClient.IOHandler.ReadInt32;
+    DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
+  finally
+    FTcpLock.Release;
+  end;
 
+  DataJsonValue := TJSONValue.ParseJSONValue(DataStr);
   Message := TLintMessage.Create(Category, DataJsonValue);
-
-  if FResponseActions.ContainsKey(Id) then begin
-    FResponseActions[Id](Message);
-  end
-  else begin
-    OnUnhandledMessage(Message);
+  try
+    if FResponseActions.ContainsKey(Id) then begin
+      FResponseActions[Id](Message);
+    end
+    else begin
+      OnUnhandledMessage(Message);
+    end;
+  finally
+    FreeAndNil(Message);
   end;
 end;
 
