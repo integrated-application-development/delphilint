@@ -25,8 +25,6 @@ uses
   , System.Generics.Collections
   , DelphiLint.Logger
   , DelphiLint.Events
-  , ToolsAPI
-  , DelphiLint.IDE
   ;
 
 type
@@ -91,7 +89,6 @@ type
     FOnAnalysisStarted: TEventNotifier<TArray<string>>;
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
-    FSaveBlockers: TDictionary<IOTAModule, TLintModuleSaveBlocker>;
 
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
@@ -101,9 +98,6 @@ type
     function GetOrInitServer: TLintServer;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
-
-    procedure BlockSavingForAnalysisFiles;
-    procedure UnblockSavingForAnalysisFiles;
 
   public
     constructor Create;
@@ -147,6 +141,7 @@ uses
   , Vcl.Dialogs
   , System.Hash
   , System.DateUtils
+  , ToolsAPI
   ;
 
 var
@@ -168,72 +163,6 @@ end;
 function LintContextValid: Boolean;
 begin
   Result := not GContextInvalid;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintContext.BlockSavingForAnalysisFiles;
-
-  procedure BlockSave(Module: IOTAModule);
-  var
-    SaveBlocker: TLintModuleSaveBlocker;
-    NotfIndex: Integer;
-  begin
-    SaveBlocker := TLintModuleSaveBlocker.Create(
-      'Please wait for DelphiLint analysis to complete before saving this file.');
-    NotfIndex := Module.AddNotifier(SaveBlocker);
-    FSaveBlockers.Add(Module, SaveBlocker);
-
-    SaveBlocker.OnReleased.AddListener(
-      procedure(const Notf: TNotifierBase) begin
-        Module.RemoveNotifier(NotfIndex);
-      end);
-    SaveBlocker.OnOwnerFreed.AddListener(
-      procedure(const Notf: TNotifierBase) begin
-        FSaveBlockers.Remove(Module);
-      end);
-  end;
-
-var
-  FilePath: string;
-  Module: IOTAModule;
-begin
-  for FilePath in FCurrentAnalysis.FPaths do begin
-    Module := (BorlandIDEServices as IOTAModuleServices).FindModule(FilePath);
-    if not Assigned(Module) then begin
-      Log.Info('Module could not be found for path ' + FilePath + ', saving will not be disabled.');
-      Continue;
-    end;
-    BlockSave(Module);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintContext.UnblockSavingForAnalysisFiles;
-
-  procedure UnblockSave(Module: IOTAModule);
-  begin
-    if FSaveBlockers.ContainsKey(Module) then begin
-      FSaveBlockers.Remove(Module);
-    end
-    else begin
-      Log.Info('Attempted to unblock saving for a file that was never blocked.');
-    end;
-  end;
-
-var
-  FilePath: string;
-  Module: IOTAModule;
-begin
-  for FilePath in FCurrentAnalysis.FPaths do begin
-    Module := (BorlandIDEServices as IOTAModuleServices).FindModule(FilePath);
-    if not Assigned(Module) then begin
-      Log.Info('Module could not be found for path ' + FilePath + ', saving will not be re-enabled.');
-      Continue;
-    end;
-    UnblockSave(Module);
-  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -286,7 +215,6 @@ begin
   FOutputLog.Clear;
   FCurrentAnalysis := TCurrentAnalysis.Create(Files);
   FOnAnalysisStarted.Notify(Files);
-  BlockSavingForAnalysisFiles;
 
   Server := GetOrInitServer;
   if Assigned(Server) then begin
@@ -299,7 +227,6 @@ begin
       ProjectKey);
   end
   else begin
-    UnblockSavingForAnalysisFiles;
     FOutputLog.Info('Analysis failed - server connection could not be established.');
     FOnAnalysisFailed.Notify(Files);
   end;
@@ -317,7 +244,6 @@ begin
   FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
-  FSaveBlockers := TDictionary<IOTAModule, TLintModuleSaveBlocker>.Create;
 
   Log.Clear;
   Log.Info('Context initialised.');
@@ -326,14 +252,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 destructor TLintContext.Destroy;
-var
-  SaveBlocker: TLintModuleSaveBlocker;
 begin
-  for SaveBlocker in FSaveBlockers.Values do begin
-    SaveBlocker.Release;
-  end;
-  FreeAndNil(FSaveBlockers);
-
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
@@ -464,8 +383,6 @@ procedure TLintContext.OnAnalyzeError(Message: string);
 var
   Path: string;
 begin
-  UnblockSavingForAnalysisFiles;
-
   FOutputLog.Info('Error during analysis: ' + Message);
 
   for Path in FCurrentAnalysis.Paths do begin
