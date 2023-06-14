@@ -43,11 +43,15 @@ type
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
+    FMainMenu: TMenuItem;
+
+    procedure CreateMainMenu;
+    procedure DestroyMainMenu;
+
+    procedure Init;
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
-
-    procedure Init;
   end;
 
 procedure Register;
@@ -68,7 +72,6 @@ uses
   , DelphiLint.ToolWindow
   , DelphiLint.IDEUtils
   ;
-
 
 //______________________________________________________________________________________________________________________
 
@@ -104,12 +107,7 @@ end;
 constructor TLintPlugin.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
-end;
 
-//______________________________________________________________________________________________________________________
-
-procedure TLintPlugin.Init;
-begin
   FEditor := TLintEditor.Create;
   FEditor.OnOwnerFreed.AddListener(
     procedure(const Notf: TNotifierBase) begin
@@ -119,8 +117,14 @@ begin
     end);
   FEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(FEditor);
 
+  CreateMainMenu;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.Init;
+begin
   TLintToolWindow.CreateInstance;
-  TLintToolWindow.ShowInstance;
   FEditor.OnActiveFileChanged.AddListener(TLintToolWindow.Instance.ChangeActiveFile);
 end;
 
@@ -128,9 +132,39 @@ end;
 
 destructor TLintPlugin.Destroy;
 begin
+  DestroyMainMenu;
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
   TLintToolWindow.RemoveInstance;
   inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.CreateMainMenu;
+var
+  NTAServices: INTAServices;
+  MenuItem: TMenuItem;
+begin
+  NTAServices := (BorlandIDEServices as INTAServices);
+  FMainMenu := TMenuItem.Create(NTAServices.MainMenu);
+  FMainMenu.Caption := 'DelphiLint';
+
+  MenuItem := TMenuItem.Create(FMainMenu);
+  MenuItem.Action := ActionShowToolWindow;
+  FMainMenu.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(FMainMenu);
+  MenuItem.Action := ActionAnalyzeActiveFile;
+  FMainMenu.Add(MenuItem);
+
+  NTAServices.AddActionMenu('ToolsMenu', nil, FMainMenu);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.DestroyMainMenu;
+begin
+  FreeAndNil(FMainMenu);
 end;
 
 //______________________________________________________________________________________________________________________

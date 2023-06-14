@@ -20,22 +20,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, DelphiLint.Plugin,
-  Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus, Vcl.Buttons, Vcl.VirtualImage;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
+  DelphiLint.ToolFrame;
 
 type
   TLintToolWindow = class(TDockableForm)
-    LintPanel: TPanel;
-    ProgLabel: TLabel;
-    ProgBar: TProgressBar;
-    FileNameLabel: TLabel;
-    LintButton: TBitBtn;
-    ProgImage: TImage;
-    IssueListBox: TListBox;
-    LintButtonPanel: TPanel;
-    procedure FormCreate(Sender: TObject);
   private
     FCurrentPath: string;
+    FFrame: TLintToolFrame;
 
     function IsFileScannable(const Path: string): Boolean;
     procedure UpdateFileNameLabel(NewText: string = '');
@@ -73,7 +65,7 @@ uses
   , System.StrUtils
   , System.IOUtils
   , DelphiLint.IDEUtils
-  , DelphiLint.IssueFrame
+  , DelphiLint.Plugin
   ;
 
 var
@@ -95,7 +87,7 @@ end;
 
 procedure UnregisterDockableForm(var FormInstance: TLintToolWindow);
 begin
-  if @UnregisterFieldAddress <> nil then begin
+  if (@UnregisterFieldAddress <> nil) and Assigned(FormInstance) then begin
     UnregisterFieldAddress(@FormInstance);
   end;
 end;
@@ -106,6 +98,7 @@ procedure CreateDockableForm(var FormInstance: TLintToolWindow);
 begin
   FormInstance := TLintToolWindow.Create(nil);
   RegisterDockableForm(FormInstance);
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FormInstance);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -197,38 +190,20 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TLintToolWindow.Create(Owner: TComponent);
+var
+  Editor: IOTASourceEditor;
 begin
   inherited;
 
   DeskSection := Name;
   AutoSave := True;
   SaveStateNecessary := True;
-end;
 
-//______________________________________________________________________________________________________________________
+  FFrame := TLintToolFrame.Create(Self);
+  FFrame.Parent := Self;
+  FFrame.Align := alClient;
 
-destructor TLintToolWindow.Destroy;
-begin
-  SaveStateNecessary := True;
-  inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolWindow.Focus;
-begin
-  SetFocus;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolWindow.FormCreate(Sender: TObject);
-var
-  Editor: IOTASourceEditor;
-begin
-  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
-
-  IssueListBox.OnDrawItem := OnDrawIssueItem;
+  FFrame.IssueListBox.OnDrawItem := OnDrawIssueItem;
 
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
@@ -255,8 +230,24 @@ begin
     ChangeActiveFile(Editor.FileName);
   end
   else begin
+    AnalysisCleared;
     UpdateFileNameLabel('No file selected');
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLintToolWindow.Destroy;
+begin
+  SaveStateNecessary := True;
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.Focus;
+begin
+  SetFocus;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -264,10 +255,10 @@ end;
 procedure TLintToolWindow.UpdateFileNameLabel(NewText: string = '');
 begin
   if NewText = '' then begin
-    FileNameLabel.Caption := TPath.GetFileName(FCurrentPath);
+    FFrame.FileNameLabel.Caption := TPath.GetFileName(FCurrentPath);
   end
   else begin
-    FileNameLabel.Caption := NewText;
+    FFrame.FileNameLabel.Caption := NewText;
   end;
 end;
 
@@ -284,7 +275,7 @@ begin
   if IsFileScannable(Path) then begin
     FCurrentPath := Path;
     UpdateFileNameLabel;
-    LintButton.Enabled := True;
+    FFrame.LintButton.Enabled := True;
 
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
@@ -311,7 +302,7 @@ begin
     FCurrentPath := '';
     AnalysisCleared;
     UpdateFileNameLabel('File not analyzable');
-    LintButton.Enabled := False;
+    FFrame.LintButton.Enabled := False;
     RefreshIssueView;
   end;
 end;
@@ -320,10 +311,10 @@ end;
 
 procedure TLintToolWindow.AnalysisCleared;
 begin
-  Plugin.LintImages.GetIcon(C_ImgDefault, ProgImage.Picture.Icon);
-  LintButton.Hint := 'Scan current file';
-  ProgLabel.Caption := 'Not analyzed';
-  ProgBar.Hide;
+  Plugin.LintImages.GetIcon(C_ImgDefault, FFrame.ProgImage.Picture.Icon);
+  FFrame.LintButton.Hint := 'Scan current file';
+  FFrame.ProgLabel.Caption := 'Not analyzed';
+  FFrame.ProgBar.Hide;
   RefreshIssueView;
 end;
 
@@ -331,22 +322,22 @@ end;
 
 procedure TLintToolWindow.AnalysisFailed;
 begin
-  Plugin.LintImages.GetIcon(C_ImgError, ProgImage.Picture.Icon);
-  LintButton.Hint := 'Error occurred during analysis';
-  ProgLabel.Caption := 'Failed';
-  ProgBar.Hide;
+  Plugin.LintImages.GetIcon(C_ImgError, FFrame.ProgImage.Picture.Icon);
+  FFrame.LintButton.Hint := 'Error occurred during analysis';
+  FFrame.ProgLabel.Caption := 'Failed';
+  FFrame.ProgBar.Hide;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolWindow.AnalysisStarted;
 begin
-  Plugin.LintImages.GetIcon(C_ImgWorking, ProgImage.Picture.Icon);
-  LintButton.Hint := 'Analysis in progress';
-  ProgLabel.Caption := 'Analyzing';
-  ProgBar.Show;
-  ProgBar.Style := TProgressBarStyle.pbstNormal;
-  ProgBar.Style := TProgressBarStyle.pbstMarquee;
+  Plugin.LintImages.GetIcon(C_ImgWorking, FFrame.ProgImage.Picture.Icon);
+  FFrame.LintButton.Hint := 'Analysis in progress';
+  FFrame.ProgLabel.Caption := 'Analyzing';
+  FFrame.ProgBar.Show;
+  FFrame.ProgBar.Style := TProgressBarStyle.pbstNormal;
+  FFrame.ProgBar.Style := TProgressBarStyle.pbstMarquee;
   Repaint;
 end;
 
@@ -358,15 +349,15 @@ var
 begin
   if IssueCount = 0 then begin
     ImageIndex := IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
-    ProgLabel.Caption := Format('No issues%s', [IfThen(Outdated, ' (outdated)', '')]);
+    FFrame.ProgLabel.Caption := Format('No issues%s', [IfThen(Outdated, ' (outdated)', '')]);
   end
   else begin
     ImageIndex := IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
-    ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
+    FFrame.ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
   end;
-  Plugin.LintImages.GetIcon(ImageIndex, ProgImage.Picture.Icon);
-  LintButton.Hint := 'Analysis succeeded';
-  ProgBar.Hide;
+  Plugin.LintImages.GetIcon(ImageIndex, FFrame.ProgImage.Picture.Icon);
+  FFrame.LintButton.Hint := 'Analysis succeeded';
+  FFrame.ProgBar.Hide;
   RefreshIssueView;
 end;
 
@@ -400,12 +391,12 @@ var
   Issues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
 begin
-  IssueListBox.Clear;
+  FFrame.IssueListBox.Clear;
 
   if FCurrentPath <> '' then begin
     Issues := LintContext.GetIssues(FCurrentPath);
     for Issue in Issues do begin
-      IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
+      FFrame.IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
     end;
   end;
 end;
