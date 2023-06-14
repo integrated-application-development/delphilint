@@ -95,7 +95,8 @@ type
     procedure OnAnalyzeError(Message: string);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>);
     procedure DisplayIssues;
-    function GetOrInitServer: TLintServer;
+    procedure EnsureServerInited;
+    function GetInitedServer: TLintServer;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
 
@@ -216,7 +217,7 @@ begin
   FCurrentAnalysis := TCurrentAnalysis.Create(Files);
   FOnAnalysisStarted.Notify(Files);
 
-  Server := GetOrInitServer;
+  Server := GetInitedServer;
   if Assigned(Server) then begin
     Server.Analyze(
       BaseDir,
@@ -341,8 +342,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetOrInitServer: TLintServer;
+procedure TLintContext.EnsureServerInited;
 begin
+  if Assigned(FServer) and FServer.CheckTerminated then begin
+    FreeAndNil(FServer);
+  end;
+
   if not Assigned(FServer) then begin
     try
       FServer := TLintServer.Create(LintSettings.ServerPort);
@@ -351,6 +356,13 @@ begin
       FServer := nil;
     end;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintContext.GetInitedServer: TLintServer;
+begin
+  EnsureServerInited;
   Result := FServer;
 end;
 

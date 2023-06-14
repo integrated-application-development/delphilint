@@ -26,7 +26,12 @@ public class App {
     var logOutput = new DelphiLintLogOutput();
     SonarLintLogger.setTarget(logOutput);
 
-    var server = new LintServer(14000);
+    int port = 14000;
+    if (args.length > 0) {
+      port = Integer.parseInt(args[0]);
+    }
+
+    var server = new LintServer(port);
     server.run();
   }
 }

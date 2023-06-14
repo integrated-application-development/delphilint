@@ -248,8 +248,13 @@ end;
 procedure TLintServer.Execute;
 begin
   inherited;
+
   while True do begin
-    ReceiveMessage;
+    try
+      ReceiveMessage;
+    except
+      on E: Exception do Break;
+    end;
   end;
 end;
 
