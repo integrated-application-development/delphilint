@@ -46,7 +46,6 @@ contains
   DelphiLint.Context in 'DelphiLint.Context.pas',
   DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
   DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: TLintToolFrame},
-  DelphiLint.IssueFrame in 'DelphiLint.IssueFrame.pas' {LintIssueFrame: TFrame},
   DelphiLint.ToolWindow in 'DelphiLint.ToolWindow.pas' {LintToolWindow: TLintToolWindow};
 
 end.
