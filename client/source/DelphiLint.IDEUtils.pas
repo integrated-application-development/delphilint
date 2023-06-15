@@ -30,6 +30,7 @@ uses
 
 function GetProjectDirectory: string; overload;
 function GetAllFiles: TArray<string>;
+function GetProjectFile: string;
 function IsPasFile(Path: string): Boolean;
 function IsMainFile(Path: string): Boolean;
 function IsDelphiSource(Path: string): Boolean;
@@ -248,6 +249,23 @@ begin
   end;
 
   PasFiles := PasFilesList.ToStringArray;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function GetProjectFile: string;
+var
+  AllFiles: TArray<string>;
+  FilePath: string;
+begin
+  AllFiles := GetAllFiles;
+
+  for FilePath in AllFiles do begin
+    if IsProjectFile(FilePath) then begin
+     Result := FilePath;
+     Exit;
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
