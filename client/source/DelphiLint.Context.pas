@@ -23,8 +23,8 @@ uses
   , System.Classes
   , DelphiLint.Data
   , System.Generics.Collections
-  , DelphiLint.Logger
   , DelphiLint.Events
+  , DelphiLint.Logger
   ;
 
 type
@@ -86,7 +86,6 @@ type
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FRules: TObjectDictionary<string, TRule>;
-    FOutputLog: TLintLogger;
     FCurrentAnalysis: TCurrentAnalysis;
     FOnAnalysisStarted: TEventNotifier<TArray<string>>;
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
@@ -97,7 +96,6 @@ type
     procedure OnAnalyzeError(Message: string);
     procedure OnServerTerminated(Sender: TObject);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>);
-    procedure DisplayIssues;
     procedure EnsureServerInited;
     function GetInitedServer: TLintServer;
     procedure RefreshRules;
@@ -215,7 +213,6 @@ begin
     Exit;
   end;
 
-  FOutputLog.Clear;
   FCurrentAnalysis := TCurrentAnalysis.Create(Files);
   FOnAnalysisStarted.Notify(Files);
 
@@ -230,7 +227,6 @@ begin
       ProjectKey);
   end
   else begin
-    FOutputLog.Info('Analysis failed - server connection could not be established.');
     FOnAnalysisFailed.Notify(Files);
   end;
 end;
@@ -241,7 +237,6 @@ constructor TLintContext.Create;
 begin
   inherited;
   FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
-  FOutputLog := TLintLogger.Create('Issues', False);
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
   FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
@@ -261,7 +256,6 @@ begin
   FreeAndNil(FRules);
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
-  FreeAndNil(FOutputLog);
   FreeAndNil(FFileAnalyses);
   FreeAndNil(FOnAnalysisStarted);
   FreeAndNil(FOnAnalysisComplete);
@@ -269,32 +263,6 @@ begin
   FreeAndNil(FCurrentAnalysis);
 
   inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintContext.DisplayIssues;
-var
-  FileIssues: TArray<TLiveIssue>;
-  Issue: TLiveIssue;
-  FileName: string;
-begin
-  FOutputLog.Clear;
-
-  for FileName in FActiveIssues.Keys do begin
-    FileIssues := GetIssues(FileName);
-    FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
-
-    for Issue in FileIssues do begin
-      FOutputLog.Info(
-        Issue.Message,
-        Issue.FilePath,
-        Issue.StartLine,
-        Issue.StartLineOffset);
-    end;
-  end;
-
-  RefreshEditorWindows;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -413,8 +381,6 @@ begin
       Path: string;
       Paths: TArray<string>;
     begin
-      FOutputLog.Info('Error during analysis: ' + Message);
-
       for Path in FCurrentAnalysis.Paths do begin
         RecordAnalysis(Path, False, 0);
       end;
@@ -446,8 +412,6 @@ begin
       Paths := FCurrentAnalysis.Paths;
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisComplete.Notify(Paths);
-
-      DisplayIssues;
     end);
 end;
 
