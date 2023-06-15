@@ -37,6 +37,7 @@ import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.analysis.container.global.GlobalAnalysisContainer;
+import org.sonarsource.sonarlint.core.analysis.container.module.ModuleContainer;
 import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.progress.ClientProgressMonitor;
 import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
@@ -108,11 +109,15 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection);
 
-    var moduleContainer =
-        globalContainer.getModuleRegistry().createTransientContainer(config.inputFiles());
     Set<Issue> issues = new HashSet<>();
 
-    moduleContainer.analyze(config, issues::add, new ProgressMonitor(progressMonitor));
+    ModuleContainer moduleContainer =
+        globalContainer.getModuleRegistry().createTransientContainer(config.inputFiles());
+    try {
+      moduleContainer.analyze(config, issues::add, new ProgressMonitor(progressMonitor));
+    } finally {
+      moduleContainer.stopComponents();
+    }
 
     if (connection != null) {
       issues = postProcessIssues(issues, connection);

@@ -201,6 +201,9 @@ public class LintServer {
       sendMessage.accept(
           Response.analyzeError(e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
+
+    // I'd rather not have to call this, but the server gets unacceptably large without it
+    System.gc();
   }
 
   private void handleInitialize(
