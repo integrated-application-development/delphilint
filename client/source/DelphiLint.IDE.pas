@@ -70,7 +70,6 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure EditorIdle(const View: IOTAEditView); override;
     procedure BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean); override;
     procedure PaintLine(const View: IOTAEditView; LineNumber: Integer;
       const LineText: PAnsiChar; const TextWidth: Word; const LineAttributes: TOTAAttributeArray;
@@ -192,6 +191,7 @@ var
   Tracker: TEditorLineTracker;
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
+  SourceEditor: IOTASourceEditor;
 begin
   for Tracker in FTrackers do begin
     Tracker.ClearTracking;
@@ -201,6 +201,15 @@ begin
       Tracker.TrackLine(Issue.StartLine);
       Issue.NewLineMoveSession;
     end;
+  end;
+
+  SourceEditor := GetCurrentSourceEditor;
+  if Assigned(SourceEditor) and (SourceEditor.EditViewCount <> 0) then begin
+    TThread.ForceQueue(
+      TThread.Current,
+      procedure begin
+        SourceEditor.EditViews[0].Paint;
+      end);
   end;
 end;
 
@@ -238,15 +247,6 @@ end;
 procedure TLintView.OnAnalysisComplete(const Paths: TArray<string>);
 begin
   FRepaint := True;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintView.EditorIdle(const View: IOTAEditView);
-begin
-  if FRepaint then begin
-    View.GetEditWindow.Form.Repaint;
-  end;
 end;
 
 //______________________________________________________________________________________________________________________

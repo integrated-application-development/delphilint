@@ -61,6 +61,7 @@ type
     procedure RefreshIssueView;
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     procedure OnIssueSelected(Sender: TObject);
+    procedure OnIssueDoubleClicked(Sender: TObject);
 
     procedure RefreshRuleView;
     procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
@@ -237,6 +238,7 @@ begin
 
   FFrame.IssueListBox.OnDrawItem := OnDrawIssueItem;
   FFrame.IssueListBox.OnClick := OnIssueSelected;
+  FFrame.IssueListBox.OnDblClick := OnIssueDoubleClicked;
 
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
@@ -417,6 +419,38 @@ begin
   Canvas.TextOut(Rect.Left + 4, Rect.Top + 4, LocationText);
   Canvas.Font.Style := [fsBold];
   Canvas.TextOut(Rect.Left + 4 + LocationWidth, Rect.Top + 4, Issue.Message);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.OnIssueDoubleClicked(Sender: TObject);
+var
+  SelectedIndex: Integer;
+  SelectedIssue: TLiveIssue;
+  Editor: IOTASourceEditor;
+  Buffer: IOTAEditBuffer;
+begin
+  SelectedIndex := FFrame.IssueListBox.ItemIndex;
+
+  // No item selected
+  if SelectedIndex = -1 then begin
+    Exit;
+  end;
+
+  SelectedIssue := TLiveIssue(FFrame.IssueListBox.Items.Objects[SelectedIndex]);
+
+  // Issue line has been removed
+  if SelectedIssue.StartLine = -1 then begin
+    Exit;
+  end;
+
+  Editor := GetCurrentSourceEditor;
+  if Assigned(Editor) and (Editor.EditViewCount <> 0) then begin
+    Buffer := Editor.EditViews[0].Buffer;
+    Buffer.EditPosition.GotoLine(SelectedIssue.StartLine);
+    Buffer.EditPosition.Move(0, SelectedIssue.StartLineOffset);
+    Buffer.TopView.Paint;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
