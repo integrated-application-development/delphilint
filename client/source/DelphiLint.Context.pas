@@ -278,8 +278,6 @@ var
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
   FileName: string;
-  Rule: TRule;
-  RuleMsg: string;
 begin
   FOutputLog.Clear;
 
@@ -288,19 +286,11 @@ begin
     FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
 
     for Issue in FileIssues do begin
-      Rule := GetRule(Issue.RuleKey);
-
       FOutputLog.Info(
         Issue.Message,
         Issue.FilePath,
         Issue.StartLine,
         Issue.StartLineOffset);
-
-      RuleMsg := 'No associated rule found';
-      if Assigned(Rule) then begin
-        RuleMsg := Format('%s - %s, %s: %s', [Rule.Name, Rule.RuleType, Rule.Severity, Rule.Desc]);
-      end;
-      FOutputLog.Info(RuleMsg);
     end;
   end;
 

@@ -24,7 +24,7 @@ uses
   Vcl.Buttons;
 
 type
- TLintToolFrame = class(TFrame)
+  TLintToolFrame = class(TFrame)
     LintPanel: TPanel;
     ProgLabel: TLabel;
     ProgBar: TProgressBar;
@@ -33,10 +33,53 @@ type
     ProgImage: TImage;
     IssueListBox: TListBox;
     LintButtonPanel: TPanel;
+    RulePanel: TPanel;
+    RuleNameLabel: TLabel;
+    RuleTypeLabel: TLabel;
+    RuleDescLabel: TLabel;
+    ContentPanel: TPanel;
+    SplitPanel: TPanel;
+    RuleHeading: TPanel;
+    procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+  private
+    FResizing: Boolean;
+  public
+    constructor Create(Owner: TComponent); override;
   end;
 
 implementation
 
 {$R *.dfm}
+
+constructor TLintToolFrame.Create(Owner: TComponent);
+begin
+  inherited Create(Owner);
+  FResizing := False;
+end;
+
+procedure TLintToolFrame.SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FResizing := True;
+end;
+
+procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  NewWidth: Integer;
+begin
+  if FResizing then begin
+    NewWidth := RulePanel.Width - X;
+
+    if (NewWidth < ContentPanel.Width - 10) then begin
+      RulePanel.Width := NewWidth;
+    end;
+  end;
+end;
+
+procedure TLintToolFrame.SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FResizing := False;
+end;
 
 end.

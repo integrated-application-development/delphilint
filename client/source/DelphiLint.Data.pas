@@ -55,20 +55,35 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TRuleType = (
+    rtCodeSmell,
+    rtBug,
+    rtVulnerability,
+    rtSecurityHotspot
+  );
+
+  TRuleSeverity = (
+    rsInfo,
+    rsMinor,
+    rsMajor,
+    rsCritical,
+    rsBlocker
+  );
+
   TRule = class(TObject)
   private
     FRuleKey: string;
     FName: string;
     FDesc: string;
-    FSeverity: string;
-    FType: string;
+    FSeverity: TRuleSeverity;
+    FType: TRuleType;
 
   public
     property RuleKey: string read FRuleKey;
     property Name: string read FName;
     property Desc: string read FDesc;
-    property Severity: string read FSeverity;
-    property RuleType: string read FType;
+    property Severity: TRuleSeverity read FSeverity;
+    property RuleType: TRuleType read FType;
 
     constructor FromJson(Json: TJSONObject);
   end;
@@ -76,6 +91,10 @@ type
 //______________________________________________________________________________________________________________________
 
 implementation
+
+uses
+    System.StrUtils
+  ;
 
 //______________________________________________________________________________________________________________________
 
@@ -106,12 +125,15 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TRule.FromJson(Json: TJSONObject);
+const
+  C_Severities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
+  C_RuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
 begin
   FRuleKey := Json.GetValue<string>('key');
   FName := Json.GetValue<string>('name');
   FDesc := Json.GetValue<string>('htmlDesc');
-  FSeverity := Json.GetValue<string>('severity');
-  FType := Json.GetValue<string>('type');
+  FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), C_Severities));
+  FType := TRuleType(IndexStr(Json.GetValue<string>('type'), C_RuleTypes));
 end;
 
 end.

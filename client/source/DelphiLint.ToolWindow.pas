@@ -21,19 +21,49 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  DelphiLint.ToolFrame;
+  DelphiLint.ToolFrame, System.RegularExpressions, DelphiLint.Data;
 
 type
+  THtmlRemover = class(TObject)
+  private
+    FBrRegex: TRegEx;
+    FTagRegex: TRegEx;
+    FConsecutiveSpaceRegex: TRegEx;
+    FConsecutiveNewlineRegex: TRegEx;
+  public
+    constructor Create;
+    function Process(Text: string): string;
+  end;
+
   TLintToolWindow = class(TDockableForm)
+  private const
+    C_RuleSeverityStrs: array[TRuleSeverity] of string = (
+      'Info',
+      'Minor',
+      'Major',
+      'Critical',
+      'Blocker'
+    );
+    C_RuleTypeStrs: array[TRuleType] of string = (
+      'Code smell',
+      'Bug',
+      'Vulnerability',
+      'Security hotspot'
+    );
   private
     FCurrentPath: string;
     FFrame: TLintToolFrame;
+    FHtmlRemover: THtmlRemover;
 
     function IsFileScannable(const Path: string): Boolean;
     procedure UpdateFileNameLabel(NewText: string = '');
 
     procedure RefreshIssueView;
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure OnIssueSelected(Sender: TObject);
+
+    procedure RefreshRuleView;
+    procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
   public
     class procedure CreateInstance;
     class procedure RemoveInstance;
@@ -199,11 +229,14 @@ begin
   AutoSave := True;
   SaveStateNecessary := True;
 
+  FHtmlRemover := THtmlRemover.Create;
+
   FFrame := TLintToolFrame.Create(Self);
   FFrame.Parent := Self;
   FFrame.Align := alClient;
 
   FFrame.IssueListBox.OnDrawItem := OnDrawIssueItem;
+  FFrame.IssueListBox.OnClick := OnIssueSelected;
 
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
@@ -239,6 +272,8 @@ end;
 
 destructor TLintToolWindow.Destroy;
 begin
+  FreeAndNil(FHtmlRemover);
+
   SaveStateNecessary := True;
   inherited;
 end;
@@ -386,12 +421,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintToolWindow.OnIssueSelected(Sender: TObject);
+begin
+  RefreshRuleView;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintToolWindow.RefreshIssueView;
 var
   Issues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
 begin
   FFrame.IssueListBox.Clear;
+  FFrame.IssueListBox.ClearSelection;
 
   if FCurrentPath <> '' then begin
     Issues := LintContext.GetIssues(FCurrentPath);
@@ -399,6 +442,67 @@ begin
       FFrame.IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
     end;
   end;
+
+  RefreshRuleView;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.RefreshRuleView;
+var
+  SelectedIndex: Integer;
+  SelectedIssue: TLiveIssue;
+  Rule: TRule;
+begin
+  SelectedIndex := FFrame.IssueListBox.ItemIndex;
+
+  if SelectedIndex <> -1 then begin
+    SelectedIssue := TLiveIssue(FFrame.IssueListBox.Items.Objects[SelectedIndex]);
+    Rule := LintContext.GetRule(SelectedIssue.RuleKey);
+    FFrame.RulePanel.Visible := True;
+    FFrame.SplitPanel.Visible := True;
+    SetRuleView(Rule.Name, Rule.RuleKey, Rule.RuleType, Rule.Severity, Rule.Desc);
+  end
+  else begin
+    FFrame.RulePanel.Visible := False;
+    FFrame.SplitPanel.Visible := False;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.SetRuleView(
+  Name: string;
+  RuleKey: string;
+  RuleType: TRuleType;
+  Severity: TRuleSeverity;
+  Desc: string
+);
+begin
+  FFrame.RuleNameLabel.Caption := Name;
+  FFrame.RuleTypeLabel.Caption := C_RuleTypeStrs[RuleType] + ' - ' + C_RuleSeverityStrs[Severity];
+  FFrame.RuleDescLabel.Caption := FHtmlRemover.Process(Desc);
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor THtmlRemover.Create;
+begin
+  FBrRegex := TRegEx.Create('<br[^>]*\/?[^>]*>', [roCompiled]);
+  FTagRegex := TRegEx.Create('<[^>]*>', [roCompiled]);
+  FConsecutiveSpaceRegex := TRegEx.Create('[ \t](?=[ \t])', [roCompiled]);
+  FConsecutiveNewlineRegex := TRegEx.Create('\n', [roCompiled]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function THtmlRemover.Process(Text: string): string;
+begin
+  Result := Text;
+  Result := FConsecutiveNewlineRegex.Replace(Result, '');
+  Result := FBrRegex.Replace(Result, #13#10);
+  Result := FTagRegex.Replace(Result, '');
+  Result := FConsecutiveSpaceRegex.Replace(Result, '');
 end;
 
 //______________________________________________________________________________________________________________________
