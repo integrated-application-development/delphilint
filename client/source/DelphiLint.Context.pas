@@ -82,6 +82,7 @@ type
   TLintContext = class(TObject)
   private
     FServer: TLintServer;
+    FServerTerminated: Boolean;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FOutputLog: TLintLogger;
@@ -93,6 +94,7 @@ type
     function ToUnixPath(Path: string; Lower: Boolean = False): string;
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
+    procedure OnServerTerminated(Sender: TObject);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>);
     procedure DisplayIssues;
     procedure EnsureServerInited;
@@ -344,18 +346,28 @@ end;
 
 procedure TLintContext.EnsureServerInited;
 begin
-  if Assigned(FServer) and FServer.CheckTerminated then begin
+  if Assigned(FServer) and FServerTerminated then begin
     FreeAndNil(FServer);
   end;
 
   if not Assigned(FServer) then begin
     try
       FServer := TLintServer.Create(LintSettings.ServerPort);
+      FServer.FreeOnTerminate := False;
+      FServer.OnTerminate := OnServerTerminated;
+      FServerTerminated := False;
     except
       ShowMessage('Server connection could not be established.');
       FServer := nil;
     end;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintContext.OnServerTerminated(Sender: TObject);
+begin
+  FServerTerminated := True;
 end;
 
 //______________________________________________________________________________________________________________________
