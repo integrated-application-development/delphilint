@@ -24,8 +24,11 @@ import au.com.integradev.delphilint.analysis.StandaloneDelphiConfiguration;
 import au.com.integradev.delphilint.messaging.Category;
 import au.com.integradev.delphilint.messaging.RequestAnalyze;
 import au.com.integradev.delphilint.messaging.RequestInitialize;
+import au.com.integradev.delphilint.messaging.RequestRuleRetrieve;
 import au.com.integradev.delphilint.messaging.Response;
 import au.com.integradev.delphilint.messaging.ResponseAnalyzeResult;
+import au.com.integradev.delphilint.messaging.ResponseRuleRetrieveResult;
+import au.com.integradev.delphilint.sonarqube.RuleInfo;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +39,8 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -155,6 +160,9 @@ public class LintServer {
       case ANALYZE:
         handleAnalyze((RequestAnalyze) message.getData(), sendMessage);
         break;
+      case RULE_RETRIEVE:
+        handleRuleRetrieve((RequestRuleRetrieve) message.getData(), sendMessage);
+        break;
       case QUIT:
         LOG.info("Quit received, shutting down.");
         running = false;
@@ -207,5 +215,31 @@ public class LintServer {
       engine = new DelphiAnalysisEngine(delphiConfig);
     }
     sendMessage.accept(Response.initialized());
+  }
+
+  private void handleRuleRetrieve(
+      RequestRuleRetrieve requestRuleRetrieve, Consumer<Response> sendMessage) {
+    try {
+      if (!requestRuleRetrieve.getSonarHostUrl().isEmpty()) {
+        SonarQubeConnection sonarqube =
+            new SonarQubeConnection(
+                requestRuleRetrieve.getSonarHostUrl(),
+                requestRuleRetrieve.getProjectKey(),
+                LANGUAGE_KEY);
+        Map<String, RuleInfo> ruleInfoMap = sonarqube.getRuleInfosByRuleKey();
+        LOG.info("Retrieved " + ruleInfoMap.size() + " rules");
+        sendMessage.accept(
+            Response.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
+      } else {
+        LOG.info("No SonarQube connection, returning default ruleset");
+        // TODO: Have a local set of rule definitions
+        sendMessage.accept(
+            Response.ruleRetrieveResult(new ResponseRuleRetrieveResult(Collections.emptyMap())));
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      sendMessage.accept(
+          Response.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
+    }
   }
 }

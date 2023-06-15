@@ -48,6 +48,14 @@ public class Response {
     return new Response(Category.ANALYZE_ERROR, message);
   }
 
+  public static Response ruleRetrieveResult(ResponseRuleRetrieveResult result) {
+    return new Response(Category.RULE_RETRIEVE_RESULT, result);
+  }
+
+  public static Response ruleRetrieveError(String message) {
+    return new Response(Category.RULE_RETRIEVE_ERROR, message);
+  }
+
   public static Response pong(String data) {
     return new Response(Category.PONG, data);
   }

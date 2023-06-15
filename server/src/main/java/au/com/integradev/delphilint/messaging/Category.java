@@ -27,6 +27,9 @@ public enum Category {
   ANALYZE(30, RequestAnalyze.class),
   ANALYZE_RESULT(35, ResponseAnalyzeResult.class),
   ANALYZE_ERROR(36, String.class),
+  RULE_RETRIEVE(40, RequestRuleRetrieve.class),
+  RULE_RETRIEVE_RESULT(45, ResponseRuleRetrieveResult.class),
+  RULE_RETRIEVE_ERROR(46, String.class),
   INVALID_REQUEST(241, String.class),
   UNEXPECTED_ERROR(242, String.class);
 

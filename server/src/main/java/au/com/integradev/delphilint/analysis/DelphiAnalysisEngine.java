@@ -87,6 +87,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
                     .map(relativePath -> new DelphiLintInputFile(baseDir, relativePath))
                     .collect(Collectors.toUnmodifiableList()));
 
+    // TODO: Have a local set of rules
     if (connection != null) {
       Set<ActiveRule> activeRules =
           connection.getActiveRules().stream()
@@ -113,7 +114,9 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     moduleContainer.analyze(config, issues::add, new ProgressMonitor(progressMonitor));
 
-    issues = postProcessIssues(issues, connection);
+    if (connection != null) {
+      issues = postProcessIssues(issues, connection);
+    }
 
     return issues;
   }

@@ -103,6 +103,40 @@ public class SonarQubeConnection {
     return ruleMap;
   }
 
+  public Map<String, RuleInfo> getRuleInfosByRuleKey() {
+    String apiPath =
+        "/api/rules/search?ps=500&activation=true"
+            + "&f=name,htmlDesc,severity"
+            + "&language="
+            + languageKey;
+
+    QualityProfile profile = getQualityProfile();
+    if (profile != null) {
+      apiPath += "&qprofile=" + profile.getKey();
+    }
+
+    var rootNode = api.getJson(apiPath);
+    if (rootNode == null) {
+      LOG.error("No JSON response from SonarQube for rule information retrieval");
+      return Collections.emptyMap();
+    }
+
+    var rulesArray = rootNode.get("rules");
+    var ruleMap = new HashMap<String, RuleInfo>();
+
+    for (var rule : rulesArray) {
+      try {
+        RuleInfo ruleInfo = jsonMapper.treeToValue(rule, RuleInfo.class);
+        ruleMap.put(ruleInfo.getKey(), ruleInfo);
+      } catch (JsonProcessingException e) {
+        LOG.error("Malformed rule info response from SonarQube: " + e.getMessage());
+        return Collections.emptyMap();
+      }
+    }
+
+    return ruleMap;
+  }
+
   public ConnectedList<ServerIssue> getResolvedIssues() {
     if (projectKey.isEmpty()) {
       return null;

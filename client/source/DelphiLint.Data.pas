@@ -55,6 +55,26 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TRule = class(TObject)
+  private
+    FRuleKey: string;
+    FName: string;
+    FDesc: string;
+    FSeverity: string;
+    FType: string;
+
+  public
+    property RuleKey: string read FRuleKey;
+    property Name: string read FName;
+    property Desc: string read FDesc;
+    property Severity: string read FSeverity;
+    property RuleType: string read FType;
+
+    constructor FromJson(Json: TJSONObject);
+  end;
+
+//______________________________________________________________________________________________________________________
+
 implementation
 
 //______________________________________________________________________________________________________________________
@@ -84,5 +104,14 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
+
+constructor TRule.FromJson(Json: TJSONObject);
+begin
+  FRuleKey := Json.GetValue<string>('key');
+  FName := Json.GetValue<string>('name');
+  FDesc := Json.GetValue<string>('htmlDesc');
+  FSeverity := Json.GetValue<string>('severity');
+  FType := Json.GetValue<string>('type');
+end;
 
 end.

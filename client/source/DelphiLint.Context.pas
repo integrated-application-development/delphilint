@@ -85,6 +85,7 @@ type
     FServerTerminated: Boolean;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
+    FRules: TObjectDictionary<string, TRule>;
     FOutputLog: TLintLogger;
     FCurrentAnalysis: TCurrentAnalysis;
     FOnAnalysisStarted: TEventNotifier<TArray<string>>;
@@ -99,6 +100,7 @@ type
     procedure DisplayIssues;
     procedure EnsureServerInited;
     function GetInitedServer: TLintServer;
+    procedure RefreshRules;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
 
@@ -119,6 +121,8 @@ type
 
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
     function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+
+    function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 
     property OnAnalysisStarted: TEventNotifier<TArray<string>> read FOnAnalysisStarted;
     property OnAnalysisComplete: TEventNotifier<TArray<string>> read FOnAnalysisComplete;
@@ -143,8 +147,8 @@ uses
   , DelphiLint.Settings
   , Vcl.Dialogs
   , System.Hash
-  , System.DateUtils
   , ToolsAPI
+  , System.SyncObjs
   ;
 
 var
@@ -172,10 +176,7 @@ end;
 
 procedure TLintContext.AnalyzeActiveFile;
 var
-  AllFiles: TArray<string>;
   ProjectFile: string;
-  MainFile: string;
-  PasFiles: TArray<string>;
   SourceEditor: IOTASourceEditor;
   ProjectOptions: TLintProjectOptions;
   ProjectDir: string;
@@ -185,8 +186,7 @@ begin
     Exit;
   end;
 
-  DelphiLint.IDEUtils.ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
-
+  ProjectFile := DelphiLint.IDEUtils.GetProjectFile;
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
   ProjectDir := ProjectOptions.ProjectBaseDir;
   if ProjectDir = '' then begin
@@ -210,7 +210,7 @@ procedure TLintContext.AnalyzeFiles(
 var
   Server: TLintServer;
 begin
-  if Assigned(FCurrentAnalysis) then begin
+  if InAnalysis then begin
     Log.Info('Already in analysis.');
     Exit;
   end;
@@ -241,12 +241,14 @@ constructor TLintContext.Create;
 begin
   inherited;
   FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
-  FOutputLog := TLintLogger.Create('Issues');
+  FOutputLog := TLintLogger.Create('Issues', False);
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
   FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
+  FRules := TObjectDictionary<string, TRule>.Create;
+  FServer := nil;
 
   Log.Clear;
   Log.Info('Context initialised.');
@@ -256,6 +258,7 @@ end;
 
 destructor TLintContext.Destroy;
 begin
+  FreeAndNil(FRules);
   FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FOutputLog);
@@ -275,21 +278,29 @@ var
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
   FileName: string;
-  Stale: Boolean;
+  Rule: TRule;
+  RuleMsg: string;
 begin
   FOutputLog.Clear;
 
   for FileName in FActiveIssues.Keys do begin
     FileIssues := GetIssues(FileName);
     FOutputLog.Title(Format('[DelphiLint] %s (%d issues)', [FileIssues[0].FilePath, Length(FileIssues)]));
-    Stale := GetAnalysisStatus(FileName) = fasOutdatedAnalysis;
 
     for Issue in FileIssues do begin
+      Rule := GetRule(Issue.RuleKey);
+
       FOutputLog.Info(
-        Format('%s%s', [Issue.Message, IfThen(Stale, ' (outdated)', '')]),
+        Issue.Message,
         Issue.FilePath,
         Issue.StartLine,
         Issue.StartLineOffset);
+
+      RuleMsg := 'No associated rule found';
+      if Assigned(Rule) then begin
+        RuleMsg := Format('%s - %s, %s: %s', [Rule.Name, Rule.RuleType, Rule.Severity, Rule.Desc]);
+      end;
+      FOutputLog.Info(RuleMsg);
     end;
   end;
 
@@ -404,36 +415,50 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintContext.OnAnalyzeError(Message: string);
-var
-  Path: string;
 begin
-  FOutputLog.Info('Error during analysis: ' + Message);
+  TThread.Queue(
+    TThread.Current,
+    procedure
+    var
+      Path: string;
+      Paths: TArray<string>;
+    begin
+      FOutputLog.Info('Error during analysis: ' + Message);
 
-  for Path in FCurrentAnalysis.Paths do begin
-    RecordAnalysis(Path, False, 0);
-  end;
+      for Path in FCurrentAnalysis.Paths do begin
+        RecordAnalysis(Path, False, 0);
+      end;
 
-  FOnAnalysisFailed.Notify(FCurrentAnalysis.Paths);
+      Paths := FCurrentAnalysis.Paths;
+      FreeAndNil(FCurrentAnalysis);
+      FOnAnalysisFailed.Notify(Paths);
 
-  FreeAndNil(FCurrentAnalysis);
-
-  ShowMessage('There was an error during analysis.' + #13#10 + Message);
+      ShowMessage('There was an error during analysis.' + #13#10 + Message);
+    end);
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintContext.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
 begin
-  try
-    SaveIssues(Issues);
-  finally
-    FreeAndNil(Issues);
-  end;
+  TThread.Queue(
+    TThread.Current,
+    procedure
+    var
+      Paths: TArray<string>;
+    begin
+      try
+        SaveIssues(Issues);
+      finally
+        FreeAndNil(Issues);
+      end;
 
-  FOnAnalysisComplete.Notify(FCurrentAnalysis.Paths);
-  FreeAndNil(FCurrentAnalysis);
+      Paths := FCurrentAnalysis.Paths;
+      FreeAndNil(FCurrentAnalysis);
+      FOnAnalysisComplete.Notify(Paths);
 
-  DisplayIssues;
+      DisplayIssues;
+    end);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -548,6 +573,80 @@ begin
         Issue.LinesMoved := Delta;
       end;
     end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintContext.RefreshRules;
+var
+  Server: TLintServer;
+  ProjectFile: string;
+  ProjectOptions: TLintProjectOptions;
+  RulesRetrieved: TEvent;
+  TimedOut: Boolean;
+begin
+  Log.Info('Refreshing ruleset');
+
+  Server := GetInitedServer;
+
+  ProjectFile := DelphiLint.IDEUtils.GetProjectFile;
+  ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+
+  RulesRetrieved := TEvent.Create;
+  TimedOut := False;
+  try
+    Server.RetrieveRules(
+      ProjectOptions.SonarHostUrl,
+      ProjectOptions.ProjectKey,
+      procedure(Rules: TObjectDictionary<string, TRule>)
+      begin
+        if not TimedOut then begin
+          // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
+          // If FRules is ever accessed by a third thread a mutex will be required.
+          FreeAndNil(FRules);
+          FRules := Rules;
+          Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
+
+          RulesRetrieved.SetEvent;
+        end
+        else begin
+          Log.Info('Server retrieved rules after timeout had expired');
+        end;
+      end,
+      procedure(ErrorMsg: string) begin
+        if not TimedOut then begin
+          Log.Info('Error retrieving latest rules: ' + ErrorMsg);
+          RulesRetrieved.SetEvent;
+        end
+        else begin
+          Log.Info('Server rule retrieval returned error after timeout had expired');
+        end;
+      end);
+
+    if RulesRetrieved.WaitFor(3000) <> TWaitResult.wrSignaled then begin
+      TimedOut := True;
+      Log.Info('Rule retrieval timed out');
+    end;
+  finally
+    FreeAndNil(RulesRetrieved);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintContext.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+begin
+  if FRules.ContainsKey(RuleKey) then begin
+    Result := FRules[RuleKey];
+  end
+  else if AllowRefresh then begin
+    Log.Info('No rule with rulekey ' + RuleKey + ' found, refreshing.');
+    RefreshRules;
+    Result := GetRule(RuleKey, False);
+  end
+  else begin
+    Result := nil;
   end;
 end;
 

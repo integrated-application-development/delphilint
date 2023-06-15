@@ -36,6 +36,9 @@ const
   C_Analyze = 30;
   C_AnalyzeResult = 35;
   C_AnalyzeError = 36;
+  C_RuleRetrieve = 40;
+  C_RuleRetrieveResult = 45;
+  C_RuleRetrieveError = 46;
   C_Initialized = 25;
   C_Uninitialized = 26;
   C_InvalidRequest = 241;
@@ -66,6 +69,10 @@ type
       SonarHostUrl: string = '';
       ProjectKey: string = ''
     ): TLintMessage; static;
+    class function RuleRetrieve(
+      SonarHostUrl: string = '';
+      ProjectKey: string = ''
+    ): TLintMessage; static;
     class function Quit: TLintMessage; static;
     property Category: Byte read FCategory;
     property Data: TJSONValue read FData;
@@ -75,7 +82,8 @@ type
 
   TResponseAction = reference to procedure (const Message: TLintMessage);
   TAnalyzeResultAction = reference to procedure(Issues: TObjectList<TLintIssue>);
-  TAnalyzeErrorAction = reference to procedure(Message: string);
+  TRuleRetrieveResultAction = reference to procedure(Rules: TObjectDictionary<string, TRule>);
+  TErrorAction = reference to procedure(Message: string);
 
   TLintServer = class(TThread)
   private
@@ -99,7 +107,13 @@ type
     procedure OnAnalyzeResponse(
       Response: TLintMessage;
       OnResult: TAnalyzeResultAction;
-      OnError: TAnalyzeErrorAction
+      OnError: TErrorAction
+    );
+
+    procedure OnRuleRetrieveResponse(
+      Response: TLintMessage;
+      OnResult: TRuleRetrieveResultAction;
+      OnError: TErrorAction
     );
 
   public
@@ -113,9 +127,14 @@ type
       BaseDir: string;
       DelphiFiles: TArray<string>;
       OnResult: TAnalyzeResultAction;
-      OnError: TAnalyzeErrorAction;
+      OnError: TErrorAction;
       SonarHostUrl: string = '';
       ProjectKey: string = '');
+    procedure RetrieveRules(
+      SonarHostUrl: string;
+      ProjectKey: string;
+      OnResult: TRuleRetrieveResultAction;
+      OnError: TErrorAction);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -199,6 +218,20 @@ begin
   Json.AddPair('projectKey', ProjectKey);
 
   Result := TLintMessage.Create(C_Analyze, Json);
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey: string): TLintMessage;
+var
+  Json: TJSONObject;
+begin
+  // JSON representation of au.com.integradev.delphilint.messaging.RequestRuleRetrieve
+  Json := TJSONObject.Create;
+  Json.AddPair('sonarHostUrl', SonarHostUrl);
+  Json.AddPair('projectKey', ProjectKey);
+
+  Result := TLintMessage.Create(C_RuleRetrieve, Json);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -313,7 +346,7 @@ procedure TLintServer.Analyze(
   BaseDir: string;
   DelphiFiles: TArray<string>;
   OnResult: TAnalyzeResultAction;
-  OnError: TAnalyzeErrorAction;
+  OnError: TErrorAction;
   SonarHostUrl: string = '';
   ProjectKey: string = '');
 begin
@@ -332,11 +365,20 @@ end;
 procedure TLintServer.OnAnalyzeResponse(
   Response: TLintMessage;
   OnResult: TAnalyzeResultAction;
-  OnError: TAnalyzeErrorAction
+  OnError: TErrorAction
 );
+
+  function ParseIssues(Json: TJSONArray): TObjectList<TLintIssue>;
+  var
+    Index: Integer;
+  begin
+    Result := TObjectList<TLintIssue>.Create;
+    for Index := 0 to Json.Count - 1 do begin
+      Result.Add(TLintIssue.FromJson(Json[Index] as TJSONObject));
+    end;
+  end;
+
 var
-  IssuesArrayJson: TJSONArray;
-  Index: Integer;
   Issues: TObjectList<TLintIssue>;
   ErrorMsg: string;
   ErrorCat: Byte;
@@ -346,28 +388,72 @@ begin
   if Response.Category <> C_AnalyzeResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
+
     Log.Info(Format('Analyze error (%d): %s', [ErrorCat, ErrorMsg]));
-    Synchronize(
-      procedure begin
-        OnError(ErrorMsg);
-      end);
+    OnError(ErrorMsg);
   end
   else begin
-    IssuesArrayJson := Response.Data.GetValue<TJSONArray>('issues');
-    try
-      Issues := TObjectList<TLintIssue>.Create;
-      for Index := 0 to IssuesArrayJson.Count - 1 do begin
-        Issues.Add(TLintIssue.FromJson(IssuesArrayJson[Index] as TJSONObject));
-      end;
-    finally
-      FreeAndNil(IssuesArrayJson);
-    end;
+    Issues := ParseIssues(Response.Data.GetValue<TJSONArray>('issues'));
 
     Log.Info('Calling post-analyze action.');
-    Synchronize(
-      procedure begin
-        OnResult(Issues);
-      end);
+    OnResult(Issues);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.RetrieveRules(
+  SonarHostUrl: string;
+  ProjectKey: string;
+  OnResult: TRuleRetrieveResultAction;
+  OnError: TErrorAction
+);
+begin
+  SendMessage(
+    TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey),
+    procedure (const Response: TLintMessage) begin
+      Log.Info('Rule retrieval response retrieved');
+      OnRuleRetrieveResponse(Response, OnResult, OnError);
+    end);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServer.OnRuleRetrieveResponse(
+  Response: TLintMessage;
+  OnResult: TRuleRetrieveResultAction;
+  OnError: TErrorAction
+);
+
+  function ParseRules(Json: TJSONObject): TObjectDictionary<string, TRule>;
+  var
+    Pair: TJSONPair;
+  begin
+    Result := TObjectDictionary<string, TRule>.Create;
+    for Pair in Json do begin
+      Result.Add(Pair.JsonString.Value, TRule.FromJson(TJSONObject(Pair.JsonValue)));
+    end;
+  end;
+
+var
+  ErrorMsg: string;
+  ErrorCat: Byte;
+  Rules: TObjectDictionary<string, TRule>;
+begin
+  Log.Info(Format('Rule retrieve response received (%d)', [Response.Category]));
+
+  if Response.Category <> C_RuleRetrieveResult then begin
+    ErrorMsg := Response.Data.AsType<string>;
+    ErrorCat := Response.Category;
+
+    Log.Info(Format('Rule retrieve error (%d): %s', [ErrorCat, ErrorMsg]));
+    OnError(ErrorMsg);
+  end
+  else begin
+    Rules := ParseRules(Response.Data.GetValue<TJSONObject>('rules'));
+
+    Log.Info('Calling post-rule retrieve action.');
+    OnResult(Rules);
   end;
 end;
 
