@@ -414,9 +414,17 @@ begin
   Issue := TLiveIssue(ListBox.Items.Objects[Index]);
   Canvas.FillRect(Rect);
 
-  LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
+  if Issue.StartLine <> -1 then begin
+    LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
+  end
+  else begin
+    LocationText := '(deleted) ';
+    Canvas.Font.Color := clGrayText;
+  end;
+
   LocationWidth := Canvas.TextWidth(LocationText);
   Canvas.TextOut(Rect.Left + 4, Rect.Top + 4, LocationText);
+
   Canvas.Font.Style := [fsBold];
   Canvas.TextOut(Rect.Left + 4 + LocationWidth, Rect.Top + 4, Issue.Message);
 end;
