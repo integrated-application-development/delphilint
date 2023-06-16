@@ -7,7 +7,7 @@ uses
   ;
 
 
-function GetProjectDirectory: string; overload;
+function GetProjectDirectory(ReadOptions: Boolean = True): string; overload;
 function GetAllFiles: TArray<string>;
 function GetProjectFile: string;
 function IsPasFile(Path: string): Boolean;
@@ -17,6 +17,7 @@ function IsProjectFile(Path: string): Boolean;
 procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
 function GetCurrentSourceEditor: IOTASourceEditor;
 procedure RefreshEditorWindows;
+function NormalizePath(const Path: string): string;
 
 implementation
 
@@ -24,6 +25,8 @@ uses
     System.IOUtils
   , System.Classes
   , System.StrUtils
+  , System.SysUtils
+  , DelphiLint.ProjectOptions
   ;
 
 //______________________________________________________________________________________________________________________
@@ -31,6 +34,13 @@ uses
 procedure RefreshEditorWindows;
 begin
   (BorlandIDEServices as IOTAEditorServices).TopView.GetEditWindow.Form.Repaint;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function NormalizePath(const Path: string): string;
+begin
+  Result := StringReplace(LowerCase(Path), '\', '/', [rfReplaceAll]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -52,15 +62,21 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetProjectDirectory: string;
+function GetProjectDirectory(ReadOptions: Boolean = True): string;
 var
-  AllFiles: TArray<string>;
   ProjectFile: string;
-  MainFile: string;
-  PasFiles: TArray<string>;
 begin
-  ExtractFiles(AllFiles, ProjectFile, MainFile, PasFiles);
-  Result := TPath.GetDirectoryName(MainFile);
+  ProjectFile := GetProjectFile;
+
+  if ReadOptions then begin
+    Result := TLintProjectOptions.Create(ProjectFile).ProjectBaseDir;
+
+    if Result <> '' then begin
+      Exit;
+    end;
+  end;
+
+  Result := TPath.GetDirectoryName(ProjectFile);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -118,6 +134,10 @@ var
   I: Integer;
 begin
   Project := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
+
+  if not Assigned(Project) then begin
+    Exit;
+  end;
 
   FileList := TStringList.Create;
   Project.GetCompleteFileList(FileList);

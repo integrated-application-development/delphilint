@@ -196,22 +196,10 @@ function TLintToolWindow.IsFileScannable(const Path: string): Boolean;
 
   function IsProjectFile: Boolean;
   var
-    Project: IOTAProject;
-    FileList: TStringList;
+    ProjectDir: string;
   begin
-    Project := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
-    if Assigned(Project) then begin
-      FileList := TStringList.Create;
-      try
-        Project.GetCompleteFileList(FileList);
-        Result := FileList.IndexOf(Path) <> -1;
-      finally
-        FreeAndNil(FileList);
-      end;
-    end
-    else begin
-      Result := False;
-    end;
+    ProjectDir := NormalizePath(DelphiLint.Utils.GetProjectDirectory);
+    Result := StartsText(ProjectDir, NormalizePath(Path));
   end;
 
 begin

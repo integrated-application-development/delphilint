@@ -91,7 +91,6 @@ type
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
 
-    function ToUnixPath(Path: string; Lower: Boolean = False): string;
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
     procedure OnServerTerminated(Sender: TObject);
@@ -177,7 +176,6 @@ var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
   ProjectOptions: TLintProjectOptions;
-  ProjectDir: string;
 begin
   SourceEditor := DelphiLint.Utils.GetCurrentSourceEditor;
   if not Assigned(SourceEditor) then begin
@@ -186,16 +184,18 @@ begin
 
   ProjectFile := DelphiLint.Utils.GetProjectFile;
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
-  ProjectDir := ProjectOptions.ProjectBaseDir;
-  if ProjectDir = '' then begin
-    ProjectDir := TPath.GetDirectoryName(ProjectFile);
+  try
+    AnalyzeFiles(
+      [SourceEditor.FileName, ProjectFile],
+      IfThen(
+        ProjectOptions.ProjectBaseDir <> '',
+        ProjectOptions.ProjectBaseDir,
+        DelphiLint.Utils.GetProjectDirectory(False)),
+      ProjectOptions.SonarHostUrl,
+      ProjectOptions.ProjectKey);
+  finally
+    FreeAndNil(ProjectOptions);
   end;
-
-  AnalyzeFiles(
-    [SourceEditor.FileName, ProjectFile],
-    ProjectDir,
-    ProjectOptions.SonarHostUrl,
-    ProjectOptions.ProjectKey);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -287,7 +287,7 @@ var
   Issue: TLiveIssue;
   ResultList: TList<TLiveIssue>;
 begin
-  SanitizedName := ToUnixPath(FileName, True);
+  SanitizedName := NormalizePath(FileName);
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
@@ -354,7 +354,7 @@ var
   SanitizedPath: string;
   History: TFileAnalysisHistory;
 begin
-  SanitizedPath := ToUnixPath(Path, True);
+  SanitizedPath := NormalizePath(Path);
 
   if FFileAnalyses.ContainsKey(SanitizedPath) then begin
     History := FFileAnalyses[SanitizedPath];
@@ -427,7 +427,7 @@ begin
   History.IssuesFound := IssuesFound;
   History.FileHash := THashMD5.GetHashStringFromFile(Path);
 
-  SanitizedPath := ToUnixPath(Path, True);
+  SanitizedPath := NormalizePath(Path);
   FFileAnalyses.AddOrSetValue(SanitizedPath, History);
 
   Log.Info(Format(
@@ -458,7 +458,7 @@ begin
     for Issue in Issues do begin
       LiveIssue := TLiveIssue.CreateFromData(Issue);
 
-      SanitizedPath := ToUnixPath(Issue.FilePath, True);
+      SanitizedPath := NormalizePath(Issue.FilePath);
       if not NewIssues.ContainsKey(SanitizedPath) then begin
         NewIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
       end;
@@ -467,7 +467,7 @@ begin
 
     // Process issues per file
     for Path in FCurrentAnalysis.Paths do begin
-      SanitizedPath := ToUnixPath(Path, True);
+      SanitizedPath := NormalizePath(Path);
 
       // Remove current active issues
       if FActiveIssues.ContainsKey(SanitizedPath) then begin
@@ -491,20 +491,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.ToUnixPath(Path: string; Lower: Boolean = False): string;
-begin
-  if Lower then begin
-    Path := LowerCase(Path);
-  end;
-
-  Result := StringReplace(Path, '\', '/', [rfReplaceAll]);
-end;
-
-//______________________________________________________________________________________________________________________
-
 function TLintContext.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 begin
-  Result := FFileAnalyses.TryGetValue(ToUnixPath(Path, True), History);
+  Result := FFileAnalyses.TryGetValue(NormalizePath(Path), History);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -516,7 +505,7 @@ var
   Delta: Integer;
   Index: Integer;
 begin
-  SanitizedPath := ToUnixPath(FilePath, True);
+  SanitizedPath := NormalizePath(FilePath);
   Delta := NewLine - OriginalLine;
 
   if FActiveIssues.ContainsKey(SanitizedPath) then begin
