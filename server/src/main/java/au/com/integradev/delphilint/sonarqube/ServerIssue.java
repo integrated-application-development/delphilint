@@ -28,7 +28,10 @@ public class ServerIssue {
   @JsonProperty private String key;
   @JsonProperty private String rule;
   @JsonProperty private String project;
-  @JsonProperty private int line;
+
+  @JsonProperty(defaultValue = "-1")
+  private int line;
+
   @JsonProperty private String hash;
   @JsonProperty private TextRange textRange;
   @JsonProperty private String resolution;
@@ -62,6 +65,9 @@ public class ServerIssue {
   }
 
   public TextRange getTextRange() {
+    if (textRange == null) {
+      textRange = new TextRange();
+    }
     return textRange;
   }
 
