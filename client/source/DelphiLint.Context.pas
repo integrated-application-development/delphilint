@@ -297,7 +297,7 @@ begin
       ResultList := TList<TLiveIssue>.Create;
       try
         for Issue in FActiveIssues[SanitizedName] do begin
-          if (Issue.StartLine >= Line) and (Issue.EndLine <= Line) then begin
+          if (Line >= Issue.StartLine) and (Line <= Issue.EndLine) then begin
             ResultList.Add(Issue);
           end;
         end;

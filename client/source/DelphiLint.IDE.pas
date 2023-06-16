@@ -408,6 +408,9 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
 
     StartX := Max(ColumnToPx(StartChar), TextRect.Left);
     EndX := Max(ColumnToPx(EndChar), TextRect.Left);
+    if EndChar = -1 then begin
+      EndX := TextRect.Right;
+    end;
 
     Canvas.MoveTo(StartX, TextRect.Bottom - 1);
     Canvas.LineTo(EndX, TextRect.Bottom - 1);
@@ -426,14 +429,30 @@ var
   Issues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
   Msg: string;
+  StartLineOffset: Integer;
+  EndLineOffset: Integer;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
   Issues := LintContext.GetIssues(CurrentModule.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
     for Issue in Issues do begin
-      Msg := Msg + ' - ' + Issue.Message;
-      DrawLine(Issue.StartLineOffset, Issue.EndLineOffset);
+      StartLineOffset := Issue.StartLineOffset;
+      EndLineOffset := Issue.EndLineOffset;
+
+      if Issue.StartLine <> LineNumber then begin
+        StartLineOffset := 0;
+      end;
+
+      if Issue.EndLine <> LineNumber then begin
+        EndLineOffset := -1;
+      end;
+
+      DrawLine(StartLineOffset, EndLineOffset);
+
+      if Issue.StartLine = LineNumber then begin
+        Msg := Msg + ' - ' + Issue.Message;
+      end;
     end;
 
     DrawMessage(Msg);
