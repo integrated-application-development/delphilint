@@ -49,6 +49,9 @@ type
     procedure DestroyMainMenu;
 
     procedure Init;
+
+    procedure OnAnalysisStarted(const Paths: TArray<string>);
+    procedure OnAnalysisEnded(const Paths: TArray<string>);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -118,6 +121,10 @@ begin
   FEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(FEditor);
 
   CreateMainMenu;
+
+  LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
+  LintContext.OnAnalysisComplete.AddListener(OnAnalysisEnded);
+  LintContext.OnAnalysisFailed.AddListener(OnAnalysisEnded);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -130,8 +137,28 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintPlugin.OnAnalysisStarted(const Paths: TArray<string>);
+begin
+  ActionAnalyzeActiveFile.Enabled := False;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.OnAnalysisEnded(const Paths: TArray<string>);
+begin
+  ActionAnalyzeActiveFile.Enabled := True;
+end;
+
+//______________________________________________________________________________________________________________________
+
 destructor TLintPlugin.Destroy;
 begin
+  if LintContextValid then begin
+    LintContext.OnAnalysisStarted.RemoveListener(OnAnalysisStarted);
+    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisEnded);
+    LintContext.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
+  end;
+
   DestroyMainMenu;
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
   TLintToolWindow.RemoveInstance;
