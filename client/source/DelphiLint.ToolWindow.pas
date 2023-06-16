@@ -81,6 +81,7 @@ type
     procedure AnalysisCleared;
     procedure AnalysisSucceeded(IssueCount: Integer; Outdated: Boolean = False);
     procedure ChangeActiveFile(const Path: string);
+    procedure RefreshActiveFile;
   end;
 
 implementation
@@ -239,7 +240,7 @@ begin
       History: TFileAnalysisHistory;
     begin
       if LintContext.TryGetAnalysisHistory(Paths[0], History) then begin
-        AnalysisSucceeded(History.IssuesFound, False);
+        RefreshActiveFile;
       end;
     end);
 
@@ -292,13 +293,22 @@ end;
 procedure TLintToolWindow.ChangeActiveFile(const Path: string);
 var
   History: TFileAnalysisHistory;
+  FileScannable: Boolean;
 begin
+  FileScannable := IsFileScannable(Path);
+
+  if FileScannable then begin
+    FCurrentPath := Path;
+  end
+  else begin
+    FCurrentPath := '';
+  end;
+
   if LintContext.InAnalysis then begin
     Exit;
   end;
 
-  if IsFileScannable(Path) then begin
-    FCurrentPath := Path;
+  if FileScannable then begin
     UpdateFileNameLabel;
     FFrame.LintButton.Enabled := True;
 
@@ -307,7 +317,12 @@ begin
           AnalysisCleared;
       fasOutdatedAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
-          AnalysisSucceeded(History.IssuesFound, True);
+          if History.Success then begin
+            AnalysisSucceeded(History.IssuesFound, True);
+          end
+          else begin
+            AnalysisFailed;
+          end;
         end
         else begin
           Log.Info('Could not get analysis history for file ' + Path + ' with apparently outdated analysis.');
@@ -315,7 +330,12 @@ begin
         end;
       fasUpToDateAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
-          AnalysisSucceeded(History.IssuesFound, False);
+          if History.Success then begin
+            AnalysisSucceeded(History.IssuesFound, False);
+          end
+          else begin
+            AnalysisFailed;
+          end;
         end
         else begin
           Log.Info('Could not get analysis history for file ' + Path + ' with apparently up-to-date analysis.');
@@ -324,7 +344,6 @@ begin
     end;
   end
   else begin
-    FCurrentPath := '';
     AnalysisCleared;
     UpdateFileNameLabel('File not analyzable');
     FFrame.LintButton.Enabled := False;
@@ -454,6 +473,13 @@ end;
 procedure TLintToolWindow.OnIssueSelected(Sender: TObject);
 begin
   RefreshRuleView;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolWindow.RefreshActiveFile;
+begin
+  ChangeActiveFile(FCurrentPath);
 end;
 
 //______________________________________________________________________________________________________________________
