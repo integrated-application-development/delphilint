@@ -38,14 +38,14 @@ contains
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
-  DelphiLint.IDEUtils in 'DelphiLint.IDEUtils.pas',
+  DelphiLint.NotifierBase in 'DelphiLint.NotifierBase.pas',
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
-  DelphiLint.EditorSync in 'DelphiLint.EditorSync.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
   DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
-  DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: TLintToolFrame},
-  DelphiLint.ToolWindow in 'DelphiLint.ToolWindow.pas' {LintToolWindow: TLintToolWindow};
+  DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: T},
+  DelphiLint.ToolWindow in 'DelphiLint.ToolWindow.pas' {LintToolWindow: T},
+  DelphiLint.Utils in 'DelphiLint.Utils.pas';
 
 end.

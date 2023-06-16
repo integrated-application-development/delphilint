@@ -87,11 +87,10 @@
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
         <DCCReference Include="DelphiLint.Logger.pas"/>
-        <DCCReference Include="DelphiLint.IDEUtils.pas"/>
+        <DCCReference Include="DelphiLint.NotifierBase.pas"/>
         <DCCReference Include="DelphiLint.Events.pas"/>
         <DCCReference Include="DelphiLint.Settings.pas"/>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
-        <DCCReference Include="DelphiLint.EditorSync.pas"/>
         <DCCReference Include="DelphiLint.Context.pas"/>
         <DCCReference Include="DelphiLint.Plugin.pas">
             <Form>LintPlugin</Form>
@@ -108,6 +107,7 @@
             <FormType>dfm</FormType>
             <DesignClass>T</DesignClass>
         </DCCReference>
+        <DCCReference Include="DelphiLint.Utils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

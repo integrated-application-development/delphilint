@@ -20,9 +20,9 @@ interface
 
 uses
     ToolsAPI
-  , DelphiLint.IDEUtils
   , DelphiLint.Events
   , System.Classes
+  , DelphiLint.NotifierBase
   ;
 
 type

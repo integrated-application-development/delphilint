@@ -70,7 +70,7 @@ uses
     ToolsAPI
   , DelphiLint.Context
   , DelphiLint.ToolWindow
-  , DelphiLint.IDEUtils
+  , DelphiLint.NotifierBase
   ;
 
 //______________________________________________________________________________________________________________________

@@ -95,7 +95,7 @@ uses
   , System.Math
   , System.StrUtils
   , System.IOUtils
-  , DelphiLint.IDEUtils
+  , DelphiLint.Utils
   , DelphiLint.Plugin
   ;
 

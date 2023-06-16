@@ -137,7 +137,7 @@ implementation
 
 uses
     DelphiLint.ProjectOptions
-  , DelphiLint.IDEUtils
+  , DelphiLint.Utils
   , System.IOUtils
   , System.SysUtils
   , System.StrUtils
@@ -179,12 +179,12 @@ var
   ProjectOptions: TLintProjectOptions;
   ProjectDir: string;
 begin
-  SourceEditor := DelphiLint.IDEUtils.GetCurrentSourceEditor;
+  SourceEditor := DelphiLint.Utils.GetCurrentSourceEditor;
   if not Assigned(SourceEditor) then begin
     Exit;
   end;
 
-  ProjectFile := DelphiLint.IDEUtils.GetProjectFile;
+  ProjectFile := DelphiLint.Utils.GetProjectFile;
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
   ProjectDir := ProjectOptions.ProjectBaseDir;
   if ProjectDir = '' then begin
@@ -544,7 +544,7 @@ begin
 
   Server := GetInitedServer;
 
-  ProjectFile := DelphiLint.IDEUtils.GetProjectFile;
+  ProjectFile := DelphiLint.Utils.GetProjectFile;
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
 
   RulesRetrieved := TEvent.Create;
