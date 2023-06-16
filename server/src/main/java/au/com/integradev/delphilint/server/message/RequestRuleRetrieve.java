@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.messaging;
+package au.com.integradev.delphilint.server.message;
 
 public class RequestRuleRetrieve {
   private String sonarHostUrl;

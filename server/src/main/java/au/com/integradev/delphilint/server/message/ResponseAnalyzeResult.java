@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.messaging;
+package au.com.integradev.delphilint.server.message;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import au.com.integradev.delphilint.analysis.DelphiLintIssue;
 import au.com.integradev.delphilint.analysis.TextRange;
+import au.com.integradev.delphilint.server.message.data.IssueData;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ResponseAnalyzeResult {
-  @JsonProperty private Set<DelphiLintIssue> issues;
+  @JsonProperty private Set<IssueData> issues;
 
-  private ResponseAnalyzeResult(Set<DelphiLintIssue> issues) {
+  private ResponseAnalyzeResult(Set<IssueData> issues) {
     this.issues = issues;
   }
 
@@ -37,7 +37,7 @@ public class ResponseAnalyzeResult {
 
   public static ResponseAnalyzeResult fromIssueSet(
       Set<org.sonarsource.sonarlint.core.analysis.api.Issue> sonarIssues) {
-    Set<DelphiLintIssue> issues =
+    Set<IssueData> issues =
         sonarIssues.stream()
             .map(
                 sonarIssue -> {
@@ -56,7 +56,7 @@ public class ResponseAnalyzeResult {
                     path = sonarIssue.getInputFile().relativePath();
                   }
 
-                  return new DelphiLintIssue(
+                  return new IssueData(
                       sonarIssue.getRuleKey(), sonarIssue.getMessage(), path, range);
                 })
             .collect(Collectors.toSet());

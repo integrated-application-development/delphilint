@@ -15,31 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.analysis;
+package au.com.integradev.delphilint;
 
-import java.nio.file.Path;
+import org.sonarsource.sonarlint.core.commons.log.ClientLogOutput;
 
-public class StandaloneDelphiConfiguration implements DelphiConfiguration {
-  private final String bdsPath;
-  private final String compilerVersion;
-  private final Path sonarDelphiJarPath;
-
-  public StandaloneDelphiConfiguration(
-      String bdsPath, String compilerVersion, Path sonarDelphiJarPath) {
-    this.bdsPath = bdsPath;
-    this.compilerVersion = compilerVersion;
-    this.sonarDelphiJarPath = sonarDelphiJarPath;
-  }
-
-  public String getBdsPath() {
-    return bdsPath;
-  }
-
-  public String getCompilerVersion() {
-    return compilerVersion;
-  }
-
-  public Path getSonarDelphiJarPath() {
-    return sonarDelphiJarPath;
+public class LogOutput implements ClientLogOutput {
+  @Override
+  public void log(String s, Level level) {
+    System.out.println(String.format("[%s] %s", level.toString(), s));
   }
 }

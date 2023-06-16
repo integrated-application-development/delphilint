@@ -19,8 +19,8 @@ package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
 import au.com.integradev.delphilint.sonarqube.ConnectedList;
-import au.com.integradev.delphilint.sonarqube.ServerIssue;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
+import au.com.integradev.delphilint.sonarqube.SonarQubeIssue;
 import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -133,8 +133,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
             .collect(Collectors.toCollection(LinkedList::new));
     Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
 
-    ConnectedList<ServerIssue> resolvedIssues = connection.getResolvedIssues();
-    for (ServerIssue resolvedIssue : resolvedIssues) {
+    ConnectedList<SonarQubeIssue> resolvedIssues = connection.getResolvedIssues();
+    for (SonarQubeIssue resolvedIssue : resolvedIssues) {
       serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
     }
 

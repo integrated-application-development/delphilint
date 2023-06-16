@@ -17,7 +17,7 @@
  */
 package au.com.integradev.delphilint.analysis;
 
-import au.com.integradev.delphilint.sonarqube.ServerIssue;
+import au.com.integradev.delphilint.sonarqube.SonarQubeIssue;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
@@ -97,15 +97,15 @@ public class TrackableWrappers {
     }
   }
 
-  public static class ServerTrackable implements Trackable<ServerIssue> {
-    private final ServerIssue issue;
+  public static class ServerTrackable implements Trackable<SonarQubeIssue> {
+    private final SonarQubeIssue issue;
 
-    public ServerTrackable(ServerIssue issue) {
+    public ServerTrackable(SonarQubeIssue issue) {
       this.issue = issue;
     }
 
     @Override
-    public ServerIssue getClientObject() {
+    public SonarQubeIssue getClientObject() {
       return issue;
     }
 

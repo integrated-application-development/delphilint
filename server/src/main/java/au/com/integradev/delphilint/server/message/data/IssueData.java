@@ -15,22 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.analysis;
+package au.com.integradev.delphilint.server.message.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import au.com.integradev.delphilint.analysis.TextRange;
 
-public class DelphiLintIssue {
+public class IssueData {
   @JsonProperty private String ruleKey;
   @JsonProperty private String message;
   @JsonProperty private String file;
-
-  public void setFile(String file) {
-    this.file = file;
-  }
-
   @JsonProperty private TextRange range;
 
-  public DelphiLintIssue(String ruleKey, String message, String file, TextRange range) {
+  public IssueData(String ruleKey, String message, String file, TextRange range) {
     this.ruleKey = ruleKey;
     this.message = message;
     this.file = file;
@@ -47,6 +43,10 @@ public class DelphiLintIssue {
 
   public String getFile() {
     return file;
+  }
+
+  public void setFile(String file) {
+    this.file = file;
   }
 
   public TextRange getRange() {

@@ -17,13 +17,13 @@
  */
 package au.com.integradev.delphilint;
 
-import au.com.integradev.delphilint.analysis.DelphiLintLogOutput;
+import au.com.integradev.delphilint.server.LintServer;
 import java.io.IOException;
 import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
 
 public class App {
   public static void main(String[] args) throws IOException {
-    var logOutput = new DelphiLintLogOutput();
+    var logOutput = new LogOutput();
     SonarLintLogger.setTarget(logOutput);
 
     int port = 14000;

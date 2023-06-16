@@ -15,20 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint;
+package au.com.integradev.delphilint.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
-import au.com.integradev.delphilint.analysis.StandaloneDelphiConfiguration;
-import au.com.integradev.delphilint.messaging.Category;
-import au.com.integradev.delphilint.messaging.RequestAnalyze;
-import au.com.integradev.delphilint.messaging.RequestInitialize;
-import au.com.integradev.delphilint.messaging.RequestRuleRetrieve;
-import au.com.integradev.delphilint.messaging.Response;
-import au.com.integradev.delphilint.messaging.ResponseAnalyzeResult;
-import au.com.integradev.delphilint.messaging.ResponseRuleRetrieveResult;
-import au.com.integradev.delphilint.sonarqube.RuleInfo;
+import au.com.integradev.delphilint.analysis.DelphiConfiguration;
+import au.com.integradev.delphilint.server.message.RequestAnalyze;
+import au.com.integradev.delphilint.server.message.RequestInitialize;
+import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
+import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
+import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
+import au.com.integradev.delphilint.server.message.data.RuleData;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +40,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
@@ -83,14 +82,14 @@ public class LintServer {
     clientSocket.close();
   }
 
-  private void writeStream(OutputStream out, int id, Response response) {
+  private void writeStream(OutputStream out, int id, LintMessage response) {
     LOG.info("Sending {}", response.getCategory());
 
     String dataString;
     try {
       dataString = mapper.writeValueAsString(response.getData());
     } catch (JsonProcessingException e) {
-      writeStream(out, id, Response.unexpectedError(e.getMessage()));
+      writeStream(out, id, LintMessage.unexpectedError(e.getMessage()));
       return;
     }
 
@@ -107,12 +106,12 @@ public class LintServer {
   }
 
   private void readStream(InputStream in, OutputStream out) {
-    Category category;
+    MessageCategory category;
     int id;
     int length;
     String dataString;
     try {
-      category = Category.fromCode(in.read());
+      category = MessageCategory.fromCode(in.read());
       id = ByteBuffer.wrap(in.readNBytes(4)).getInt();
       length = ByteBuffer.wrap(in.readNBytes(4)).getInt();
       dataString = new String(in.readNBytes(length), StandardCharsets.UTF_8);
@@ -122,10 +121,10 @@ public class LintServer {
 
     LOG.info("Received {}", category);
 
-    Consumer<Response> sendMessage = (response -> writeStream(out, id, response));
+    Consumer<LintMessage> sendMessage = (response -> writeStream(out, id, response));
 
     if (category == null) {
-      sendMessage.accept(Response.invalidRequest("Unrecognised category"));
+      sendMessage.accept(LintMessage.invalidRequest("Unrecognised category"));
       return;
     }
 
@@ -133,26 +132,26 @@ public class LintServer {
 
     if (category.getDataClass() != null) {
       if (length == 0) {
-        sendMessage.accept(Response.invalidRequest("No data supplied"));
+        sendMessage.accept(LintMessage.invalidRequest("No data supplied"));
         return;
       }
 
       try {
         data = mapper.readValue(dataString, category.getDataClass());
       } catch (JsonProcessingException e) {
-        sendMessage.accept(Response.invalidRequest("Data is in an incorrect format"));
+        sendMessage.accept(LintMessage.invalidRequest("Data is in an incorrect format"));
         return;
       }
     }
 
     try {
-      processRequest(new Response(category, data), sendMessage);
+      processRequest(new LintMessage(category, data), sendMessage);
     } catch (Exception e) {
-      sendMessage.accept(Response.unexpectedError(e.getMessage()));
+      sendMessage.accept(LintMessage.unexpectedError(e.getMessage()));
     }
   }
 
-  private void processRequest(Response message, Consumer<Response> sendMessage) {
+  private void processRequest(LintMessage message, Consumer<LintMessage> sendMessage) {
     switch (message.getCategory()) {
       case INITIALIZE:
         handleInitialize((RequestInitialize) message.getData(), sendMessage);
@@ -168,16 +167,16 @@ public class LintServer {
         running = false;
         break;
       case PING:
-        sendMessage.accept(Response.pong((String) message.getData()));
+        sendMessage.accept(LintMessage.pong((String) message.getData()));
         break;
       default:
-        sendMessage.accept(Response.invalidRequest("Unhandled request category"));
+        sendMessage.accept(LintMessage.invalidRequest("Unhandled request category"));
     }
   }
 
-  private void handleAnalyze(RequestAnalyze requestAnalyze, Consumer<Response> sendMessage) {
+  private void handleAnalyze(RequestAnalyze requestAnalyze, Consumer<LintMessage> sendMessage) {
     if (engine == null) {
-      sendMessage.accept(Response.uninitialized());
+      sendMessage.accept(LintMessage.uninitialized());
       return;
     }
 
@@ -195,11 +194,11 @@ public class LintServer {
 
       ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
       result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
-      sendMessage.accept(Response.analyzeResult(result));
+      sendMessage.accept(LintMessage.analyzeResult(result));
     } catch (Exception e) {
       e.printStackTrace();
       sendMessage.accept(
-          Response.analyzeError(e.getClass().getSimpleName() + ": " + e.getMessage()));
+          LintMessage.analyzeError(e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
 
     // I'd rather not have to call this, but the server gets unacceptably large without it
@@ -207,21 +206,21 @@ public class LintServer {
   }
 
   private void handleInitialize(
-      RequestInitialize requestInitialize, Consumer<Response> sendMessage) {
+      RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
     if (engine == null) {
       var delphiConfig =
-          new StandaloneDelphiConfiguration(
+          new DelphiConfiguration(
               requestInitialize.getBdsPath(),
               requestInitialize.getCompilerVersion(),
               Path.of(requestInitialize.getSonarDelphiJarPath()));
 
       engine = new DelphiAnalysisEngine(delphiConfig);
     }
-    sendMessage.accept(Response.initialized());
+    sendMessage.accept(LintMessage.initialized());
   }
 
   private void handleRuleRetrieve(
-      RequestRuleRetrieve requestRuleRetrieve, Consumer<Response> sendMessage) {
+      RequestRuleRetrieve requestRuleRetrieve, Consumer<LintMessage> sendMessage) {
     try {
       if (!requestRuleRetrieve.getSonarHostUrl().isEmpty()) {
         SonarQubeConnection sonarqube =
@@ -229,20 +228,23 @@ public class LintServer {
                 requestRuleRetrieve.getSonarHostUrl(),
                 requestRuleRetrieve.getProjectKey(),
                 LANGUAGE_KEY);
-        Map<String, RuleInfo> ruleInfoMap = sonarqube.getRuleInfosByRuleKey();
+        Map<String, RuleData> ruleInfoMap =
+            sonarqube.getRules().stream()
+                .map(RuleData::new)
+                .collect(Collectors.toMap(RuleData::getKey, x -> x));
         LOG.info("Retrieved " + ruleInfoMap.size() + " rules");
         sendMessage.accept(
-            Response.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
+            LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
       } else {
         LOG.info("No SonarQube connection, returning default ruleset");
         // TODO: Have a local set of rule definitions
         sendMessage.accept(
-            Response.ruleRetrieveResult(new ResponseRuleRetrieveResult(Collections.emptyMap())));
+            LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(Collections.emptyMap())));
       }
     } catch (Exception e) {
       e.printStackTrace();
       sendMessage.accept(
-          Response.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
+          LintMessage.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
   }
 }

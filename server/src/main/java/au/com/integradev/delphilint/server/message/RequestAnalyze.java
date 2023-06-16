@@ -15,22 +15,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.messaging;
+package au.com.integradev.delphilint.server.message;
 
-public class RequestInitialize {
-  private String bdsPath;
-  private String compilerVersion;
-  private String sonarDelphiJarPath;
+import java.nio.file.Path;
+import java.util.Set;
 
-  public String getBdsPath() {
-    return bdsPath;
+public class RequestAnalyze {
+  private Path baseDir;
+  private Set<Path> inputFiles;
+  private String sonarHostUrl;
+  private String projectKey;
+
+  public Path getBaseDir() {
+    return baseDir;
   }
 
-  public String getCompilerVersion() {
-    return compilerVersion;
+  public Set<Path> getInputFiles() {
+    return inputFiles;
   }
 
-  public String getSonarDelphiJarPath() {
-    return sonarDelphiJarPath;
+  public String getSonarHostUrl() {
+    return sonarHostUrl;
+  }
+
+  public String getProjectKey() {
+    return projectKey;
   }
 }

@@ -24,7 +24,7 @@ import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServerIssue {
+public class SonarQubeIssue {
   @JsonProperty private String key;
   @JsonProperty private String rule;
   @JsonProperty private String project;

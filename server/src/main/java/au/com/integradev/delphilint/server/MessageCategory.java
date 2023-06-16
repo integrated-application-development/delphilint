@@ -15,9 +15,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.messaging;
+package au.com.integradev.delphilint.server;
 
-public enum Category {
+import au.com.integradev.delphilint.server.message.RequestAnalyze;
+import au.com.integradev.delphilint.server.message.RequestInitialize;
+import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
+import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
+import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
+
+public enum MessageCategory {
   PING(1, String.class),
   PONG(5, String.class),
   QUIT(15),
@@ -36,17 +42,17 @@ public enum Category {
   private int code;
   private final Class<?> dataClass;
 
-  Category(int code) {
+  MessageCategory(int code) {
     this.code = code;
     this.dataClass = null;
   }
 
-  Category(int code, Class<?> clazz) {
+  MessageCategory(int code, Class<?> clazz) {
     this.code = code;
     this.dataClass = clazz;
   }
 
-  public static Category fromCode(int code) {
+  public static MessageCategory fromCode(int code) {
     for (var category : values()) {
       if (category.getCode() == code) {
         return category;

@@ -27,7 +27,7 @@ import java.net.http.HttpResponse.ResponseInfo;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
-public class JsonBodyHandler implements BodyHandler<Supplier<JsonNode>> {
+public class JsonHttpHandler implements BodyHandler<Supplier<JsonNode>> {
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @Override

@@ -50,10 +50,6 @@ public class ApiConnection {
   }
 
   public JsonNode getJson(String url) {
-    return getResponse(hostUrl + url, new JsonBodyHandler());
-  }
-
-  public <T> T getXml(String url, Class<T> clazz) {
-    return getResponse(hostUrl + url, new XmlBodyHandler<>(clazz));
+    return getResponse(hostUrl + url, new JsonHttpHandler());
   }
 }

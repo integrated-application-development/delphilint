@@ -131,7 +131,7 @@ const
 begin
   FRuleKey := Json.GetValue<string>('key');
   FName := Json.GetValue<string>('name');
-  FDesc := Json.GetValue<string>('htmlDesc');
+  FDesc := Json.GetValue<string>('desc');
   FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), C_Severities));
   FType := TRuleType(IndexStr(Json.GetValue<string>('type'), C_RuleTypes));
 end;

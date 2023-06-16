@@ -42,7 +42,7 @@ public class SonarQubeConnection {
     this.jsonMapper = new ObjectMapper();
   }
 
-  public QualityProfile getQualityProfile() {
+  private QualityProfile getQualityProfile() {
     String url = "/api/qualityprofiles/search?language=" + languageKey;
     if (projectKey.isEmpty()) {
       url += "&defaults=true";
@@ -103,7 +103,7 @@ public class SonarQubeConnection {
     return ruleMap;
   }
 
-  public Map<String, RuleInfo> getRuleInfosByRuleKey() {
+  public Set<SonarQubeRule> getRules() {
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
             + "&f=name,htmlDesc,severity"
@@ -118,26 +118,26 @@ public class SonarQubeConnection {
     var rootNode = api.getJson(apiPath);
     if (rootNode == null) {
       LOG.error("No JSON response from SonarQube for rule information retrieval");
-      return Collections.emptyMap();
+      return Collections.emptySet();
     }
 
     var rulesArray = rootNode.get("rules");
-    var ruleMap = new HashMap<String, RuleInfo>();
+    Set<SonarQubeRule> ruleSet = new HashSet<>();
 
     for (var rule : rulesArray) {
       try {
-        RuleInfo ruleInfo = jsonMapper.treeToValue(rule, RuleInfo.class);
-        ruleMap.put(ruleInfo.getKey(), ruleInfo);
+        SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
+        ruleSet.add(sonarQubeRule);
       } catch (JsonProcessingException e) {
         LOG.error("Malformed rule info response from SonarQube: " + e.getMessage());
-        return Collections.emptyMap();
+        return Collections.emptySet();
       }
     }
 
-    return ruleMap;
+    return ruleSet;
   }
 
-  public ConnectedList<ServerIssue> getResolvedIssues() {
+  public ConnectedList<SonarQubeIssue> getResolvedIssues() {
     if (projectKey.isEmpty()) {
       return null;
     }
@@ -146,7 +146,7 @@ public class SonarQubeConnection {
         api,
         "/api/issues/search?resolved=true&componentKeys=" + projectKey,
         "issues",
-        ServerIssue.class);
+        SonarQubeIssue.class);
   }
 
   public Set<ActiveRule> getActiveRules() {
