@@ -491,7 +491,17 @@ begin
     Rule := LintContext.GetRule(SelectedIssue.RuleKey);
     FFrame.RulePanel.Visible := True;
     FFrame.SplitPanel.Visible := True;
-    SetRuleView(Rule.Name, Rule.RuleKey, Rule.RuleType, Rule.Severity, Rule.Desc);
+    if Assigned(Rule) then begin
+      SetRuleView(Rule.Name, Rule.RuleKey, Rule.RuleType, Rule.Severity, Rule.Desc);
+    end
+    else begin
+      SetRuleView(
+        SelectedIssue.RuleKey,
+        SelectedIssue.RuleKey,
+        TRuleType.rtCodeSmell,
+        TRuleSeverity.rsMinor,
+        'Metadata for this rule could not be retrieved.');
+    end;
   end
   else begin
     FFrame.RulePanel.Visible := False;
