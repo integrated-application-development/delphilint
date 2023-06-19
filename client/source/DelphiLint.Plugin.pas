@@ -38,6 +38,11 @@ type
     LintPopupMenu: TPopupMenu;
     ActionAnalyzeActiveFile: TAction;
     ActionShowToolWindow: TAction;
+    ActionAnalyzeShort: TAction;
+    ActionOpenProjectOptions: TAction;
+    ActionOpenSettings: TAction;
+    ActionAnalyzeOpenFiles: TAction;
+    ActionRestartServer: TAction;
     procedure ActionShowToolWindowExecute(Sender: TObject);
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
   private
@@ -168,21 +173,40 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.CreateMainMenu;
+
+  procedure AddItem(Action: TAction);
+  var
+    MenuItem: TMenuItem;
+  begin
+    MenuItem := TMenuItem.Create(FMainMenu);
+    MenuItem.Action := Action;
+    FMainMenu.Add(MenuItem);
+  end;
+
+  procedure AddSeparator;
+  var
+    MenuItem: TMenuItem;
+  begin
+    MenuItem := TMenuItem.Create(FMainMenu);
+    MenuItem.Caption := '-';
+    FMainMenu.Add(MenuItem);
+  end;
+
 var
   NTAServices: INTAServices;
-  MenuItem: TMenuItem;
 begin
   NTAServices := (BorlandIDEServices as INTAServices);
   FMainMenu := TMenuItem.Create(NTAServices.MainMenu);
   FMainMenu.Caption := 'DelphiLint';
 
-  MenuItem := TMenuItem.Create(FMainMenu);
-  MenuItem.Action := ActionShowToolWindow;
-  FMainMenu.Add(MenuItem);
-
-  MenuItem := TMenuItem.Create(FMainMenu);
-  MenuItem.Action := ActionAnalyzeActiveFile;
-  FMainMenu.Add(MenuItem);
+  AddItem(ActionShowToolWindow);
+  AddSeparator;
+  AddItem(ActionAnalyzeActiveFile);
+  AddItem(ActionAnalyzeOpenFiles);
+  AddSeparator;
+  AddItem(ActionOpenProjectOptions);
+  AddItem(ActionOpenSettings);
+  AddItem(ActionRestartServer);
 
   NTAServices.AddActionMenu('ToolsMenu', nil, FMainMenu);
 end;

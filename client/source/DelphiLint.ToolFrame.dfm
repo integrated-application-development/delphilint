@@ -186,7 +186,7 @@ object LintToolFrame: TLintToolFrame
         Top = 7
         Width = 84
         Height = 24
-        Action = LintPlugin.ActionAnalyzeActiveFile
+        Action = LintPlugin.ActionAnalyzeShort
         Anchors = [akTop, akRight]
         Caption = 'Analyze'
         Images = LintPlugin.LintImages
