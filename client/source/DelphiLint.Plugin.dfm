@@ -441,6 +441,7 @@ object LintPlugin: TLintPlugin
     end
     object ActionRestartServer: TAction
       Caption = 'Restart Server'
+      OnExecute = ActionRestartServerExecute
     end
   end
   object LintPopupMenu: TPopupMenu

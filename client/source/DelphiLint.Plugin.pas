@@ -45,6 +45,7 @@ type
     ActionRestartServer: TAction;
     procedure ActionShowToolWindowExecute(Sender: TObject);
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
+    procedure ActionRestartServerExecute(Sender: TObject);
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
@@ -86,6 +87,13 @@ uses
 procedure TLintPlugin.ActionAnalyzeActiveFileExecute(Sender: TObject);
 begin
   LintContext.AnalyzeActiveFile;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.ActionRestartServerExecute(Sender: TObject);
+begin
+  LintContext.RestartServer;
 end;
 
 //______________________________________________________________________________________________________________________

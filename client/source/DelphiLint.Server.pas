@@ -286,7 +286,16 @@ begin
     try
       ReceiveMessage;
     except
-      on E: Exception do Break;
+      on E: Exception do begin
+        FTcpClient.CheckForGracefulDisconnect(False);
+        if not FTcpClient.Connected then begin
+          Log.Info('TCP connection to server was unexpectedly terminated.');
+          Break;
+        end
+        else begin
+          Log.Info('Error occurred in server thread: ' + E.Message);
+        end;
+      end;
     end;
   end;
 end;
@@ -552,7 +561,10 @@ end;
 
 procedure TLintServer.StopExtServer;
 begin
-  SendMessage(TLintMessage.Quit);
+  FTcpClient.CheckForGracefulDisconnect(False);
+  if FTcpClient.Connected then begin
+    SendMessage(TLintMessage.Quit);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

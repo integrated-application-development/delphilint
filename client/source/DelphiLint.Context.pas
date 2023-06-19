@@ -116,6 +116,8 @@ type
       const ProjectKey: string = '');
     procedure AnalyzeActiveFile;
 
+    procedure RestartServer;
+
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
     function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 
@@ -574,6 +576,28 @@ begin
   finally
     FreeAndNil(RulesRetrieved);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintContext.RestartServer;
+begin
+  FreeAndNil(FServer);
+  Sleep(500);
+  try
+    GetInitedServer;
+  except
+    on E: Exception do begin
+      MessageDlg(
+        'DelphiLint server restart encountered error: ' + E.Message,
+        TMsgDlgType.mtError,
+        [TMsgDlgBtn.mbOK],
+        0);
+      FreeAndNil(FServer);
+    end;
+  end;
+
+  MessageDlg('DelphiLint server restarted successfully.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
 end;
 
 //______________________________________________________________________________________________________________________
