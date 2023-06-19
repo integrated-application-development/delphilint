@@ -153,6 +153,8 @@ end;
 procedure TLintPlugin.OnAnalysisStarted(const Paths: TArray<string>);
 begin
   ActionAnalyzeActiveFile.Enabled := False;
+  ActionAnalyzeShort.Enabled := False;
+  ActionAnalyzeOpenFiles.Enabled := False;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -160,6 +162,8 @@ end;
 procedure TLintPlugin.OnAnalysisEnded(const Paths: TArray<string>);
 begin
   ActionAnalyzeActiveFile.Enabled := True;
+  ActionAnalyzeShort.Enabled := True;
+  ActionAnalyzeOpenFiles.Enabled := False; // TODO: Implement AnalyzeOpenFiles
 end;
 
 //______________________________________________________________________________________________________________________
