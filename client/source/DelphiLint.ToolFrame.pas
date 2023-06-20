@@ -156,6 +156,10 @@ begin
     AnalysisCleared;
     UpdateFileNameLabel('No file selected');
   end;
+
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self.Owner);
+
+  Plugin.RegisterToolFrame(Self);
 end;
 
 //______________________________________________________________________________________________________________________

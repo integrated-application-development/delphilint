@@ -20,7 +20,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE;
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, DelphiLint.ToolFormInfo, Vcl.Forms, DelphiLint.ToolFrame;
 
 const
   C_ImgDefault = 0;
@@ -51,11 +51,11 @@ type
     FEditorNotifier: Integer;
     FMainMenu: TMenuItem;
     FAnalysisActionsEnabled: Boolean;
+    FToolFormInfo: TLintToolFormInfo;
+    FToolForm: TCustomForm;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
-
-    procedure Init;
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisEnded(const Paths: TArray<string>);
@@ -66,6 +66,8 @@ type
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
+
+    procedure RegisterToolFrame(Frame: TLintToolFrame);
 
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
   end;
@@ -85,7 +87,6 @@ implementation
 uses
     ToolsAPI
   , DelphiLint.Context
-  , DelphiLint.ToolWindow
   , DelphiLint.NotifierBase
   ;
 
@@ -114,7 +115,12 @@ end;
 
 procedure TLintPlugin.ActionShowToolWindowExecute(Sender: TObject);
 begin
-  TLintToolWindow.ShowInstance;
+  if not Assigned(FToolForm) then begin
+    FToolForm := (BorlandIDEServices as INTAServices).CreateDockableForm(FToolFormInfo);
+  end;
+
+  FToolForm.Show;
+  FToolForm.SetFocus;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -129,7 +135,6 @@ end;
 procedure Register;
 begin
   GPlugin := TLintPlugin.Create(nil);
-  GPlugin.Init;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -154,14 +159,9 @@ begin
   LintContext.OnAnalysisFailed.AddListener(OnAnalysisEnded);
 
   AnalysisActionsEnabled := True;
-end;
 
-//______________________________________________________________________________________________________________________
-
-procedure TLintPlugin.Init;
-begin
-  TLintToolWindow.CreateInstance;
-  FEditor.OnActiveFileChanged.AddListener(TLintToolWindow.Instance.Frame.ChangeActiveFile);
+  FToolFormInfo := TLintToolFormInfo.Create;
+  (BorlandIDEServices as INTAServices).RegisterDockableForm(FToolFormInfo);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -190,7 +190,7 @@ begin
 
   DestroyMainMenu;
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
-  TLintToolWindow.RemoveInstance;
+  (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
   inherited;
 end;
 
@@ -264,6 +264,13 @@ begin
     ActionAnalyzeShort.Enabled := False;
     ActionAnalyzeOpenFiles.Enabled := False;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.RegisterToolFrame(Frame: TLintToolFrame);
+begin
+  FEditor.OnActiveFileChanged.AddListener(Frame.ChangeActiveFile);
 end;
 
 //______________________________________________________________________________________________________________________

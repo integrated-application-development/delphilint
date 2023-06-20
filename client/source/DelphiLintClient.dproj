@@ -102,11 +102,7 @@
             <FormType>dfm</FormType>
             <DesignClass>T</DesignClass>
         </DCCReference>
-        <DCCReference Include="DelphiLint.ToolWindow.pas">
-            <Form>LintToolWindow</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>T</DesignClass>
-        </DCCReference>
+        <DCCReference Include="DelphiLint.ToolFormInfo.pas"/>
         <DCCReference Include="DelphiLint.Utils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

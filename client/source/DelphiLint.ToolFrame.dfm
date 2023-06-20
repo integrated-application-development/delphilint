@@ -130,7 +130,6 @@ object LintToolFrame: TLintToolFrame
       Align = alBottom
       BevelOuter = bvNone
       Caption = 'FileHeadingPanel'
-      Color = clNone
       ParentBackground = False
       ShowCaption = False
       TabOrder = 0
