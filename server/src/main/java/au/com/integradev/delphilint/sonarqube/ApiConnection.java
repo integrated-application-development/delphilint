@@ -29,18 +29,33 @@ import java.util.function.Supplier;
 public class ApiConnection {
   private final HttpClient http;
   private final String hostUrl;
+  private final String token;
 
-  public ApiConnection(String hostUrl) {
+  public ApiConnection(String hostUrl, String token) {
     http = HttpClient.newHttpClient();
     this.hostUrl = hostUrl;
+    this.token = token;
   }
 
-  private <T> T getResponse(String url, BodyHandler<Supplier<T>> handler) {
-    var request = HttpRequest.newBuilder(URI.create(url)).build();
+  private <T> T getResponse(String url, BodyHandler<Supplier<T>> handler) throws ApiException {
+    var reqBuilder = HttpRequest.newBuilder(URI.create(url));
+
+    if (!this.token.isEmpty()) {
+      reqBuilder.header("Authorization", "Bearer " + token);
+    }
+
+    HttpRequest request = reqBuilder.build();
 
     try {
       var response = http.send(request, handler);
-      return response.body().get();
+
+      if (response.statusCode() == 401) {
+        throw new ApiUnauthorizedException();
+      } else if (response.statusCode() == 200) {
+        return response.body().get();
+      } else {
+        throw new ApiStatusCodeException(response.statusCode());
+      }
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     } catch (InterruptedException e) {
@@ -49,7 +64,7 @@ public class ApiConnection {
     return null;
   }
 
-  public JsonNode getJson(String url) {
+  public JsonNode getJson(String url) throws ApiException {
     return getResponse(hostUrl + url, new JsonHttpHandler());
   }
 }

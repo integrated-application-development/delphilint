@@ -67,11 +67,13 @@ type
       BaseDir: string;
       InputFiles: TArray<string>;
       SonarHostUrl: string = '';
-      ProjectKey: string = ''
+      ProjectKey: string = '';
+      ApiToken: string = ''
     ): TLintMessage; static;
     class function RuleRetrieve(
       SonarHostUrl: string = '';
-      ProjectKey: string = ''
+      ProjectKey: string = '';
+      ApiToken: string = ''
     ): TLintMessage; static;
     class function Quit: TLintMessage; static;
     property Category: Byte read FCategory;
@@ -129,12 +131,14 @@ type
       OnResult: TAnalyzeResultAction;
       OnError: TErrorAction;
       SonarHostUrl: string = '';
-      ProjectKey: string = '');
+      ProjectKey: string = '';
+      ApiToken: string = '');
     procedure RetrieveRules(
       SonarHostUrl: string;
       ProjectKey: string;
       OnResult: TRuleRetrieveResultAction;
-      OnError: TErrorAction);
+      OnError: TErrorAction;
+      ApiToken: string = '');
   end;
 
 //______________________________________________________________________________________________________________________
@@ -198,7 +202,8 @@ class function TLintMessage.Analyze(
   BaseDir: string;
   InputFiles: TArray<string>;
   SonarHostUrl: string = '';
-  ProjectKey: string = ''
+  ProjectKey: string = '';
+  ApiToken: string = ''
 ): TLintMessage;
 var
   InputFilesJson: TJSONArray;
@@ -216,13 +221,18 @@ begin
   Json.AddPair('inputFiles', InputFilesJson);
   Json.AddPair('sonarHostUrl', SonarHostUrl);
   Json.AddPair('projectKey', ProjectKey);
+  Json.AddPair('apiToken', ApiToken);
 
   Result := TLintMessage.Create(C_Analyze, Json);
 end;
 
 //______________________________________________________________________________________________________________________
 
-class function TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey: string): TLintMessage;
+class function TLintMessage.RuleRetrieve(
+  SonarHostUrl: string = '';
+  ProjectKey: string = '';
+  ApiToken: string = ''
+): TLintMessage;
 var
   Json: TJSONObject;
 begin
@@ -230,6 +240,7 @@ begin
   Json := TJSONObject.Create;
   Json.AddPair('sonarHostUrl', SonarHostUrl);
   Json.AddPair('projectKey', ProjectKey);
+  Json.AddPair('apiToken', ApiToken);
 
   Result := TLintMessage.Create(C_RuleRetrieve, Json);
 end;
@@ -357,13 +368,14 @@ procedure TLintServer.Analyze(
   OnResult: TAnalyzeResultAction;
   OnError: TErrorAction;
   SonarHostUrl: string = '';
-  ProjectKey: string = '');
+  ProjectKey: string = '';
+  ApiToken: string = '');
 begin
   Log.Info('Requesting analysis.');
   Initialize;
 
   SendMessage(
-    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey),
+    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken),
     procedure (const Response: TLintMessage) begin
       OnAnalyzeResponse(Response, OnResult, OnError);
     end);
@@ -415,11 +427,12 @@ procedure TLintServer.RetrieveRules(
   SonarHostUrl: string;
   ProjectKey: string;
   OnResult: TRuleRetrieveResultAction;
-  OnError: TErrorAction
+  OnError: TErrorAction;
+  ApiToken: string = ''
 );
 begin
   SendMessage(
-    TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey),
+    TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey, ApiToken),
     procedure (const Response: TLintMessage) begin
       Log.Info('Rule retrieval response retrieved');
       OnRuleRetrieveResponse(Response, OnResult, OnError);

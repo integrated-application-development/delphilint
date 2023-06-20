@@ -26,6 +26,7 @@ type
     function GetProjectKey: string;
     function GetSonarHostUrl: string;
     function GetProjectBaseDir: string;
+    function GetSonarHostToken: string;
 
     function StrFromIni(const Section: string; const Identifier: string): string;
   public
@@ -34,6 +35,7 @@ type
     property ProjectKey: string read GetProjectKey;
     property SonarHostUrl: string read GetSonarHostUrl;
     property ProjectBaseDir: string read GetProjectBaseDir;
+    property SonarHostToken: string read GetSonarHostToken;
   end;
 
 implementation
@@ -63,6 +65,11 @@ end;
 function TLintProjectOptions.GetSonarHostUrl: string;
 begin
   Result := StrFromIni('SonarHost', 'Url');
+end;
+
+function TLintProjectOptions.GetSonarHostToken: string;
+begin
+  Result := StrFromIni('SonarHost', 'Token');
 end;
 
 function TLintProjectOptions.StrFromIni(const Section, Identifier: string): string;

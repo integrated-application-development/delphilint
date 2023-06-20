@@ -25,6 +25,7 @@ public class RequestAnalyze {
   private Set<Path> inputFiles;
   private String sonarHostUrl;
   private String projectKey;
+  private String apiToken;
 
   public Path getBaseDir() {
     return baseDir;
@@ -40,5 +41,9 @@ public class RequestAnalyze {
 
   public String getProjectKey() {
     return projectKey;
+  }
+
+  public String getApiToken() {
+    return apiToken;
   }
 }

@@ -20,6 +20,7 @@ package au.com.integradev.delphilint.server.message;
 public class RequestRuleRetrieve {
   private String sonarHostUrl;
   private String projectKey;
+  private String apiToken;
 
   public String getSonarHostUrl() {
     return sonarHostUrl;
@@ -27,5 +28,9 @@ public class RequestRuleRetrieve {
 
   public String getProjectKey() {
     return projectKey;
+  }
+
+  public String getApiToken() {
+    return apiToken;
   }
 }

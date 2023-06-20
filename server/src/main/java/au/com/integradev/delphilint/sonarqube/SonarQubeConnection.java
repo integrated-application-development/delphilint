@@ -24,25 +24,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 
 public class SonarQubeConnection {
-  private static final Logger LOG = Loggers.get(SonarQubeConnection.class);
   private final String projectKey;
   private final String languageKey;
   private final ObjectMapper jsonMapper;
   private final ApiConnection api;
 
-  public SonarQubeConnection(String hostUrl, String projectKey, String languageKey) {
-    this.api = new ApiConnection(hostUrl);
+  public SonarQubeConnection(
+      String hostUrl, String projectKey, String languageKey, String apiToken) {
+    this.api = new ApiConnection(hostUrl, apiToken);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
     this.jsonMapper = new ObjectMapper();
   }
 
-  private QualityProfile getQualityProfile() {
+  private QualityProfile getQualityProfile() throws ApiException {
     String url = "/api/qualityprofiles/search?language=" + languageKey;
     if (projectKey.isEmpty()) {
       url += "&defaults=true";
@@ -59,29 +57,26 @@ public class SonarQubeConnection {
         try {
           return jsonMapper.treeToValue(profile, QualityProfile.class);
         } catch (JsonProcessingException e) {
-          LOG.error("Problem parsing quality profile json: " + e.getMessage());
-          return null;
+          throw new ApiException("Problem parsing quality profile JSON: " + e.getMessage());
         }
       } else {
         var errorsArray = rootNode.get("errors");
         if (errorsArray != null && errorsArray.size() > 0) {
           var errorMessage = errorsArray.get(0).get("msg");
           if (errorMessage != null) {
-            throw new IllegalArgumentException(
-                "Error retrieving quality profile: " + errorMessage.asText());
+            throw new ApiException(
+                "SonarQube error when retrieving quality profile: " + errorMessage.asText());
           }
         }
-        LOG.error("Malformed quality profile response from SonarQube");
+
+        throw new ApiException("No quality profile found for project " + projectKey);
       }
     } else {
-      LOG.error("No default quality profile for language key " + languageKey);
+      throw new ApiException("Could not retrieve quality profile from SonarQube");
     }
-
-    LOG.error("Null quality profile");
-    return null;
   }
 
-  public Map<String, String> getRuleNamesByRuleKey() {
+  public Map<String, String> getRuleNamesByRuleKey() throws ApiException {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptyMap();
 
@@ -91,7 +86,10 @@ public class SonarQubeConnection {
                 + languageKey
                 + "&qprofile="
                 + profile.getKey());
-    if (rootNode == null) return Collections.emptyMap();
+    if (rootNode == null) {
+      throw new ApiException(
+          "Could not retrieve rule names from SonarQube for quality profile " + profile.getName());
+    }
 
     var rulesArray = rootNode.get("rules");
     var ruleMap = new HashMap<String, String>();
@@ -103,7 +101,7 @@ public class SonarQubeConnection {
     return ruleMap;
   }
 
-  public Set<SonarQubeRule> getRules() {
+  public Set<SonarQubeRule> getRules() throws ApiException {
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
             + "&f=name,htmlDesc,severity"
@@ -117,8 +115,7 @@ public class SonarQubeConnection {
 
     var rootNode = api.getJson(apiPath);
     if (rootNode == null) {
-      LOG.error("No JSON response from SonarQube for rule information retrieval");
-      return Collections.emptySet();
+      throw new ApiException("No JSON response from SonarQube for rule information retrieval");
     }
 
     var rulesArray = rootNode.get("rules");
@@ -129,8 +126,7 @@ public class SonarQubeConnection {
         SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
         ruleSet.add(sonarQubeRule);
       } catch (JsonProcessingException e) {
-        LOG.error("Malformed rule info response from SonarQube: " + e.getMessage());
-        return Collections.emptySet();
+        throw new ApiException("Malformed rule info response from SonarQube: " + e.getMessage());
       }
     }
 
@@ -149,7 +145,7 @@ public class SonarQubeConnection {
         SonarQubeIssue.class);
   }
 
-  public Set<ActiveRule> getActiveRules() {
+  public Set<ActiveRule> getActiveRules() throws ApiException {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();
 
@@ -159,7 +155,9 @@ public class SonarQubeConnection {
                 + languageKey
                 + "&qprofile="
                 + profile.getKey());
-    if (rootNode == null) return Collections.emptySet();
+    if (rootNode == null) {
+      throw new ApiException("Could not retrieve active rules from SonarQube");
+    }
 
     var rulesArray = rootNode.get("rules");
 

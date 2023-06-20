@@ -71,37 +71,46 @@ public class ConnectedList<T> implements Iterable<T> {
 
   @Override
   public Iterator<T> iterator() {
-    JsonNode rootNode = api.getJson(url);
-    int initialPageCount = getPageCount(rootNode);
-    Queue<T> initialContent = new LinkedList<>(getArrayContents(rootNode));
+    try {
+      JsonNode rootNode = api.getJson(url);
+      int initialPageCount = getPageCount(rootNode);
+      Queue<T> initialContent = new LinkedList<>(getArrayContents(rootNode));
 
-    return new Iterator<>() {
-      private int page = 0;
-      private int pageCount = initialPageCount;
-      private final Queue<T> nextContent = initialContent;
+      return new Iterator<>() {
+        private int page = 0;
+        private int pageCount = initialPageCount;
+        private final Queue<T> nextContent = initialContent;
 
-      @Override
-      public boolean hasNext() {
-        return !nextContent.isEmpty();
-      }
-
-      @Override
-      public T next() {
-        if (nextContent.isEmpty()) {
-          throw new NoSuchElementException();
+        @Override
+        public boolean hasNext() {
+          return !nextContent.isEmpty();
         }
 
-        T element = nextContent.remove();
+        @Override
+        public T next() {
+          if (nextContent.isEmpty()) {
+            throw new NoSuchElementException();
+          }
 
-        if (nextContent.isEmpty() && page + 1 < pageCount) {
-          page += 1;
-          JsonNode rootNode = api.getJson(url + "&p=" + page);
-          pageCount = getPageCount(rootNode);
-          nextContent.addAll(getArrayContents(rootNode));
+          T element = nextContent.remove();
+
+          if (nextContent.isEmpty() && page + 1 < pageCount) {
+            page += 1;
+            try {
+              JsonNode rootNode = api.getJson(url + "&p=" + page);
+              pageCount = getPageCount(rootNode);
+              nextContent.addAll(getArrayContents(rootNode));
+            } catch (ApiException e) {
+              throw new UncheckedApiException(e);
+            }
+          }
+
+          return element;
         }
+      };
 
-        return element;
-      }
-    };
+    } catch (ApiException e) {
+      throw new UncheckedApiException(e);
+    }
   }
 }

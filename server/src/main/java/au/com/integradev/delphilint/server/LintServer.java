@@ -27,7 +27,10 @@ import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
+import au.com.integradev.delphilint.sonarqube.ApiException;
+import au.com.integradev.delphilint.sonarqube.ApiUnauthorizedException;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
+import au.com.integradev.delphilint.sonarqube.UncheckedApiException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -180,14 +183,17 @@ public class LintServer {
       return;
     }
 
-    try {
-      SonarQubeConnection sonarqube = null;
-      if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
-        sonarqube =
-            new SonarQubeConnection(
-                requestAnalyze.getSonarHostUrl(), requestAnalyze.getProjectKey(), LANGUAGE_KEY);
-      }
+    SonarQubeConnection sonarqube = null;
+    if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
+      sonarqube =
+          new SonarQubeConnection(
+              requestAnalyze.getSonarHostUrl(),
+              requestAnalyze.getProjectKey(),
+              LANGUAGE_KEY,
+              requestAnalyze.getApiToken());
+    }
 
+    try {
       var issues =
           engine.analyze(
               requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null, sonarqube);
@@ -195,10 +201,24 @@ public class LintServer {
       ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
       result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
       sendMessage.accept(LintMessage.analyzeResult(result));
+    } catch (ApiUnauthorizedException e) {
+      sendMessage.accept(
+          LintMessage.analyzeError(
+              "Authorization is required to access the configured SonarQube instance. Please"
+                  + " provide an appropriate authorization token."));
+    } catch (ApiException | UncheckedApiException e) {
+      sendMessage.accept(
+          LintMessage.analyzeError(
+              "The configured SonarQube instance could not be accessed: " + e.getMessage()));
     } catch (Exception e) {
       e.printStackTrace();
       sendMessage.accept(
-          LintMessage.analyzeError(e.getClass().getSimpleName() + ": " + e.getMessage()));
+          LintMessage.analyzeError(
+              "Unknown error during analysis: "
+                  + e.getMessage()
+                  + " ("
+                  + e.getClass().getSimpleName()
+                  + ")"));
     }
 
     // I'd rather not have to call this, but the server gets unacceptably large without it
@@ -227,7 +247,8 @@ public class LintServer {
             new SonarQubeConnection(
                 requestRuleRetrieve.getSonarHostUrl(),
                 requestRuleRetrieve.getProjectKey(),
-                LANGUAGE_KEY);
+                LANGUAGE_KEY,
+                requestRuleRetrieve.getApiToken());
         Map<String, RuleData> ruleInfoMap =
             sonarqube.getRules().stream()
                 .map(RuleData::new)

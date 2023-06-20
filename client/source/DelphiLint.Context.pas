@@ -107,7 +107,8 @@ type
       const Files: TArray<string>;
       const BaseDir: string;
       const SonarHostUrl: string = '';
-      const ProjectKey: string = '');
+      const ProjectKey: string = '';
+      const ApiToken: string = '');
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
   public
     constructor Create;
@@ -222,7 +223,8 @@ begin
         ProjectOptions.ProjectBaseDir,
         DelphiLint.Utils.GetProjectDirectory(False)),
       ProjectOptions.SonarHostUrl,
-      ProjectOptions.ProjectKey);
+      ProjectOptions.ProjectKey,
+      ProjectOptions.SonarHostToken);
   finally
     FreeAndNil(ProjectOptions);
   end;
@@ -234,7 +236,8 @@ procedure TLintContext.AnalyzeFiles(
   const Files: TArray<string>;
   const BaseDir: string;
   const SonarHostUrl: string = '';
-  const ProjectKey: string = '');
+  const ProjectKey: string = '';
+  const ApiToken: string = '');
 var
   Server: TLintServer;
   IncludedFiles: TArray<string>;
@@ -256,7 +259,8 @@ begin
       OnAnalyzeResult,
       OnAnalyzeError,
       SonarHostUrl,
-      ProjectKey);
+      ProjectKey,
+      ApiToken);
   end
   else begin
     FOnAnalysisFailed.Notify(IncludedFiles);
@@ -451,7 +455,7 @@ begin
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisFailed.Notify(Paths);
 
-      ShowMessage('There was an error during analysis.' + #13#10 + Message);
+      ShowMessage(Message);
     end);
 end;
 

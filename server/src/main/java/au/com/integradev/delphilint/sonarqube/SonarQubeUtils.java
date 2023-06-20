@@ -27,7 +27,8 @@ public class SonarQubeUtils {
     // utility class
   }
 
-  public static Set<Issue> populateIssueMessages(SonarQubeConnection sq, Collection<Issue> issues) {
+  public static Set<Issue> populateIssueMessages(SonarQubeConnection sq, Collection<Issue> issues)
+      throws ApiException {
     var ruleNameMap = sq.getRuleNamesByRuleKey();
 
     return issues.stream()

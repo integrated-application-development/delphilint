@@ -18,6 +18,7 @@
 package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
+import au.com.integradev.delphilint.sonarqube.ApiException;
 import au.com.integradev.delphilint.sonarqube.ConnectedList;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
 import au.com.integradev.delphilint.sonarqube.SonarQubeIssue;
@@ -71,7 +72,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   }
 
   private AnalysisConfiguration buildConfiguration(
-      Path baseDir, Set<Path> inputFiles, SonarQubeConnection connection) {
+      Path baseDir, Set<Path> inputFiles, SonarQubeConnection connection) throws ApiException {
     var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
@@ -105,7 +106,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,
-      SonarQubeConnection connection) {
+      SonarQubeConnection connection)
+      throws ApiException {
 
     AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection);
 
@@ -126,7 +128,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     return issues;
   }
 
-  private Set<Issue> postProcessIssues(Set<Issue> issues, SonarQubeConnection connection) {
+  private Set<Issue> postProcessIssues(Set<Issue> issues, SonarQubeConnection connection)
+      throws ApiException {
     Queue<ClientTrackable> clientTrackables =
         SonarQubeUtils.populateIssueMessages(connection, issues).stream()
             .map(TrackableWrappers.ClientTrackable::new)
