@@ -296,6 +296,7 @@ var
   FileScannable: Boolean;
 begin
   FileScannable := IsFileScannable(Path);
+  Plugin.AnalysisActionsEnabled := FileScannable;
 
   if FileScannable then begin
     FCurrentPath := Path;

@@ -101,6 +101,8 @@ type
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
 
+    function FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
+
     procedure AnalyzeFiles(
       const Files: TArray<string>;
       const BaseDir: string;
@@ -235,29 +237,61 @@ procedure TLintContext.AnalyzeFiles(
   const ProjectKey: string = '');
 var
   Server: TLintServer;
+  IncludedFiles: TArray<string>;
 begin
   if InAnalysis then begin
     Log.Info('Already in analysis.');
     Exit;
   end;
 
-  FCurrentAnalysis := TCurrentAnalysis.Create(Files);
-  FOnAnalysisStarted.Notify(Files);
+  IncludedFiles := FilterNonProjectFiles(Files, BaseDir);
+  FCurrentAnalysis := TCurrentAnalysis.Create(IncludedFiles);
+  FOnAnalysisStarted.Notify(IncludedFiles);
 
   Server := GetInitedServer;
   if Assigned(Server) then begin
     Server.Analyze(
       BaseDir,
-      Files,
+      IncludedFiles,
       OnAnalyzeResult,
       OnAnalyzeError,
       SonarHostUrl,
       ProjectKey);
   end
   else begin
-    FOnAnalysisFailed.Notify(Files);
+    FOnAnalysisFailed.Notify(IncludedFiles);
   end;
 end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintContext.FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
+var
+  NormalizedBaseDir: string;
+  FileName: string;
+  OutFiles: TStringList;
+begin
+  NormalizedBaseDir := NormalizePath(BaseDir);
+
+  OutFiles := TStringList.Create;
+  try
+    for FileName in InFiles do begin
+      if StartsStr(NormalizedBaseDir, NormalizePath(FileName)) then begin
+        OutFiles.Add(FileName);
+      end
+      else begin
+        Log.Info(
+          'Excluding non-project file ' + FileName +
+          ' from analysis. Please set a custom base directory if this file should have been included.');
+      end;
+    end;
+
+    Result := OutFiles.ToStringArray;
+  finally
+    FreeAndNil(OutFiles);
+  end;
+end;
+
 
 //______________________________________________________________________________________________________________________
 

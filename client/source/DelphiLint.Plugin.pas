@@ -50,6 +50,7 @@ type
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
     FMainMenu: TMenuItem;
+    FAnalysisActionsEnabled: Boolean;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
@@ -58,9 +59,15 @@ type
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisEnded(const Paths: TArray<string>);
+
+    procedure SetAnalysisActionsEnabled(Value: Boolean);
+
+    procedure RefreshAnalysisActions;
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
+
+    property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
   end;
 
 procedure Register;
@@ -145,6 +152,8 @@ begin
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
   LintContext.OnAnalysisComplete.AddListener(OnAnalysisEnded);
   LintContext.OnAnalysisFailed.AddListener(OnAnalysisEnded);
+
+  AnalysisActionsEnabled := True;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -159,18 +168,14 @@ end;
 
 procedure TLintPlugin.OnAnalysisStarted(const Paths: TArray<string>);
 begin
-  ActionAnalyzeActiveFile.Enabled := False;
-  ActionAnalyzeShort.Enabled := False;
-  ActionAnalyzeOpenFiles.Enabled := False;
+  RefreshAnalysisActions;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.OnAnalysisEnded(const Paths: TArray<string>);
 begin
-  ActionAnalyzeActiveFile.Enabled := True;
-  ActionAnalyzeShort.Enabled := True;
-  ActionAnalyzeOpenFiles.Enabled := True;
+  RefreshAnalysisActions;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -235,6 +240,30 @@ end;
 procedure TLintPlugin.DestroyMainMenu;
 begin
   FreeAndNil(FMainMenu);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.SetAnalysisActionsEnabled(Value: Boolean);
+begin
+  FAnalysisActionsEnabled := Value;
+  RefreshAnalysisActions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.RefreshAnalysisActions;
+begin
+  if FAnalysisActionsEnabled and (not LintContext.InAnalysis) then begin
+    ActionAnalyzeActiveFile.Enabled := True;
+    ActionAnalyzeShort.Enabled := True;
+    ActionAnalyzeOpenFiles.Enabled := True;
+  end
+  else begin
+    ActionAnalyzeActiveFile.Enabled := False;
+    ActionAnalyzeShort.Enabled := False;
+    ActionAnalyzeOpenFiles.Enabled := False;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
