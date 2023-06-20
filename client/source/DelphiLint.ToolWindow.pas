@@ -204,7 +204,7 @@ function TLintToolWindow.IsFileScannable(const Path: string): Boolean;
   end;
 
 begin
-  Result := (Path <> '') and IsPasFile(Path) and IsProjectFile;
+  Result := (Path <> '') and IsPasFile(Path) and IsProjectFile and FileExists(Path);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -366,6 +366,7 @@ begin
   Plugin.LintImages.GetIcon(C_ImgError, FFrame.ProgImage.Picture.Icon);
   FFrame.ProgLabel.Caption := 'Failed';
   FFrame.ProgBar.Hide;
+  RefreshIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -377,6 +378,7 @@ begin
   FFrame.ProgBar.Show;
   FFrame.ProgBar.Style := TProgressBarStyle.pbstNormal;
   FFrame.ProgBar.Style := TProgressBarStyle.pbstMarquee;
+  RefreshIssueView;
   Repaint;
 end;
 

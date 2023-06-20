@@ -35,7 +35,6 @@ type
   TLintPlugin = class(TDataModule)
     LintImages: TImageList;
     LintActions: TActionList;
-    LintPopupMenu: TPopupMenu;
     ActionAnalyzeActiveFile: TAction;
     ActionShowToolWindow: TAction;
     ActionAnalyzeShort: TAction;
@@ -46,6 +45,7 @@ type
     procedure ActionShowToolWindowExecute(Sender: TObject);
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
     procedure ActionRestartServerExecute(Sender: TObject);
+    procedure ActionAnalyzeOpenFilesExecute(Sender: TObject);
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
@@ -87,6 +87,13 @@ uses
 procedure TLintPlugin.ActionAnalyzeActiveFileExecute(Sender: TObject);
 begin
   LintContext.AnalyzeActiveFile;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.ActionAnalyzeOpenFilesExecute(Sender: TObject);
+begin
+  LintContext.AnalyzeOpenFiles;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -163,7 +170,7 @@ procedure TLintPlugin.OnAnalysisEnded(const Paths: TArray<string>);
 begin
   ActionAnalyzeActiveFile.Enabled := True;
   ActionAnalyzeShort.Enabled := True;
-  ActionAnalyzeOpenFiles.Enabled := False; // TODO: Implement AnalyzeOpenFiles
+  ActionAnalyzeOpenFiles.Enabled := True;
 end;
 
 //______________________________________________________________________________________________________________________

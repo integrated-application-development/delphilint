@@ -101,6 +101,12 @@ type
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
 
+    procedure AnalyzeFiles(
+      const Files: TArray<string>;
+      const BaseDir: string;
+      const SonarHostUrl: string = '';
+      const ProjectKey: string = '');
+    procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -109,12 +115,8 @@ type
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
-    procedure AnalyzeFiles(
-      const Files: TArray<string>;
-      const BaseDir: string;
-      const SonarHostUrl: string = '';
-      const ProjectKey: string = '');
     procedure AnalyzeActiveFile;
+    procedure AnalyzeOpenFiles;
 
     procedure RestartServer;
 
@@ -177,7 +179,6 @@ procedure TLintContext.AnalyzeActiveFile;
 var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
-  ProjectOptions: TLintProjectOptions;
 begin
   SourceEditor := DelphiLint.Utils.GetCurrentSourceEditor;
   if not Assigned(SourceEditor) then begin
@@ -185,10 +186,35 @@ begin
   end;
 
   ProjectFile := DelphiLint.Utils.GetProjectFile;
+  AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintContext.AnalyzeOpenFiles;
+var
+  ProjectFile: string;
+  Files: TArray<string>;
+begin
+  ProjectFile := DelphiLint.Utils.GetProjectFile;
+
+  Files := DelphiLint.Utils.GetOpenSourceFiles;
+  SetLength(Files, Length(Files) + 1);
+  Files[Length(Files) - 1] := ProjectFile;
+
+  AnalyzeFilesWithProjectOptions(Files, ProjectFile);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintContext.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+var
+  ProjectOptions: TLintProjectOptions;
+begin
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
   try
     AnalyzeFiles(
-      [SourceEditor.FileName, ProjectFile],
+      Files,
       IfThen(
         ProjectOptions.ProjectBaseDir <> '',
         ProjectOptions.ProjectBaseDir,

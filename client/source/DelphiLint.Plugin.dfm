@@ -412,15 +412,20 @@ object LintPlugin: TLintPlugin
     Images = LintImages
     Left = 120
     Top = 32
+    object ActionShowToolWindow: TAction
+      Caption = 'Show DelphiLint'
+      ImageIndex = 7
+      OnExecute = ActionShowToolWindowExecute
+    end
     object ActionAnalyzeActiveFile: TAction
       Caption = 'Analyze This File'
       ImageIndex = 8
       OnExecute = ActionAnalyzeActiveFileExecute
     end
-    object ActionShowToolWindow: TAction
-      Caption = 'Show DelphiLint'
-      ImageIndex = 7
-      OnExecute = ActionShowToolWindowExecute
+    object ActionAnalyzeOpenFiles: TAction
+      Caption = 'Analyze All Open Files'
+      ImageIndex = 9
+      OnExecute = ActionAnalyzeOpenFilesExecute
     end
     object ActionAnalyzeShort: TAction
       Caption = 'Analyze'
@@ -435,18 +440,9 @@ object LintPlugin: TLintPlugin
       Caption = 'Settings...'
       Enabled = False
     end
-    object ActionAnalyzeOpenFiles: TAction
-      Caption = 'Analyze All Open Files'
-      ImageIndex = 9
-    end
     object ActionRestartServer: TAction
       Caption = 'Restart Server'
       OnExecute = ActionRestartServerExecute
     end
-  end
-  object LintPopupMenu: TPopupMenu
-    Images = LintImages
-    Left = 200
-    Top = 32
   end
 end

@@ -18,6 +18,7 @@ procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; ou
 function GetCurrentSourceEditor: IOTASourceEditor;
 procedure RefreshEditorWindows;
 function NormalizePath(const Path: string): string;
+function GetOpenSourceFiles: TArray<string>;
 
 implementation
 
@@ -57,6 +58,33 @@ begin
         Break;
       end;
     end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function GetOpenSourceFiles: TArray<string>;
+var
+  Index: Integer;
+  Module: IOTAModule;
+  ModuleServices: IOTAModuleServices;
+  Files: TStringList;
+begin
+  ModuleServices := (BorlandIDEServices as IOTAModuleServices);
+
+  Files := TStringList.Create;
+  try
+    for Index := 0 to ModuleServices.ModuleCount - 1 do begin
+      Module := ModuleServices.Modules[Index];
+
+      if IsPasFile(Module.FileName) then begin
+        Files.Add(Module.FileName);
+      end;
+    end;
+
+    Result := Files.ToStringArray;
+  finally
+    FreeAndNil(Files);
   end;
 end;
 
