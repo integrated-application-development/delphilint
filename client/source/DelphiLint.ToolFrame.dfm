@@ -1,24 +1,24 @@
 object LintToolFrame: TLintToolFrame
   Left = 0
   Top = 0
-  Width = 577
-  Height = 247
+  Width = 708
+  Height = 371
   TabOrder = 0
   object ContentPanel: TPanel
     Left = 0
-    Top = 51
-    Width = 577
-    Height = 196
+    Top = 50
+    Width = 708
+    Height = 321
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
     ShowCaption = False
     TabOrder = 0
     object RulePanel: TPanel
-      Left = 312
+      Left = 443
       Top = 0
       Width = 265
-      Height = 196
+      Height = 321
       Align = alRight
       BevelOuter = bvNone
       Caption = 'RulePanel'
@@ -29,7 +29,7 @@ object LintToolFrame: TLintToolFrame
         Left = 6
         Top = 49
         Width = 253
-        Height = 141
+        Height = 266
         Margins.Left = 6
         Margins.Top = 0
         Margins.Right = 6
@@ -86,8 +86,8 @@ object LintToolFrame: TLintToolFrame
     object IssueListBox: TListBox
       Left = 0
       Top = 0
-      Width = 310
-      Height = 196
+      Width = 441
+      Height = 321
       Style = lbOwnerDrawFixed
       Align = alClient
       BorderStyle = bsNone
@@ -95,10 +95,10 @@ object LintToolFrame: TLintToolFrame
       TabOrder = 1
     end
     object SplitPanel: TPanel
-      Left = 310
+      Left = 441
       Top = 0
       Width = 2
-      Height = 196
+      Height = 321
       Cursor = crHSplit
       Align = alRight
       BevelOuter = bvNone
@@ -111,88 +111,121 @@ object LintToolFrame: TLintToolFrame
       OnMouseUp = SplitPanelMouseUp
     end
   end
-  object LintPanel: TPanel
+  object TopPanel: TPanel
     Left = 0
     Top = 0
-    Width = 577
-    Height = 51
+    Width = 708
+    Height = 50
     Align = alTop
+    AutoSize = True
     BevelOuter = bvNone
-    Caption = 'LintPanel'
-    Color = clNone
-    ParentBackground = False
+    Caption = 'TopPanel'
     ShowCaption = False
     TabOrder = 1
-    object ProgLabel: TLabel
-      Left = 30
-      Top = 26
-      Width = 52
-      Height = 15
-      Caption = 'Analyzing'
-      Layout = tlCenter
-    end
-    object FileNameLabel: TLabel
-      Left = 30
-      Top = 10
-      Width = 87
-      Height = 15
-      Caption = 'No file selected'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-      Layout = tlCenter
-    end
-    object ProgImage: TImage
-      Left = 9
-      Top = 10
-      Width = 16
-      Height = 16
-      Proportional = True
-    end
-    object ProgBar: TProgressBar
-      Left = 88
-      Top = 27
-      Width = 73
-      Height = 16
-      Smooth = True
-      Style = pbstMarquee
-      MarqueeInterval = 30
-      TabOrder = 0
-    end
-    object LintButtonPanel: TPanel
-      AlignWithMargins = True
-      Left = 487
+    object FileHeadingPanel: TPanel
+      Left = 0
       Top = 0
-      Width = 84
-      Height = 51
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 6
-      Margins.Bottom = 0
-      Align = alRight
-      AutoSize = True
+      Width = 708
+      Height = 50
+      Align = alBottom
       BevelOuter = bvNone
-      Caption = 'LintButtonPanel'
+      Caption = 'FileHeadingPanel'
+      Color = clNone
+      ParentBackground = False
       ShowCaption = False
-      TabOrder = 1
+      TabOrder = 0
       DesignSize = (
-        84
-        51)
-      object LintButton: TBitBtn
-        Left = 0
-        Top = 7
-        Width = 84
-        Height = 24
-        Action = LintPlugin.ActionAnalyzeShort
-        Anchors = [akTop, akRight]
-        Caption = 'Analyze'
-        Images = LintPlugin.LintImages
-        ParentDoubleBuffered = True
+        708
+        50)
+      object ProgLabel: TLabel
+        Left = 30
+        Top = 26
+        Width = 52
+        Height = 15
+        Caption = 'Analyzing'
+        Layout = tlCenter
+      end
+      object FileNameLabel: TLabel
+        Left = 30
+        Top = 10
+        Width = 87
+        Height = 15
+        Caption = 'No file selected'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Layout = tlCenter
+      end
+      object ProgImage: TImage
+        Left = 9
+        Top = 10
+        Width = 16
+        Height = 16
+        Proportional = True
+      end
+      object ProgBar: TProgressBar
+        Left = 88
+        Top = 27
+        Width = 73
+        Height = 16
+        Smooth = True
+        Style = pbstMarquee
+        MarqueeInterval = 30
         TabOrder = 0
       end
+      object LintButtonPanel: TPanel
+        AlignWithMargins = True
+        Left = 618
+        Top = 0
+        Width = 84
+        Height = 50
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 6
+        Margins.Bottom = 0
+        Align = alRight
+        AutoSize = True
+        BevelOuter = bvNone
+        Caption = 'LintButtonPanel'
+        ShowCaption = False
+        TabOrder = 1
+      end
+      object LintToolBar: TToolBar
+        Left = 608
+        Top = 11
+        Width = 94
+        Height = 29
+        Align = alNone
+        Anchors = [akTop, akRight]
+        ButtonHeight = 30
+        ButtonWidth = 74
+        Caption = 'LintToolBar'
+        Images = LintPlugin.LintImages
+        List = True
+        ShowCaptions = True
+        TabOrder = 2
+        object AnalyzeShortButton: TToolButton
+          Left = 0
+          Top = 0
+          Action = LintPlugin.ActionAnalyzeShort
+          DropdownMenu = AnalyzePopupMenu
+          Style = tbsDropDown
+        end
+      end
+    end
+  end
+  object AnalyzePopupMenu: TPopupMenu
+    Images = LintPlugin.LintImages
+    Left = 635
+    Top = 310
+    object AnalyzeCurrentFile1: TMenuItem
+      Action = LintPlugin.ActionAnalyzeActiveFile
+    end
+    object AnalyzeOpenFiles1: TMenuItem
+      Action = LintPlugin.ActionAnalyzeOpenFiles
     end
   end
 end

@@ -21,15 +21,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.Buttons;
+  Vcl.Buttons, Vcl.ToolWin, DelphiLint.Plugin;
 
 type
   TLintToolFrame = class(TFrame)
-    LintPanel: TPanel;
+    FileHeadingPanel: TPanel;
     ProgLabel: TLabel;
     ProgBar: TProgressBar;
     FileNameLabel: TLabel;
-    LintButton: TBitBtn;
     ProgImage: TImage;
     IssueListBox: TListBox;
     LintButtonPanel: TPanel;
@@ -40,6 +39,12 @@ type
     ContentPanel: TPanel;
     SplitPanel: TPanel;
     RuleHeading: TPanel;
+    TopPanel: TPanel;
+    LintToolBar: TToolBar;
+    AnalyzeShortButton: TToolButton;
+    AnalyzePopupMenu: TPopupMenu;
+    AnalyzeCurrentFile1: TMenuItem;
+    AnalyzeOpenFiles1: TMenuItem;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);

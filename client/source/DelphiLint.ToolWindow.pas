@@ -310,7 +310,6 @@ begin
 
   if FileScannable then begin
     UpdateFileNameLabel;
-    FFrame.LintButton.Enabled := True;
 
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
@@ -346,7 +345,6 @@ begin
   else begin
     AnalysisCleared;
     UpdateFileNameLabel('File not analyzable');
-    FFrame.LintButton.Enabled := False;
     RefreshIssueView;
   end;
 end;
@@ -356,7 +354,6 @@ end;
 procedure TLintToolWindow.AnalysisCleared;
 begin
   Plugin.LintImages.GetIcon(C_ImgDefault, FFrame.ProgImage.Picture.Icon);
-  FFrame.LintButton.Hint := 'Scan current file';
   FFrame.ProgLabel.Caption := 'Not analyzed';
   FFrame.ProgBar.Hide;
   RefreshIssueView;
@@ -367,7 +364,6 @@ end;
 procedure TLintToolWindow.AnalysisFailed;
 begin
   Plugin.LintImages.GetIcon(C_ImgError, FFrame.ProgImage.Picture.Icon);
-  FFrame.LintButton.Hint := 'Error occurred during analysis';
   FFrame.ProgLabel.Caption := 'Failed';
   FFrame.ProgBar.Hide;
 end;
@@ -377,7 +373,6 @@ end;
 procedure TLintToolWindow.AnalysisStarted;
 begin
   Plugin.LintImages.GetIcon(C_ImgWorking, FFrame.ProgImage.Picture.Icon);
-  FFrame.LintButton.Hint := 'Analysis in progress';
   FFrame.ProgLabel.Caption := 'Analyzing';
   FFrame.ProgBar.Show;
   FFrame.ProgBar.Style := TProgressBarStyle.pbstNormal;
@@ -400,7 +395,6 @@ begin
     FFrame.ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
   end;
   Plugin.LintImages.GetIcon(ImageIndex, FFrame.ProgImage.Picture.Icon);
-  FFrame.LintButton.Hint := 'Analysis succeeded';
   FFrame.ProgBar.Hide;
   RefreshIssueView;
 end;
