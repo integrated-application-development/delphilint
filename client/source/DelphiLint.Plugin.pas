@@ -161,7 +161,7 @@ end;
 procedure TLintPlugin.Init;
 begin
   TLintToolWindow.CreateInstance;
-  FEditor.OnActiveFileChanged.AddListener(TLintToolWindow.Instance.ChangeActiveFile);
+  FEditor.OnActiveFileChanged.AddListener(TLintToolWindow.Instance.Frame.ChangeActiveFile);
 end;
 
 //______________________________________________________________________________________________________________________
