@@ -8,7 +8,7 @@ object LintToolFrame: TLintToolFrame
     Left = 0
     Top = 50
     Width = 708
-    Height = 321
+    Height = 294
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
@@ -18,7 +18,7 @@ object LintToolFrame: TLintToolFrame
       Left = 443
       Top = 0
       Width = 265
-      Height = 321
+      Height = 294
       Align = alRight
       BevelOuter = bvNone
       Caption = 'RulePanel'
@@ -29,7 +29,7 @@ object LintToolFrame: TLintToolFrame
         Left = 6
         Top = 49
         Width = 253
-        Height = 266
+        Height = 239
         Margins.Left = 6
         Margins.Top = 0
         Margins.Right = 6
@@ -87,7 +87,7 @@ object LintToolFrame: TLintToolFrame
       Left = 0
       Top = 0
       Width = 441
-      Height = 321
+      Height = 294
       Style = lbOwnerDrawFixed
       Align = alClient
       BorderStyle = bsNone
@@ -98,7 +98,7 @@ object LintToolFrame: TLintToolFrame
       Left = 441
       Top = 0
       Width = 2
-      Height = 321
+      Height = 294
       Cursor = crHSplit
       Align = alRight
       BevelOuter = bvNone
@@ -128,7 +128,6 @@ object LintToolFrame: TLintToolFrame
       Width = 708
       Height = 50
       Align = alBottom
-      BevelOuter = bvNone
       Caption = 'FileHeadingPanel'
       ParentBackground = False
       ShowCaption = False
@@ -136,7 +135,7 @@ object LintToolFrame: TLintToolFrame
       DesignSize = (
         708
         50)
-      object ProgLabel: TLabel
+      object FileStatusLabel: TLabel
         Left = 30
         Top = 26
         Width = 52
@@ -165,22 +164,12 @@ object LintToolFrame: TLintToolFrame
         Height = 16
         Proportional = True
       end
-      object ProgBar: TProgressBar
-        Left = 88
-        Top = 27
-        Width = 73
-        Height = 16
-        Smooth = True
-        Style = pbstMarquee
-        MarqueeInterval = 30
-        TabOrder = 0
-      end
       object LintButtonPanel: TPanel
         AlignWithMargins = True
-        Left = 618
-        Top = 0
+        Left = 617
+        Top = 1
         Width = 84
-        Height = 50
+        Height = 48
         Margins.Left = 0
         Margins.Top = 0
         Margins.Right = 6
@@ -190,7 +179,7 @@ object LintToolFrame: TLintToolFrame
         BevelOuter = bvNone
         Caption = 'LintButtonPanel'
         ShowCaption = False
-        TabOrder = 1
+        TabOrder = 0
       end
       object LintToolBar: TToolBar
         Left = 608
@@ -205,7 +194,7 @@ object LintToolFrame: TLintToolFrame
         Images = LintPlugin.LintImages
         List = True
         ShowCaptions = True
-        TabOrder = 2
+        TabOrder = 1
         object AnalyzeShortButton: TToolButton
           Left = 0
           Top = 0
@@ -214,6 +203,33 @@ object LintToolFrame: TLintToolFrame
           Style = tbsDropDown
         end
       end
+    end
+  end
+  object StatusPanel: TPanel
+    Left = 0
+    Top = 344
+    Width = 708
+    Height = 27
+    Align = alBottom
+    Caption = 'StatusPanel'
+    ShowCaption = False
+    TabOrder = 2
+    object ProgLabel: TLabel
+      Left = 85
+      Top = 6
+      Width = 52
+      Height = 15
+      Caption = 'Analyzing'
+    end
+    object ProgBar: TProgressBar
+      Left = 6
+      Top = 6
+      Width = 73
+      Height = 16
+      Smooth = True
+      Style = pbstMarquee
+      MarqueeInterval = 30
+      TabOrder = 0
     end
   end
   object AnalyzePopupMenu: TPopupMenu

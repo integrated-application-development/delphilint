@@ -35,9 +35,20 @@ type
     function Process(Text: string): string;
   end;
 
+  TCurrentFileStatus = (
+    cfsNotAnalyzable,
+    cfsNotAnalyzed,
+    cfsInAnalysis,
+    cfsFailed,
+    cfsNoIssues,
+    cfsNoIssuesOutdated,
+    cfsIssues,
+    cfsIssuesOutdated
+  );
+
   TLintToolFrame = class(TFrame)
     FileHeadingPanel: TPanel;
-    ProgLabel: TLabel;
+    FileStatusLabel: TLabel;
     ProgBar: TProgressBar;
     FileNameLabel: TLabel;
     ProgImage: TImage;
@@ -56,6 +67,8 @@ type
     AnalyzePopupMenu: TPopupMenu;
     AnalyzeCurrentFile1: TMenuItem;
     AnalyzeOpenFiles1: TMenuItem;
+    StatusPanel: TPanel;
+    ProgLabel: TLabel;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -87,14 +100,15 @@ type
 
     procedure RefreshRuleView;
     procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
+
+    function GetStatusImage(Status: TCurrentFileStatus): Integer;
+    function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
+    procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
+    procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
 
-    procedure AnalysisStarted;
-    procedure AnalysisFailed;
-    procedure AnalysisCleared;
-    procedure AnalysisSucceeded(IssueCount: Integer; Outdated: Boolean = False);
     procedure ChangeActiveFile(const Path: string);
     procedure RefreshActiveFile;
   end;
@@ -108,7 +122,6 @@ uses
   , System.StrUtils
   , System.IOUtils
   , DelphiLint.Logger
-  , System.Math
   , DelphiLint.Plugin
   ;
 
@@ -130,22 +143,21 @@ begin
 
   LintContext.OnAnalysisStarted.AddListener(
     procedure(const Paths: TArray<string>) begin
-      AnalysisStarted;
+      UpdateAnalysisStatus(Format('Analyzing %d files', [Length(Paths) - 1]), True);
+      RefreshActiveFile;
     end);
 
   LintContext.OnAnalysisComplete.AddListener(
     procedure(const Paths: TArray<string>)
-    var
-      History: TFileAnalysisHistory;
     begin
-      if LintContext.TryGetAnalysisHistory(Paths[0], History) then begin
-        RefreshActiveFile;
-      end;
+      UpdateAnalysisStatus(Format('Idle (last analysis succeeded at %s)', [FormatDateTime('hh:nn:ss', Now)]));
+      RefreshActiveFile;
     end);
 
   LintContext.OnAnalysisFailed.AddListener(
     procedure(const Paths: TArray<string>) begin
-      AnalysisFailed;
+      UpdateAnalysisStatus(Format('Idle (last analysis failed at %s)', [FormatDateTime('hh:nn:ss', Now)]));
+      RefreshActiveFile;
     end);
 
   if TryGetCurrentSourceEditor(Editor) then begin
@@ -154,6 +166,7 @@ begin
   else begin
     ChangeActiveFile('');
   end;
+  UpdateAnalysisStatus('Idle');
 
   (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self.Owner);
 
@@ -170,10 +183,27 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintToolFrame.UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean);
+begin
+  if ShowProgress then begin
+    ProgBar.Style := TProgressBarStyle.pbstMarquee;
+  end
+  else begin
+    ProgBar.Style := TProgressBarStyle.pbstNormal;
+    ProgBar.Position := 0;
+  end;
+  ProgLabel.Caption := Msg;
+  Repaint;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintToolFrame.SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FResizing := True;
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
@@ -187,6 +217,8 @@ begin
     end;
   end;
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -216,101 +248,95 @@ begin
   FCurrentPath := IfThen(FileScannable, Path, '');
 
   if FileScannable then begin
-    UpdateFileNameLabel;
-
     if LintContext.InAnalysis and LintContext.CurrentAnalysis.IncludesFile(Path) then begin
-      AnalysisStarted;
+      UpdateFileStatus(cfsInAnalysis);
       Exit;
     end;
 
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
-          AnalysisCleared;
+          UpdateFileStatus(cfsNotAnalyzed);
       fasOutdatedAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
           if History.Success then begin
-            AnalysisSucceeded(History.IssuesFound, True);
+            UpdateFileStatus(cfsIssuesOutdated);
           end
           else begin
-            AnalysisFailed;
+              UpdateFileStatus(cfsNoIssuesOutdated, History.IssuesFound);
           end;
         end
         else begin
           Log.Info('Could not get analysis history for file ' + Path + ' with apparently outdated analysis.');
-          AnalysisCleared;
+          UpdateFileStatus(cfsNotAnalyzed);
         end;
       fasUpToDateAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
           if History.Success then begin
-            AnalysisSucceeded(History.IssuesFound, False);
+            if History.IssuesFound = 0 then begin
+              UpdateFileStatus(cfsNoIssues);
+            end
+            else begin
+              UpdateFileStatus(cfsIssues, History.IssuesFound);
+            end;
           end
           else begin
-            AnalysisFailed;
+            UpdateFileStatus(cfsFailed);
           end;
         end
         else begin
           Log.Info('Could not get analysis history for file ' + Path + ' with apparently up-to-date analysis.');
-          AnalysisCleared;
+          UpdateFileStatus(cfsNotAnalyzed);
         end;
     end;
   end
   else begin
-    AnalysisCleared;
-    UpdateFileNameLabel('File not analyzable');
-    RefreshIssueView;
+    UpdateFileStatus(cfsNotAnalyzable);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.AnalysisCleared;
+procedure TLintToolFrame.UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
 begin
-  Plugin.LintImages.GetIcon(C_ImgDefault, ProgImage.Picture.Icon);
-  ProgLabel.Caption := 'Not analyzed';
-  ProgBar.Hide;
+  UpdateFileNameLabel;
+  Plugin.LintImages.GetIcon(GetStatusImage(Status), ProgImage.Picture.Icon);
+  FileStatusLabel.Caption := GetStatusCaption(Status, NumIssues);
   RefreshIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.AnalysisFailed;
+function TLintToolFrame.GetStatusImage(Status: TCurrentFileStatus): Integer;
 begin
-  Plugin.LintImages.GetIcon(C_ImgError, ProgImage.Picture.Icon);
-  ProgLabel.Caption := 'Failed';
-  ProgBar.Hide;
-  RefreshIssueView;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.AnalysisStarted;
-begin
-  Plugin.LintImages.GetIcon(C_ImgWorking, ProgImage.Picture.Icon);
-  ProgLabel.Caption := 'Analyzing';
-  ProgBar.Show;
-  ProgBar.Style := TProgressBarStyle.pbstNormal;
-  ProgBar.Style := TProgressBarStyle.pbstMarquee;
-  RefreshIssueView;
-  Repaint;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.AnalysisSucceeded(IssueCount: Integer; Outdated: Boolean);
-var
-  ImageIndex: Integer;
-begin
-  if IssueCount = 0 then begin
-    ImageIndex := IfThen(Outdated, C_ImgSuccessWarn, C_ImgSuccess);
-    ProgLabel.Caption := Format('No issues%s', [IfThen(Outdated, ' (outdated)', '')]);
-  end
-  else begin
-    ImageIndex := IfThen(Outdated, C_ImgIssuesWarn, C_ImgIssues);
-    ProgLabel.Caption := Format('%d issues%s', [IssueCount,IfThen(Outdated, ' (outdated)', '')]);
+  case Status of
+    cfsNotAnalyzable, cfsNotAnalyzed: Result := C_ImgDefault;
+    cfsInAnalysis: Result := C_ImgWorking;
+    cfsFailed: Result := C_ImgError;
+    cfsNoIssues: Result := C_ImgSuccess;
+    cfsNoIssuesOutdated: Result := C_ImgSuccessWarn;
+    cfsIssues: Result := C_ImgIssues;
+    cfsIssuesOutdated: Result := C_ImgIssuesWarn;
+  else
+    Result := C_ImgDefault;
   end;
-  Plugin.LintImages.GetIcon(ImageIndex, ProgImage.Picture.Icon);
-  ProgBar.Hide;
-  RefreshIssueView;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintToolFrame.GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
+begin
+  case Status of
+    cfsNotAnalyzable: Result := 'Not analyzable';
+    cfsNotAnalyzed: Result := 'Not analyzed';
+    cfsInAnalysis: Result := 'In analysis...';
+    cfsFailed: Result := 'Failed';
+    cfsNoIssues: Result := 'No issues';
+    cfsNoIssuesOutdated: Result := 'No issues (outdated)';
+    cfsIssues: Result := Format('%d issues', [NumIssues]);
+    cfsIssuesOutdated: Result := Format('%d issues (outdated)', [NumIssues]);
+  else
+    Result := 'Not analyzable';
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
