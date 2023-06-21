@@ -1,10 +1,22 @@
-target/
+# Delphi
 *.~*
 *.dproj.local
 *.dsk
 *.res
 *.identcache
+*.dres
+*.rc
+
+# Project Magician
+*.prjmgc
+
+# DelphiLint
+*.delphilint
+
+# SonarDelphi
 delph.xml
 .scannerwork/
-*.delphilint
 __recovery/
+
+# Other
+target/
