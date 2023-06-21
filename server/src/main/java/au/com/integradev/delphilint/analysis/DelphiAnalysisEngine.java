@@ -31,8 +31,8 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
@@ -46,7 +46,7 @@ import org.sonarsource.sonarlint.core.issuetracking.Tracker;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginInstancesRepository;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
-  private static final Logger LOG = Loggers.get(DelphiAnalysisEngine.class);
+  private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
   private final GlobalAnalysisContainer globalContainer;
 
   public DelphiAnalysisEngine(DelphiConfiguration delphiConfig) {
@@ -69,6 +69,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     globalContainer = new GlobalAnalysisContainer(engineConfig, pluginInstances);
     globalContainer.startComponents();
+    LOG.info("Analysis engine started");
   }
 
   private AnalysisConfiguration buildConfiguration(
@@ -89,14 +90,16 @@ public class DelphiAnalysisEngine implements AutoCloseable {
                     .map(relativePath -> new DelphiLintInputFile(baseDir, relativePath))
                     .collect(Collectors.toUnmodifiableList()));
 
-    // TODO: Have a local set of rules
     if (connection != null) {
       Set<ActiveRule> activeRules =
           connection.getActiveRules().stream()
               .filter(rule -> !RuleUtils.isIncompatible(rule.getRuleKey()))
               .collect(Collectors.toSet());
       configBuilder.addActiveRules(activeRules);
-      LOG.info("Added " + activeRules.size() + " active rules");
+      LOG.info("Added {} active rules", activeRules.size());
+    } else {
+      // TODO: Have a local set of rules
+      LOG.warn("Because there is no SonarQube connection, no rules will be active");
     }
 
     return configBuilder.build();
@@ -108,7 +111,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       ClientProgressMonitor progressMonitor,
       SonarQubeConnection connection)
       throws ApiException {
-
+    LOG.info("About to analyze {} files", inputFiles.size());
     AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection);
 
     Set<Issue> issues = new HashSet<>();
@@ -116,10 +119,13 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     ModuleContainer moduleContainer =
         globalContainer.getModuleRegistry().createTransientContainer(config.inputFiles());
     try {
+      LOG.info("Starting analysis");
       moduleContainer.analyze(config, issues::add, new ProgressMonitor(progressMonitor));
     } finally {
       moduleContainer.stopComponents();
     }
+
+    LOG.info("Analysis finished");
 
     if (connection != null) {
       issues = postProcessIssues(issues, connection);
@@ -150,11 +156,18 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         .getUnmatchedRaws()
         .iterator()
         .forEachRemaining(trackable -> returnIssues.add(trackable.getClientObject()));
+
+    LOG.info(
+        "{}/{} issues matched with resolved server issues and discarded",
+        issues.size() - returnIssues.size(),
+        issues.size());
+
     return returnIssues;
   }
 
   @Override
   public void close() {
     globalContainer.stopComponents();
+    LOG.info("Analysis engine closed");
   }
 }

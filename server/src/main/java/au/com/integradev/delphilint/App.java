@@ -19,19 +19,20 @@ package au.com.integradev.delphilint;
 
 import au.com.integradev.delphilint.server.LintServer;
 import java.io.IOException;
-import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class App {
-  public static void main(String[] args) throws IOException {
-    var logOutput = new LogOutput();
-    SonarLintLogger.setTarget(logOutput);
+  private static final Logger LOG = LogManager.getLogger(App.class);
 
+  public static void main(String[] args) throws IOException {
     int port = 14000;
     if (args.length > 0) {
       port = Integer.parseInt(args[0]);
     }
-
+    LOG.info("Starting server on port {}", port);
     var server = new LintServer(port);
     server.run();
+    LOG.info("Server stopped");
   }
 }

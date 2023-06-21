@@ -15,13 +15,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint;
+package au.com.integradev.delphilint.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.commons.log.ClientLogOutput;
 
-public class LogOutput implements ClientLogOutput {
+public class SonarLintLogOutput implements ClientLogOutput {
+  private static final Logger LOG = LogManager.getLogger(SonarLintLogOutput.class);
+
+  private String errorMessage = "";
+
+  public boolean containsError() {
+    return !errorMessage.isEmpty();
+  }
+
+  public String getError() {
+    return errorMessage;
+  }
+
   @Override
   public void log(String s, Level level) {
-    System.out.println(String.format("[%s] %s", level.toString(), s));
+    LOG.debug("[{}] {}", level, s);
+
+    if (level == Level.ERROR) {
+      errorMessage = s;
+    }
   }
 }

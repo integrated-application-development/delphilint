@@ -44,12 +44,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
 
 public class LintServer {
   private static final String LANGUAGE_KEY = "delph";
-  private static final Logger LOG = Loggers.get(LintServer.class);
+  private static final Logger LOG = LogManager.getLogger(LintServer.class);
   private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
   private final ObjectMapper mapper;
@@ -92,6 +93,7 @@ public class LintServer {
     try {
       dataString = mapper.writeValueAsString(response.getData());
     } catch (JsonProcessingException e) {
+      LOG.error("Unexpected error while converting outgoing message data to a JSON string", e);
       writeStream(out, id, LintMessage.unexpectedError(e.getMessage()));
       return;
     }
@@ -104,6 +106,7 @@ public class LintServer {
       out.write(ByteBuffer.allocate(4).putInt(dataBytes.length).array());
       out.write(dataBytes);
     } catch (IOException e) {
+      LOG.error("Unexpected IO exception while writing message data to stream", e);
       throw new UncheckedIOException(e);
     }
   }
@@ -127,6 +130,7 @@ public class LintServer {
     Consumer<LintMessage> sendMessage = (response -> writeStream(out, id, response));
 
     if (category == null) {
+      LOG.warn("Received message with an unrecognised category");
       sendMessage.accept(LintMessage.invalidRequest("Unrecognised category"));
       return;
     }
@@ -135,6 +139,7 @@ public class LintServer {
 
     if (category.getDataClass() != null) {
       if (length == 0) {
+        LOG.warn("Received message of type {}, but no data was supplied", category);
         sendMessage.accept(LintMessage.invalidRequest("No data supplied"));
         return;
       }
@@ -142,6 +147,7 @@ public class LintServer {
       try {
         data = mapper.readValue(dataString, category.getDataClass());
       } catch (JsonProcessingException e) {
+        LOG.warn("Received message of type {} with data in an incorrect format", category);
         sendMessage.accept(LintMessage.invalidRequest("Data is in an incorrect format"));
         return;
       }
@@ -150,6 +156,7 @@ public class LintServer {
     try {
       processRequest(new LintMessage(category, data), sendMessage);
     } catch (Exception e) {
+      LOG.warn("Unexpected error during message processing", e);
       sendMessage.accept(LintMessage.unexpectedError(e.getMessage()));
     }
   }
@@ -173,6 +180,7 @@ public class LintServer {
         sendMessage.accept(LintMessage.pong((String) message.getData()));
         break;
       default:
+        LOG.warn("TCP request has unhandled category {}", message.getCategory());
         sendMessage.accept(LintMessage.invalidRequest("Unhandled request category"));
     }
   }
@@ -194,23 +202,35 @@ public class LintServer {
     }
 
     try {
+      var logOutput = new SonarLintLogOutput();
+      SonarLintLogger.setTarget(logOutput);
+
       var issues =
           engine.analyze(
               requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null, sonarqube);
 
-      ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
-      result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
-      sendMessage.accept(LintMessage.analyzeResult(result));
+      if (logOutput.containsError()) {
+        LOG.error("Error logged during SonarDelphi analysis: {}", logOutput.getError());
+        sendMessage.accept(
+            LintMessage.analyzeError("Error logged during analysis: " + logOutput.getError()));
+      } else {
+        ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
+        result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
+        sendMessage.accept(LintMessage.analyzeResult(result));
+      }
     } catch (ApiUnauthorizedException e) {
+      LOG.warn("API returned an unauthorized response", e);
       sendMessage.accept(
           LintMessage.analyzeError(
               "Authorization is required to access the configured SonarQube instance. Please"
                   + " provide an appropriate authorization token."));
     } catch (ApiException | UncheckedApiException e) {
+      LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
           LintMessage.analyzeError(
-              "The configured SonarQube instance could not be accessed: " + e.getMessage()));
+              "The configured SonarQube instance could not be accessed: " + e));
     } catch (Exception e) {
+      LOG.error("Unknown error during analysis", e);
       e.printStackTrace();
       sendMessage.accept(
           LintMessage.analyzeError(
@@ -219,6 +239,8 @@ public class LintServer {
                   + " ("
                   + e.getClass().getSimpleName()
                   + ")"));
+    } finally {
+      SonarLintLogger.setTarget(null);
     }
 
     // I'd rather not have to call this, but the server gets unacceptably large without it
@@ -253,16 +275,17 @@ public class LintServer {
             sonarqube.getRules().stream()
                 .map(RuleData::new)
                 .collect(Collectors.toMap(RuleData::getKey, x -> x));
-        LOG.info("Retrieved " + ruleInfoMap.size() + " rules");
+        LOG.info("Retrieved {} rules", ruleInfoMap.size());
         sendMessage.accept(
             LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
       } else {
-        LOG.info("No SonarQube connection, returning default ruleset");
+        LOG.warn("No SonarQube connection, returning empty ruleset");
         // TODO: Have a local set of rule definitions
         sendMessage.accept(
             LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(Collections.emptyMap())));
       }
     } catch (Exception e) {
+      LOG.error("Error encountered during rule retrieval", e);
       e.printStackTrace();
       sendMessage.accept(
           LintMessage.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
