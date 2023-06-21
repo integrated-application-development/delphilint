@@ -78,7 +78,6 @@ type
     FCurrentPath: string;
     FHtmlRemover: THtmlRemover;
 
-    function IsFileScannable(const Path: string): Boolean;
     procedure UpdateFileNameLabel(NewText: string = '');
 
     procedure RefreshIssueView;
@@ -123,6 +122,7 @@ begin
   FResizing := False;
 
   FHtmlRemover := THtmlRemover.Create;
+  FCurrentPath := '';
 
   IssueListBox.OnDrawItem := OnDrawIssueItem;
   IssueListBox.OnClick := OnIssueSelected;
@@ -148,13 +148,11 @@ begin
       AnalysisFailed;
     end);
 
-  Editor := GetCurrentSourceEditor;
-  if Assigned(Editor) then begin
+  if TryGetCurrentSourceEditor(Editor) then begin
     ChangeActiveFile(Editor.FileName);
   end
   else begin
-    AnalysisCleared;
-    UpdateFileNameLabel('No file selected');
+    ChangeActiveFile('');
   end;
 
   (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self.Owner);
@@ -197,22 +195,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintToolFrame.IsFileScannable(const Path: string): Boolean;
-
-  function IsProjectFile: Boolean;
-  var
-    ProjectDir: string;
-  begin
-    ProjectDir := NormalizePath(DelphiLint.Utils.GetProjectDirectory);
-    Result := StartsText(ProjectDir, NormalizePath(Path));
-  end;
-
-begin
-  Result := (Path <> '') and IsPasFile(Path) and IsProjectFile and FileExists(Path);
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintToolFrame.UpdateFileNameLabel(NewText: string = '');
 begin
   if NewText = '' then begin
@@ -230,22 +212,16 @@ var
   History: TFileAnalysisHistory;
   FileScannable: Boolean;
 begin
-  FileScannable := IsFileScannable(Path);
-  Plugin.AnalysisActionsEnabled := FileScannable;
-
-  if FileScannable then begin
-    FCurrentPath := Path;
-  end
-  else begin
-    FCurrentPath := '';
-  end;
-
-  if LintContext.InAnalysis then begin
-    Exit;
-  end;
+  FileScannable := IsFileInProject(Path);
+  FCurrentPath := IfThen(FileScannable, Path, '');
 
   if FileScannable then begin
     UpdateFileNameLabel;
+
+    if LintContext.InAnalysis and LintContext.CurrentAnalysis.IncludesFile(Path) then begin
+      AnalysisStarted;
+      Exit;
+    end;
 
     case LintContext.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
@@ -391,8 +367,7 @@ begin
     Exit;
   end;
 
-  Editor := GetCurrentSourceEditor;
-  if Assigned(Editor) and (Editor.EditViewCount <> 0) then begin
+  if TryGetCurrentSourceEditor(Editor) and (Editor.EditViewCount <> 0) then begin
     Buffer := Editor.EditViews[0].Buffer;
     Buffer.EditPosition.GotoLine(SelectedIssue.StartLine);
     Buffer.EditPosition.Move(0, SelectedIssue.StartLineOffset);

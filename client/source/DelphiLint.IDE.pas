@@ -331,8 +331,7 @@ begin
     end;
   end;
 
-  SourceEditor := GetCurrentSourceEditor;
-  if Assigned(SourceEditor) and (SourceEditor.EditViewCount <> 0) then begin
+  if TryGetCurrentSourceEditor(SourceEditor) and (SourceEditor.EditViewCount <> 0) then begin
     TThread.ForceQueue(
       TThread.Current,
       procedure begin

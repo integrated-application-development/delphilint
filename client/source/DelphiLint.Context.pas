@@ -71,6 +71,8 @@ type
   public
     constructor Create(Paths: TArray<string>);
     property Paths: TArray<string> read FPaths;
+
+    function IncludesFile(const Path: string): Boolean;
   end;
 
   TFileAnalysisStatus = (
@@ -183,13 +185,13 @@ var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
 begin
-  SourceEditor := DelphiLint.Utils.GetCurrentSourceEditor;
-  if not Assigned(SourceEditor) then begin
+  if TryGetCurrentSourceEditor(SourceEditor) and TryGetProjectFile(ProjectFile) then begin
+    AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
+  end
+  else begin
+    MessageDlg('There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
     Exit;
   end;
-
-  ProjectFile := DelphiLint.Utils.GetProjectFile;
-  AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -199,13 +201,22 @@ var
   ProjectFile: string;
   Files: TArray<string>;
 begin
-  ProjectFile := DelphiLint.Utils.GetProjectFile;
+  if TryGetProjectFile(ProjectFile) then begin
+    Files := DelphiLint.Utils.GetOpenSourceFiles;
+    SetLength(Files, Length(Files) + 1);
+    Files[Length(Files) - 1] := ProjectFile;
 
-  Files := DelphiLint.Utils.GetOpenSourceFiles;
-  SetLength(Files, Length(Files) + 1);
-  Files[Length(Files) - 1] := ProjectFile;
+    if Length(Files) = 1 then begin
+      MessageDlg('There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
+      Exit;
+    end;
 
-  AnalyzeFilesWithProjectOptions(Files, ProjectFile);
+    AnalyzeFilesWithProjectOptions(Files, ProjectFile);
+  end
+  else begin
+    MessageDlg('Could not analyze file - please open a Delphi project first.', TMsgDlgType.mtError, [mbOK], 0);
+    Exit;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -218,10 +229,7 @@ begin
   try
     AnalyzeFiles(
       Files,
-      IfThen(
-        ProjectOptions.ProjectBaseDir <> '',
-        ProjectOptions.ProjectBaseDir,
-        DelphiLint.Utils.GetProjectDirectory(False)),
+      IfThen(ProjectOptions.ProjectBaseDir <> '', ProjectOptions.ProjectBaseDir, TPath.GetDirectoryName(ProjectFile)),
       ProjectOptions.SonarHostUrl,
       ProjectOptions.ProjectKey,
       ProjectOptions.SonarHostToken);
@@ -417,13 +425,13 @@ end;
 
 function TLintContext.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
 var
-  SanitizedPath: string;
+  NormalizedPath: string;
   History: TFileAnalysisHistory;
 begin
-  SanitizedPath := NormalizePath(Path);
+  NormalizedPath := NormalizePath(Path);
 
-  if FFileAnalyses.ContainsKey(SanitizedPath) then begin
-    History := FFileAnalyses[SanitizedPath];
+  if FFileAnalyses.ContainsKey(NormalizedPath) then begin
+    History := FFileAnalyses[NormalizedPath];
     if THashMD5.GetHashStringFromFile(Path) = History.FileHash then begin
       Result := TFileAnalysisStatus.fasUpToDateAnalysis;
     end
@@ -597,11 +605,14 @@ var
 begin
   Log.Info('Refreshing ruleset');
 
+  if not TryGetProjectFile(ProjectFile) then begin
+    Log.Info('Not in a project, aborting refresh');
+    Exit;
+  end;
+
   Server := GetInitedServer;
 
-  ProjectFile := DelphiLint.Utils.GetProjectFile;
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
-
   RulesRetrieved := TEvent.Create;
   TimedOut := False;
   try
@@ -718,6 +729,20 @@ end;
 constructor TCurrentAnalysis.Create(Paths: TArray<string>);
 begin
   FPaths := Paths;
+end;
+
+function TCurrentAnalysis.IncludesFile(const Path: string): Boolean;
+var
+  PathEl: string;
+begin
+  Result := False;
+
+  for PathEl in FPaths do begin
+    if NormalizePath(PathEl) = NormalizePath(Path) then begin
+      Result := True;
+      Exit;
+    end;
+  end;
 end;
 
 initialization

@@ -64,6 +64,7 @@ type
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisEnded(const Paths: TArray<string>);
+    procedure OnActiveFileChanged(const Path: string);
 
     procedure SetAnalysisActionsEnabled(Value: Boolean);
 
@@ -97,6 +98,7 @@ uses
   , Winapi.Windows
   , Vcl.Graphics
   , System.StrUtils
+  , DelphiLint.Utils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -344,6 +346,14 @@ end;
 procedure TLintPlugin.RegisterToolFrame(Frame: TLintToolFrame);
 begin
   FEditor.OnActiveFileChanged.AddListener(Frame.ChangeActiveFile);
+  FEditor.OnActiveFileChanged.AddListener(OnActiveFileChanged);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.OnActiveFileChanged(const Path: string);
+begin
+  AnalysisActionsEnabled := IsFileInProject(Path);
 end;
 
 //______________________________________________________________________________________________________________________

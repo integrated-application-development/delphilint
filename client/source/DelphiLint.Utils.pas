@@ -7,18 +7,22 @@ uses
   ;
 
 
-function GetProjectDirectory(ReadOptions: Boolean = True): string; overload;
-function GetAllFiles: TArray<string>;
-function GetProjectFile: string;
-function IsPasFile(Path: string): Boolean;
-function IsMainFile(Path: string): Boolean;
-function IsDelphiSource(Path: string): Boolean;
-function IsProjectFile(Path: string): Boolean;
-procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
-function GetCurrentSourceEditor: IOTASourceEditor;
-procedure RefreshEditorWindows;
+// Project utils
 function NormalizePath(const Path: string): string;
+function GetAllFiles: TArray<string>;
+function IsPasFile(const Path: string): Boolean;
+function IsMainFile(const Path: string): Boolean;
+function IsDelphiSource(const Path: string): Boolean;
+function IsProjectFile(const Path: string): Boolean;
+procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
 function GetOpenSourceFiles: TArray<string>;
+function TryGetProjectFile(out ProjectFile: string): Boolean;
+function IsFileInProjectDirectory(const Path: string): Boolean;
+function IsFileInProject(const Path: string): Boolean;
+function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = True): Boolean; overload;
+
+// ToolsAPI utils
+function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
 
 implementation
 
@@ -32,13 +36,6 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure RefreshEditorWindows;
-begin
-  (BorlandIDEServices as IOTAEditorServices).TopView.GetEditWindow.Form.Repaint;
-end;
-
-//______________________________________________________________________________________________________________________
-
 function NormalizePath(const Path: string): string;
 begin
   Result := StringReplace(LowerCase(Path), '\', '/', [rfReplaceAll]);
@@ -46,15 +43,17 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetCurrentSourceEditor: IOTASourceEditor;
+function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
 var
   Module: IOTAModule;
   I: Integer;
 begin
+  Result := False;
   Module := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
   if Assigned(Module) then begin
     for I := 0 to Module.ModuleFileCount - 1 do begin
-      if Module.ModuleFileEditors[I].QueryInterface(IOTASourceEditor, Result) = S_OK then begin
+      if Module.ModuleFileEditors[I].QueryInterface(IOTASourceEditor, Editor) = S_OK then begin
+        Result := True;
         Break;
       end;
     end;
@@ -90,21 +89,25 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetProjectDirectory(ReadOptions: Boolean = True): string;
+function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = True): Boolean;
 var
   ProjectFile: string;
 begin
-  ProjectFile := GetProjectFile;
+  Result := False;
 
-  if ReadOptions then begin
-    Result := TLintProjectOptions.Create(ProjectFile).ProjectBaseDir;
+  if TryGetProjectFile(ProjectFile) then begin
+    Result := True;
 
-    if Result <> '' then begin
-      Exit;
+    if ReadOptions then begin
+      ProjectDir := TLintProjectOptions.Create(ProjectFile).ProjectBaseDir;
+
+      if ProjectDir <> '' then begin
+        Exit;
+      end;
     end;
-  end;
 
-  Result := TPath.GetDirectoryName(ProjectFile);
+    ProjectDir := TPath.GetDirectoryName(ProjectFile);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -127,28 +130,28 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function IsMainFile(Path: string): Boolean;
+function IsMainFile(const Path: string): Boolean;
 begin
   Result := EndsText('.dpk', Path) or EndsText('.dpr', Path);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function IsPasFile(Path: string): Boolean;
+function IsPasFile(const Path: string): Boolean;
 begin
   Result := EndsText('.pas', Path);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function IsDelphiSource(Path: string): Boolean;
+function IsDelphiSource(const Path: string): Boolean;
 begin
   Result := IsPasFile(Path) or IsMainFile(Path);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function IsProjectFile(Path: string): Boolean;
+function IsProjectFile(const Path: string): Boolean;
 begin
   Result := EndsText('.dproj', Path) or EndsText('.groupproj', Path);
 end;
@@ -206,19 +209,37 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetProjectFile: string;
+function TryGetProjectFile(out ProjectFile: string): Boolean;
 var
   AllFiles: TArray<string>;
   FilePath: string;
 begin
-  AllFiles := GetAllFiles;
+  Result := False;
 
+  AllFiles := GetAllFiles;
   for FilePath in AllFiles do begin
     if IsProjectFile(FilePath) then begin
-     Result := FilePath;
+     ProjectFile := FilePath;
+     Result := True;
      Exit;
     end;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function IsFileInProjectDirectory(const Path: string): Boolean;
+var
+  ProjectDir: string;
+begin
+  Result := TryGetProjectDirectory(ProjectDir) and StartsText(NormalizePath(ProjectDir), NormalizePath(Path));
+end;
+
+//______________________________________________________________________________________________________________________
+
+function IsFileInProject(const Path: string): Boolean;
+begin
+  Result := (Path <> '') and IsDelphiSource(Path) and FileExists(Path) and IsFileInProjectDirectory(Path);
 end;
 
 end.
