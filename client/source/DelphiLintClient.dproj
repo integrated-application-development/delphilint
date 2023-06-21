@@ -45,9 +45,6 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_UsePackage>vcl;rtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -66,8 +63,6 @@
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\bds.exe</Debugger_HostApplication>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
@@ -104,6 +99,14 @@
         </DCCReference>
         <DCCReference Include="DelphiLint.ToolFormInfo.pas"/>
         <DCCReference Include="DelphiLint.Utils.pas"/>
+        <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DELPHILINT_SPLASH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\delphilint_icon_48x48.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DELPHILINT_ICON</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

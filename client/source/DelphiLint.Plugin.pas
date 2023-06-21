@@ -31,6 +31,8 @@ const
   C_ImgSuccessWarn = 5;
   C_ImgIssuesWarn = 6;
 
+{$I dlversion.inc}
+
 type
   TLintPlugin = class(TDataModule)
     LintImages: TImageList;
@@ -53,9 +55,12 @@ type
     FAnalysisActionsEnabled: Boolean;
     FToolFormInfo: TLintToolFormInfo;
     FToolForm: TCustomForm;
+    FInfoIndex: Integer;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
+
+    procedure InitPluginInfo;
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisEnded(const Paths: TArray<string>);
@@ -68,6 +73,7 @@ type
     destructor Destroy; override;
 
     procedure RegisterToolFrame(Frame: TLintToolFrame);
+    procedure OnRegister;
 
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
   end;
@@ -88,6 +94,9 @@ uses
     ToolsAPI
   , DelphiLint.Context
   , DelphiLint.NotifierBase
+  , Winapi.Windows
+  , Vcl.Graphics
+  , System.StrUtils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -134,7 +143,7 @@ end;
 
 procedure Register;
 begin
-  GPlugin := TLintPlugin.Create(nil);
+  GPlugin.OnRegister;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -143,6 +152,15 @@ constructor TLintPlugin.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
 
+  // Set plugin info
+  InitPluginInfo;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.OnRegister;
+begin
+  // Editor notifier
   FEditor := TLintEditor.Create;
   FEditor.OnOwnerFreed.AddListener(
     procedure(const Notf: TNotifierBase) begin
@@ -152,14 +170,18 @@ begin
     end);
   FEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(FEditor);
 
+  // Main menu
   CreateMainMenu;
 
+  // Analysis callbacks
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
   LintContext.OnAnalysisComplete.AddListener(OnAnalysisEnded);
   LintContext.OnAnalysisFailed.AddListener(OnAnalysisEnded);
 
+  // Enable actions
   AnalysisActionsEnabled := True;
 
+  // Initialise tool form
   FToolFormInfo := TLintToolFormInfo.Create;
   (BorlandIDEServices as INTAServices).RegisterDockableForm(FToolFormInfo);
 end;
@@ -191,6 +213,7 @@ begin
   DestroyMainMenu;
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
   (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
+  (BorlandIDEServices as IOTAAboutBoxServices).RemovePluginInfo(FInfoIndex);
   inherited;
 end;
 
@@ -244,6 +267,56 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintPlugin.InitPluginInfo;
+var
+  Icon: TBitmap;
+  Handle: HBITMAP;
+  VersionStr: string;
+begin
+  VersionStr := Format(
+    '%d.%d.%d',
+    [
+      C_DlMajorVersion,
+      C_DlMinorVersion,
+      C_DlPatchVersion
+    ]);
+
+  if C_DlIsDevVersion then begin
+    VersionStr := Format('%s (dev)', [VersionStr]);
+  end;
+
+  Icon := TBitmap.Create(24, 24);
+  try
+    Icon.LoadFromResourceName(HInstance, 'DELPHILINT_SPLASH');
+    Handle := Icon.Handle;
+
+    (SplashScreenServices as IOTASplashScreenServices).AddPluginBitmap(
+      'DelphiLint',
+      Handle,
+      False,
+      'Code analyzer powered by SonarDelphi',
+      VersionStr);
+  finally
+    FreeAndNil(Icon);
+  end;
+
+  try
+    Icon := TBitmap.Create(48, 48);
+    Icon.LoadFromResourceName(HInstance, 'DELPHILINT_ICON');
+    Handle := Icon.Handle;
+
+    FInfoIndex := (BorlandIDEServices as IOTAAboutBoxServices).AddPluginInfo(
+      'DelphiLint ' + VersionStr,
+      'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
+      + #13#10#13#10'Copyright © 2023 Integrated Application Development',
+      Handle);
+  finally
+    FreeAndNil(Icon);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintPlugin.SetAnalysisActionsEnabled(Value: Boolean);
 begin
   FAnalysisActionsEnabled := Value;
@@ -276,6 +349,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 initialization
+ GPlugin := TLintPlugin.Create(nil);
 
 finalization
   FreeAndNil(GPlugin);
