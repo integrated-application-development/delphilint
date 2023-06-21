@@ -631,7 +631,8 @@ begin
         else begin
           Log.Info('Server rule retrieval returned error after timeout had expired');
         end;
-      end);
+      end,
+      ProjectOptions.SonarHostToken);
 
     if RulesRetrieved.WaitFor(3000) <> TWaitResult.wrSignaled then begin
       TimedOut := True;
