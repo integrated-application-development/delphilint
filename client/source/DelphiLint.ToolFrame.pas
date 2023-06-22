@@ -493,8 +493,6 @@ end;
 
 procedure TLintToolFrame.RefreshIssueView;
 begin
-  IssueListBox.ClearSelection;
-
   if FCurrentPath <> '' then begin
     FIssues := LintContext.GetIssues(FCurrentPath);
   end;
@@ -511,13 +509,16 @@ var
   Selected: Integer;
 begin
   Selected := IssueListBox.ItemIndex;
+  IssueListBox.ClearSelection;
   IssueListBox.Clear;
 
   for Issue in FIssues do begin
     IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
   end;
 
-  IssueListBox.ItemIndex := Selected;
+  if IssueListBox.Items.Count > Selected then begin
+    IssueListBox.ItemIndex := Selected;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
