@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 
@@ -40,7 +41,10 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public String getPath() {
-    return baseDir.resolve(relativePath).toString();
+    return baseDir
+        .resolve(relativePath)
+        .toString()
+        .replace(FileSystems.getDefault().getSeparator(), "/");
   }
 
   @Override
@@ -72,7 +76,7 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public String relativePath() {
-    return relativePath.toString();
+    return relativePath.toString().replace(FileSystems.getDefault().getSeparator(), "/");
   }
 
   @Override

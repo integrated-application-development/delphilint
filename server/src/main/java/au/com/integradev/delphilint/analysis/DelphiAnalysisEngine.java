@@ -36,6 +36,7 @@ import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
+import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.analysis.container.global.GlobalAnalysisContainer;
 import org.sonarsource.sonarlint.core.analysis.container.module.ModuleContainer;
@@ -128,13 +129,16 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     LOG.info("Analysis finished");
 
     if (connection != null) {
-      issues = postProcessIssues(issues, connection);
+      Set<ClientInputFile> clientInputFiles = new HashSet<>();
+      config.inputFiles().iterator().forEachRemaining(clientInputFiles::add);
+      issues = postProcessIssues(clientInputFiles, issues, connection);
     }
 
     return issues;
   }
 
-  private Set<Issue> postProcessIssues(Set<Issue> issues, SonarQubeConnection connection)
+  private Set<Issue> postProcessIssues(
+      Set<ClientInputFile> inputFiles, Set<Issue> issues, SonarQubeConnection connection)
       throws ApiException {
     Queue<ClientTrackable> clientTrackables =
         SonarQubeUtils.populateIssueMessages(connection, issues).stream()
@@ -142,7 +146,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
             .collect(Collectors.toCollection(LinkedList::new));
     Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
 
-    ConnectedList<SonarQubeIssue> resolvedIssues = connection.getResolvedIssues();
+    ConnectedList<SonarQubeIssue> resolvedIssues = connection.getResolvedIssues(inputFiles);
     for (SonarQubeIssue resolvedIssue : resolvedIssues) {
       serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
     }

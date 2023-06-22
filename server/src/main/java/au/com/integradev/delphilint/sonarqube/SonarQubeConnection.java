@@ -19,14 +19,21 @@ package au.com.integradev.delphilint.sonarqube;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
+import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 
 public class SonarQubeConnection {
+  private static final Logger LOG = LogManager.getLogger(SonarQubeConnection.class);
+
   private final String projectKey;
   private final String languageKey;
   private final ObjectMapper jsonMapper;
@@ -133,14 +140,21 @@ public class SonarQubeConnection {
     return ruleSet;
   }
 
-  public ConnectedList<SonarQubeIssue> getResolvedIssues() {
+  public ConnectedList<SonarQubeIssue> getResolvedIssues(Collection<ClientInputFile> files) {
     if (projectKey.isEmpty()) {
       return null;
     }
 
+    String componentKeysStr =
+        files.stream()
+            .map(file -> projectKey + ":" + file.relativePath())
+            .collect(Collectors.joining(","));
+
+    LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
+
     return new ConnectedList<>(
         api,
-        "/api/issues/search?resolved=true&componentKeys=" + projectKey,
+        "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
         "issues",
         SonarQubeIssue.class);
   }
