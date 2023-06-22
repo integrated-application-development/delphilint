@@ -104,6 +104,8 @@ type
     procedure OnIssueSelected(Sender: TObject);
     procedure OnIssueDoubleClicked(Sender: TObject);
 
+    procedure OnAnalysisStarted(const Paths: TArray<string>);
+
     procedure RefreshRuleView;
     procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
 
@@ -147,11 +149,7 @@ begin
   IssueListBox.OnClick := OnIssueSelected;
   IssueListBox.OnDblClick := OnIssueDoubleClicked;
 
-  LintContext.OnAnalysisStarted.AddListener(
-    procedure(const Paths: TArray<string>) begin
-      UpdateAnalysisStatus(Format('Analyzing %d files', [Length(Paths) - 1]), True);
-      RefreshActiveFile;
-    end);
+  LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
   LintContext.OnAnalysisComplete.AddListener(
     procedure(const Paths: TArray<string>)
@@ -207,6 +205,37 @@ begin
   end;
   ProgLabel.Caption := Msg;
   Repaint;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.OnAnalysisStarted(const Paths: TArray<string>);
+var
+  SourceFile: string;
+begin
+  if Length(Paths) = 2 then begin
+    SourceFile := Paths[0];
+    if IsDelphiSource(Paths[1]) then begin
+      SourceFile := Paths[1];
+    end;
+
+    UpdateAnalysisStatus(Format('Analyzing %s...', [TPath.GetFileName(SourceFile)]), True);
+  end
+  else begin
+    for SourceFile in Paths do begin
+      if IsDelphiSource(SourceFile) then begin
+        Break;
+      end;
+    end;
+
+    UpdateAnalysisStatus(
+      Format(
+        'Analyzing %s + %d more...',
+        [TPath.GetFileName(SourceFile), Length(Paths) - 1]),
+      True);
+  end;
+
+  RefreshActiveFile;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -313,7 +342,13 @@ end;
 
 procedure TLintToolFrame.UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
 begin
-  UpdateFileNameLabel;
+  if Status = TCurrentFileStatus.cfsNotAnalyzable then begin
+    UpdateFileNameLabel('Non-project file');
+  end
+  else begin
+    UpdateFileNameLabel;
+  end;
+
   Plugin.LintImages.GetIcon(GetStatusImage(Status), ProgImage.Picture.Icon);
   FileStatusLabel.Caption := GetStatusCaption(Status, NumIssues);
   RefreshIssueView;
