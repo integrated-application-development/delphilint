@@ -73,6 +73,10 @@ type
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure FrameResize(Sender: TObject);
+    procedure OnIssueSelected(Sender: TObject);
+    procedure OnIssueDoubleClicked(Sender: TObject);
+    procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -98,13 +102,11 @@ type
 
     procedure RefreshIssueView;
     procedure RepaintIssueView;
-    procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-    procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
     procedure GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText: string; out MessageText: string);
-    procedure OnIssueSelected(Sender: TObject);
-    procedure OnIssueDoubleClicked(Sender: TObject);
+
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
+    procedure OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
 
     procedure RefreshRuleView;
     procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
@@ -144,24 +146,16 @@ begin
   FHtmlRemover := THtmlRemover.Create;
   FCurrentPath := '';
 
-  IssueListBox.OnDrawItem := OnDrawIssueItem;
-  IssueListBox.OnMeasureItem := OnMeasureIssueItem;
-  IssueListBox.OnClick := OnIssueSelected;
-  IssueListBox.OnDblClick := OnIssueDoubleClicked;
-
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
   LintContext.OnAnalysisComplete.AddListener(
-    procedure(const Paths: TArray<string>)
-    begin
-      UpdateAnalysisStatus(Format('Idle (last analysis succeeded at %s)', [FormatDateTime('hh:nn:ss', Now)]));
-      RefreshActiveFile;
+    procedure(const Paths: TArray<string>) begin
+      OnAnalysisFinished(Paths, True);
     end);
 
   LintContext.OnAnalysisFailed.AddListener(
     procedure(const Paths: TArray<string>) begin
-      UpdateAnalysisStatus(Format('Idle (last analysis failed at %s)', [FormatDateTime('hh:nn:ss', Now)]));
-      RefreshActiveFile;
+      OnAnalysisFinished(Paths, False);
     end);
 
   if TryGetCurrentSourceEditor(Editor) then begin
@@ -236,6 +230,17 @@ begin
   end;
 
   RefreshActiveFile;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
+begin
+    UpdateAnalysisStatus(
+      Format(
+        'Idle (last analysis %s at %s)',
+        [IfThen(Succeeded, 'succeeded', 'failed'), FormatDateTime('h:nnam/pm', Now)]));
+    RefreshActiveFile;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -378,7 +383,7 @@ begin
   case Status of
     cfsNotAnalyzable: Result := 'Not analyzable';
     cfsNotAnalyzed: Result := 'Not analyzed';
-    cfsInAnalysis: Result := 'In analysis...';
+    cfsInAnalysis: Result := 'Analyzing';
     cfsFailed: Result := 'Failed';
     cfsNoIssues: Result := 'No issues';
     cfsNoIssuesOutdated: Result := 'No issues (outdated)';

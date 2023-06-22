@@ -101,6 +101,10 @@ object LintToolFrame: TLintToolFrame
       BorderStyle = bsNone
       ItemHeight = 20
       TabOrder = 1
+      OnClick = OnIssueSelected
+      OnDblClick = OnIssueDoubleClicked
+      OnDrawItem = OnDrawIssueItem
+      OnMeasureItem = OnMeasureIssueItem
     end
     object SplitPanel: TPanel
       Left = 435
