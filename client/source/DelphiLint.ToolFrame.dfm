@@ -3,7 +3,10 @@ object LintToolFrame: TLintToolFrame
   Top = 0
   Width = 708
   Height = 371
+  DoubleBuffered = True
+  ParentDoubleBuffered = False
   TabOrder = 0
+  OnResize = FrameResize
   object ContentPanel: TPanel
     Left = 0
     Top = 50
@@ -55,11 +58,16 @@ object LintToolFrame: TLintToolFrame
         Caption = 'RuleHeading'
         ShowCaption = False
         TabOrder = 0
+        DesignSize = (
+          265
+          49)
         object RuleNameLabel: TLabel
           Left = 6
           Top = 6
-          Width = 59
+          Width = 251
           Height = 15
+          Anchors = [akLeft, akTop, akRight]
+          AutoSize = False
           Caption = 'Rule name'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -86,18 +94,18 @@ object LintToolFrame: TLintToolFrame
     object IssueListBox: TListBox
       Left = 0
       Top = 0
-      Width = 441
+      Width = 435
       Height = 294
-      Style = lbOwnerDrawFixed
+      Style = lbOwnerDrawVariable
       Align = alClient
       BorderStyle = bsNone
       ItemHeight = 20
       TabOrder = 1
     end
     object SplitPanel: TPanel
-      Left = 441
+      Left = 435
       Top = 0
-      Width = 2
+      Width = 8
       Height = 294
       Cursor = crHSplit
       Align = alRight
@@ -226,6 +234,8 @@ object LintToolFrame: TLintToolFrame
       Top = 6
       Width = 73
       Height = 16
+      DoubleBuffered = False
+      ParentDoubleBuffered = False
       Smooth = True
       Style = pbstMarquee
       MarqueeInterval = 30

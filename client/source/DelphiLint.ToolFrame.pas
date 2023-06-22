@@ -21,7 +21,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data;
+  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context;
 
 type
   THtmlRemover = class(TObject)
@@ -72,6 +72,7 @@ type
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FrameResize(Sender: TObject);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -90,11 +91,15 @@ type
     FResizing: Boolean;
     FCurrentPath: string;
     FHtmlRemover: THtmlRemover;
+    FIssues: TArray<TLiveIssue>;
 
     procedure UpdateFileNameLabel(NewText: string = '');
 
     procedure RefreshIssueView;
+    procedure RepaintIssueView;
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
+    procedure GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText: string; out MessageText: string);
     procedure OnIssueSelected(Sender: TObject);
     procedure OnIssueDoubleClicked(Sender: TObject);
 
@@ -116,8 +121,7 @@ type
 implementation
 
 uses
-    DelphiLint.Context
-  , ToolsAPI
+    ToolsAPI
   , DelphiLint.Utils
   , System.StrUtils
   , System.IOUtils
@@ -138,6 +142,7 @@ begin
   FCurrentPath := '';
 
   IssueListBox.OnDrawItem := OnDrawIssueItem;
+  IssueListBox.OnMeasureItem := OnMeasureIssueItem;
   IssueListBox.OnClick := OnIssueSelected;
   IssueListBox.OnDblClick := OnIssueDoubleClicked;
 
@@ -183,6 +188,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintToolFrame.FrameResize(Sender: TObject);
+begin
+  RepaintIssueView;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintToolFrame.UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean);
 begin
   if ShowProgress then begin
@@ -223,6 +235,7 @@ end;
 procedure TLintToolFrame.SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FResizing := False;
+  RepaintIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -341,25 +354,72 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintToolFrame.GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText, MessageText: string);
+begin
+  if Issue.StartLine <> -1 then begin
+    LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
+  end
+  else begin
+    LocationText := '(deleted) ';
+  end;
+
+  MessageText := Issue.Message;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
+var
+  ListBox: TListBox;
+  LocationText: string;
+  MessageText: string;
+  Issue: TLiveIssue;
+  Rect: TRect;
+begin
+  ListBox := Control as TListBox;
+  // For some reason, OnMeasureItem is called after a string is added to the listbox, but before its corresponding
+  // object is added. This means we have to maintain a separate list to be able to retrieve them by index here.
+  Issue := FIssues[Index];
+
+  GetIssueItemText(ListBox, Issue, LocationText, MessageText);
+
+  Rect := TRect.Empty;
+  Rect.Left := Rect.Left + ListBox.Canvas.TextWidth(LocationText) + 4;
+  Rect.Right := ListBox.ClientRect.Right - 4;
+  Rect.Top := Rect.Top + 4;
+  Rect.Height := 0;
+
+  DrawText(
+    ListBox.Canvas.Handle,
+    PChar(MessageText),
+    Length(MessageText),
+    Rect,
+    DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
+
+  Height := Rect.Height + 8;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintToolFrame.OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
 var
   Canvas: TCanvas;
   Issue: TLiveIssue;
   ListBox: TListBox;
   LocationText: string;
+  MessageText: string;
   LocationWidth: Integer;
+  MessageRect: TRect;
 begin
   ListBox := Control as TListBox;
 
+  Issue := FIssues[Index];
+  GetIssueItemText(ListBox, Issue, LocationText, MessageText);
+
   Canvas := ListBox.Canvas;
-  Issue := TLiveIssue(ListBox.Items.Objects[Index]);
   Canvas.FillRect(Rect);
 
-  if Issue.StartLine <> -1 then begin
-    LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
-  end
-  else begin
-    LocationText := '(deleted) ';
+  if Issue.StartLine = -1 then begin
     Canvas.Font.Color := clGrayText;
   end;
 
@@ -367,7 +427,19 @@ begin
   Canvas.TextOut(Rect.Left + 4, Rect.Top + 4, LocationText);
 
   Canvas.Font.Style := [fsBold];
-  Canvas.TextOut(Rect.Left + 4 + LocationWidth, Rect.Top + 4, Issue.Message);
+
+  MessageRect := TRect.Empty;
+  MessageRect.Left := Rect.Left + LocationWidth + 4;
+  MessageRect.Right := Rect.Right - 4;
+  MessageRect.Top := Rect.Top + 4;
+  MessageRect.Bottom := Rect.Bottom - 4;
+
+  DrawText(
+    ListBox.Canvas.Handle,
+    PChar(MessageText),
+    Length(MessageText),
+    MessageRect,
+    DT_LEFT or DT_WORDBREAK);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -418,21 +490,32 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.RefreshIssueView;
-var
-  Issues: TArray<TLiveIssue>;
-  Issue: TLiveIssue;
 begin
-  IssueListBox.Clear;
   IssueListBox.ClearSelection;
 
   if FCurrentPath <> '' then begin
-    Issues := LintContext.GetIssues(FCurrentPath);
-    for Issue in Issues do begin
-      IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
-    end;
+    FIssues := LintContext.GetIssues(FCurrentPath);
   end;
 
+  RepaintIssueView;
   RefreshRuleView;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.RepaintIssueView;
+var
+  Issue: TLiveIssue;
+  Selected: Integer;
+begin
+  Selected := IssueListBox.ItemIndex;
+  IssueListBox.Clear;
+
+  for Issue in FIssues do begin
+    IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
+  end;
+
+  IssueListBox.ItemIndex := Selected;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -442,7 +525,10 @@ var
   SelectedIndex: Integer;
   SelectedIssue: TLiveIssue;
   Rule: TRule;
+  WasVisible: Boolean;
 begin
+  WasVisible := RulePanel.Visible;
+
   SelectedIndex := IssueListBox.ItemIndex;
 
   if SelectedIndex <> -1 then begin
@@ -463,8 +549,12 @@ begin
     end;
   end
   else begin
-    RulePanel.Visible := False;
     SplitPanel.Visible := False;
+    RulePanel.Visible := False;
+  end;
+
+  if WasVisible <> RulePanel.Visible then begin
+    RepaintIssueView;
   end;
 end;
 
