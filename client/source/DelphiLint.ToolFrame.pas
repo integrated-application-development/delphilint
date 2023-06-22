@@ -89,6 +89,7 @@ type
     );
   private
     FResizing: Boolean;
+    FDragStartX: Integer;
     FCurrentPath: string;
     FHtmlRemover: THtmlRemover;
     FIssues: TArray<TLiveIssue>;
@@ -213,28 +214,29 @@ end;
 procedure TLintToolFrame.SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FResizing := True;
+  FDragStartX := X;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  NewWidth: Integer;
 begin
-  if FResizing then begin
-    NewWidth := RulePanel.Width - X;
-
-    if (NewWidth < ContentPanel.Width - 10) then begin
-      RulePanel.Width := NewWidth;
-    end;
-  end;
+  // TODO: Implement visual feedback
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  NewWidth: Integer;
 begin
   FResizing := False;
+  NewWidth := RulePanel.Width - (X - FDragStartX);
+
+  if (NewWidth < ContentPanel.Width - 10) then begin
+    RulePanel.Width := NewWidth;
+  end;
+
   RepaintIssueView;
 end;
 
