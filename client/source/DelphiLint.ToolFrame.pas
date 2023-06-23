@@ -403,11 +403,11 @@ end;
 
 procedure TLintToolFrame.GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText, MessageText: string);
 begin
-  if Issue.StartLine <> -1 then begin
+  if Issue.Tethered then begin
     LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
   end
   else begin
-    LocationText := '(deleted) ';
+    LocationText := '(removed) ';
   end;
 
   MessageText := Issue.Message;
@@ -460,13 +460,17 @@ var
 begin
   ListBox := Control as TListBox;
 
+  if (Index < 0) or (Index >= Length(FIssues)) then begin
+    Exit;
+  end;
+
   Issue := FIssues[Index];
   GetIssueItemText(ListBox, Issue, LocationText, MessageText);
 
   Canvas := ListBox.Canvas;
   Canvas.FillRect(Rect);
 
-  if Issue.StartLine = -1 then begin
+  if not Issue.Tethered then begin
     Canvas.Font.Color := clGrayText;
   end;
 

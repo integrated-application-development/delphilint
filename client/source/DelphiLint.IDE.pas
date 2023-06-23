@@ -430,12 +430,21 @@ var
   Msg: string;
   StartLineOffset: Integer;
   EndLineOffset: Integer;
+  TetheredIssues: Boolean;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
   Issues := LintContext.GetIssues(CurrentModule.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
+    TetheredIssues := False;
     for Issue in Issues do begin
+      Issue.UpdateTether(LineNumber, string(LineText));
+
+      if not Issue.Tethered then begin
+        Continue;
+      end;
+
+      TetheredIssues := True;
       StartLineOffset := Issue.StartLineOffset;
       EndLineOffset := Issue.EndLineOffset;
 
@@ -454,7 +463,9 @@ begin
       end;
     end;
 
-    DrawMessage(Msg);
+    if TetheredIssues then begin
+      DrawMessage(Msg);
+    end;
   end;
 end;
 

@@ -24,7 +24,6 @@ uses
   , DelphiLint.Data
   , System.Generics.Collections
   , DelphiLint.Events
-  , DelphiLint.Logger
   ;
 
 type
@@ -38,11 +37,19 @@ type
     FStartLineOffset: Integer;
     FEndLineOffset: Integer;
     FLinesMoved: Integer;
+    FTethered: Boolean;
+    FLines: TList<string>;
 
     function GetStartLine: Integer;
     function GetEndLine: Integer;
-
+    procedure PopulateLines;
   public
+    constructor CreateFromData(Issue: TLintIssue);
+    destructor Destroy; override;
+
+    procedure NewLineMoveSession;
+    procedure UpdateTether(LineNum: Integer; LineText: string);
+
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
     property FilePath: string read FFilePath write FFilePath;
@@ -53,9 +60,7 @@ type
     property StartLineOffset: Integer read FStartLineOffset;
     property EndLineOffset: Integer read FEndLineOffset;
     property LinesMoved: Integer read FLinesMoved write FLinesMoved;
-
-    constructor CreateFromData(Issue: TLintIssue);
-    procedure NewLineMoveSession;
+    property Tethered: Boolean read FTethered;
   end;
 
   TFileAnalysisHistory = record
@@ -70,9 +75,9 @@ type
     FPaths: TArray<string>;
   public
     constructor Create(Paths: TArray<string>);
-    property Paths: TArray<string> read FPaths;
-
     function IncludesFile(const Path: string): Boolean;
+
+    property Paths: TArray<string> read FPaths;
   end;
 
   TFileAnalysisStatus = (
@@ -153,8 +158,9 @@ uses
   , DelphiLint.Settings
   , Vcl.Dialogs
   , System.Hash
-  , ToolsAPI
   , System.SyncObjs
+  , DelphiLint.Logger
+  , ToolsAPI
   ;
 
 var
@@ -705,17 +711,93 @@ begin
   FStartLineOffset := Issue.Range.StartLineOffset;
   FEndLineOffset := Issue.Range.EndLineOffset;
   FLinesMoved := 0;
+  FLines := TList<string>.Create;
+  FTethered := True;
+
+  PopulateLines;
 end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLiveIssue.Destroy;
+begin
+  FreeAndNil(FLines);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssue.PopulateLines;
+
+  procedure ProcessLine(LineNum: Integer; Line: String);
+  begin
+    if (LineNum >= StartLine) and (LineNum <= EndLine) then begin
+      FLines.Add(Line);
+    end;
+  end;
+
+var
+  Reader: TStreamReader;
+  LineNum: Integer;
+  Line: string;
+begin
+  if not FileExists(FFilePath) then begin
+    Exit;
+  end;
+
+  Reader := TFile.OpenText(FFilePath);
+  try
+    LineNum := 1;
+
+    while (LineNum <= EndLine) do begin
+      Line := Reader.ReadLine;
+      ProcessLine(LineNum, Line);
+      Inc(LineNum);
+    end;
+  finally
+    FreeAndNil(Reader);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssue.UpdateTether(LineNum: Integer; LineText: string);
+var
+  Delta: Integer;
+begin
+  if not FTethered then begin
+    Exit;
+  end;
+
+  Delta := StartLine - LineNum;
+  if (Delta >= 0) and (Delta < FLines.Count) then begin
+    if (FLines[Delta] <> LineText) then begin
+      Log.Info('Issue at line ' + IntToStr(StartLine) + 'untethered due to changes on line ' + IntToStr(LineNum));
+      FTethered := False;
+    end;
+  end
+  else begin
+    Log.Info(Format(
+      'Attempted to tether by providing line %d for issue at issue on lines %d-%d',
+      [IntToStr(StartLine), IntToStr(EndLine), IntToStr(LineNum)]));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
 
 function TLiveIssue.GetStartLine: Integer;
 begin
   Result := FStartLine + LinesMoved;
 end;
 
+//______________________________________________________________________________________________________________________
+
 function TLiveIssue.GetEndLine: Integer;
 begin
   Result := FEndLine + LinesMoved;
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TLiveIssue.NewLineMoveSession;
 begin
@@ -724,7 +806,7 @@ begin
   FLinesMoved := 0;
 end;
 
-{ TCurrentAnalysis }
+//______________________________________________________________________________________________________________________
 
 constructor TCurrentAnalysis.Create(Paths: TArray<string>);
 begin
