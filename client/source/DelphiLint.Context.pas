@@ -42,9 +42,9 @@ type
 
     function GetStartLine: Integer;
     function GetEndLine: Integer;
-    procedure PopulateLines;
+    procedure PopulateLines(const FileLines: TArray<string>);
   public
-    constructor CreateFromData(Issue: TLintIssue);
+    constructor Create(Issue: TLintIssue; FileLines: TArray<string>);
     destructor Destroy; override;
 
     procedure NewLineMoveSession;
@@ -528,20 +528,25 @@ var
   LiveIssue: TLiveIssue;
   SanitizedPath: string;
   NewIssues: TDictionary<string, TObjectList<TLiveIssue>>;
+  FileContents: TDictionary<string, TArray<string>>;
   Path: string;
   NewIssuesForFile: TObjectList<TLiveIssue>;
   IssueCount: Integer;
 begin
-  NewIssues := TDictionary<string, TObjectList<TLiveIssue>>.Create;
   try
+    FileContents := TDictionary<string, TArray<string>>.Create;
+    NewIssues := TDictionary<string, TObjectList<TLiveIssue>>.Create;
+
     // Split issues by file and convert to live issues
     for Issue in Issues do begin
-      LiveIssue := TLiveIssue.CreateFromData(Issue);
-
       SanitizedPath := NormalizePath(Issue.FilePath);
       if not NewIssues.ContainsKey(SanitizedPath) then begin
         NewIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
+        // TODO: Improve encoding handling
+        FileContents.Add(SanitizedPath, TFile.ReadAllLines(Issue.FilePath, TEncoding.ANSI));
       end;
+
+      LiveIssue := TLiveIssue.Create(Issue, FileContents[SanitizedPath]);
       NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 
@@ -566,6 +571,7 @@ begin
     end;
   finally
     FreeAndNil(NewIssues);
+    FreeAndNil(FileContents);
   end;
 end;
 
@@ -701,7 +707,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLiveIssue.CreateFromData(Issue: TLintIssue);
+constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>);
 begin
   FRuleKey := Issue.RuleKey;
   FMessage := Issue.Message;
@@ -714,7 +720,7 @@ begin
   FLines := TList<string>.Create;
   FTethered := True;
 
-  PopulateLines;
+  PopulateLines(FileLines);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -727,35 +733,17 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssue.PopulateLines;
-
-  procedure ProcessLine(LineNum: Integer; Line: String);
-  begin
-    if (LineNum >= StartLine) and (LineNum <= EndLine) then begin
-      FLines.Add(Line);
-    end;
-  end;
-
+procedure TLiveIssue.PopulateLines(const FileLines: TArray<string>);
 var
-  Reader: TStreamReader;
   LineNum: Integer;
-  Line: string;
 begin
-  if not FileExists(FFilePath) then begin
-    Exit;
-  end;
+  if FileExists(FFilePath) and (Length(FileLines) > StartLine) then begin
+    LineNum := StartLine;
 
-  Reader := TFile.OpenText(FFilePath);
-  try
-    LineNum := 1;
-
-    while (LineNum <= EndLine) do begin
-      Line := Reader.ReadLine;
-      ProcessLine(LineNum, Line);
+    while (LineNum <= EndLine) and (LineNum < Length(FileLines)) do begin
+      FLines.Add(FileLines[LineNum - 1]);
       Inc(LineNum);
     end;
-  finally
-    FreeAndNil(Reader);
   end;
 end;
 
@@ -772,7 +760,7 @@ begin
   Delta := StartLine - LineNum;
   if (Delta >= 0) and (Delta < FLines.Count) then begin
     if (FLines[Delta] <> LineText) then begin
-      Log.Info('Issue at line ' + IntToStr(StartLine) + 'untethered due to changes on line ' + IntToStr(LineNum));
+      Log.Info(Format('Issue at line %d untethered: <%s> -> <%s>', [LineNum, FLines[Delta], LineText]));
       FTethered := False;
     end;
   end
