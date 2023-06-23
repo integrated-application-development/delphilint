@@ -20,8 +20,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, DelphiLint.ToolFormInfo, Vcl.Forms, DelphiLint.ToolFrame,
-  DelphiLint.SettingsFrame;
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame;
 
 const
   C_ImgDefault = 0;

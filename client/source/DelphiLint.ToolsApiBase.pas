@@ -27,6 +27,12 @@ uses
   , System.SysUtils
   , DelphiLint.Events
   , Vcl.Forms
+  , Vcl.ActnList
+  , Vcl.ImgList
+  , Vcl.ComCtrls
+  , System.IniFiles
+  , Vcl.Menus
+  , DesignIntf
   ;
 
 type
@@ -109,6 +115,24 @@ type
     function ValidateContents: Boolean; virtual;
     function GetHelpContext: Integer; virtual;
     function IncludeInIDEInsight: Boolean; virtual;
+  end;
+
+  TCustomDockableFormBase = class abstract(TInterfacedObject, INTACustomDockableForm)
+  public
+    function GetCaption: string; virtual;
+    function GetIdentifier: string; virtual; abstract;
+    function GetFrameClass: TCustomFrameClass; virtual; abstract;
+    procedure FrameCreated(AFrame: TCustomFrame); virtual;
+    function GetMenuActionList: TCustomActionList; virtual;
+    function GetMenuImageList: TCustomImageList; virtual;
+    procedure CustomizePopupMenu(PopupMenu: TPopupMenu); virtual;
+    function GetToolBarActionList: TCustomActionList; virtual;
+    function GetToolBarImageList: TCustomImageList; virtual;
+    procedure CustomizeToolBar(ToolBar: TToolBar); virtual;
+    procedure SaveWindowState(Desktop: TCustomIniFile; const Section: string; IsProject: Boolean); virtual;
+    procedure LoadWindowState(Desktop: TCustomIniFile; const Section: string); virtual;
+    function GetEditState: TEditState; virtual;
+    function EditAction(Action: TEditAction): Boolean; virtual;
   end;
 
 implementation
@@ -319,5 +343,75 @@ begin
   // Empty default implementation
   Result := True;
 end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TCustomDockableFormBase.CustomizePopupMenu(PopupMenu: TPopupMenu);
+begin
+  // Empty default implementation
+end;
+
+procedure TCustomDockableFormBase.CustomizeToolBar(ToolBar: TToolBar);
+begin
+  // Empty default implementation
+end;
+
+function TCustomDockableFormBase.EditAction(Action: TEditAction): Boolean;
+begin
+  // Empty default implementation
+  Result := True;
+end;
+
+procedure TCustomDockableFormBase.FrameCreated(AFrame: TCustomFrame);
+begin
+  // Empty default implementation
+end;
+
+function TCustomDockableFormBase.GetCaption: string;
+begin
+  // Empty default implementation
+  Result := '';
+end;
+
+function TCustomDockableFormBase.GetEditState: TEditState;
+begin
+  // Empty default implementation
+  Result := [];
+end;
+
+function TCustomDockableFormBase.GetMenuActionList: TCustomActionList;
+begin
+  // Empty default implementation
+  Result := nil;
+end;
+
+function TCustomDockableFormBase.GetMenuImageList: TCustomImageList;
+begin
+  // Empty default implementation
+  Result := nil;
+end;
+
+function TCustomDockableFormBase.GetToolBarActionList: TCustomActionList;
+begin
+  // Empty default implementation
+  Result := nil;
+end;
+
+function TCustomDockableFormBase.GetToolBarImageList: TCustomImageList;
+begin
+  // Empty default implementation
+  Result := nil;
+end;
+
+procedure TCustomDockableFormBase.LoadWindowState(Desktop: TCustomIniFile; const Section: string);
+begin
+  // Empty default implementation
+end;
+
+procedure TCustomDockableFormBase.SaveWindowState(Desktop: TCustomIniFile; const Section: string; IsProject: Boolean);
+begin
+  // Empty default implementation
+end;
+
 
 end.

@@ -21,7 +21,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context;
+  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase;
 
 type
   THtmlRemover = class(TObject)
@@ -121,6 +121,14 @@ type
 
     procedure ChangeActiveFile(const Path: string);
     procedure RefreshActiveFile;
+  end;
+
+  TLintToolFormInfo = class(TCustomDockableFormBase)
+  public
+    function GetCaption: string; override;
+    function GetIdentifier: string; override;
+    function GetFrameClass: TCustomFrameClass; override;
+    procedure FrameCreated(AFrame: TCustomFrame); override;
   end;
 
 implementation
@@ -650,5 +658,33 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+
+function TLintToolFormInfo.GetIdentifier: string;
+begin
+  Result := 'DelphiLintToolForm';
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFormInfo.FrameCreated(AFrame: TCustomFrame);
+begin
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(AFrame);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintToolFormInfo.GetCaption: string;
+begin
+  Result := 'DelphiLint';
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintToolFormInfo.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TLintToolFrame;
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.

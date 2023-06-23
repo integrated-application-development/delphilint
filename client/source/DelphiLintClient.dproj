@@ -98,7 +98,6 @@
             <FormType>dfm</FormType>
             <DesignClass>T</DesignClass>
         </DCCReference>
-        <DCCReference Include="DelphiLint.ToolFormInfo.pas"/>
         <DCCReference Include="DelphiLint.Utils.pas"/>
         <DCCReference Include="DelphiLint.SettingsFrame.pas">
             <Form>LintSettingsFrame</Form>
