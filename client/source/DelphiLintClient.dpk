@@ -26,6 +26,7 @@ package DelphiLintClient;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'DelphiLint'}
 {$IMPLICITBUILD ON}
 
 requires
