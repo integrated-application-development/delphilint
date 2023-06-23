@@ -308,10 +308,15 @@ begin
       fasOutdatedAnalysis:
         if LintContext.TryGetAnalysisHistory(Path, History) then begin
           if History.Success then begin
-            UpdateFileStatus(cfsIssuesOutdated);
+            if History.IssuesFound = 0 then begin
+              UpdateFileStatus(cfsNoIssuesOutdated);
+            end
+            else begin
+              UpdateFileStatus(cfsIssuesOutdated, History.IssuesFound);
+            end;
           end
           else begin
-              UpdateFileStatus(cfsNoIssuesOutdated, History.IssuesFound);
+            UpdateFileStatus(cfsNotAnalyzed);
           end;
         end
         else begin
