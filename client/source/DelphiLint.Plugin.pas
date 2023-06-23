@@ -128,6 +128,7 @@ procedure TLintPlugin.ActionShowToolWindowExecute(Sender: TObject);
 begin
   if not Assigned(FToolForm) then begin
     FToolForm := (BorlandIDEServices as INTAServices).CreateDockableForm(FToolFormInfo);
+    (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FToolForm);
   end;
 
   FToolForm.Show;

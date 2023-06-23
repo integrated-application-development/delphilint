@@ -166,8 +166,6 @@ begin
   end;
   UpdateAnalysisStatus('Idle');
 
-  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self.Owner);
-
   Plugin.RegisterToolFrame(Self);
 end;
 
