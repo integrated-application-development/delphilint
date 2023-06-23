@@ -27,11 +27,14 @@ private var
   FServerAutoLaunch: Boolean;
   FSonarDelphiJar: string;
   FServerStartDelay: Integer;
+  FClientDarkMode: Boolean;
 
   FSettingsDir: string;
   FSettingsFile: string;
 private
   constructor Create;
+
+  function InDarkMode: Boolean;
 
 public
   procedure Save;
@@ -44,6 +47,7 @@ public
   property ServerJavaExe: string read FServerJavaExe;
   property ServerStartDelay: Integer read FServerStartDelay;
   property ServerAutoLaunch: Boolean read FServerAutoLaunch;
+  property ClientDarkMode: Boolean read FClientDarkMode;
 end;
 
 function LintSettings: TLintSettings;
@@ -54,10 +58,16 @@ uses
     System.IniFiles
   , System.SysUtils
   , System.IOUtils
+  , ToolsAPI
+  , Vcl.Themes
+  , Vcl.Graphics
+  , Winapi.Windows
   ;
 
 var
   G_LintSettings: TLintSettings;
+
+//______________________________________________________________________________________________________________________
 
 function LintSettings: TLintSettings;
 begin
@@ -67,7 +77,7 @@ begin
   Result := G_LintSettings;
 end;
 
-{ TLintSettings }
+//______________________________________________________________________________________________________________________
 
 constructor TLintSettings.Create;
 begin
@@ -77,6 +87,8 @@ begin
   Reload;
   Save;
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TLintSettings.Reload;
 var
@@ -91,6 +103,7 @@ begin
     FServerStartDelay := Ini.ReadInteger('Server', 'StartDelay', 1000);
     FServerAutoLaunch := Ini.ReadBool('Server', 'AutoLaunch', True);
     FSonarDelphiJar := Ini.ReadString('SonarDelphi', 'Jar', TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar'));
+    FClientDarkMode := Ini.ReadBool('Client', 'DarkMode', InDarkMode);
 
     FServerJavaExe := Ini.ReadString('Server', 'JavaExe', '');
 
@@ -108,6 +121,8 @@ begin
   end;
 end;
 
+//______________________________________________________________________________________________________________________
+
 procedure TLintSettings.Save;
 var
   Ini: TIniFile;
@@ -121,9 +136,23 @@ begin
     Ini.WriteBool('Server', 'AutoLaunch', FServerAutoLaunch);
     Ini.WriteString('SonarDelphi', 'Jar', FSonarDelphiJar);
     Ini.WriteString('Server', 'JavaExe', FServerJavaExe);
+    Ini.WriteBool('Client', 'DarkMode', FClientDarkMode);
   finally
     FreeAndNil(Ini);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.InDarkMode: Boolean;
+var
+  BgColor: TColor;
+  Color: Longint;
+begin
+  BgColor := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetStyleColor(scGenericBackground);
+  Color := ColorToRGB(BgColor);
+
+  Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);
 end;
 
 end.

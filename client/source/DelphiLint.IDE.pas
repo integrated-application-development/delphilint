@@ -130,6 +130,7 @@ uses
   , DelphiLint.Context
   , DelphiLint.Logger
   , DelphiLint.Utils
+  , DelphiLint.Settings
   ;
 
 //______________________________________________________________________________________________________________________
@@ -397,12 +398,12 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
     Result := TextRect.Left + (Col + 1 - View.LeftColumn) * CellSize.Width;
   end;
 
-  procedure DrawLine(const StartChar: Integer; const EndChar: Integer);
+  procedure DrawLine(const StartChar: Integer; const EndChar: Integer; const Color: TColor);
   var
     StartX: Integer;
     EndX: Integer;
   begin
-    Canvas.Pen.Color := clWebGold;
+    Canvas.Pen.Color := Color;
     Canvas.Pen.Width := 1;
 
     StartX := Max(ColumnToPx(StartChar), TextRect.Left);
@@ -415,9 +416,9 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
     Canvas.LineTo(EndX, TextRect.Bottom - 1);
   end;
 
-  procedure DrawMessage(const Msg: string);
+  procedure DrawMessage(const Msg: string; const Color: TColor);
   begin
-    Canvas.Font.Color := clWebGold;
+    Canvas.Font.Color := Color;
     Canvas.Brush.Style := bsClear;
     Canvas.TextOut(LineRect.Left + (2 * CellSize.Width), LineRect.Top, '!');
     Canvas.TextOut(TextRect.Right, TextRect.Top, Msg);
@@ -431,11 +432,20 @@ var
   StartLineOffset: Integer;
   EndLineOffset: Integer;
   TetheredIssues: Boolean;
+  TextColor: TColor;
 begin
   CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
   Issues := LintContext.GetIssues(CurrentModule.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
+    if LintSettings.ClientDarkMode then begin
+      TextColor := clWebGold;
+    end
+    else begin
+      TextColor := clWebSienna;
+    end;
+
+
     TetheredIssues := False;
     for Issue in Issues do begin
       Issue.UpdateTether(LineNumber, string(LineText));
@@ -456,7 +466,7 @@ begin
         EndLineOffset := -1;
       end;
 
-      DrawLine(StartLineOffset, EndLineOffset);
+      DrawLine(StartLineOffset, EndLineOffset, TextColor);
 
       if Issue.StartLine = LineNumber then begin
         Msg := Msg + ' - ' + Issue.Message;
@@ -464,7 +474,7 @@ begin
     end;
 
     if TetheredIssues then begin
-      DrawMessage(Msg);
+      DrawMessage(Msg, TextColor);
     end;
   end;
 end;
