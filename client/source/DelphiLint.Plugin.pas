@@ -20,7 +20,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame;
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame,
+  DelphiLint.OptionsForm;
 
 const
   C_ImgDefault = 0;
@@ -49,6 +50,7 @@ type
     procedure ActionRestartServerExecute(Sender: TObject);
     procedure ActionAnalyzeOpenFilesExecute(Sender: TObject);
     procedure ActionOpenSettingsExecute(Sender: TObject);
+    procedure ActionOpenProjectOptionsExecute(Sender: TObject);
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
@@ -58,6 +60,7 @@ type
     FToolForm: TCustomForm;
     FAddInOptions: TLintAddInOptions;
     FInfoIndex: Integer;
+    FOptionsForm: TLintOptionsForm;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
@@ -115,6 +118,18 @@ end;
 procedure TLintPlugin.ActionAnalyzeOpenFilesExecute(Sender: TObject);
 begin
   LintContext.AnalyzeOpenFiles;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.ActionOpenProjectOptionsExecute(Sender: TObject);
+begin
+  if not Assigned(FOptionsForm) then begin
+    FOptionsForm := TLintOptionsForm.Create(nil);
+    (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FOptionsForm);
+  end;
+
+  FOptionsForm.Show;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -200,6 +215,9 @@ begin
   // Settings form
   FAddInOptions := TLintAddInOptions.Create;
   (BorlandIDEServices as INTAEnvironmentOptionsServices).RegisterAddInOptions(FAddInOptions);
+
+  // Project options form
+  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintOptionsForm);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -231,6 +249,8 @@ begin
   (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
   (BorlandIDEServices as IOTAAboutBoxServices).RemovePluginInfo(FInfoIndex);
   (BorlandIDEServices as INTAEnvironmentOptionsServices).UnregisterAddInOptions(FAddInOptions);
+
+  FreeAndNil(FOptionsForm);
   inherited;
 end;
 

@@ -28,14 +28,20 @@ type
     function GetProjectBaseDir: string;
     function GetSonarHostToken: string;
 
+    procedure SetProjectKey(Value: string);
+    procedure SetSonarHostUrl(Value: string);
+    procedure SetProjectBaseDir(Value: string);
+    procedure SetSonarHostToken(Value: string);
+
     function StrFromIni(const Section: string; const Identifier: string): string;
+    procedure StrToIni(const Section: string; const Identifier: string; const Value: string);
   public
     constructor Create(ProjectFilePath: string);
 
-    property ProjectKey: string read GetProjectKey;
-    property SonarHostUrl: string read GetSonarHostUrl;
-    property ProjectBaseDir: string read GetProjectBaseDir;
-    property SonarHostToken: string read GetSonarHostToken;
+    property ProjectKey: string read GetProjectKey write SetProjectKey;
+    property SonarHostUrl: string read GetSonarHostUrl write SetSonarHostUrl;
+    property ProjectBaseDir: string read GetProjectBaseDir write SetProjectBaseDir;
+    property SonarHostToken: string read GetSonarHostToken write SetSonarHostToken;
   end;
 
 implementation
@@ -72,6 +78,26 @@ begin
   Result := StrFromIni('SonarHost', 'Token');
 end;
 
+procedure TLintProjectOptions.SetProjectBaseDir(Value: string);
+begin
+  StrToIni('Project', 'BaseDir', Value);
+end;
+
+procedure TLintProjectOptions.SetProjectKey(Value: string);
+begin
+  StrToIni('Project', 'Key', Value);
+end;
+
+procedure TLintProjectOptions.SetSonarHostToken(Value: string);
+begin
+  StrToIni('SonarHost', 'Token', Value);
+end;
+
+procedure TLintProjectOptions.SetSonarHostUrl(Value: string);
+begin
+  StrToIni('SonarHost', 'Url', Value);
+end;
+
 function TLintProjectOptions.StrFromIni(const Section, Identifier: string): string;
 var
   Ini: TIniFile;
@@ -79,6 +105,23 @@ begin
   Ini := TIniFile.Create(FOptionsFile);
   try
     Result := Ini.ReadString(Section, Identifier, '');
+  finally
+    FreeAndNil(Ini);
+  end;
+end;
+
+procedure TLintProjectOptions.StrToIni(const Section, Identifier, Value: string);
+var
+  Ini: TIniFile;
+begin
+  Ini := TIniFile.Create(FOptionsFile);
+  try
+    if Value = '' then begin
+      Ini.DeleteKey(Section, Identifier);
+    end
+    else begin
+      Ini.WriteString(Section, Identifier, Value);
+    end;
   finally
     FreeAndNil(Ini);
   end;

@@ -434,7 +434,7 @@ object LintPlugin: TLintPlugin
     end
     object ActionOpenProjectOptions: TAction
       Caption = 'Project Options...'
-      Enabled = False
+      OnExecute = ActionOpenProjectOptionsExecute
     end
     object ActionOpenSettings: TAction
       Caption = 'Settings...'
