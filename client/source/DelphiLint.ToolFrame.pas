@@ -164,7 +164,13 @@ begin
   else begin
     ChangeActiveFile('');
   end;
-  UpdateAnalysisStatus('Idle');
+
+  if LintContext.InAnalysis then begin
+    OnAnalysisStarted(LintContext.CurrentAnalysis.Paths);
+  end
+  else begin
+    UpdateAnalysisStatus('Idle');
+  end;
 
   Plugin.RegisterToolFrame(Self);
 end;
@@ -223,7 +229,7 @@ begin
     UpdateAnalysisStatus(
       Format(
         'Analyzing %s + %d more...',
-        [TPath.GetFileName(SourceFile), Length(Paths) - 1]),
+        [TPath.GetFileName(SourceFile), Length(Paths) - 2]),
       True);
   end;
 
