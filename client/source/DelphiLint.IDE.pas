@@ -29,7 +29,7 @@ uses
   , DelphiLint.Data
   , DockForm
   , DelphiLint.Events
-  , DelphiLint.NotifierBase
+  , DelphiLint.ToolsApiBase
   ;
 
 type

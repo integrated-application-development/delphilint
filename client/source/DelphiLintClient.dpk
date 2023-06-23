@@ -39,7 +39,7 @@ contains
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
-  DelphiLint.NotifierBase in 'DelphiLint.NotifierBase.pas',
+  DelphiLint.ToolsApiBase in 'DelphiLint.ToolsApiBase.pas',
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
@@ -47,6 +47,7 @@ contains
   DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
   DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: T},
   DelphiLint.ToolFormInfo in 'DelphiLint.ToolFormInfo.pas',
-  DelphiLint.Utils in 'DelphiLint.Utils.pas';
+  DelphiLint.Utils in 'DelphiLint.Utils.pas',
+  DelphiLint.SettingsFrame in 'DelphiLint.SettingsFrame.pas' {LintSettingsFrame: TFrame};
 
 end.

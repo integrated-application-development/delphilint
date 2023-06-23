@@ -20,7 +20,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, DelphiLint.ToolFormInfo, Vcl.Forms, DelphiLint.ToolFrame;
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, DelphiLint.ToolFormInfo, Vcl.Forms, DelphiLint.ToolFrame,
+  DelphiLint.SettingsFrame;
 
 const
   C_ImgDefault = 0;
@@ -55,6 +56,7 @@ type
     FAnalysisActionsEnabled: Boolean;
     FToolFormInfo: TLintToolFormInfo;
     FToolForm: TCustomForm;
+    FAddInOptions: TLintAddInOptions;
     FInfoIndex: Integer;
 
     procedure CreateMainMenu;
@@ -94,7 +96,7 @@ implementation
 uses
     ToolsAPI
   , DelphiLint.Context
-  , DelphiLint.NotifierBase
+  , DelphiLint.ToolsApiBase
   , Winapi.Windows
   , Vcl.Graphics
   , System.StrUtils
@@ -187,6 +189,10 @@ begin
   // Initialise tool form
   FToolFormInfo := TLintToolFormInfo.Create;
   (BorlandIDEServices as INTAServices).RegisterDockableForm(FToolFormInfo);
+
+  // Settings form
+  FAddInOptions := TLintAddInOptions.Create;
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).RegisterAddInOptions(FAddInOptions);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -217,6 +223,7 @@ begin
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
   (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
   (BorlandIDEServices as IOTAAboutBoxServices).RemovePluginInfo(FInfoIndex);
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).UnregisterAddInOptions(FAddInOptions);
   inherited;
 end;
 
@@ -293,7 +300,7 @@ begin
     Icon.LoadFromResourceName(HInstance, 'DELPHILINT_SPLASH');
     Handle := Icon.Handle;
 
-    (SplashScreenServices as IOTASplashScreenServices).AddPluginBitmap(
+    SplashScreenServices.AddPluginBitmap(
       'DelphiLint',
       Handle,
       False,

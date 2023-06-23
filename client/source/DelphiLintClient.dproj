@@ -82,7 +82,7 @@
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
         <DCCReference Include="DelphiLint.Logger.pas"/>
-        <DCCReference Include="DelphiLint.NotifierBase.pas"/>
+        <DCCReference Include="DelphiLint.ToolsApiBase.pas"/>
         <DCCReference Include="DelphiLint.Events.pas"/>
         <DCCReference Include="DelphiLint.Settings.pas"/>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
@@ -99,6 +99,11 @@
         </DCCReference>
         <DCCReference Include="DelphiLint.ToolFormInfo.pas"/>
         <DCCReference Include="DelphiLint.Utils.pas"/>
+        <DCCReference Include="DelphiLint.SettingsFrame.pas">
+            <Form>LintSettingsFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DELPHILINT_SPLASH</ResourceId>

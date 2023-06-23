@@ -14,7 +14,7 @@ PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 }
-unit DelphiLint.NotifierBase;
+unit DelphiLint.ToolsApiBase;
 
 interface
 
@@ -26,6 +26,7 @@ uses
   , Winapi.Windows
   , System.SysUtils
   , DelphiLint.Events
+  , Vcl.Forms
   ;
 
 type
@@ -97,6 +98,17 @@ type
     // IOTAModuleNotifier90
     procedure BeforeRename(const OldFileName, NewFileName: string); virtual;
     procedure AfterRename(const OldFileName, NewFileName: string); virtual;
+  end;
+
+  TAddInOptionsBase = class abstract(TInterfacedObject, INTAAddInOptions)
+    function GetArea: string; virtual;
+    function GetCaption: string; virtual;
+    function GetFrameClass: TCustomFrameClass; virtual; abstract;
+    procedure FrameCreated(AFrame: TCustomFrame); virtual;
+    procedure DialogClosed(Accepted: Boolean); virtual;
+    function ValidateContents: Boolean; virtual;
+    function GetHelpContext: Integer; virtual;
+    function IncludeInIDEInsight: Boolean; virtual;
   end;
 
 implementation
@@ -264,6 +276,48 @@ end;
 procedure TModuleNotifierBase.SetSaveFileName(const FileName: string);
 begin
   // Empty default implementation
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TAddInOptionsBase.DialogClosed(Accepted: Boolean);
+begin
+  // Empty default implementation
+end;
+
+procedure TAddInOptionsBase.FrameCreated(AFrame: TCustomFrame);
+begin
+  // Empty default implementation
+end;
+
+function TAddInOptionsBase.GetArea: string;
+begin
+  // Empty default implementation
+  Result := ''; // Third Party
+end;
+
+function TAddInOptionsBase.GetCaption: string;
+begin
+  // Empty default implementation
+  Result := '';
+end;
+
+function TAddInOptionsBase.GetHelpContext: Integer;
+begin
+  // Empty default implementation
+  Result := 0;
+end;
+
+function TAddInOptionsBase.IncludeInIDEInsight: Boolean;
+begin
+  // Empty default implementation
+  Result := True;
+end;
+
+function TAddInOptionsBase.ValidateContents: Boolean;
+begin
+  // Empty default implementation
+  Result := True;
 end;
 
 end.

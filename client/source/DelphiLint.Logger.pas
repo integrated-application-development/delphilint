@@ -22,7 +22,7 @@ uses
     ToolsAPI
   , DelphiLint.Events
   , System.Classes
-  , DelphiLint.NotifierBase
+  , DelphiLint.ToolsApiBase
   ;
 
 type

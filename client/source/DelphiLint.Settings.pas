@@ -40,14 +40,14 @@ public
   procedure Save;
   procedure Reload;
 
-  property ServerJar: string read FServerJar;
-  property ServerPort: Integer read FServerPort;
-  property ServerShowConsole: Boolean read FServerShowConsole;
-  property SonarDelphiJar: string read FSonarDelphiJar;
-  property ServerJavaExe: string read FServerJavaExe;
-  property ServerStartDelay: Integer read FServerStartDelay;
-  property ServerAutoLaunch: Boolean read FServerAutoLaunch;
-  property ClientDarkMode: Boolean read FClientDarkMode;
+  property ServerJar: string read FServerJar write FServerJar;
+  property ServerPort: Integer read FServerPort write FServerPort;
+  property ServerShowConsole: Boolean read FServerShowConsole write FServerShowConsole;
+  property SonarDelphiJar: string read FSonarDelphiJar write FSonarDelphiJar;
+  property ServerJavaExe: string read FServerJavaExe write FServerJavaExe;
+  property ServerStartDelay: Integer read FServerStartDelay write FServerStartDelay;
+  property ServerAutoLaunch: Boolean read FServerAutoLaunch write FServerAutoLaunch;
+  property ClientDarkMode: Boolean read FClientDarkMode write FClientDarkMode;
 end;
 
 function LintSettings: TLintSettings;
@@ -83,7 +83,6 @@ constructor TLintSettings.Create;
 begin
   FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
   FSettingsFile := TPath.Combine(FSettingsDir, 'delphilint.ini');
-
   Reload;
   Save;
 end;
