@@ -49,6 +49,7 @@ type
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
     procedure ActionRestartServerExecute(Sender: TObject);
     procedure ActionAnalyzeOpenFilesExecute(Sender: TObject);
+    procedure ActionOpenSettingsExecute(Sender: TObject);
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
@@ -115,6 +116,13 @@ end;
 procedure TLintPlugin.ActionAnalyzeOpenFilesExecute(Sender: TObject);
 begin
   LintContext.AnalyzeOpenFiles;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.ActionOpenSettingsExecute(Sender: TObject);
+begin
+  (BorlandIDEServices as IOTAServices).GetEnvironmentOptions.EditOptions('', 'DelphiLint');
 end;
 
 //______________________________________________________________________________________________________________________

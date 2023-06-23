@@ -438,7 +438,7 @@ object LintPlugin: TLintPlugin
     end
     object ActionOpenSettings: TAction
       Caption = 'Settings...'
-      Enabled = False
+      OnExecute = ActionOpenSettingsExecute
     end
     object ActionRestartServer: TAction
       Caption = 'Restart Server'
