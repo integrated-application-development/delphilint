@@ -3,7 +3,7 @@ object LintOptionsForm: TLintOptionsForm
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Project Options'
-  ClientHeight = 283
+  ClientHeight = 314
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -28,10 +28,10 @@ object LintOptionsForm: TLintOptionsForm
     ParentFont = False
   end
   object GroupBox1: TGroupBox
-    Left = 303
+    Left = 304
     Top = 58
     Width = 265
-    Height = 217
+    Height = 239
     Caption = 'SonarQube connection'
     TabOrder = 0
     object SonarHostUrlEdit: TLabeledEdit
@@ -69,6 +69,15 @@ object LintOptionsForm: TLintOptionsForm
       TabOrder = 2
       Text = ''
       OnChange = ProjectKeyEditChange
+    end
+    object CreateTokenButton: TButton
+      Left = 16
+      Top = 202
+      Width = 105
+      Height = 25
+      Caption = 'Create Token'
+      TabOrder = 3
+      OnClick = CreateTokenButtonClick
     end
   end
   object GroupBox2: TGroupBox
