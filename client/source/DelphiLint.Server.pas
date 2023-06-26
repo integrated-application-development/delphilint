@@ -356,7 +356,7 @@ begin
   end;
 
   if Response.Category <> C_Initialized then begin
-    Log.Info(Format('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]));
+    Log.Info('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]);
   end;
 end;
 
@@ -404,13 +404,13 @@ var
   ErrorMsg: string;
   ErrorCat: Byte;
 begin
-  Log.Info(Format('Analysis response received (%d)', [Response.Category]));
+  Log.Info('Analysis response received (%d)', [Response.Category]);
 
   if Response.Category <> C_AnalyzeResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 
-    Log.Info(Format('Analyze error (%d): %s', [ErrorCat, ErrorMsg]));
+    Log.Info('Analyze error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
@@ -462,13 +462,13 @@ var
   ErrorCat: Byte;
   Rules: TObjectDictionary<string, TRule>;
 begin
-  Log.Info(Format('Rule retrieve response received (%d)', [Response.Category]));
+  Log.Info('Rule retrieve response received (%d)', [Response.Category]);
 
   if Response.Category <> C_RuleRetrieveResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 
-    Log.Info(Format('Rule retrieve error (%d): %s', [ErrorCat, ErrorMsg]));
+    Log.Info('Rule retrieve error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
@@ -483,7 +483,7 @@ end;
 
 procedure TLintServer.OnUnhandledMessage(Message: TLintMessage);
 begin
-  Log.Info(Format('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]));
+  Log.Info('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -53,7 +53,8 @@ type
     destructor Destroy; override;
 
     procedure Title(Msg: string);
-    procedure Info(Msg: string); overload;
+    procedure Info(const Msg: string); overload;
+    procedure Info(const Msg: string; const Args: array of const); overload;
     procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
     procedure Clear;
   end;
@@ -153,7 +154,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintLogger.Info(Msg: string);
+procedure TLintLogger.Info(const Msg: string);
 begin
   Info(Msg, '', 0, 0);
 end;
@@ -183,6 +184,13 @@ begin
     end;
 
   MainThreadRun(LogProc);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintLogger.Info(const Msg: string; const Args: array of const);
+begin
+  Info(Format(Msg, Args));
 end;
 
 //______________________________________________________________________________________________________________________

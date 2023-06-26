@@ -510,14 +510,14 @@ begin
   SanitizedPath := NormalizePath(Path);
   FFileAnalyses.AddOrSetValue(SanitizedPath, History);
 
-  Log.Info(Format(
+  Log.Info(
     'Analysis recorded for %s at %s, (%s, %d issues found)',
     [
       Path,
       FormatDateTime('hh:nn:ss', History.AnalysisTime),
       IfThen(Success, 'successful', 'failure'),
       IssuesFound
-    ]));
+    ]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -760,14 +760,14 @@ begin
   Delta := StartLine - LineNum;
   if (Delta >= 0) and (Delta < FLines.Count) then begin
     if (FLines[Delta] <> LineText) then begin
-      Log.Info(Format('Issue at line %d untethered: <%s> -> <%s>', [LineNum, FLines[Delta], LineText]));
+      Log.Info('Issue at line %d untethered: <%s> -> <%s>', [LineNum, FLines[Delta], LineText]);
       FTethered := False;
     end;
   end
   else begin
-    Log.Info(Format(
+    Log.Info(
       'Attempted to tether by providing line %d for issue at issue on lines %d-%d',
-      [IntToStr(StartLine), IntToStr(EndLine), IntToStr(LineNum)]));
+      [IntToStr(StartLine), IntToStr(EndLine), IntToStr(LineNum)]);
   end;
 end;
 
