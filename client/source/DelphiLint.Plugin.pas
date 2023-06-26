@@ -126,7 +126,7 @@ procedure TLintPlugin.ActionOpenProjectOptionsExecute(Sender: TObject);
 begin
   if not Assigned(FOptionsForm) then begin
     FOptionsForm := TLintOptionsForm.Create(nil);
-    (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FOptionsForm);
+    FOptionsForm.RefreshTheme;
   end;
 
   FOptionsForm.Show;

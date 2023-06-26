@@ -16,6 +16,9 @@ type
     ProjectBaseDirEdit: TLabeledEdit;
     ProjectNameLabel: TLabel;
     CreateTokenButton: TButton;
+    HeaderPanel: TPanel;
+    ContentPanel: TPanel;
+    FooterPanel: TPanel;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -34,6 +37,7 @@ type
     procedure UpdateCreateTokenButton;
   public
     procedure RefreshOptions;
+    procedure RefreshTheme;
   end;
 
 implementation
@@ -46,6 +50,8 @@ uses
   , Winapi.ShellAPI
   , System.NetEncoding
   , System.StrUtils
+  , Vcl.Themes
+  , ToolsAPI
   ;
 
 //______________________________________________________________________________________________________________________
@@ -67,8 +73,8 @@ begin
     ProjectKeyEdit.Text := FProjectOptions.ProjectKey;
     ProjectBaseDirEdit.Text := FProjectOptions.ProjectBaseDir;
 
-    ProjectName := TPath.GetFileNameWithoutExtension(FProjectFile);
-    ProjectNameLabel.Caption := ProjectName;
+    ProjectName := TPath.GetFileName(FProjectFile);
+    ProjectNameLabel.Caption := 'DelphiLint: ' + ProjectName;
     Caption := 'DelphiLint Project Options - ' + ProjectName;
   end
   else begin
@@ -76,8 +82,8 @@ begin
     SonarHostTokenEdit.Text := '';
     ProjectKeyEdit.Text := '';
     ProjectBaseDirEdit.Text := '';
-    ProjectNameLabel.Caption := 'No project selected';
-    Caption := 'DelphiLint Project Options - no project selected';
+    ProjectNameLabel.Caption := 'DelphiLint: (no project)';
+    Caption := 'DelphiLint Project Options (no project)';
   end;
 
   UpdateCreateTokenButton;
@@ -103,6 +109,17 @@ begin
   end;
 
   UpdateControls;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.RefreshTheme;
+var
+  WindowColor: TColor;
+begin
+  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
+  WindowColor := StyleServices(Self).GetSystemColor(clWindow);
+  ContentPanel.Color := WindowColor;
 end;
 
 //______________________________________________________________________________________________________________________
