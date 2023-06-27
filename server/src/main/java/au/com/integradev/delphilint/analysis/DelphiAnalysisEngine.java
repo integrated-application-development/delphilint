@@ -19,11 +19,12 @@ package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
 import au.com.integradev.delphilint.sonarqube.ApiException;
-import au.com.integradev.delphilint.sonarqube.ConnectedList;
-import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
-import au.com.integradev.delphilint.sonarqube.SonarQubeIssue;
+import au.com.integradev.delphilint.sonarqube.RemoteActiveRule;
+import au.com.integradev.delphilint.sonarqube.RemoteIssue;
 import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
+import au.com.integradev.delphilint.sonarqube.SonarServerConnection;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -35,7 +36,6 @@ import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisConfiguration;
 import org.sonarsource.sonarlint.core.analysis.api.AnalysisEngineConfiguration;
-import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.analysis.container.global.GlobalAnalysisContainer;
 import org.sonarsource.sonarlint.core.analysis.container.module.ModuleContainer;
@@ -71,7 +71,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   private AnalysisConfiguration buildConfiguration(
       Path baseDir,
       Set<Path> inputFiles,
-      SonarQubeConnection connection,
+      SonarServerConnection connection,
       Map<String, String> properties)
       throws ApiException {
     var configBuilder =
@@ -97,6 +97,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Set<ActiveRule> activeRules =
           connection.getActiveRules().stream()
               .filter(rule -> !RuleUtils.isIncompatible(rule.getRuleKey()))
+              .map(RemoteActiveRule::toSonarLintActiveRule)
               .collect(Collectors.toSet());
       configBuilder.addActiveRules(activeRules);
       LOG.info("Added {} active rules", activeRules.size());
@@ -112,7 +113,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,
-      SonarQubeConnection connection,
+      SonarServerConnection connection,
       Map<String, String> properties)
       throws ApiException {
     LOG.info("About to analyze {} files", inputFiles.size());
@@ -132,16 +133,19 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     LOG.info("Analysis finished");
 
     if (connection != null) {
-      Set<ClientInputFile> clientInputFiles = new HashSet<>();
-      config.inputFiles().iterator().forEachRemaining(clientInputFiles::add);
-      issues = postProcessIssues(clientInputFiles, issues, connection);
+      Set<String> fileRelativePaths = new HashSet<>();
+      config
+          .inputFiles()
+          .iterator()
+          .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
+      issues = postProcessIssues(fileRelativePaths, issues, connection);
     }
 
     return issues;
   }
 
   private Set<Issue> postProcessIssues(
-      Set<ClientInputFile> inputFiles, Set<Issue> issues, SonarQubeConnection connection)
+      Set<String> fileRelativePaths, Set<Issue> issues, SonarServerConnection connection)
       throws ApiException {
     Queue<ClientTrackable> clientTrackables =
         SonarQubeUtils.populateIssueMessages(connection, issues).stream()
@@ -149,8 +153,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
             .collect(Collectors.toCollection(LinkedList::new));
     Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
 
-    ConnectedList<SonarQubeIssue> resolvedIssues = connection.getResolvedIssues(inputFiles);
-    for (SonarQubeIssue resolvedIssue : resolvedIssues) {
+    Collection<RemoteIssue> resolvedIssues = connection.getResolvedIssues(fileRelativePaths);
+    for (RemoteIssue resolvedIssue : resolvedIssues) {
       serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
     }
 

@@ -28,19 +28,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;
-import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 
-public class SonarQubeConnection {
-  private static final Logger LOG = LogManager.getLogger(SonarQubeConnection.class);
+public class SonarQube implements SonarServerConnection {
+  private static final Logger LOG = LogManager.getLogger(SonarQube.class);
 
   private final String projectKey;
   private final String languageKey;
   private final ObjectMapper jsonMapper;
   private final ApiConnection api;
 
-  public SonarQubeConnection(
-      String hostUrl, String projectKey, String languageKey, String apiToken) {
+  public SonarQube(String hostUrl, String projectKey, String languageKey, String apiToken) {
     this.api = new ApiConnection(hostUrl, apiToken);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
@@ -108,7 +105,7 @@ public class SonarQubeConnection {
     return ruleMap;
   }
 
-  public Set<SonarQubeRule> getRules() throws ApiException {
+  public Set<RemoteRule> getRules() throws ApiException {
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
             + "&f=name,htmlDesc,severity"
@@ -126,12 +123,18 @@ public class SonarQubeConnection {
     }
 
     var rulesArray = rootNode.get("rules");
-    Set<SonarQubeRule> ruleSet = new HashSet<>();
+    Set<RemoteRule> ruleSet = new HashSet<>();
 
     for (var rule : rulesArray) {
       try {
         SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
-        ruleSet.add(sonarQubeRule);
+        ruleSet.add(
+            new RemoteRule(
+                sonarQubeRule.getKey(),
+                sonarQubeRule.getName(),
+                sonarQubeRule.getHtmlDesc(),
+                RuleSeverity.fromSonarLintSeverity(sonarQubeRule.getSeverity()),
+                RuleType.fromSonarLintRuleType(sonarQubeRule.getType())));
       } catch (JsonProcessingException e) {
         throw new ApiException("Malformed rule info response from SonarQube: " + e.getMessage());
       }
@@ -140,26 +143,44 @@ public class SonarQubeConnection {
     return ruleSet;
   }
 
-  public ConnectedList<SonarQubeIssue> getResolvedIssues(Collection<ClientInputFile> files) {
+  public Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths) {
     if (projectKey.isEmpty()) {
       return null;
     }
 
     String componentKeysStr =
-        files.stream()
-            .map(file -> projectKey + ":" + file.relativePath())
+        relativeFilePaths.stream()
+            .map(filePath -> projectKey + ":" + filePath)
             .collect(Collectors.joining(","));
 
     LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
 
-    return new ConnectedList<>(
-        api,
-        "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
-        "issues",
-        SonarQubeIssue.class);
+    ConnectedList<SonarQubeIssue> resolvedIssues =
+        new ConnectedList<>(
+            api,
+            "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
+            "issues",
+            SonarQubeIssue.class);
+
+    Set<RemoteIssue> remoteIssues = new HashSet<>();
+
+    for (SonarQubeIssue sqIssue : resolvedIssues) {
+      remoteIssues.add(
+          new RemoteIssue(
+              sqIssue.getServerIssueKey(),
+              sqIssue.getRuleKey(),
+              sqIssue.getLine(),
+              sqIssue.getLineHash(),
+              sqIssue.getTextRange(),
+              sqIssue.getMessage(),
+              RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
+              RuleType.fromSonarLintRuleType(sqIssue.getType())));
+    }
+
+    return remoteIssues;
   }
 
-  public Set<ActiveRule> getActiveRules() throws ApiException {
+  public Set<RemoteActiveRule> getActiveRules() throws ApiException {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();
 
@@ -197,21 +218,22 @@ public class SonarQubeConnection {
               }
             });
 
-    var activeRules = new HashSet<ActiveRule>();
+    var activeRules = new HashSet<RemoteActiveRule>();
     for (var ruleNode : rulesArray) {
       var ruleKey = ruleNode.get("key").asText();
-      var rule = new ActiveRule(ruleKey, languageKey);
 
+      String templateRuleKey = null;
       var templateKeyNode = ruleNode.get("templateKey");
       if (templateKeyNode != null) {
-        rule.setTemplateRuleKey(templateKeyNode.asText());
+        templateRuleKey = templateKeyNode.asText();
       }
 
+      Map<String, String> thisRuleParams = Collections.emptyMap();
       if (paramsMap.containsKey(ruleKey)) {
-        rule.setParams(paramsMap.get(ruleKey));
+        thisRuleParams = Map.copyOf(paramsMap.get(ruleKey));
       }
 
-      activeRules.add(rule);
+      activeRules.add(new RemoteActiveRule(ruleKey, languageKey, templateRuleKey, thisRuleParams));
     }
 
     return activeRules;

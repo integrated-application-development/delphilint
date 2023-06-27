@@ -30,7 +30,8 @@ import au.com.integradev.delphilint.server.message.data.RuleData;
 import au.com.integradev.delphilint.sonarqube.ApiConnectException;
 import au.com.integradev.delphilint.sonarqube.ApiException;
 import au.com.integradev.delphilint.sonarqube.ApiUnauthorizedException;
-import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
+import au.com.integradev.delphilint.sonarqube.SonarQube;
+import au.com.integradev.delphilint.sonarqube.SonarServerConnection;
 import au.com.integradev.delphilint.sonarqube.UncheckedApiException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -195,10 +196,10 @@ public class LintServer {
       return;
     }
 
-    SonarQubeConnection sonarqube = null;
+    SonarServerConnection sonarServer = null;
     if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
-      sonarqube =
-          new SonarQubeConnection(
+      sonarServer =
+          new SonarQube(
               requestAnalyze.getSonarHostUrl(),
               requestAnalyze.getProjectKey(),
               LANGUAGE_KEY,
@@ -222,7 +223,7 @@ public class LintServer {
               requestAnalyze.getBaseDir(),
               requestAnalyze.getInputFiles(),
               null,
-              sonarqube,
+              sonarServer,
               properties);
 
       if (logOutput.containsError()) {
@@ -287,14 +288,14 @@ public class LintServer {
       RequestRuleRetrieve requestRuleRetrieve, Consumer<LintMessage> sendMessage) {
     try {
       if (!requestRuleRetrieve.getSonarHostUrl().isEmpty()) {
-        SonarQubeConnection sonarqube =
-            new SonarQubeConnection(
+        SonarServerConnection sonarServer =
+            new SonarQube(
                 requestRuleRetrieve.getSonarHostUrl(),
                 requestRuleRetrieve.getProjectKey(),
                 LANGUAGE_KEY,
                 requestRuleRetrieve.getApiToken());
         Map<String, RuleData> ruleInfoMap =
-            sonarqube.getRules().stream()
+            sonarServer.getRules().stream()
                 .map(RuleData::new)
                 .collect(Collectors.toMap(RuleData::getKey, x -> x));
         LOG.info("Retrieved {} rules", ruleInfoMap.size());

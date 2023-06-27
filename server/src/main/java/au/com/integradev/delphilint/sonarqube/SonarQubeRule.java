@@ -11,6 +11,14 @@ public class SonarQubeRule {
   @JsonProperty private Severity severity;
   @JsonProperty private RuleType type;
 
+  public SonarQubeRule(String key, String name, String htmlDesc, Severity severity, RuleType type) {
+    this.key = key;
+    this.name = name;
+    this.htmlDesc = htmlDesc;
+    this.severity = severity;
+    this.type = type;
+  }
+
   public String getKey() {
     return key;
   }

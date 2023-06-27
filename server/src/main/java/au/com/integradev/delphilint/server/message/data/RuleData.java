@@ -1,15 +1,15 @@
 package au.com.integradev.delphilint.server.message.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import au.com.integradev.delphilint.sonarqube.SonarQubeRule;
-import org.sonar.api.batch.rule.Severity;
-import org.sonarsource.sonarlint.core.commons.RuleType;
+import au.com.integradev.delphilint.sonarqube.RemoteRule;
+import au.com.integradev.delphilint.sonarqube.RuleSeverity;
+import au.com.integradev.delphilint.sonarqube.RuleType;
 
 public class RuleData {
   @JsonProperty private String key;
   @JsonProperty private String name;
   @JsonProperty private String desc;
-  @JsonProperty private Severity severity;
+  @JsonProperty private RuleSeverity severity;
   @JsonProperty private RuleType type;
 
   public String getKey() {
@@ -24,7 +24,7 @@ public class RuleData {
     return desc;
   }
 
-  public Severity getSeverity() {
+  public RuleSeverity getSeverity() {
     return severity;
   }
 
@@ -32,7 +32,7 @@ public class RuleData {
     return type;
   }
 
-  public RuleData(SonarQubeRule rule) {
+  public RuleData(RemoteRule rule) {
     key = rule.getKey();
     name = rule.getName();
     desc = rule.getHtmlDesc();

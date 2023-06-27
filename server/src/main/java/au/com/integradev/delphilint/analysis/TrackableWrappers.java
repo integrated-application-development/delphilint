@@ -17,13 +17,14 @@
  */
 package au.com.integradev.delphilint.analysis;
 
-import au.com.integradev.delphilint.sonarqube.SonarQubeIssue;
+import au.com.integradev.delphilint.sonarqube.RemoteIssue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.commons.HotspotReviewStatus;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
@@ -146,15 +147,15 @@ public class TrackableWrappers {
     }
   }
 
-  public static class ServerTrackable implements Trackable<SonarQubeIssue> {
-    private final SonarQubeIssue issue;
+  public static class ServerTrackable implements Trackable<RemoteIssue> {
+    private final RemoteIssue issue;
 
-    public ServerTrackable(SonarQubeIssue issue) {
+    public ServerTrackable(RemoteIssue issue) {
       this.issue = issue;
     }
 
     @Override
-    public SonarQubeIssue getClientObject() {
+    public RemoteIssue getClientObject() {
       return issue;
     }
 
@@ -165,7 +166,20 @@ public class TrackableWrappers {
 
     @Override
     public IssueSeverity getSeverity() {
-      return issue.getSeverity();
+      switch (issue.getSeverity()) {
+        case INFO:
+          return IssueSeverity.INFO;
+        case MINOR:
+          return IssueSeverity.MINOR;
+        case MAJOR:
+          return IssueSeverity.MAJOR;
+        case BLOCKER:
+          return IssueSeverity.BLOCKER;
+        case CRITICAL:
+          return IssueSeverity.CRITICAL;
+        default:
+          throw new NotImplementedException("Unknown issue severity");
+      }
     }
 
     @Override
@@ -175,7 +189,18 @@ public class TrackableWrappers {
 
     @Override
     public RuleType getType() {
-      return issue.getType();
+      switch (issue.getType()) {
+        case BUG:
+          return RuleType.BUG;
+        case CODE_SMELL:
+          return RuleType.CODE_SMELL;
+        case VULNERABILITY:
+          return RuleType.VULNERABILITY;
+        case SECURITY_HOTSPOT:
+          return RuleType.SECURITY_HOTSPOT;
+        default:
+          throw new NotImplementedException("Unknown rule type");
+      }
     }
 
     @Override
