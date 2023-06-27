@@ -3,7 +3,7 @@ object LintOptionsForm: TLintOptionsForm
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Project Options'
-  ClientHeight = 331
+  ClientHeight = 357
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -43,7 +43,7 @@ object LintOptionsForm: TLintOptionsForm
     Left = 0
     Top = 35
     Width = 577
-    Height = 267
+    Height = 285
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
@@ -147,14 +147,32 @@ object LintOptionsForm: TLintOptionsForm
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 302
+    Top = 320
     Width = 577
-    Height = 29
+    Height = 37
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'FooterPanel'
     ShowCaption = False
     TabOrder = 2
+    object SaveButton: TButton
+      Left = 415
+      Top = 6
+      Width = 75
+      Height = 25
+      Caption = 'Save'
+      TabOrder = 0
+      OnClick = SaveButtonClick
+    end
+    object CancelButton: TButton
+      Left = 496
+      Top = 6
+      Width = 75
+      Height = 25
+      Caption = 'Cancel'
+      TabOrder = 1
+      OnClick = CancelButtonClick
+    end
   end
   object PropertiesOpenDialog: TOpenDialog
     Filter = 'Properties files (*.properties)|*.PROPERTIES'

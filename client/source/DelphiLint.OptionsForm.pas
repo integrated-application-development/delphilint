@@ -22,6 +22,8 @@ type
     ProjectPropertiesPathEdit: TLabeledEdit;
     ProjectPropertiesBrowseButton: TButton;
     PropertiesOpenDialog: TOpenDialog;
+    SaveButton: TButton;
+    CancelButton: TButton;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -31,6 +33,8 @@ type
     procedure CreateTokenButtonClick(Sender: TObject);
     procedure ProjectPropertiesBrowseButtonClick(Sender: TObject);
     procedure ProjectPropertiesPathEditChange(Sender: TObject);
+    procedure SaveButtonClick(Sender: TObject);
+    procedure CancelButtonClick(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
@@ -53,7 +57,6 @@ uses
     DelphiLint.Utils
   , System.IOUtils
   , Winapi.ShellAPI
-  , System.NetEncoding
   , System.StrUtils
   , Vcl.Themes
   , ToolsAPI
@@ -109,6 +112,7 @@ begin
       FProjectOptions := TLintProjectOptions.Create(ProjectFile);
       FProjectFile := ProjectFile;
     end;
+    FProjectOptions.Load;
   end
   else begin
     FreeAndNil(FProjectOptions);
@@ -134,6 +138,23 @@ end;
 procedure TLintOptionsForm.FormShow(Sender: TObject);
 begin
   RefreshOptions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.SaveButtonClick(Sender: TObject);
+begin
+  if Assigned(FProjectOptions) then begin
+    FProjectOptions.Save;
+    Close;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.CancelButtonClick(Sender: TObject);
+begin
+  Close;
 end;
 
 //______________________________________________________________________________________________________________________

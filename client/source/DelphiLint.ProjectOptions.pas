@@ -18,126 +18,55 @@ unit DelphiLint.ProjectOptions;
 
 interface
 
+uses
+    DelphiLint.Properties
+  ;
+
 type
-  TLintProjectOptions = class(TObject)
-  private
-    FOptionsFile: string;
-
-    function GetProjectKey: string;
-    function GetSonarHostUrl: string;
-    function GetProjectBaseDir: string;
-    function GetSonarHostToken: string;
-    function GetProjectPropertiesPath: string;
-
-    procedure SetProjectKey(Value: string);
-    procedure SetSonarHostUrl(Value: string);
-    procedure SetProjectBaseDir(Value: string);
-    procedure SetSonarHostToken(Value: string);
-    procedure SetProjectPropertiesPath(Value: string);
-
-    function StrFromIni(const Section: string; const Identifier: string): string;
-    procedure StrToIni(const Section: string; const Identifier: string; const Value: string);
+  TLintProjectOptions = class(TPropertiesFile)
+  protected
+    function RegisterFields: TArray<TPropFieldBase>; override;
   public
-    constructor Create(ProjectFilePath: string);
+    constructor Create(Path: string);
 
-    property ProjectKey: string read GetProjectKey write SetProjectKey;
-    property SonarHostUrl: string read GetSonarHostUrl write SetSonarHostUrl;
-    property ProjectBaseDir: string read GetProjectBaseDir write SetProjectBaseDir;
-    property SonarHostToken: string read GetSonarHostToken write SetSonarHostToken;
-    property ProjectPropertiesPath: string read GetProjectPropertiesPath write SetProjectPropertiesPath;
+    property ProjectKey: string index 0 read GetValueStr write SetValueStr;
+    property SonarHostUrl: string index 1 read GetValueStr write SetValueStr;
+    property ProjectBaseDir: string index 2 read GetValueStr write SetValueStr;
+    property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
+    property ProjectPropertiesPath: string index 4 read GetValueStr write SetValueStr;
   end;
 
 implementation
 
 uses
-    System.IniFiles
-  , System.SysUtils
+    System.IOUtils
   ;
 
-{ TProjectOptions }
+//______________________________________________________________________________________________________________________
 
-constructor TLintProjectOptions.Create(ProjectFilePath: string);
+constructor TLintProjectOptions.Create(Path: string);
 begin
-  FOptionsFile := ChangeFileExt(ProjectFilePath, '.delphilint');
+  Path := TPath.ChangeExtension(Path, '.delphilint');
+  inherited Create(Path);
+  Load;
 end;
 
-function TLintProjectOptions.GetProjectBaseDir: string;
-begin
-  Result := StrFromIni('Project', 'BaseDir');
-end;
+//______________________________________________________________________________________________________________________
 
-function TLintProjectOptions.GetProjectKey: string;
+function TLintProjectOptions.RegisterFields: TArray<TPropFieldBase>;
 begin
-  Result := StrFromIni('Project', 'Key');
-end;
-
-function TLintProjectOptions.GetProjectPropertiesPath: string;
-begin
-  Result := StrFromIni('Project', 'PropertiesPath');
-end;
-
-function TLintProjectOptions.GetSonarHostUrl: string;
-begin
-  Result := StrFromIni('SonarHost', 'Url');
-end;
-
-function TLintProjectOptions.GetSonarHostToken: string;
-begin
-  Result := StrFromIni('SonarHost', 'Token');
-end;
-
-procedure TLintProjectOptions.SetProjectBaseDir(Value: string);
-begin
-  StrToIni('Project', 'BaseDir', Value);
-end;
-
-procedure TLintProjectOptions.SetProjectKey(Value: string);
-begin
-  StrToIni('Project', 'Key', Value);
-end;
-
-procedure TLintProjectOptions.SetProjectPropertiesPath(Value: string);
-begin
-  StrToIni('Project', 'PropertiesPath', Value);
-end;
-
-procedure TLintProjectOptions.SetSonarHostToken(Value: string);
-begin
-  StrToIni('SonarHost', 'Token', Value);
-end;
-
-procedure TLintProjectOptions.SetSonarHostUrl(Value: string);
-begin
-  StrToIni('SonarHost', 'Url', Value);
-end;
-
-function TLintProjectOptions.StrFromIni(const Section, Identifier: string): string;
-var
-  Ini: TIniFile;
-begin
-  Ini := TIniFile.Create(FOptionsFile);
-  try
-    Result := Ini.ReadString(Section, Identifier, '');
-  finally
-    FreeAndNil(Ini);
-  end;
-end;
-
-procedure TLintProjectOptions.StrToIni(const Section, Identifier, Value: string);
-var
-  Ini: TIniFile;
-begin
-  Ini := TIniFile.Create(FOptionsFile);
-  try
-    if Value = '' then begin
-      Ini.DeleteKey(Section, Identifier);
-    end
-    else begin
-      Ini.WriteString(Section, Identifier, Value);
-    end;
-  finally
-    FreeAndNil(Ini);
-  end;
+  Result := [
+    // 0
+    TStringPropField.Create('Project', 'Key'),
+    // 1
+    TStringPropField.Create('SonarHost', 'Url'),
+    // 2
+    TStringPropField.Create('Project', 'BaseDir'),
+    // 3
+    TStringPropField.Create('SonarHost', 'Token'),
+    // 4
+    TStringPropField.Create('Project', 'PropertiesPath')
+  ];
 end;
 
 end.
