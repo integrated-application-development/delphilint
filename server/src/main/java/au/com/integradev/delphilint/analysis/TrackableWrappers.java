@@ -17,7 +17,7 @@
  */
 package au.com.integradev.delphilint.analysis;
 
-import au.com.integradev.delphilint.sonarqube.RemoteIssue;
+import au.com.integradev.delphilint.remote.RemoteIssue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

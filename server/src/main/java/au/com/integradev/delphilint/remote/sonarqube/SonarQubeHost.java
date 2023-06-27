@@ -15,10 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import au.com.integradev.delphilint.remote.RemoteActiveRule;
+import au.com.integradev.delphilint.remote.RemoteIssue;
+import au.com.integradev.delphilint.remote.RemoteRule;
+import au.com.integradev.delphilint.remote.RuleSeverity;
+import au.com.integradev.delphilint.remote.RuleType;
+import au.com.integradev.delphilint.remote.SonarHost;
+import au.com.integradev.delphilint.remote.SonarHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,22 +36,22 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class SonarQube implements SonarServerConnection {
-  private static final Logger LOG = LogManager.getLogger(SonarQube.class);
+public class SonarQubeHost implements SonarHost {
+  private static final Logger LOG = LogManager.getLogger(SonarQubeHost.class);
 
   private final String projectKey;
   private final String languageKey;
   private final ObjectMapper jsonMapper;
   private final ApiConnection api;
 
-  public SonarQube(String hostUrl, String projectKey, String languageKey, String apiToken) {
+  public SonarQubeHost(String hostUrl, String projectKey, String languageKey, String apiToken) {
     this.api = new ApiConnection(hostUrl, apiToken);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
     this.jsonMapper = new ObjectMapper();
   }
 
-  private QualityProfile getQualityProfile() throws ApiException {
+  private SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
     String url = "/api/qualityprofiles/search?language=" + languageKey;
     if (projectKey.isEmpty()) {
       url += "&defaults=true";
@@ -59,28 +66,28 @@ public class SonarQube implements SonarServerConnection {
       if (profilesArray != null && profilesArray.size() > 0) {
         var profile = profilesArray.get(0);
         try {
-          return jsonMapper.treeToValue(profile, QualityProfile.class);
+          return jsonMapper.treeToValue(profile, SonarQubeQualityProfile.class);
         } catch (JsonProcessingException e) {
-          throw new ApiException("Problem parsing quality profile JSON: " + e.getMessage());
+          throw new SonarHostException("Problem parsing quality profile JSON: " + e.getMessage());
         }
       } else {
         var errorsArray = rootNode.get("errors");
         if (errorsArray != null && errorsArray.size() > 0) {
           var errorMessage = errorsArray.get(0).get("msg");
           if (errorMessage != null) {
-            throw new ApiException(
+            throw new SonarHostException(
                 "SonarQube error when retrieving quality profile: " + errorMessage.asText());
           }
         }
 
-        throw new ApiException("No quality profile found for project " + projectKey);
+        throw new SonarHostException("No quality profile found for project " + projectKey);
       }
     } else {
-      throw new ApiException("Could not retrieve quality profile from SonarQube");
+      throw new SonarHostException("Could not retrieve quality profile from SonarQube");
     }
   }
 
-  public Map<String, String> getRuleNamesByRuleKey() throws ApiException {
+  public Map<String, String> getRuleNamesByRuleKey() throws SonarHostException {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptyMap();
 
@@ -91,7 +98,7 @@ public class SonarQube implements SonarServerConnection {
                 + "&qprofile="
                 + profile.getKey());
     if (rootNode == null) {
-      throw new ApiException(
+      throw new SonarHostException(
           "Could not retrieve rule names from SonarQube for quality profile " + profile.getName());
     }
 
@@ -105,21 +112,22 @@ public class SonarQube implements SonarServerConnection {
     return ruleMap;
   }
 
-  public Set<RemoteRule> getRules() throws ApiException {
+  public Set<RemoteRule> getRules() throws SonarHostException {
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
             + "&f=name,htmlDesc,severity"
             + "&language="
             + languageKey;
 
-    QualityProfile profile = getQualityProfile();
+    SonarQubeQualityProfile profile = getQualityProfile();
     if (profile != null) {
       apiPath += "&qprofile=" + profile.getKey();
     }
 
     var rootNode = api.getJson(apiPath);
     if (rootNode == null) {
-      throw new ApiException("No JSON response from SonarQube for rule information retrieval");
+      throw new SonarHostException(
+          "No JSON response from SonarQube for rule information retrieval");
     }
 
     var rulesArray = rootNode.get("rules");
@@ -136,7 +144,8 @@ public class SonarQube implements SonarServerConnection {
                 RuleSeverity.fromSonarLintSeverity(sonarQubeRule.getSeverity()),
                 RuleType.fromSonarLintRuleType(sonarQubeRule.getType())));
       } catch (JsonProcessingException e) {
-        throw new ApiException("Malformed rule info response from SonarQube: " + e.getMessage());
+        throw new SonarHostException(
+            "Malformed rule info response from SonarQube: " + e.getMessage());
       }
     }
 
@@ -155,16 +164,16 @@ public class SonarQube implements SonarServerConnection {
 
     LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
 
-    ConnectedList<SonarQubeIssue> resolvedIssues =
+    ConnectedList<SonarQubeJsonIssue> resolvedIssues =
         new ConnectedList<>(
             api,
             "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
             "issues",
-            SonarQubeIssue.class);
+            SonarQubeJsonIssue.class);
 
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
-    for (SonarQubeIssue sqIssue : resolvedIssues) {
+    for (SonarQubeJsonIssue sqIssue : resolvedIssues) {
       remoteIssues.add(
           new RemoteIssue(
               sqIssue.getServerIssueKey(),
@@ -180,7 +189,7 @@ public class SonarQube implements SonarServerConnection {
     return remoteIssues;
   }
 
-  public Set<RemoteActiveRule> getActiveRules() throws ApiException {
+  public Set<RemoteActiveRule> getActiveRules() throws SonarHostException {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();
 
@@ -191,7 +200,7 @@ public class SonarQube implements SonarServerConnection {
                 + "&qprofile="
                 + profile.getKey());
     if (rootNode == null) {
-      throw new ApiException("Could not retrieve active rules from SonarQube");
+      throw new SonarHostException("Could not retrieve active rules from SonarQube");
     }
 
     var rulesArray = rootNode.get("rules");

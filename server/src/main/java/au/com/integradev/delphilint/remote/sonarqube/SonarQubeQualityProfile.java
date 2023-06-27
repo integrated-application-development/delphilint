@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class QualityProfile {
+public class SonarQubeQualityProfile {
   private String key;
   private String name;
   private String language;

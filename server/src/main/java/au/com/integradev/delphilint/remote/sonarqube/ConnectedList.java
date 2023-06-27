@@ -15,11 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -100,8 +102,8 @@ public class ConnectedList<T> implements Iterable<T> {
               JsonNode rootNode = api.getJson(url + "&p=" + page);
               pageCount = getPageCount(rootNode);
               nextContent.addAll(getArrayContents(rootNode));
-            } catch (ApiException e) {
-              throw new UncheckedApiException(e);
+            } catch (SonarHostException e) {
+              throw new UncheckedSonarHostException(e);
             }
           }
 
@@ -109,8 +111,8 @@ public class ConnectedList<T> implements Iterable<T> {
         }
       };
 
-    } catch (ApiException e) {
-      throw new UncheckedApiException(e);
+    } catch (SonarHostException e) {
+      throw new UncheckedSonarHostException(e);
     }
   }
 }

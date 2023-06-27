@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +24,7 @@ import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SonarQubeIssue {
+public class SonarQubeJsonIssue {
   @JsonProperty private String key;
   @JsonProperty private String rule;
   @JsonProperty private String project;

@@ -1,5 +1,11 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.standalone;
 
+import au.com.integradev.delphilint.remote.RemoteActiveRule;
+import au.com.integradev.delphilint.remote.RemoteIssue;
+import au.com.integradev.delphilint.remote.RemoteRule;
+import au.com.integradev.delphilint.remote.RuleSeverity;
+import au.com.integradev.delphilint.remote.RuleType;
+import au.com.integradev.delphilint.remote.SonarHost;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -10,10 +16,10 @@ import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.rule.extractor.RulesDefinitionExtractor;
 
-public class StandaloneSonar implements SonarServerConnection {
+public class StandaloneSonarHost implements SonarHost {
   private final LoadedPlugins loadedPlugins;
 
-  public StandaloneSonar(LoadedPlugins loadedPlugins) {
+  public StandaloneSonarHost(LoadedPlugins loadedPlugins) {
     this.loadedPlugins = loadedPlugins;
   }
 

@@ -15,21 +15,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 
-public class SonarQubeUtils {
-  private SonarQubeUtils() {
+public class SonarServerUtils {
+  private SonarServerUtils() {
     // utility class
   }
 
-  public static Set<Issue> populateIssueMessages(SonarServerConnection sq, Collection<Issue> issues)
-      throws ApiException {
-    var ruleNameMap = sq.getRuleNamesByRuleKey();
+  public static Set<Issue> populateIssueMessages(SonarHost host, Collection<Issue> issues)
+      throws SonarHostException {
+    var ruleNameMap = host.getRuleNamesByRuleKey();
 
     return issues.stream()
         .map(

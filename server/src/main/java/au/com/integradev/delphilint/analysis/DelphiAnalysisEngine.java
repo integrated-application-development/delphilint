@@ -18,11 +18,11 @@
 package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
-import au.com.integradev.delphilint.sonarqube.ApiException;
-import au.com.integradev.delphilint.sonarqube.RemoteActiveRule;
-import au.com.integradev.delphilint.sonarqube.RemoteIssue;
-import au.com.integradev.delphilint.sonarqube.SonarQubeUtils;
-import au.com.integradev.delphilint.sonarqube.SonarServerConnection;
+import au.com.integradev.delphilint.remote.RemoteActiveRule;
+import au.com.integradev.delphilint.remote.RemoteIssue;
+import au.com.integradev.delphilint.remote.SonarHost;
+import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.SonarServerUtils;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -69,11 +69,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   }
 
   private AnalysisConfiguration buildConfiguration(
-      Path baseDir,
-      Set<Path> inputFiles,
-      SonarServerConnection connection,
-      Map<String, String> properties)
-      throws ApiException {
+      Path baseDir, Set<Path> inputFiles, SonarHost connection, Map<String, String> properties)
+      throws SonarHostException {
     var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
@@ -113,11 +110,11 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,
-      SonarServerConnection connection,
+      SonarHost host,
       Map<String, String> properties)
-      throws ApiException {
+      throws SonarHostException {
     LOG.info("About to analyze {} files", inputFiles.size());
-    AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection, properties);
+    AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, host, properties);
 
     Set<Issue> issues = new HashSet<>();
 
@@ -132,28 +129,27 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     LOG.info("Analysis finished");
 
-    if (connection != null) {
+    if (host != null) {
       Set<String> fileRelativePaths = new HashSet<>();
       config
           .inputFiles()
           .iterator()
           .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
-      issues = postProcessIssues(fileRelativePaths, issues, connection);
+      issues = postProcessIssues(fileRelativePaths, issues, host);
     }
 
     return issues;
   }
 
   private Set<Issue> postProcessIssues(
-      Set<String> fileRelativePaths, Set<Issue> issues, SonarServerConnection connection)
-      throws ApiException {
+      Set<String> fileRelativePaths, Set<Issue> issues, SonarHost host) throws SonarHostException {
     Queue<ClientTrackable> clientTrackables =
-        SonarQubeUtils.populateIssueMessages(connection, issues).stream()
+        SonarServerUtils.populateIssueMessages(host, issues).stream()
             .map(TrackableWrappers.ClientTrackable::new)
             .collect(Collectors.toCollection(LinkedList::new));
     Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
 
-    Collection<RemoteIssue> resolvedIssues = connection.getResolvedIssues(fileRelativePaths);
+    Collection<RemoteIssue> resolvedIssues = host.getResolvedIssues(fileRelativePaths);
     for (RemoteIssue resolvedIssue : resolvedIssues) {
       serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
     }

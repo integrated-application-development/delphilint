@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote;
 
 import java.util.Map;
 import org.sonarsource.sonarlint.core.analysis.api.ActiveRule;

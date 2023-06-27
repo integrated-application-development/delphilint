@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.sonar.api.batch.rule.Severity;

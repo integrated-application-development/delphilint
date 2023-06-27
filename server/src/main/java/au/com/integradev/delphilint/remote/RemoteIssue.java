@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote;
 
 import au.com.integradev.delphilint.analysis.TextRange;
 

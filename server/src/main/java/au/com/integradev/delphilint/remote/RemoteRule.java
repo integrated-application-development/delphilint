@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote;
 
 public class RemoteRule {
   private final String key;

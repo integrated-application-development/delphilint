@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.sonar.api.batch.rule.Severity;

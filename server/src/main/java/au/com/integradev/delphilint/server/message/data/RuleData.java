@@ -1,9 +1,9 @@
 package au.com.integradev.delphilint.server.message.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import au.com.integradev.delphilint.sonarqube.RemoteRule;
-import au.com.integradev.delphilint.sonarqube.RuleSeverity;
-import au.com.integradev.delphilint.sonarqube.RuleType;
+import au.com.integradev.delphilint.remote.RemoteRule;
+import au.com.integradev.delphilint.remote.RuleSeverity;
+import au.com.integradev.delphilint.remote.RuleType;
 
 public class RuleData {
   @JsonProperty private String key;

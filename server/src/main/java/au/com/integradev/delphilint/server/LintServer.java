@@ -21,18 +21,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
+import au.com.integradev.delphilint.remote.SonarHost;
+import au.com.integradev.delphilint.remote.SonarHostConnectException;
+import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
+import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
+import au.com.integradev.delphilint.remote.sonarqube.SonarQubeHost;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
 import au.com.integradev.delphilint.server.message.RequestInitialize;
 import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
-import au.com.integradev.delphilint.sonarqube.ApiConnectException;
-import au.com.integradev.delphilint.sonarqube.ApiException;
-import au.com.integradev.delphilint.sonarqube.ApiUnauthorizedException;
-import au.com.integradev.delphilint.sonarqube.SonarQube;
-import au.com.integradev.delphilint.sonarqube.SonarServerConnection;
-import au.com.integradev.delphilint.sonarqube.UncheckedApiException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -196,10 +196,10 @@ public class LintServer {
       return;
     }
 
-    SonarServerConnection sonarServer = null;
+    SonarHost sonarServer = null;
     if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
       sonarServer =
-          new SonarQube(
+          new SonarQubeHost(
               requestAnalyze.getSonarHostUrl(),
               requestAnalyze.getProjectKey(),
               LANGUAGE_KEY,
@@ -235,19 +235,19 @@ public class LintServer {
         result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
         sendMessage.accept(LintMessage.analyzeResult(result));
       }
-    } catch (ApiUnauthorizedException e) {
+    } catch (SonarHostUnauthorizedException e) {
       LOG.warn("API returned an unauthorized response", e);
       sendMessage.accept(
           LintMessage.analyzeError(
               "Authorization is required to access the configured SonarQube instance. Please"
                   + " provide an appropriate authorization token."));
-    } catch (ApiConnectException e) {
+    } catch (SonarHostConnectException e) {
       LOG.warn("API could not be accessed", e);
       sendMessage.accept(
           LintMessage.analyzeError(
               "Could not connect to the configured SonarQube instance. Please confirm that the URL"
                   + " is correct and the instance is running."));
-    } catch (ApiException | UncheckedApiException e) {
+    } catch (SonarHostException | UncheckedSonarHostException e) {
       LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
           LintMessage.analyzeError(
@@ -288,14 +288,14 @@ public class LintServer {
       RequestRuleRetrieve requestRuleRetrieve, Consumer<LintMessage> sendMessage) {
     try {
       if (!requestRuleRetrieve.getSonarHostUrl().isEmpty()) {
-        SonarServerConnection sonarServer =
-            new SonarQube(
+        SonarHost host =
+            new SonarQubeHost(
                 requestRuleRetrieve.getSonarHostUrl(),
                 requestRuleRetrieve.getProjectKey(),
                 LANGUAGE_KEY,
                 requestRuleRetrieve.getApiToken());
         Map<String, RuleData> ruleInfoMap =
-            sonarServer.getRules().stream()
+            host.getRules().stream()
                 .map(RuleData::new)
                 .collect(Collectors.toMap(RuleData::getKey, x -> x));
         LOG.info("Retrieved {} rules", ruleInfoMap.size());

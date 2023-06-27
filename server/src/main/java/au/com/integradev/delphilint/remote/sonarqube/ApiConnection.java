@@ -15,9 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package au.com.integradev.delphilint.sonarqube;
+package au.com.integradev.delphilint.remote.sonarqube;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import au.com.integradev.delphilint.remote.JsonHttpHandler;
+import au.com.integradev.delphilint.remote.SonarHostConnectException;
+import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.SonarHostStatusCodeException;
+import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -36,7 +41,8 @@ public class ApiConnection {
     this.token = token;
   }
 
-  private <T> T getResponse(String url, BodyHandler<Supplier<T>> handler) throws ApiException {
+  private <T> T getResponse(String url, BodyHandler<Supplier<T>> handler)
+      throws SonarHostException {
     var reqBuilder = HttpRequest.newBuilder(URI.create(url));
 
     if (!this.token.isEmpty()) {
@@ -49,21 +55,21 @@ public class ApiConnection {
       var response = http.send(request, handler);
 
       if (response.statusCode() == 401) {
-        throw new ApiUnauthorizedException();
+        throw new SonarHostUnauthorizedException();
       } else if (response.statusCode() == 200) {
         return response.body().get();
       } else {
-        throw new ApiStatusCodeException(response.statusCode());
+        throw new SonarHostStatusCodeException(response.statusCode());
       }
     } catch (IOException e) {
-      throw new ApiConnectException();
+      throw new SonarHostConnectException();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
     return null;
   }
 
-  public JsonNode getJson(String url) throws ApiException {
+  public JsonNode getJson(String url) throws SonarHostException {
     return getResponse(hostUrl + url, new JsonHttpHandler());
   }
 }
