@@ -18,45 +18,40 @@ unit DelphiLint.Settings;
 
 interface
 
-type TLintSettings = class(TObject)
-private var
-  FServerJar: string;
-  FServerPort: Integer;
-  FServerJavaExe: string;
-  FServerShowConsole: Boolean;
-  FServerAutoLaunch: Boolean;
-  FSonarDelphiJar: string;
-  FServerStartDelay: Integer;
-  FClientDarkMode: Boolean;
+uses
+    DelphiLint.Properties
+  ;
 
-  FSettingsDir: string;
-  FSettingsFile: string;
-private
-  constructor Create;
+type
+  TLintSettings = class(TPropertiesFile)
+  private
+    FSettingsDir: string;
 
-  function InDarkMode: Boolean;
+    constructor Create;
 
-public
-  procedure Save;
-  procedure Reload;
-
-  property ServerJar: string read FServerJar write FServerJar;
-  property ServerPort: Integer read FServerPort write FServerPort;
-  property ServerShowConsole: Boolean read FServerShowConsole write FServerShowConsole;
-  property SonarDelphiJar: string read FSonarDelphiJar write FSonarDelphiJar;
-  property ServerJavaExe: string read FServerJavaExe write FServerJavaExe;
-  property ServerStartDelay: Integer read FServerStartDelay write FServerStartDelay;
-  property ServerAutoLaunch: Boolean read FServerAutoLaunch write FServerAutoLaunch;
-  property ClientDarkMode: Boolean read FClientDarkMode write FClientDarkMode;
-end;
+    function GetDefaultServerJar: string;
+    function GetDefaultSonarDelphiJar: string;
+    function GetDefaultServerJavaExe: string;
+    function GetDefaultClientDarkMode: Boolean;
+  protected
+    function RegisterFields: TArray<TPropFieldBase>; override;
+  public
+    property ServerJar: string index 0 read GetValueStr write SetValueStr;
+    property ServerPort: Integer index 1 read GetValueInt write SetValueInt;
+    property ServerShowConsole: Boolean index 2 read GetValueBool write SetValueBool;
+    property SonarDelphiJar: string index 3 read GetValueStr write SetValueStr;
+    property ServerJavaExe: string index 4 read GetValueStr write SetValueStr;
+    property ServerStartDelay: Integer index 5 read GetValueInt write SetValueInt;
+    property ServerAutoLaunch: Boolean index 6 read GetValueBool write SetValueBool;
+    property ClientDarkMode: Boolean index 7 read GetValueBool write SetValueBool;
+  end;
 
 function LintSettings: TLintSettings;
 
 implementation
 
 uses
-    System.IniFiles
-  , System.SysUtils
+    System.SysUtils
   , System.IOUtils
   , ToolsAPI
   , Vcl.Themes
@@ -82,76 +77,77 @@ end;
 constructor TLintSettings.Create;
 begin
   FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
-  FSettingsFile := TPath.Combine(FSettingsDir, 'delphilint.ini');
-  Reload;
+  inherited Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
+
+  Load;
   Save;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSettings.Reload;
-var
-  Ini: TIniFile;
-  JavaHome: string;
+function TLintSettings.RegisterFields: TArray<TPropFieldBase>;
 begin
-  Ini := TIniFile.Create(FSettingsFile);
-  try
-    FServerJar := Ini.ReadString('Server', 'Jar', TPath.Combine(FSettingsDir, 'delphilint-server.jar'));
-    FServerPort := Ini.ReadInteger('Server', 'Port', 14000);
-    FServerShowConsole := Ini.ReadBool('Server', 'ShowConsole', False);
-    FServerStartDelay := Ini.ReadInteger('Server', 'StartDelay', 1000);
-    FServerAutoLaunch := Ini.ReadBool('Server', 'AutoLaunch', True);
-    FSonarDelphiJar := Ini.ReadString('SonarDelphi', 'Jar', TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar'));
-    FClientDarkMode := Ini.ReadBool('Client', 'DarkMode', InDarkMode);
-
-    FServerJavaExe := Ini.ReadString('Server', 'JavaExe', '');
-
-    if FServerJavaExe = '' then begin
-      JavaHome := GetEnvironmentVariable('JAVA_HOME');
-
-      if JavaHome <> '' then begin
-        FServerJavaExe := Format('%s\bin\java.exe', [JavaHome]);
-      end;
-    end;
-
-
-  finally
-    FreeAndNil(Ini);
-  end;
+  Result := [
+    // 0
+    TCustomStringPropField.Create('Server', 'Jar', GetDefaultServerJar),
+    // 1
+    TIntPropField.Create('Server', 'Port', 14000),
+    // 2
+    TBoolPropField.Create('Server', 'ShowConsole', False),
+    // 3
+    TCustomStringPropField.Create('SonarDelphi', 'Jar', GetDefaultSonarDelphiJar),
+    // 4
+    TCustomStringPropField.Create('Server', 'JavaExe', GetDefaultServerJavaExe),
+    // 5
+    TIntPropField.Create('Server', 'StartDelay', 1000),
+    // 6
+    TBoolPropField.Create('Server', 'AutoLaunch', True),
+    // 7
+    TCustomBoolPropField.Create('Client', 'DarkMode', GetDefaultClientDarkMode)
+  ];
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSettings.Save;
-var
-  Ini: TIniFile;
-begin
-  Ini := TIniFile.Create(FSettingsFile);
-  try
-    Ini.WriteString('Server', 'Jar', FServerJar);
-    Ini.WriteInteger('Server', 'Port', FServerPort);
-    Ini.WriteBool('Server', 'ShowConsole', FServerShowConsole);
-    Ini.WriteInteger('Server', 'StartDelay', FServerStartDelay);
-    Ini.WriteBool('Server', 'AutoLaunch', FServerAutoLaunch);
-    Ini.WriteString('SonarDelphi', 'Jar', FSonarDelphiJar);
-    Ini.WriteString('Server', 'JavaExe', FServerJavaExe);
-    Ini.WriteBool('Client', 'DarkMode', FClientDarkMode);
-  finally
-    FreeAndNil(Ini);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintSettings.InDarkMode: Boolean;
+function TLintSettings.GetDefaultClientDarkMode: Boolean;
 var
   BgColor: TColor;
-  Color: Longint;
+  Color: LongInt;
 begin
   BgColor := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetStyleColor(scGenericBackground);
   Color := ColorToRGB(BgColor);
 
   Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);
 end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetDefaultServerJar: string;
+begin
+  Result := TPath.Combine(FSettingsDir, 'delphilint-server.jar');
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetDefaultServerJavaExe: string;
+var
+  JavaHome: string;
+begin
+  Result := '';
+
+  JavaHome := GetEnvironmentVariable('JAVA_HOME');
+  if JavaHome <> '' then begin
+    Result := Format('%s\bin\java.exe', [JavaHome]);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetDefaultSonarDelphiJar: string;
+begin
+  Result := TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar');
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.

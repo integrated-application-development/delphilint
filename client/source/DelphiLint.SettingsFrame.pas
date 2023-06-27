@@ -100,7 +100,7 @@ end;
 
 procedure TLintSettingsFrame.Init;
 begin
-  LintSettings.Reload;
+  LintSettings.Load;
   ServerJarEdit.Text := LintSettings.ServerJar;
   ServerPortEdit.Text := IntToStr(LintSettings.ServerPort);
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
