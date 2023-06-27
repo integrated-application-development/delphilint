@@ -112,6 +112,8 @@ type
 
     procedure Save;
     procedure Load;
+
+    property Path: string read FPath;
   end;
 
 implementation

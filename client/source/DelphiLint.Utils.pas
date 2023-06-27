@@ -24,6 +24,7 @@ uses
 
 
 // Project utils
+function ToAbsolutePath(const RelativePath: string; const BaseDir: string): string;
 function NormalizePath(const Path: string): string;
 function GetAllFiles: TArray<string>;
 function IsPasFile(const Path: string): Boolean;
@@ -48,7 +49,21 @@ uses
   , System.StrUtils
   , System.SysUtils
   , DelphiLint.ProjectOptions
+  , DelphiLint.Logger
+  , Winapi.ShLwApi
   ;
+
+//______________________________________________________________________________________________________________________
+
+function ToAbsolutePath(const RelativePath: string; const BaseDir: string): string;
+var
+  Buffer: array[0..512] of Char;
+begin
+  Result := TPath.Combine(BaseDir, RelativePath);
+  if PathCanonicalize(@Buffer[0], PChar(Result)) then begin
+    Result := Buffer;
+  end;
+end;
 
 //______________________________________________________________________________________________________________________
 
@@ -115,7 +130,7 @@ begin
     Result := True;
 
     if ReadOptions then begin
-      ProjectDir := TLintProjectOptions.Create(ProjectFile).ProjectBaseDir;
+      ProjectDir := TLintProjectOptions.Create(ProjectFile).ProjectBaseDirAbsolute;
 
       if ProjectDir <> '' then begin
         Exit;

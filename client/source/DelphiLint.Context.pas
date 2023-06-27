@@ -236,11 +236,15 @@ begin
   try
     AnalyzeFiles(
       Files,
-      IfThen(ProjectOptions.ProjectBaseDir <> '', ProjectOptions.ProjectBaseDir, TPath.GetDirectoryName(ProjectFile)),
+      IfThen(
+        ProjectOptions.ProjectBaseDir <> '',
+        ProjectOptions.ProjectBaseDirAbsolute,
+        TPath.GetDirectoryName(ProjectFile)),
       ProjectOptions.SonarHostUrl,
       ProjectOptions.ProjectKey,
       ProjectOptions.SonarHostToken,
-      ProjectOptions.ProjectPropertiesPath);
+      ProjectOptions.ProjectPropertiesPathAbsolute
+    );
   finally
     FreeAndNil(ProjectOptions);
   end;

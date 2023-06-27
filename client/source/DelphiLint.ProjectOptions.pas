@@ -24,6 +24,11 @@ uses
 
 type
   TLintProjectOptions = class(TPropertiesFile)
+  private
+    FDir: string;
+
+    function GetProjectPropertiesPathAbsolute: string;
+    function GetProjectBaseDirAbsolute: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
@@ -34,12 +39,16 @@ type
     property ProjectBaseDir: string index 2 read GetValueStr write SetValueStr;
     property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
     property ProjectPropertiesPath: string index 4 read GetValueStr write SetValueStr;
+
+    property ProjectPropertiesPathAbsolute: string read GetProjectPropertiesPathAbsolute;
+    property ProjectBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
   end;
 
 implementation
 
 uses
     System.IOUtils
+  , DelphiLint.Utils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -47,8 +56,29 @@ uses
 constructor TLintProjectOptions.Create(Path: string);
 begin
   Path := TPath.ChangeExtension(Path, '.delphilint');
+  FDir := TPath.GetDirectoryName(Path);
   inherited Create(Path);
   Load;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintProjectOptions.GetProjectPropertiesPathAbsolute: string;
+begin
+  Result := ProjectPropertiesPath;
+  if (Result <> '') and TPath.IsRelativePath(Result) then begin
+    Result := ToAbsolutePath(Result, FDir);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintProjectOptions.GetProjectBaseDirAbsolute: string;
+begin
+  Result := ProjectBaseDir;
+  if (Result <> '') and TPath.IsRelativePath(Result) then begin
+    Result := ToAbsolutePath(Result, FDir);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -61,7 +91,7 @@ begin
     // 1
     TStringPropField.Create('SonarHost', 'Url'),
     // 2
-    TStringPropField.Create('Project', 'BaseDir'),
+    TStringPropField.Create('Project', 'BaseDir', '.'),
     // 3
     TStringPropField.Create('SonarHost', 'Token'),
     // 4
