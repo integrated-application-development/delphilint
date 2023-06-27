@@ -50,21 +50,18 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
   private final GlobalAnalysisContainer globalContainer;
 
-  public DelphiAnalysisEngine(DelphiConfiguration delphiConfig) {
+  public DelphiAnalysisEngine(EngineStartupConfiguration startupConfig) {
     var engineConfig =
         AnalysisEngineConfiguration.builder()
             .setWorkDir(Path.of(System.getProperty("java.io.tmpdir")))
             .addEnabledLanguage(Language.DELPHI)
-            .setExtraProperties(
-                Map.of(
-                    "sonar.delphi.bds.path", delphiConfig.getBdsPath(),
-                    "sonar.delphi.compiler.version", delphiConfig.getCompilerVersion()))
+            .setExtraProperties(startupConfig.getBaseProperties())
             .build();
 
     var pluginInstances =
         new PluginInstancesRepository(
             new PluginInstancesRepository.Configuration(
-                Set.of(delphiConfig.getSonarDelphiJarPath()),
+                Set.of(startupConfig.getSonarDelphiJarPath()),
                 engineConfig.getEnabledLanguages(),
                 Optional.empty()));
 
@@ -74,10 +71,15 @@ public class DelphiAnalysisEngine implements AutoCloseable {
   }
 
   private AnalysisConfiguration buildConfiguration(
-      Path baseDir, Set<Path> inputFiles, SonarQubeConnection connection) throws ApiException {
+      Path baseDir,
+      Set<Path> inputFiles,
+      SonarQubeConnection connection,
+      Map<String, String> properties)
+      throws ApiException {
     var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
+            .putAllExtraProperties(properties)
             .addInputFiles(
                 inputFiles.stream()
                     .map(
@@ -90,6 +92,8 @@ public class DelphiAnalysisEngine implements AutoCloseable {
                         })
                     .map(relativePath -> new DelphiLintInputFile(baseDir, relativePath))
                     .collect(Collectors.toUnmodifiableList()));
+
+    LOG.info("Added {} extra properties", properties.size());
 
     if (connection != null) {
       Set<ActiveRule> activeRules =
@@ -110,10 +114,11 @@ public class DelphiAnalysisEngine implements AutoCloseable {
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,
-      SonarQubeConnection connection)
+      SonarQubeConnection connection,
+      Map<String, String> properties)
       throws ApiException {
     LOG.info("About to analyze {} files", inputFiles.size());
-    AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection);
+    AnalysisConfiguration config = buildConfiguration(baseDir, inputFiles, connection, properties);
 
     Set<Issue> issues = new HashSet<>();
 

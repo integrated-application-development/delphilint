@@ -107,7 +107,7 @@ object LintOptionsForm: TLintOptionsForm
       Left = 296
       Top = 16
       Width = 265
-      Height = 97
+      Height = 196
       Caption = 'Project analysis'
       TabOrder = 1
       object ProjectBaseDirEdit: TLabeledEdit
@@ -122,6 +122,27 @@ object LintOptionsForm: TLintOptionsForm
         Text = ''
         OnChange = ProjectBaseDirEditChange
       end
+      object ProjectPropertiesPathEdit: TLabeledEdit
+        Left = 16
+        Top = 112
+        Width = 233
+        Height = 23
+        EditLabel.Width = 193
+        EditLabel.Height = 15
+        EditLabel.Caption = 'Sonar project properties (.properties)'
+        TabOrder = 1
+        Text = ''
+        OnChange = ProjectPropertiesPathEditChange
+      end
+      object ProjectPropertiesBrowseButton: TButton
+        Left = 16
+        Top = 141
+        Width = 75
+        Height = 25
+        Caption = 'Browse...'
+        TabOrder = 2
+        OnClick = ProjectPropertiesBrowseButtonClick
+      end
     end
   end
   object FooterPanel: TPanel
@@ -134,5 +155,11 @@ object LintOptionsForm: TLintOptionsForm
     Caption = 'FooterPanel'
     ShowCaption = False
     TabOrder = 2
+  end
+  object PropertiesOpenDialog: TOpenDialog
+    Filter = 'Properties files (*.properties)|*.PROPERTIES'
+    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
+    Left = 496
+    Top = 271
   end
 end

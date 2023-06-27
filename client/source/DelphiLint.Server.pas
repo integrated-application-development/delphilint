@@ -68,7 +68,8 @@ type
       InputFiles: TArray<string>;
       SonarHostUrl: string = '';
       ProjectKey: string = '';
-      ApiToken: string = ''
+      ApiToken: string = '';
+      ProjectPropertiesPath: string = ''
     ): TLintMessage; static;
     class function RuleRetrieve(
       SonarHostUrl: string = '';
@@ -132,7 +133,8 @@ type
       OnError: TErrorAction;
       SonarHostUrl: string = '';
       ProjectKey: string = '';
-      ApiToken: string = '');
+      ApiToken: string = '';
+      ProjectPropertiesPath: string = '');
     procedure RetrieveRules(
       SonarHostUrl: string;
       ProjectKey: string;
@@ -203,7 +205,8 @@ class function TLintMessage.Analyze(
   InputFiles: TArray<string>;
   SonarHostUrl: string = '';
   ProjectKey: string = '';
-  ApiToken: string = ''
+  ApiToken: string = '';
+  ProjectPropertiesPath: string = ''
 ): TLintMessage;
 var
   InputFilesJson: TJSONArray;
@@ -222,6 +225,7 @@ begin
   Json.AddPair('sonarHostUrl', SonarHostUrl);
   Json.AddPair('projectKey', ProjectKey);
   Json.AddPair('apiToken', ApiToken);
+  Json.AddPair('projectPropertiesPath', ProjectPropertiesPath);
 
   Result := TLintMessage.Create(C_Analyze, Json);
 end;
@@ -369,13 +373,14 @@ procedure TLintServer.Analyze(
   OnError: TErrorAction;
   SonarHostUrl: string = '';
   ProjectKey: string = '';
-  ApiToken: string = '');
+  ApiToken: string = '';
+  ProjectPropertiesPath: string = '');
 begin
   Log.Info('Requesting analysis.');
   Initialize;
 
   SendMessage(
-    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken),
+    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath),
     procedure (const Response: TLintMessage) begin
       OnAnalyzeResponse(Response, OnResult, OnError);
     end);

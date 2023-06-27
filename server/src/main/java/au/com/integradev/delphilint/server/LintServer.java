@@ -20,13 +20,14 @@ package au.com.integradev.delphilint.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
-import au.com.integradev.delphilint.analysis.DelphiConfiguration;
+import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
 import au.com.integradev.delphilint.server.message.RequestInitialize;
 import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
+import au.com.integradev.delphilint.sonarqube.ApiConnectException;
 import au.com.integradev.delphilint.sonarqube.ApiException;
 import au.com.integradev.delphilint.sonarqube.ApiUnauthorizedException;
 import au.com.integradev.delphilint.sonarqube.SonarQubeConnection;
@@ -147,7 +148,10 @@ public class LintServer {
       try {
         data = mapper.readValue(dataString, category.getDataClass());
       } catch (JsonProcessingException e) {
-        LOG.warn("Received message of type {} with data in an incorrect format", category);
+        LOG.warn(
+            "Received message of type {} with data in an incorrect format: {}",
+            category,
+            e.getMessage());
         sendMessage.accept(LintMessage.invalidRequest("Data is in an incorrect format"));
         return;
       }
@@ -201,13 +205,25 @@ public class LintServer {
               requestAnalyze.getApiToken());
     }
 
+    Map<String, String> properties;
+    if (!requestAnalyze.getProjectProperties().isEmpty()) {
+      properties =
+          new SonarProjectProperties(Path.of(requestAnalyze.getProjectProperties())).toMap();
+    } else {
+      properties = Collections.emptyMap();
+    }
+
     try {
       var logOutput = new SonarLintLogOutput();
       SonarLintLogger.setTarget(logOutput);
 
       var issues =
           engine.analyze(
-              requestAnalyze.getBaseDir(), requestAnalyze.getInputFiles(), null, sonarqube);
+              requestAnalyze.getBaseDir(),
+              requestAnalyze.getInputFiles(),
+              null,
+              sonarqube,
+              properties);
 
       if (logOutput.containsError()) {
         LOG.error("Error logged during SonarDelphi analysis: {}", logOutput.getError());
@@ -224,6 +240,12 @@ public class LintServer {
           LintMessage.analyzeError(
               "Authorization is required to access the configured SonarQube instance. Please"
                   + " provide an appropriate authorization token."));
+    } catch (ApiConnectException e) {
+      LOG.warn("API could not be accessed", e);
+      sendMessage.accept(
+          LintMessage.analyzeError(
+              "Could not connect to the configured SonarQube instance. Please confirm that the URL"
+                  + " is correct and the instance is running."));
     } catch (ApiException | UncheckedApiException e) {
       LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
@@ -251,7 +273,7 @@ public class LintServer {
       RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
     if (engine == null) {
       var delphiConfig =
-          new DelphiConfiguration(
+          new EngineStartupConfiguration(
               requestInitialize.getBdsPath(),
               requestInitialize.getCompilerVersion(),
               Path.of(requestInitialize.getSonarDelphiJarPath()));

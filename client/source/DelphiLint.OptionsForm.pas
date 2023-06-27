@@ -19,6 +19,9 @@ type
     HeaderPanel: TPanel;
     ContentPanel: TPanel;
     FooterPanel: TPanel;
+    ProjectPropertiesPathEdit: TLabeledEdit;
+    ProjectPropertiesBrowseButton: TButton;
+    PropertiesOpenDialog: TOpenDialog;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -26,6 +29,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure CreateTokenButtonClick(Sender: TObject);
+    procedure ProjectPropertiesBrowseButtonClick(Sender: TObject);
+    procedure ProjectPropertiesPathEditChange(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
@@ -72,6 +77,7 @@ begin
     SonarHostTokenEdit.Text := FProjectOptions.SonarHostToken;
     ProjectKeyEdit.Text := FProjectOptions.ProjectKey;
     ProjectBaseDirEdit.Text := FProjectOptions.ProjectBaseDir;
+    ProjectPropertiesPathEdit.Text := FProjectOptions.ProjectPropertiesPath;
 
     ProjectName := TPath.GetFileName(FProjectFile);
     ProjectNameLabel.Caption := 'DelphiLint: ' + ProjectName;
@@ -82,6 +88,7 @@ begin
     SonarHostTokenEdit.Text := '';
     ProjectKeyEdit.Text := '';
     ProjectBaseDirEdit.Text := '';
+    ProjectPropertiesPathEdit.Text := '';
     ProjectNameLabel.Caption := 'DelphiLint: (no project)';
     Caption := 'DelphiLint Project Options (no project)';
   end;
@@ -164,6 +171,26 @@ procedure TLintOptionsForm.ProjectKeyEditChange(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
     FProjectOptions.ProjectKey := ProjectKeyEdit.Text;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.ProjectPropertiesBrowseButtonClick(Sender: TObject);
+begin
+  PropertiesOpenDialog.InitialDir := ExtractFilePath(ProjectPropertiesPathEdit.Text);
+  PropertiesOpenDialog.FileName := '';
+  if PropertiesOpenDialog.Execute then begin
+    ProjectPropertiesPathEdit.Text := PropertiesOpenDialog.FileName;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.ProjectPropertiesPathEditChange(Sender: TObject);
+begin
+  if Assigned(FProjectOptions) then begin
+    FProjectOptions.ProjectPropertiesPath := ProjectPropertiesPathEdit.Text;
   end;
 end;
 

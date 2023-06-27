@@ -27,11 +27,13 @@ type
     function GetSonarHostUrl: string;
     function GetProjectBaseDir: string;
     function GetSonarHostToken: string;
+    function GetProjectPropertiesPath: string;
 
     procedure SetProjectKey(Value: string);
     procedure SetSonarHostUrl(Value: string);
     procedure SetProjectBaseDir(Value: string);
     procedure SetSonarHostToken(Value: string);
+    procedure SetProjectPropertiesPath(Value: string);
 
     function StrFromIni(const Section: string; const Identifier: string): string;
     procedure StrToIni(const Section: string; const Identifier: string; const Value: string);
@@ -42,6 +44,7 @@ type
     property SonarHostUrl: string read GetSonarHostUrl write SetSonarHostUrl;
     property ProjectBaseDir: string read GetProjectBaseDir write SetProjectBaseDir;
     property SonarHostToken: string read GetSonarHostToken write SetSonarHostToken;
+    property ProjectPropertiesPath: string read GetProjectPropertiesPath write SetProjectPropertiesPath;
   end;
 
 implementation
@@ -68,6 +71,11 @@ begin
   Result := StrFromIni('Project', 'Key');
 end;
 
+function TLintProjectOptions.GetProjectPropertiesPath: string;
+begin
+  Result := StrFromIni('Project', 'PropertiesPath');
+end;
+
 function TLintProjectOptions.GetSonarHostUrl: string;
 begin
   Result := StrFromIni('SonarHost', 'Url');
@@ -86,6 +94,11 @@ end;
 procedure TLintProjectOptions.SetProjectKey(Value: string);
 begin
   StrToIni('Project', 'Key', Value);
+end;
+
+procedure TLintProjectOptions.SetProjectPropertiesPath(Value: string);
+begin
+  StrToIni('Project', 'PropertiesPath', Value);
 end;
 
 procedure TLintProjectOptions.SetSonarHostToken(Value: string);

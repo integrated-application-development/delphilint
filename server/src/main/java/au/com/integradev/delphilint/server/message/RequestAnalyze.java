@@ -17,15 +17,17 @@
  */
 package au.com.integradev.delphilint.server.message;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 import java.util.Set;
 
 public class RequestAnalyze {
-  private Path baseDir;
-  private Set<Path> inputFiles;
-  private String sonarHostUrl;
-  private String projectKey;
-  private String apiToken;
+  @JsonProperty private Path baseDir;
+  @JsonProperty private Set<Path> inputFiles;
+  @JsonProperty private String sonarHostUrl;
+  @JsonProperty private String projectKey;
+  @JsonProperty private String apiToken;
+  @JsonProperty private String projectPropertiesPath;
 
   public Path getBaseDir() {
     return baseDir;
@@ -45,5 +47,9 @@ public class RequestAnalyze {
 
   public String getApiToken() {
     return apiToken;
+  }
+
+  public String getProjectProperties() {
+    return projectPropertiesPath;
   }
 }

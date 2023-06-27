@@ -115,7 +115,8 @@ type
       const BaseDir: string;
       const SonarHostUrl: string = '';
       const ProjectKey: string = '';
-      const ApiToken: string = '');
+      const ApiToken: string = '';
+  const ProjectPropertiesPath: string = '');
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
   public
     constructor Create;
@@ -238,7 +239,8 @@ begin
       IfThen(ProjectOptions.ProjectBaseDir <> '', ProjectOptions.ProjectBaseDir, TPath.GetDirectoryName(ProjectFile)),
       ProjectOptions.SonarHostUrl,
       ProjectOptions.ProjectKey,
-      ProjectOptions.SonarHostToken);
+      ProjectOptions.SonarHostToken,
+      ProjectOptions.ProjectPropertiesPath);
   finally
     FreeAndNil(ProjectOptions);
   end;
@@ -251,7 +253,8 @@ procedure TLintContext.AnalyzeFiles(
   const BaseDir: string;
   const SonarHostUrl: string = '';
   const ProjectKey: string = '';
-  const ApiToken: string = '');
+  const ApiToken: string = '';
+  const ProjectPropertiesPath: string = '');
 var
   Server: TLintServer;
   IncludedFiles: TArray<string>;
@@ -274,7 +277,8 @@ begin
       OnAnalyzeError,
       SonarHostUrl,
       ProjectKey,
-      ApiToken);
+      ApiToken,
+      ProjectPropertiesPath);
   end
   else begin
     FOnAnalysisFailed.Notify(IncludedFiles);

@@ -19,7 +19,6 @@ package au.com.integradev.delphilint.sonarqube;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -57,7 +56,7 @@ public class ApiConnection {
         throw new ApiStatusCodeException(response.statusCode());
       }
     } catch (IOException e) {
-      throw new UncheckedIOException(e);
+      throw new ApiConnectException();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
