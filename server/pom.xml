@@ -64,17 +64,17 @@
     <dependency>
       <groupId>org.sonarsource.sonarlint.core</groupId>
       <artifactId>sonarlint-analysis-engine</artifactId>
-      <version>8.11.0.56591</version>
+      <version>8.19.0.72745</version>
     </dependency>
     <dependency>
       <groupId>org.sonarsource.sonarlint.core</groupId>
       <artifactId>sonarlint-core</artifactId>
-      <version>8.11.0.56591</version>
+      <version>8.19.0.72745</version>
     </dependency>
     <dependency>
       <groupId>org.sonarsource.sonarlint.core</groupId>
       <artifactId>sonarlint-issue-tracking</artifactId>
-      <version>8.11.0.56591</version>
+      <version>8.19.0.72745</version>
     </dependency>
     <dependency>
     <groupId>com.fasterxml.jackson.core</groupId>

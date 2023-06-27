@@ -41,7 +41,8 @@ public class SonarQubeUtils {
                     oldIssue.getTextRange(),
                     oldIssue.getInputFile(),
                     oldIssue.flows(),
-                    oldIssue.quickFixes());
+                    oldIssue.quickFixes(),
+                    oldIssue.getRuleDescriptionContextKey());
               } else {
                 return oldIssue;
               }

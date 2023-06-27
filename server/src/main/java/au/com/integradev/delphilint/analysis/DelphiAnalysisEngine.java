@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,7 +43,8 @@ import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.progress.ClientProgressMonitor;
 import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
 import org.sonarsource.sonarlint.core.issuetracking.Tracker;
-import org.sonarsource.sonarlint.core.plugin.commons.PluginInstancesRepository;
+import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoadResult;
+import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoader;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
@@ -54,18 +54,16 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     var engineConfig =
         AnalysisEngineConfiguration.builder()
             .setWorkDir(Path.of(System.getProperty("java.io.tmpdir")))
-            .addEnabledLanguage(Language.DELPHI)
             .setExtraProperties(startupConfig.getBaseProperties())
             .build();
 
-    var pluginInstances =
-        new PluginInstancesRepository(
-            new PluginInstancesRepository.Configuration(
-                Set.of(startupConfig.getSonarDelphiJarPath()),
-                engineConfig.getEnabledLanguages(),
-                Optional.empty()));
+    PluginsLoader.Configuration pluginsConfig =
+        new PluginsLoader.Configuration(
+            Set.of(startupConfig.getSonarDelphiJarPath()), Set.of(Language.DELPHI));
+    PluginsLoadResult pluginsLoadResult = new PluginsLoader().load(pluginsConfig);
 
-    globalContainer = new GlobalAnalysisContainer(engineConfig, pluginInstances);
+    globalContainer =
+        new GlobalAnalysisContainer(engineConfig, pluginsLoadResult.getLoadedPlugins());
     globalContainer.startComponents();
     LOG.info("Analysis engine started");
   }

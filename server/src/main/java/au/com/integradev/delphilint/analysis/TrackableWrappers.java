@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
+import org.sonarsource.sonarlint.core.commons.HotspotReviewStatus;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 import org.sonarsource.sonarlint.core.commons.TextRange;
@@ -138,6 +139,11 @@ public class TrackableWrappers {
     public boolean isResolved() {
       return false;
     }
+
+    @Override
+    public HotspotReviewStatus getReviewStatus() {
+      return null;
+    }
   }
 
   public static class ServerTrackable implements Trackable<SonarQubeIssue> {
@@ -205,6 +211,11 @@ public class TrackableWrappers {
     @Override
     public boolean isResolved() {
       return true;
+    }
+
+    @Override
+    public HotspotReviewStatus getReviewStatus() {
+      return null;
     }
   }
 }
