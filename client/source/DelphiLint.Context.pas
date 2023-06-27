@@ -775,7 +775,7 @@ begin
   else begin
     Log.Info(
       'Attempted to tether by providing line %d for issue at issue on lines %d-%d',
-      [IntToStr(StartLine), IntToStr(EndLine), IntToStr(LineNum)]);
+      [StartLine, EndLine, LineNum]);
   end;
 end;
 
