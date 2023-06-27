@@ -108,6 +108,7 @@
             <Form>LintOptionsForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="DelphiLint.Properties.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DELPHILINT_SPLASH</ResourceId>

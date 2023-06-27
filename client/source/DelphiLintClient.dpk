@@ -49,6 +49,7 @@ contains
   DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: T},
   DelphiLint.Utils in 'DelphiLint.Utils.pas',
   DelphiLint.SettingsFrame in 'DelphiLint.SettingsFrame.pas' {LintSettingsFrame: TFrame},
-  DelphiLint.OptionsForm in 'DelphiLint.OptionsForm.pas' {LintOptionsForm};
+  DelphiLint.OptionsForm in 'DelphiLint.OptionsForm.pas' {LintOptionsForm},
+  DelphiLint.Properties in 'DelphiLint.Properties.pas';
 
 end.
