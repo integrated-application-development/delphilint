@@ -3,7 +3,7 @@ object LintOptionsForm: TLintOptionsForm
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Project Options'
-  ClientHeight = 357
+  ClientHeight = 350
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -43,7 +43,7 @@ object LintOptionsForm: TLintOptionsForm
     Left = 0
     Top = 35
     Width = 577
-    Height = 285
+    Height = 278
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
@@ -51,17 +51,21 @@ object LintOptionsForm: TLintOptionsForm
     TabOrder = 1
     StyleElements = [seFont, seBorder]
     object GroupBox1: TGroupBox
-      Left = 16
-      Top = 16
-      Width = 265
+      Left = 295
+      Top = 14
+      Width = 266
       Height = 239
       Caption = 'SonarQube connection'
       TabOrder = 0
+      DesignSize = (
+        266
+        239)
       object SonarHostUrlEdit: TLabeledEdit
         Left = 16
         Top = 48
-        Width = 233
+        Width = 234
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 56
         EditLabel.Height = 15
         EditLabel.Caption = 'Server URL'
@@ -72,8 +76,9 @@ object LintOptionsForm: TLintOptionsForm
       object SonarHostTokenEdit: TLabeledEdit
         Left = 16
         Top = 173
-        Width = 233
+        Width = 234
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 105
         EditLabel.Height = 15
         EditLabel.Caption = 'Authorization token'
@@ -84,8 +89,9 @@ object LintOptionsForm: TLintOptionsForm
       object ProjectKeyEdit: TLabeledEdit
         Left = 16
         Top = 112
-        Width = 233
+        Width = 234
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 58
         EditLabel.Height = 15
         EditLabel.Caption = 'Project key'
@@ -104,17 +110,21 @@ object LintOptionsForm: TLintOptionsForm
       end
     end
     object GroupBox2: TGroupBox
-      Left = 296
-      Top = 16
+      Left = 16
+      Top = 14
       Width = 265
-      Height = 196
+      Height = 145
       Caption = 'Project analysis'
       TabOrder = 1
+      DesignSize = (
+        265
+        145)
       object ProjectBaseDirEdit: TLabeledEdit
         Left = 16
         Top = 48
         Width = 233
         Height = 23
+        Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 74
         EditLabel.Height = 15
         EditLabel.Caption = 'Base directory'
@@ -122,32 +132,29 @@ object LintOptionsForm: TLintOptionsForm
         Text = ''
         OnChange = ProjectBaseDirEditChange
       end
-      object ProjectPropertiesPathEdit: TLabeledEdit
+      object ProjectBaseDirBrowseButton: TButton
         Left = 16
-        Top = 112
-        Width = 233
-        Height = 23
-        EditLabel.Width = 193
-        EditLabel.Height = 15
-        EditLabel.Caption = 'Sonar project properties (.properties)'
-        TabOrder = 1
-        Text = ''
-        OnChange = ProjectPropertiesPathEditChange
-      end
-      object ProjectPropertiesBrowseButton: TButton
-        Left = 16
-        Top = 141
+        Top = 77
         Width = 75
         Height = 25
         Caption = 'Browse...'
+        TabOrder = 1
+        OnClick = ProjectBaseDirBrowseButtonClick
+      end
+      object ProjectReadPropertiesCheckBox: TCheckBox
+        Left = 15
+        Top = 115
+        Width = 234
+        Height = 17
+        Caption = 'Read sonar-project.properties if present'
         TabOrder = 2
-        OnClick = ProjectPropertiesBrowseButtonClick
+        OnClick = ProjectReadPropertiesCheckBoxClick
       end
     end
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 320
+    Top = 313
     Width = 577
     Height = 37
     Align = alBottom
@@ -177,7 +184,7 @@ object LintOptionsForm: TLintOptionsForm
   object PropertiesOpenDialog: TOpenDialog
     Filter = 'Properties files (*.properties)|*.PROPERTIES'
     Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
-    Left = 496
-    Top = 271
+    Left = 480
+    Top = 231
   end
 end

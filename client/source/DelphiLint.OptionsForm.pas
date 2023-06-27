@@ -35,11 +35,11 @@ type
     HeaderPanel: TPanel;
     ContentPanel: TPanel;
     FooterPanel: TPanel;
-    ProjectPropertiesPathEdit: TLabeledEdit;
-    ProjectPropertiesBrowseButton: TButton;
+    ProjectBaseDirBrowseButton: TButton;
     PropertiesOpenDialog: TOpenDialog;
     SaveButton: TButton;
     CancelButton: TButton;
+    ProjectReadPropertiesCheckBox: TCheckBox;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -47,10 +47,10 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure CreateTokenButtonClick(Sender: TObject);
-    procedure ProjectPropertiesBrowseButtonClick(Sender: TObject);
-    procedure ProjectPropertiesPathEditChange(Sender: TObject);
+    procedure ProjectBaseDirBrowseButtonClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
     procedure CancelButtonClick(Sender: TObject);
+    procedure ProjectReadPropertiesCheckBoxClick(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
@@ -96,7 +96,8 @@ begin
     SonarHostTokenEdit.Text := FProjectOptions.SonarHostToken;
     ProjectKeyEdit.Text := FProjectOptions.ProjectKey;
     ProjectBaseDirEdit.Text := FProjectOptions.ProjectBaseDir;
-    ProjectPropertiesPathEdit.Text := FProjectOptions.ProjectPropertiesPath;
+    ProjectReadPropertiesCheckBox.Checked := FProjectOptions.ProjectReadProperties;
+    SaveButton.Enabled := True;
 
     ProjectName := TPath.GetFileName(FProjectFile);
     ProjectNameLabel.Caption := 'DelphiLint: ' + ProjectName;
@@ -107,7 +108,9 @@ begin
     SonarHostTokenEdit.Text := '';
     ProjectKeyEdit.Text := '';
     ProjectBaseDirEdit.Text := '';
-    ProjectPropertiesPathEdit.Text := '';
+    ProjectReadPropertiesCheckBox.Checked := False;
+    SaveButton.Enabled := False;
+
     ProjectNameLabel.Caption := 'DelphiLint: (no project)';
     Caption := 'DelphiLint Project Options (no project)';
   end;
@@ -213,21 +216,21 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.ProjectPropertiesBrowseButtonClick(Sender: TObject);
+procedure TLintOptionsForm.ProjectReadPropertiesCheckBoxClick(Sender: TObject);
 begin
-  PropertiesOpenDialog.InitialDir := ExtractFilePath(ProjectPropertiesPathEdit.Text);
-  PropertiesOpenDialog.FileName := '';
-  if PropertiesOpenDialog.Execute then begin
-    ProjectPropertiesPathEdit.Text := PropertiesOpenDialog.FileName;
+  if Assigned(FProjectOptions) then begin
+    FProjectOptions.ProjectReadProperties := ProjectReadPropertiesCheckBox.Checked;
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.ProjectPropertiesPathEditChange(Sender: TObject);
+procedure TLintOptionsForm.ProjectBaseDirBrowseButtonClick(Sender: TObject);
 begin
-  if Assigned(FProjectOptions) then begin
-    FProjectOptions.ProjectPropertiesPath := ProjectPropertiesPathEdit.Text;
+  PropertiesOpenDialog.InitialDir := ExtractFilePath(ProjectBaseDirEdit.Text);
+  PropertiesOpenDialog.FileName := '';
+  if PropertiesOpenDialog.Execute then begin
+    ProjectBaseDirEdit.Text := PropertiesOpenDialog.FileName;
   end;
 end;
 

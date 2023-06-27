@@ -243,7 +243,7 @@ begin
       ProjectOptions.SonarHostUrl,
       ProjectOptions.ProjectKey,
       ProjectOptions.SonarHostToken,
-      ProjectOptions.ProjectPropertiesPathAbsolute
+      ProjectOptions.ProjectPropertiesPath
     );
   finally
     FreeAndNil(ProjectOptions);

@@ -26,9 +26,8 @@ type
   TLintProjectOptions = class(TPropertiesFile)
   private
     FDir: string;
-
-    function GetProjectPropertiesPathAbsolute: string;
     function GetProjectBaseDirAbsolute: string;
+    function GetProjectPropertiesPath: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
@@ -38,10 +37,10 @@ type
     property SonarHostUrl: string index 1 read GetValueStr write SetValueStr;
     property ProjectBaseDir: string index 2 read GetValueStr write SetValueStr;
     property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
-    property ProjectPropertiesPath: string index 4 read GetValueStr write SetValueStr;
+    property ProjectReadProperties: Boolean index 4 read GetValueBool write SetValueBool;
 
-    property ProjectPropertiesPathAbsolute: string read GetProjectPropertiesPathAbsolute;
     property ProjectBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
+    property ProjectPropertiesPath: string read GetProjectPropertiesPath;
   end;
 
 implementation
@@ -63,9 +62,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintProjectOptions.GetProjectPropertiesPathAbsolute: string;
+function TLintProjectOptions.GetProjectBaseDirAbsolute: string;
 begin
-  Result := ProjectPropertiesPath;
+  Result := ProjectBaseDir;
   if (Result <> '') and TPath.IsRelativePath(Result) then begin
     Result := ToAbsolutePath(Result, FDir);
   end;
@@ -73,11 +72,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintProjectOptions.GetProjectBaseDirAbsolute: string;
+function TLintProjectOptions.GetProjectPropertiesPath: string;
 begin
-  Result := ProjectBaseDir;
-  if (Result <> '') and TPath.IsRelativePath(Result) then begin
-    Result := ToAbsolutePath(Result, FDir);
+  Result := '';
+  if ProjectReadProperties then begin
+    Result := TPath.Combine(ProjectBaseDirAbsolute, 'sonar-project.properties');
   end;
 end;
 
@@ -95,7 +94,7 @@ begin
     // 3
     TStringPropField.Create('SonarHost', 'Token'),
     // 4
-    TStringPropField.Create('Project', 'PropertiesPath')
+    TBoolPropField.Create('Project', 'ReadProperties', True)
   ];
 end;
 
