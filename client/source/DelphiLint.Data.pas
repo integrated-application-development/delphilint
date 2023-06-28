@@ -26,13 +26,19 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TRange = record
-    StartLine: Integer;
-    StartLineOffset: Integer;
-    EndLine: Integer;
-    EndLineOffset: Integer;
-
+  TRange = class(TObject)
+  private
+    FStartLine: Integer;
+    FStartLineOffset: Integer;
+    FEndLine: Integer;
+    FEndLineOffset: Integer;
+  public
     constructor FromJson(Json: TJsonObject);
+
+    property StartLine: Integer read FStartLine;
+    property StartLineOffset: Integer read FStartLineOffset;
+    property EndLine: Integer read FEndLine;
+    property EndLineOffset: Integer read FEndLineOffset;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -51,6 +57,7 @@ type
     property Range: TRange read FRange write FRange;
 
     constructor FromJson(Json: TJsonObject);
+    destructor Destroy; override;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -94,16 +101,17 @@ implementation
 
 uses
     System.StrUtils
+  , System.SysUtils
   ;
 
 //______________________________________________________________________________________________________________________
 
 constructor TRange.FromJson(Json: TJsonObject);
 begin
-  StartLine := Json.GetValue<Integer>('startLine', 0);
-  EndLine := Json.GetValue<Integer>('endLine', 0);
-  StartLineOffset := Json.GetValue<Integer>('startOffset', 0);
-  EndLineOffset := Json.GetValue<Integer>('endOffset', 0);
+  FStartLine := Json.GetValue<Integer>('startLine', 0);
+  FEndLine := Json.GetValue<Integer>('endLine', 0);
+  FStartLineOffset := Json.GetValue<Integer>('startOffset', 0);
+  FEndLineOffset := Json.GetValue<Integer>('endOffset', 0);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -115,11 +123,20 @@ begin
   FRuleKey := Json.GetValue<string>('ruleKey');
   FMessage := Json.GetValue<string>('message', FRuleKey);
   FFilePath := Json.GetValue<string>('file');
+  FRange := nil;
 
   RangeJson := Json.GetValue<TJsonValue>('range', nil);
   if Assigned(RangeJson) and (RangeJson is TJsonObject) then begin
     FRange := TRange.FromJson(RangeJson as TJsonObject);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLintIssue.Destroy;
+begin
+  FreeAndNil(FRange);
+  inherited;
 end;
 
 //______________________________________________________________________________________________________________________

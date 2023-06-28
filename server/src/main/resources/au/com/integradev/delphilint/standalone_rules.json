@@ -1,6 +1,6 @@
 {
   "actives": [
-    "delph:ClassPerFileRule_disabled",
+    "delph:ClassPerFileRule",
     "delph:InheritedMethodWithNoCodeRule",
     "delph:SwallowedExceptionsRule",
     "delph:ObjectInvokedConstructorRule",

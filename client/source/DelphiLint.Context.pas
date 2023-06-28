@@ -720,10 +720,19 @@ begin
   FRuleKey := Issue.RuleKey;
   FMessage := Issue.Message;
   FFilePath := Issue.FilePath;
-  FStartLine := Issue.Range.StartLine;
-  FEndLine := Issue.Range.EndLine;
-  FStartLineOffset := Issue.Range.StartLineOffset;
-  FEndLineOffset := Issue.Range.EndLineOffset;
+
+  if Assigned(Issue.Range) then begin
+    FStartLine := Issue.Range.StartLine;
+    FEndLine := Issue.Range.EndLine;
+    FStartLineOffset := Issue.Range.StartLineOffset;
+    FEndLineOffset := Issue.Range.EndLineOffset;
+  end
+  else begin
+    FStartLine := 1;
+    FEndLine := 2;
+    FStartLineOffset := 0;
+    FEndLineOffset := 0;
+  end;
   FLinesMoved := 0;
   FLines := TList<string>.Create;
   FTethered := True;
@@ -765,7 +774,7 @@ begin
     Exit;
   end;
 
-  Delta := StartLine - LineNum;
+  Delta := LineNum - StartLine;
   if (Delta >= 0) and (Delta < FLines.Count) then begin
     if (FLines[Delta] <> LineText) then begin
       Log.Info('Issue at line %d untethered: <%s> -> <%s>', [LineNum, FLines[Delta], LineText]);
@@ -775,7 +784,7 @@ begin
   else begin
     Log.Info(
       'Attempted to tether by providing line %d for issue at issue on lines %d-%d',
-      [StartLine, EndLine, LineNum]);
+      [LineNum, StartLine, EndLine]);
   end;
 end;
 
