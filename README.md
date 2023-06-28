@@ -10,9 +10,11 @@ change without notice.**
 * Integration with [SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi), including
   100+ code analysis rules to pick up on code smells, bugs, and vulnerabilities
 * On-demand analysis in the Delphi IDE, both single-file and multi-file
-* Support for connection to a SonarQube instance, allowing for
-   * Automatic synchronization of active rules and configuration from the server's configured quality profiles
-   * Suppression of issues that have been resolved in past analyses
+* Two analysis modes:
+   * Standalone - run analyses entirely locally with a default set of active rules
+   * Connected - connect to a SonarQube instance, allowing for
+      * Automatic synchronization of active rules and configuration from the server's configured quality profiles
+      * Suppression of issues that have been resolved in past analyses
 * Support for reading `sonar-project.properties` files
 
 ## Installation
