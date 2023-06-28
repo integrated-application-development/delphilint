@@ -118,6 +118,10 @@ public class TrackableWrappers {
 
     @Override
     public TextRangeWithHash getTextRange() {
+      if (issue.getStartLine() == null) {
+        return null;
+      }
+
       return new TextRangeWithHash(
           issue.getStartLine(),
           issue.getStartLineOffset(),

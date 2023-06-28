@@ -43,12 +43,14 @@ import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.progress.ClientProgressMonitor;
 import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
 import org.sonarsource.sonarlint.core.issuetracking.Tracker;
+import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoadResult;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoader;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
   private final GlobalAnalysisContainer globalContainer;
+  private final LoadedPlugins loadedPlugins;
 
   public DelphiAnalysisEngine(EngineStartupConfiguration startupConfig) {
     var engineConfig =
@@ -61,9 +63,9 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         new PluginsLoader.Configuration(
             Set.of(startupConfig.getSonarDelphiJarPath()), Set.of(Language.DELPHI));
     PluginsLoadResult pluginsLoadResult = new PluginsLoader().load(pluginsConfig);
+    loadedPlugins = pluginsLoadResult.getLoadedPlugins();
 
-    globalContainer =
-        new GlobalAnalysisContainer(engineConfig, pluginsLoadResult.getLoadedPlugins());
+    globalContainer = new GlobalAnalysisContainer(engineConfig, loadedPlugins);
     globalContainer.startComponents();
     LOG.info("Analysis engine started");
   }
@@ -170,6 +172,10 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         issues.size());
 
     return returnIssues;
+  }
+
+  public LoadedPlugins getLoadedPlugins() {
+    return loadedPlugins;
   }
 
   @Override

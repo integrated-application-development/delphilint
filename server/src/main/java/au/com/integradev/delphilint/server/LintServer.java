@@ -27,6 +27,7 @@ import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
 import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import au.com.integradev.delphilint.remote.sonarqube.SonarQubeHost;
+import au.com.integradev.delphilint.remote.standalone.StandaloneSonarHost;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
 import au.com.integradev.delphilint.server.message.RequestInitialize;
 import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
@@ -196,15 +197,11 @@ public class LintServer {
       return;
     }
 
-    SonarHost sonarServer = null;
-    if (!requestAnalyze.getSonarHostUrl().isEmpty()) {
-      sonarServer =
-          new SonarQubeHost(
-              requestAnalyze.getSonarHostUrl(),
-              requestAnalyze.getProjectKey(),
-              LANGUAGE_KEY,
-              requestAnalyze.getApiToken());
-    }
+    SonarHost sonarHost =
+        getSonarHost(
+            requestAnalyze.getSonarHostUrl(),
+            requestAnalyze.getProjectKey(),
+            requestAnalyze.getApiToken());
 
     Map<String, String> properties;
     if (!requestAnalyze.getProjectProperties().isEmpty()) {
@@ -223,7 +220,7 @@ public class LintServer {
               requestAnalyze.getBaseDir(),
               requestAnalyze.getInputFiles(),
               null,
-              sonarServer,
+              sonarHost,
               properties);
 
       if (logOutput.containsError()) {
@@ -287,31 +284,33 @@ public class LintServer {
   private void handleRuleRetrieve(
       RequestRuleRetrieve requestRuleRetrieve, Consumer<LintMessage> sendMessage) {
     try {
-      if (!requestRuleRetrieve.getSonarHostUrl().isEmpty()) {
-        SonarHost host =
-            new SonarQubeHost(
-                requestRuleRetrieve.getSonarHostUrl(),
-                requestRuleRetrieve.getProjectKey(),
-                LANGUAGE_KEY,
-                requestRuleRetrieve.getApiToken());
-        Map<String, RuleData> ruleInfoMap =
-            host.getRules().stream()
-                .map(RuleData::new)
-                .collect(Collectors.toMap(RuleData::getKey, x -> x));
-        LOG.info("Retrieved {} rules", ruleInfoMap.size());
-        sendMessage.accept(
-            LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
-      } else {
-        LOG.warn("No SonarQube connection, returning empty ruleset");
-        // TODO: Have a local set of rule definitions
-        sendMessage.accept(
-            LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(Collections.emptyMap())));
-      }
+      SonarHost host =
+          getSonarHost(
+              requestRuleRetrieve.getSonarHostUrl(),
+              requestRuleRetrieve.getProjectKey(),
+              requestRuleRetrieve.getApiToken());
+      Map<String, RuleData> ruleInfoMap =
+          host.getRules().stream()
+              .map(RuleData::new)
+              .collect(Collectors.toMap(RuleData::getKey, x -> x));
+      LOG.info("Retrieved {} rules", ruleInfoMap.size());
+      sendMessage.accept(
+          LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
     } catch (Exception e) {
       LOG.error("Error encountered during rule retrieval", e);
       e.printStackTrace();
       sendMessage.accept(
           LintMessage.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
+    }
+  }
+
+  private SonarHost getSonarHost(String url, String projectKey, String apiToken) {
+    if (url.isEmpty()) {
+      LOG.info("Using standalone mode");
+      return new StandaloneSonarHost(engine.getLoadedPlugins());
+    } else {
+      LOG.info("Using connected mode");
+      return new SonarQubeHost(url, projectKey, LANGUAGE_KEY, apiToken);
     }
   }
 }
