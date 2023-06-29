@@ -3,7 +3,7 @@ object LintOptionsForm: TLintOptionsForm
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Project Options'
-  ClientHeight = 350
+  ClientHeight = 334
   ClientWidth = 577
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -43,15 +43,15 @@ object LintOptionsForm: TLintOptionsForm
     Left = 0
     Top = 35
     Width = 577
-    Height = 278
+    Height = 262
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
     ShowCaption = False
     TabOrder = 1
     StyleElements = [seFont, seBorder]
-    object GroupBox1: TGroupBox
-      Left = 295
+    object SonarHostGroup: TGroupBox
+      Left = 305
       Top = 14
       Width = 266
       Height = 239
@@ -109,20 +109,20 @@ object LintOptionsForm: TLintOptionsForm
         OnClick = CreateTokenButtonClick
       end
     end
-    object GroupBox2: TGroupBox
+    object AnalysisGroup: TGroupBox
       Left = 16
-      Top = 14
-      Width = 265
+      Top = 99
+      Width = 267
       Height = 145
-      Caption = 'Project analysis'
+      Caption = 'Analysis settings'
       TabOrder = 1
       DesignSize = (
-        265
+        267
         145)
       object ProjectBaseDirEdit: TLabeledEdit
         Left = 16
         Top = 48
-        Width = 233
+        Width = 235
         Height = 23
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 74
@@ -151,10 +151,30 @@ object LintOptionsForm: TLintOptionsForm
         OnClick = ProjectReadPropertiesCheckBoxClick
       end
     end
+    object AnalysisModeGroupBox: TGroupBox
+      Left = 16
+      Top = 14
+      Width = 267
+      Height = 71
+      Caption = 'Analysis mode'
+      TabOrder = 2
+      object AnalysisModeGroup: TRadioGroup
+        Left = 0
+        Top = 11
+        Width = 267
+        Height = 59
+        Items.Strings = (
+          'Standalone'
+          'Connected (SonarQube)')
+        ShowFrame = False
+        TabOrder = 0
+        OnClick = AnalysisModeGroupClick
+      end
+    end
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 313
+    Top = 297
     Width = 577
     Height = 37
     Align = alBottom

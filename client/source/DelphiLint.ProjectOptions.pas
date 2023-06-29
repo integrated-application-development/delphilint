@@ -38,6 +38,7 @@ type
     property ProjectBaseDir: string index 2 read GetValueStr write SetValueStr;
     property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
     property ProjectReadProperties: Boolean index 4 read GetValueBool write SetValueBool;
+    property AnalysisConnectedMode: Boolean index 5 read GetValueBool write SetValueBool;
 
     property ProjectBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
     property ProjectPropertiesPath: string read GetProjectPropertiesPath;
@@ -86,15 +87,17 @@ function TLintProjectOptions.RegisterFields: TArray<TPropFieldBase>;
 begin
   Result := [
     // 0
-    TStringPropField.Create('Project', 'Key'),
+    TStringPropField.Create('SonarHost', 'ProjectKey'),
     // 1
     TStringPropField.Create('SonarHost', 'Url'),
     // 2
-    TStringPropField.Create('Project', 'BaseDir', '.'),
+    TStringPropField.Create('Analysis', 'BaseDir', '.'),
     // 3
     TStringPropField.Create('SonarHost', 'Token'),
     // 4
-    TBoolPropField.Create('Project', 'ReadProperties', True)
+    TBoolPropField.Create('Analysis', 'ReadProperties', True),
+    // 5
+    TBoolPropField.Create('Analysis', 'ConnectedMode', False)
   ];
 end;
 

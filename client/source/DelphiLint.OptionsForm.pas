@@ -24,10 +24,10 @@ uses
 
 type
   TLintOptionsForm = class(TForm)
-    GroupBox1: TGroupBox;
+    SonarHostGroup: TGroupBox;
     SonarHostUrlEdit: TLabeledEdit;
     SonarHostTokenEdit: TLabeledEdit;
-    GroupBox2: TGroupBox;
+    AnalysisGroup: TGroupBox;
     ProjectKeyEdit: TLabeledEdit;
     ProjectBaseDirEdit: TLabeledEdit;
     ProjectNameLabel: TLabel;
@@ -40,6 +40,8 @@ type
     SaveButton: TButton;
     CancelButton: TButton;
     ProjectReadPropertiesCheckBox: TCheckBox;
+    AnalysisModeGroup: TRadioGroup;
+    AnalysisModeGroupBox: TGroupBox;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -51,12 +53,15 @@ type
     procedure SaveButtonClick(Sender: TObject);
     procedure CancelButtonClick(Sender: TObject);
     procedure ProjectReadPropertiesCheckBoxClick(Sender: TObject);
+    procedure AnalysisModeGroupClick(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
 
     function GetCreateTokenUrl(BaseUrl: string): string;
     function IsUrl(Val: string): Boolean;
+
+    function IsConnectedMode: Boolean;
 
     procedure UpdateControls;
     procedure UpdateCreateTokenButton;
@@ -76,6 +81,7 @@ uses
   , System.StrUtils
   , Vcl.Themes
   , ToolsAPI
+  , System.Math
   ;
 
 //______________________________________________________________________________________________________________________
@@ -91,6 +97,23 @@ procedure TLintOptionsForm.UpdateControls;
 var
   ProjectName: string;
 begin
+  AnalysisModeGroup.ItemIndex := IfThen(IsConnectedMode, 1, 0);
+
+  if IsConnectedMode then begin
+    AnalysisModeGroup.ItemIndex := 1;
+    SonarHostUrlEdit.Enabled := True;
+    ProjectKeyEdit.Enabled := True;
+    SonarHostTokenEdit.Enabled := True;
+    SonarHostGroup.Enabled := True;
+  end
+  else begin
+    AnalysisModeGroup.ItemIndex := 0;
+    SonarHostUrlEdit.Enabled := False;
+    ProjectKeyEdit.Enabled := False;
+    SonarHostTokenEdit.Enabled := False;
+    SonarHostGroup.Enabled := False;
+  end;
+
   if Assigned(FProjectOptions) then begin
     SonarHostUrlEdit.Text := FProjectOptions.SonarHostUrl;
     SonarHostTokenEdit.Text := FProjectOptions.SonarHostToken;
@@ -207,6 +230,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintOptionsForm.AnalysisModeGroupClick(Sender: TObject);
+begin
+  if Assigned(FProjectOptions) then begin
+    FProjectOptions.AnalysisConnectedMode := (AnalysisModeGroup.ItemIndex = 1);
+    UpdateControls;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintOptionsForm.ProjectKeyEditChange(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
@@ -263,6 +296,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintOptionsForm.IsConnectedMode: Boolean;
+begin
+  Result := Assigned(FProjectOptions) and FProjectOptions.AnalysisConnectedMode;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TLintOptionsForm.IsUrl(Val: string): Boolean;
 begin
   Result := StartsText('http://', Val) or StartsText('https://', Val);
@@ -273,7 +313,7 @@ end;
 procedure TLintOptionsForm.UpdateCreateTokenButton;
 begin
   CreateTokenButton.Enabled :=
-    Assigned(FProjectOptions)
+    IsConnectedMode
     and (FProjectOptions.SonarHostToken = '')
     and IsUrl(FProjectOptions.SonarHostUrl);
 end;

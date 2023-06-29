@@ -231,18 +231,27 @@ end;
 procedure TLintContext.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 var
   ProjectOptions: TLintProjectOptions;
+  SonarHostUrl: string;
+  ProjectKey: string;
+  SonarHostToken: string;
 begin
   ProjectOptions := TLintProjectOptions.Create(ProjectFile);
   try
+    if ProjectOptions.AnalysisConnectedMode then begin
+      SonarHostUrl := ProjectOptions.SonarHostUrl;
+      ProjectKey := ProjectOptions.ProjectKey;
+      SonarHostToken := ProjectOptions.SonarHostToken;
+    end;
+
     AnalyzeFiles(
       Files,
       IfThen(
         ProjectOptions.ProjectBaseDir <> '',
         ProjectOptions.ProjectBaseDirAbsolute,
         TPath.GetDirectoryName(ProjectFile)),
-      ProjectOptions.SonarHostUrl,
-      ProjectOptions.ProjectKey,
-      ProjectOptions.SonarHostToken,
+      SonarHostUrl,
+      ProjectKey,
+      SonarHostToken,
       ProjectOptions.ProjectPropertiesPath
     );
   finally
