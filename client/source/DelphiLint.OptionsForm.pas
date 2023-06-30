@@ -54,6 +54,7 @@ type
     procedure CancelButtonClick(Sender: TObject);
     procedure ProjectReadPropertiesCheckBoxClick(Sender: TObject);
     procedure AnalysisModeGroupClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
@@ -89,6 +90,13 @@ uses
 procedure TLintOptionsForm.FormCreate(Sender: TObject);
 begin
   RefreshOptions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintOptionsForm.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FProjectOptions);
 end;
 
 //______________________________________________________________________________________________________________________

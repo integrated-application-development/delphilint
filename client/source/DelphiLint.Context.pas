@@ -87,6 +87,8 @@ type
   );
 
   TLintContext = class(TObject)
+  private const
+    C_ErrorTitle = 'DelphiLint error';
   private
     FServer: TLintServer;
     FServerTerminated: Boolean;
@@ -104,7 +106,7 @@ type
     procedure SaveIssues(Issues: TObjectList<TLintIssue>);
     procedure EnsureServerInited;
     function GetInitedServer: TLintServer;
-    procedure RefreshRules;
+    function TryRefreshRules: Boolean;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
     function GetInAnalysis: Boolean;
 
@@ -196,7 +198,7 @@ begin
     AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
   end
   else begin
-    MessageDlg('There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
+    TaskMessageDlg(C_ErrorTitle, 'There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
     Exit;
   end;
 end;
@@ -214,14 +216,19 @@ begin
     Files[Length(Files) - 1] := ProjectFile;
 
     if Length(Files) = 1 then begin
-      MessageDlg('There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
+      TaskMessageDlg(C_ErrorTitle, 'There are no open files that can be analyzed.', mtError, [mbOK], 0);
       Exit;
     end;
 
     AnalyzeFilesWithProjectOptions(Files, ProjectFile);
   end
   else begin
-    MessageDlg('Could not analyze file - please open a Delphi project first.', TMsgDlgType.mtError, [mbOK], 0);
+    TaskMessageDlg(
+      C_ErrorTitle,
+      'Could not analyze file - please open a Delphi project first.',
+      mtError,
+      [mbOK],
+      0);
     Exit;
   end;
 end;
@@ -277,12 +284,20 @@ begin
     Exit;
   end;
 
+  try
+    Server := GetInitedServer;
+  except
+    on E: ELintServerError do begin
+      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+      Exit;
+    end;
+  end;
+
   IncludedFiles := FilterNonProjectFiles(Files, BaseDir);
   FCurrentAnalysis := TCurrentAnalysis.Create(IncludedFiles);
   FOnAnalysisStarted.Notify(IncludedFiles);
 
-  Server := GetInitedServer;
-  if Assigned(Server) then begin
+  try
     Server.Analyze(
       BaseDir,
       IncludedFiles,
@@ -292,9 +307,10 @@ begin
       ProjectKey,
       ApiToken,
       ProjectPropertiesPath);
-  end
-  else begin
-    FOnAnalysisFailed.Notify(IncludedFiles);
+  except
+    on E: ELintServerError do begin
+      OnAnalyzeError(Format('Error during analysis: %s.', [E.Message]));
+    end;
   end;
 end;
 
@@ -423,8 +439,8 @@ begin
       FServer.OnTerminate := OnServerTerminated;
       FServerTerminated := False;
     except
-      ShowMessage('Server connection could not be established.');
-      FServer := nil;
+      FreeAndNil(FServer);
+      raise;
     end;
   end;
 end;
@@ -486,7 +502,7 @@ begin
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisFailed.Notify(Paths);
 
-      ShowMessage(Message);
+      TaskMessageDlg(C_ErrorTitle, Message, mtError, [mbOK], 0);
     end);
 end;
 
@@ -624,30 +640,48 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.RefreshRules;
+function TLintContext.TryRefreshRules: Boolean;
 var
   Server: TLintServer;
   ProjectFile: string;
   ProjectOptions: TLintProjectOptions;
   RulesRetrieved: TEvent;
   TimedOut: Boolean;
+  SonarHostUrl: string;
+  ProjectKey: string;
+  SonarHostToken: string;
 begin
   Log.Info('Refreshing ruleset');
+  Result := False;
 
   if not TryGetProjectFile(ProjectFile) then begin
     Log.Info('Not in a project, aborting refresh');
     Exit;
   end;
 
-  Server := GetInitedServer;
-
-  ProjectOptions := TLintProjectOptions.Create(ProjectFile);
-  RulesRetrieved := TEvent.Create;
-  TimedOut := False;
   try
+    Server := GetInitedServer;
+  except
+    on E: ELintServerError do begin
+      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+      Exit;
+    end;
+  end;
+
+  try
+    RulesRetrieved := TEvent.Create;
+    ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+    TimedOut := False;
+
+    if ProjectOptions.AnalysisConnectedMode then begin
+      SonarHostUrl := ProjectOptions.SonarHostUrl;
+      ProjectKey := ProjectOptions.ProjectKey;
+      SonarHostToken := ProjectOptions.SonarHostToken;
+    end;
+
     Server.RetrieveRules(
-      ProjectOptions.SonarHostUrl,
-      ProjectOptions.ProjectKey,
+      SonarHostUrl,
+      ProjectKey,
       procedure(Rules: TObjectDictionary<string, TRule>)
       begin
         if not TimedOut then begin
@@ -655,9 +689,8 @@ begin
           // If FRules is ever accessed by a third thread a mutex will be required.
           FreeAndNil(FRules);
           FRules := Rules;
-          Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
-
           RulesRetrieved.SetEvent;
+          Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
         end
         else begin
           Log.Info('Server retrieved rules after timeout had expired');
@@ -665,20 +698,24 @@ begin
       end,
       procedure(ErrorMsg: string) begin
         if not TimedOut then begin
-          Log.Info('Error retrieving latest rules: ' + ErrorMsg);
           RulesRetrieved.SetEvent;
+          Log.Info('Error retrieving latest rules: ' + ErrorMsg);
         end
         else begin
           Log.Info('Server rule retrieval returned error after timeout had expired');
         end;
       end,
-      ProjectOptions.SonarHostToken);
+      SonarHostToken);
 
-    if RulesRetrieved.WaitFor(3000) <> TWaitResult.wrSignaled then begin
+    if RulesRetrieved.WaitFor(3000) = TWaitResult.wrSignaled then begin
+      Result := True;
+    end else begin
       TimedOut := True;
+      Result := False;
       Log.Info('Rule retrieval timed out');
     end;
   finally
+    FreeAndNil(ProjectOptions);
     FreeAndNil(RulesRetrieved);
   end;
 end;
@@ -692,33 +729,30 @@ begin
   try
     GetInitedServer;
   except
-    on E: Exception do begin
-      MessageDlg(
-        'DelphiLint server restart encountered error: ' + E.Message,
-        TMsgDlgType.mtError,
-        [TMsgDlgBtn.mbOK],
-        0);
+    on E: ELintServerError do begin
+      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
       FreeAndNil(FServer);
+      Exit;
     end;
   end;
 
-  MessageDlg('DelphiLint server restarted successfully.', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], 0);
+  TaskMessageDlg('DelphiLint', 'Server restarted successfully.', mtInformation, [mbOK], 0);
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintContext.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 begin
+  Result := nil;
+
   if FRules.ContainsKey(RuleKey) then begin
     Result := FRules[RuleKey];
   end
   else if AllowRefresh then begin
     Log.Info('No rule with rulekey ' + RuleKey + ' found, refreshing.');
-    RefreshRules;
-    Result := GetRule(RuleKey, False);
-  end
-  else begin
-    Result := nil;
+    if TryRefreshRules then begin
+      Result := GetRule(RuleKey, False);
+    end;
   end;
 end;
 

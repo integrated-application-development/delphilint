@@ -88,6 +88,21 @@ type
   TRuleRetrieveResultAction = reference to procedure(Rules: TObjectDictionary<string, TRule>);
   TErrorAction = reference to procedure(Message: string);
 
+  ELintServerError = class(Exception)
+  end;
+
+  ELintServerFailed = class(ELintServerError)
+  end;
+
+  ELintServerMisconfigured = class(ELintServerError)
+  end;
+
+  ELintServerTimedOut = class(ELintServerError)
+  end;
+
+  ELintPortRefused = class(ELintServerError)
+  end;
+
   TLintServer = class(TThread)
   private
     FTcpClient: TIdTCPClient;
@@ -100,7 +115,12 @@ type
     procedure OnUnhandledMessage(Message: TLintMessage);
     procedure ReceiveMessage;
 
-    procedure StartExtServer(Jar: string; JavaExe: string; Port: Integer; ShowConsole: Boolean);
+    procedure StartExtServer(
+      Jar: string;
+      JavaExe: string;
+      Port: Integer;
+      WorkingDir: string;
+      ShowConsole: Boolean);
     procedure StopExtServer;
 
     procedure OnInitializeResponse(
@@ -153,6 +173,7 @@ uses
   , ToolsAPI
   , Winapi.Windows
   , DelphiLint.Settings
+  , IdStack
   ;
 
 //______________________________________________________________________________________________________________________
@@ -268,14 +289,26 @@ begin
   FResponseActions := TDictionary<Integer, TResponseAction>.Create;
 
   if LintSettings.ServerAutoLaunch then begin
-    StartExtServer(LintSettings.ServerJar, LintSettings.ServerJavaExe, Port, LintSettings.ServerShowConsole);
+    StartExtServer(
+      LintSettings.ServerJar,
+      LintSettings.ServerJavaExe,
+      Port,
+      LintSettings.SettingsDirectory,
+      LintSettings.ServerShowConsole);
     Sleep(LintSettings.ServerStartDelay);
   end;
 
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
   FTcpClient.Port := Port;
-  FTcpClient.Connect;
+
+  try
+    FTcpClient.Connect;
+  except
+    on EIdSocketError do begin
+      raise ELintPortRefused.CreateFmt('Connection refused to port %d', [Port]);
+    end;
+  end;
 
   Log.Info('Server connected.');
 end;
@@ -342,7 +375,7 @@ begin
       end);
 
     if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
-      raise Exception.Create('Initialize timed out');
+      raise ELintServerTimedOut.Create('Initialize timed out');
     end;
 
     Log.Info('Initialization complete.');
@@ -521,7 +554,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.StartExtServer(Jar: string; JavaExe: string; Port: Integer; ShowConsole: Boolean);
+procedure TLintServer.StartExtServer(
+  Jar: string;
+  JavaExe: string;
+  Port: Integer;
+  WorkingDir: string;
+  ShowConsole: Boolean);
 const
   C_Title = 'DelphiLint Server';
 var
@@ -532,11 +570,11 @@ var
   CreationFlags: Cardinal;
 begin
   if not FileExists(Jar) then begin
-    raise Exception.CreateFmt('Server jar not found at path "%s".', [Jar]);
+    raise ELintServerMisconfigured.CreateFmt('Server jar not found at path "%s"', [Jar]);
   end;
 
   if not FileExists(JavaExe) then begin
-    raise Exception.CreateFmt('Java executable not found at path "%s".', [JavaExe]);
+    raise ELintServerMisconfigured.CreateFmt('Java executable not found at path "%s"', [JavaExe]);
   end;
 
   CommandLine := Format(' -jar "%s" %d', [Jar, Port]);
@@ -561,12 +599,12 @@ begin
     False,
     CreationFlags,
     nil,
-    nil,
+    PChar(WorkingDir),
     StartupInfo,
     ProcessInfo
   ) then begin
     ErrorCode := GetLastError;
-    raise Exception.CreateFmt(
+    raise ELintServerFailed.CreateFmt(
       'DelphiLint server could not be started (error code %d: %s)',
       [ErrorCode, SysErrorMessage(ErrorCode)]);
   end;
@@ -579,9 +617,11 @@ end;
 
 procedure TLintServer.StopExtServer;
 begin
-  FTcpClient.CheckForGracefulDisconnect(False);
-  if FTcpClient.Connected then begin
-    SendMessage(TLintMessage.Quit);
+  if Assigned(FTcpClient) then begin
+    FTcpClient.CheckForGracefulDisconnect(False);
+    if FTcpClient.Connected then begin
+      SendMessage(TLintMessage.Quit);
+    end;
   end;
 end;
 
@@ -630,7 +670,15 @@ begin
   Message := TLintMessage.Create(Category, DataJsonValue);
   try
     if FResponseActions.ContainsKey(Id) then begin
-      FResponseActions[Id](Message);
+      try
+        FResponseActions[Id](Message);
+      except
+        on E: Exception do begin
+          Log.Info(
+            'Registered handler for incoming message (type %d) failed with exception %s %s',
+            [Category, E.ClassName, E.Message])
+        end;
+      end;
     end
     else begin
       OnUnhandledMessage(Message);

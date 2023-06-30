@@ -44,6 +44,8 @@ type
     property ServerStartDelay: Integer index 5 read GetValueInt write SetValueInt;
     property ServerAutoLaunch: Boolean index 6 read GetValueBool write SetValueBool;
     property ClientDarkMode: Boolean index 7 read GetValueBool write SetValueBool;
+
+    property SettingsDirectory: string read FSettingsDir;
   end;
 
 function LintSettings: TLintSettings;
