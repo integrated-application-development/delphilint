@@ -61,7 +61,6 @@
         <DCC_BplOutput>.\target</DCC_BplOutput>
         <DCC_DcpOutput>.\target</DCC_DcpOutput>
         <DCC_DcuOutput>.\target\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\bds.exe</Debugger_HostApplication>
     </PropertyGroup>
