@@ -24,6 +24,8 @@ uses
   , DelphiLint.Data
   , System.Generics.Collections
   , DelphiLint.Events
+  , System.SysUtils
+  , System.SyncObjs
   ;
 
 type
@@ -91,7 +93,6 @@ type
     C_ErrorTitle = 'DelphiLint error';
   private
     FServer: TLintServer;
-    FServerTerminated: Boolean;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FRules: TObjectDictionary<string, TRule>;
@@ -99,6 +100,7 @@ type
     FOnAnalysisStarted: TEventNotifier<TArray<string>>;
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    FServerTerminateEvent: TEvent;
 
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
@@ -155,13 +157,11 @@ uses
     DelphiLint.ProjectOptions
   , DelphiLint.Utils
   , System.IOUtils
-  , System.SysUtils
   , System.StrUtils
   , System.Generics.Defaults
   , DelphiLint.Settings
   , Vcl.Dialogs
   , System.Hash
-  , System.SyncObjs
   , DelphiLint.Logger
   , ToolsAPI
   ;
@@ -366,8 +366,17 @@ end;
 
 destructor TLintContext.Destroy;
 begin
+  if Assigned(FServer) then begin
+    FServerTerminateEvent := TEvent.Create;
+    try
+      FServer.Terminate;
+      FServerTerminateEvent.WaitFor(1200);
+    finally
+      FreeAndNil(FServerTerminateEvent);
+    end;
+  end;
+
   FreeAndNil(FRules);
-  FreeAndNil(FServer);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FFileAnalyses);
   FreeAndNil(FOnAnalysisStarted);
@@ -428,20 +437,9 @@ end;
 
 procedure TLintContext.EnsureServerInited;
 begin
-  if Assigned(FServer) and FServerTerminated then begin
-    FreeAndNil(FServer);
-  end;
-
   if not Assigned(FServer) then begin
-    try
-      FServer := TLintServer.Create(LintSettings.ServerPort);
-      FServer.FreeOnTerminate := False;
-      FServer.OnTerminate := OnServerTerminated;
-      FServerTerminated := False;
-    except
-      FreeAndNil(FServer);
-      raise;
-    end;
+    FServer := TLintServer.Create(LintSettings.ServerPort);
+    FServer.OnTerminate := OnServerTerminated;
   end;
 end;
 
@@ -449,7 +447,9 @@ end;
 
 procedure TLintContext.OnServerTerminated(Sender: TObject);
 begin
-  FServerTerminated := True;
+  if Assigned(FServerTerminateEvent) then begin
+    FServerTerminateEvent.SetEvent;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -502,7 +502,7 @@ begin
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisFailed.Notify(Paths);
 
-      TaskMessageDlg(C_ErrorTitle, Message, mtError, [mbOK], 0);
+      TaskMessageDlg(C_ErrorTitle, Message + '.', mtError, [mbOK], 0);
     end);
 end;
 
@@ -724,19 +724,32 @@ end;
 
 procedure TLintContext.RestartServer;
 begin
-  FreeAndNil(FServer);
-  Sleep(500);
-  try
-    GetInitedServer;
-  except
-    on E: ELintServerError do begin
-      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
-      FreeAndNil(FServer);
-      Exit;
+  if Assigned(FServer) then begin
+    FServerTerminateEvent := TEvent.Create;
+    try
+      FServer.Terminate;
+      FServer := nil;
+
+      if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
+        TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
+      end;
+    finally
+      FreeAndNil(FServerTerminateEvent);
     end;
   end;
 
-  TaskMessageDlg('DelphiLint', 'Server restarted successfully.', mtInformation, [mbOK], 0);
+  if InAnalysis then begin
+    OnAnalyzeError('Analysis failed because the server was restarted');
+  end;
+
+  try
+    GetInitedServer;
+    TaskMessageDlg('DelphiLint', 'Server restarted successfully.', mtInformation, [mbOK], 0);
+  except
+    on E: ELintServerError do begin
+      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

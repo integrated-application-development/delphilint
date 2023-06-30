@@ -109,6 +109,7 @@ type
     FResponseActions: TDictionary<Integer, TResponseAction>;
     FNextId: Integer;
     FTcpLock: TMutex;
+    FExtProcessHandle: THandle;
 
     procedure SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil); overload;
     procedure SendMessage(Req: TLintMessage; Id: Integer); overload;
@@ -138,6 +139,9 @@ type
       OnResult: TRuleRetrieveResultAction;
       OnError: TErrorAction
     );
+
+  protected
+    procedure DoTerminate; override;
 
   public
     constructor Create(Port: Integer);
@@ -317,7 +321,6 @@ end;
 
 destructor TLintServer.Destroy;
 begin
-  StopExtServer;
   FreeAndNil(FTcpClient);
   FreeAndNil(FResponseActions);
   FreeAndNil(FTcpLock);
@@ -326,26 +329,44 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintServer.DoTerminate;
+begin
+  Log.Info('Terminating server thread');
+  StopExtServer;
+
+  // TThread.DoTerminate calls OnTerminate on the main thread using Synchronize.
+  // This is a bizarre choice that has the potential for thread cycles.
+  if Assigned(OnTerminate) then begin
+    OnTerminate(Self);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintServer.Execute;
 begin
-  inherited;
-
-  while True do begin
+  while not Terminated do begin
     try
-      ReceiveMessage;
+      if FTcpClient.IOHandler.CheckForDataOnSource(50) then begin
+        ReceiveMessage;
+      end;
     except
-      on E: Exception do begin
+      on E: EIdSocketError do begin
+        Log.Info('Socket error in server thread: ' + E.Message);
+
         FTcpClient.CheckForGracefulDisconnect(False);
         if not FTcpClient.Connected then begin
           Log.Info('TCP connection to server was unexpectedly terminated.');
           Break;
-        end
-        else begin
-          Log.Info('Error occurred in server thread: ' + E.Message);
         end;
+      end;
+      on E: Exception do begin
+        Log.Info('Error occurred in server thread: ' + E.Message);
       end;
     end;
   end;
+
+  Log.Info('End of thread');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -361,13 +382,13 @@ var
 begin
   Log.Info('Requesting initialization.');
 
-  InitializeMsg := TLintMessage.Initialize(
-    (BorlandIDEServices as IOTAServices).GetRootDirectory,
-    C_CompilerVersion,
-    LintSettings.SonarDelphiJar);
-
-  InitializeCompletedEvent := TEvent.Create;
   try
+    InitializeMsg := TLintMessage.Initialize(
+      (BorlandIDEServices as IOTAServices).GetRootDirectory,
+      C_CompilerVersion,
+      LintSettings.SonarDelphiJar);
+    InitializeCompletedEvent := TEvent.Create;
+
     SendMessage(
       InitializeMsg,
       procedure(const Response: TLintMessage) begin
@@ -380,6 +401,7 @@ begin
 
     Log.Info('Initialization complete.');
   finally
+    FreeAndNil(InitializeMsg);
     FreeAndNil(InitializeCompletedEvent);
   end;
 end;
@@ -408,15 +430,22 @@ procedure TLintServer.Analyze(
   ProjectKey: string = '';
   ApiToken: string = '';
   ProjectPropertiesPath: string = '');
+var
+  AnalyzeMsg: TLintMessage;
 begin
   Log.Info('Requesting analysis.');
   Initialize;
 
-  SendMessage(
-    TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath),
-    procedure (const Response: TLintMessage) begin
-      OnAnalyzeResponse(Response, OnResult, OnError);
-    end);
+  AnalyzeMsg := TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath);
+  try
+    SendMessage(
+      AnalyzeMsg,
+      procedure (const Response: TLintMessage) begin
+        OnAnalyzeResponse(Response, OnResult, OnError);
+      end);
+  finally
+    FreeAndNil(AnalyzeMsg);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -468,13 +497,22 @@ procedure TLintServer.RetrieveRules(
   OnError: TErrorAction;
   ApiToken: string = ''
 );
+var RuleRetrieveMsg: TLintMessage;
 begin
-  SendMessage(
-    TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey, ApiToken),
-    procedure (const Response: TLintMessage) begin
-      Log.Info('Rule retrieval response retrieved');
-      OnRuleRetrieveResponse(Response, OnResult, OnError);
-    end);
+  Initialize;
+
+  RuleRetrieveMsg := TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey, ApiToken);
+
+  try
+    SendMessage(
+      RuleRetrieveMsg,
+      procedure (const Response: TLintMessage) begin
+        Log.Info('Rule retrieval response retrieved');
+        OnRuleRetrieveResponse(Response, OnResult, OnError);
+      end);
+  finally
+    FreeAndNil(RuleRetrieveMsg);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -609,19 +647,38 @@ begin
       [ErrorCode, SysErrorMessage(ErrorCode)]);
   end;
 
-  CloseHandle(ProcessInfo.hProcess);
+  FExtProcessHandle := ProcessInfo.hProcess;
   CloseHandle(ProcessInfo.hThread);
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintServer.StopExtServer;
+var
+  QuitMsg: TLintMessage;
 begin
-  if Assigned(FTcpClient) then begin
+  FTcpLock.Acquire;
+  try
     FTcpClient.CheckForGracefulDisconnect(False);
     if FTcpClient.Connected then begin
-      SendMessage(TLintMessage.Quit);
+      QuitMsg := TLintMessage.Quit;
+      try
+        SendMessage(QuitMsg);
+      finally
+        FreeAndNil(QuitMsg);
+      end;
+      FTcpClient.Disconnect;
     end;
+  finally
+    FTcpLock.Release;
+  end;
+
+  if FExtProcessHandle <> 0 then begin
+    if WaitForSingleObject(FExtProcessHandle, 1000) <> WAIT_OBJECT_0 then begin
+      Log.Info('Force terminating external process');
+      TerminateProcess(FExtProcessHandle, 1);
+    end;
+    CloseHandle(FExtProcessHandle);
   end;
 end;
 
@@ -656,9 +713,9 @@ var
   DataJsonValue: TJSONValue;
   Message: TLintMessage;
 begin
-  Category := FTcpClient.IOHandler.ReadByte;
   FTcpLock.Acquire;
   try
+    Category := FTcpClient.IOHandler.ReadByte;
     Id := FTcpClient.IOHandler.ReadInt32;
     Length := FTcpClient.IOHandler.ReadInt32;
     DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
@@ -676,7 +733,7 @@ begin
         on E: Exception do begin
           Log.Info(
             'Registered handler for incoming message (type %d) failed with exception %s %s',
-            [Category, E.ClassName, E.Message])
+            [Category, E.ClassName, E.Message]);
         end;
       end;
     end
