@@ -164,16 +164,16 @@ public class SonarQubeHost implements SonarHost {
 
     LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
 
-    ConnectedList<SonarQubeJsonIssue> resolvedIssues =
+    ConnectedList<SonarQubeIssue> resolvedIssues =
         new ConnectedList<>(
             api,
             "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
             "issues",
-            SonarQubeJsonIssue.class);
+            SonarQubeIssue.class);
 
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
-    for (SonarQubeJsonIssue sqIssue : resolvedIssues) {
+    for (SonarQubeIssue sqIssue : resolvedIssues) {
       remoteIssues.add(
           new RemoteIssue(
               sqIssue.getServerIssueKey(),
