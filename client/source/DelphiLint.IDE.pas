@@ -425,7 +425,6 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
   end;
 
 var
-  CurrentModule: IOTAModule;
   Issues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
   Msg: string;
@@ -434,8 +433,7 @@ var
   TetheredIssues: Boolean;
   TextColor: TColor;
 begin
-  CurrentModule := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
-  Issues := LintContext.GetIssues(CurrentModule.FileName, LineNumber);
+  Issues := LintContext.GetIssues(View.Buffer.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
     if LintSettings.ClientDarkMode then begin
