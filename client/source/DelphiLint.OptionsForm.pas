@@ -36,12 +36,12 @@ type
     ContentPanel: TPanel;
     FooterPanel: TPanel;
     ProjectBaseDirBrowseButton: TButton;
-    PropertiesOpenDialog: TOpenDialog;
     SaveButton: TButton;
     CancelButton: TButton;
     ProjectReadPropertiesCheckBox: TCheckBox;
     AnalysisModeGroup: TRadioGroup;
     AnalysisModeGroupBox: TGroupBox;
+    BaseDirDialog: TFileOpenDialog;
     procedure ProjectBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure ProjectKeyEditChange(Sender: TObject);
@@ -268,10 +268,10 @@ end;
 
 procedure TLintOptionsForm.ProjectBaseDirBrowseButtonClick(Sender: TObject);
 begin
-  PropertiesOpenDialog.InitialDir := ExtractFilePath(ProjectBaseDirEdit.Text);
-  PropertiesOpenDialog.FileName := '';
-  if PropertiesOpenDialog.Execute then begin
-    ProjectBaseDirEdit.Text := PropertiesOpenDialog.FileName;
+  BaseDirDialog.DefaultFolder := ExtractFilePath(ProjectBaseDirEdit.Text);
+  BaseDirDialog.FileName := '';
+  if BaseDirDialog.Execute then begin
+    ProjectBaseDirEdit.Text := BaseDirDialog.FileName;
   end;
 end;
 

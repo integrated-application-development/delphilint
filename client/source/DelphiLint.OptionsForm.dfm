@@ -202,10 +202,11 @@ object LintOptionsForm: TLintOptionsForm
       OnClick = CancelButtonClick
     end
   end
-  object PropertiesOpenDialog: TOpenDialog
-    Filter = 'Properties files (*.properties)|*.PROPERTIES'
-    Options = [ofHideReadOnly, ofFileMustExist, ofEnableSizing]
-    Left = 480
-    Top = 231
+  object BaseDirDialog: TFileOpenDialog
+    FavoriteLinks = <>
+    FileTypes = <>
+    Options = [fdoPickFolders]
+    Left = 304
+    Top = 281
   end
 end
