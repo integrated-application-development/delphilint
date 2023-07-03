@@ -69,9 +69,9 @@ type
     AnalyzeOpenFiles1: TMenuItem;
     StatusPanel: TPanel;
     ProgLabel: TLabel;
-    procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
+    procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
+    procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
     procedure FrameResize(Sender: TObject);
     procedure OnIssueSelected(Sender: TObject);
     procedure OnIssueDoubleClicked(Sender: TObject);
@@ -257,7 +257,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TLintToolFrame.SplitPanelMouseDown(
+  Sender: TObject;
+  Button: TMouseButton;
+  Shift: TShiftState;
+  X: Integer;
+  Y: Integer);
 begin
   FResizing := True;
   FDragStartX := X;
@@ -265,14 +270,19 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
 begin
   // TODO: Implement visual feedback
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TLintToolFrame.SplitPanelMouseUp(
+  Sender: TObject;
+  Button: TMouseButton;
+  Shift: TShiftState;
+  X: Integer;
+  Y: Integer);
 var
   NewWidth: Integer;
 begin
@@ -413,7 +423,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText, MessageText: string);
+procedure TLintToolFrame.GetIssueItemText(
+  ListBox: TListBox;
+  Issue: TLiveIssue;
+  out LocationText: string;
+  out MessageText: string);
 begin
   if Issue.Tethered then begin
     LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);

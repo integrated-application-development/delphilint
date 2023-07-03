@@ -62,16 +62,16 @@ uses
   ;
 
 var
-  G_LintSettings: TLintSettings;
+  GLintSettings: TLintSettings;
 
 //______________________________________________________________________________________________________________________
 
 function LintSettings: TLintSettings;
 begin
-  if not Assigned(G_LintSettings) then begin
-    G_LintSettings := TLintSettings.Create;
+  if not Assigned(GLintSettings) then begin
+    GLintSettings := TLintSettings.Create;
   end;
-  Result := G_LintSettings;
+  Result := GLintSettings;
 end;
 
 //______________________________________________________________________________________________________________________

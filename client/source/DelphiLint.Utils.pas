@@ -31,7 +31,11 @@ function IsPasFile(const Path: string): Boolean;
 function IsMainFile(const Path: string): Boolean;
 function IsDelphiSource(const Path: string): Boolean;
 function IsProjectFile(const Path: string): Boolean;
-procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
+procedure ExtractFiles(
+  out AllFiles: TArray<string>;
+  out ProjectFile: string;
+  out MainFile: string;
+  out PasFiles: TArray<string>);
 function GetOpenSourceFiles: TArray<string>;
 function TryGetProjectFile(out ProjectFile: string): Boolean;
 function IsFileInProjectDirectory(const Path: string): Boolean;
@@ -49,7 +53,6 @@ uses
   , System.StrUtils
   , System.SysUtils
   , DelphiLint.ProjectOptions
-  , DelphiLint.Logger
   , Winapi.ShLwApi
   ;
 
@@ -215,7 +218,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure ExtractFiles(out AllFiles: TArray<string>; out ProjectFile: string; out MainFile: string; out PasFiles: TArray<string>);
+procedure ExtractFiles(
+  out AllFiles: TArray<string>;
+  out ProjectFile: string;
+  out MainFile: string;
+  out PasFiles: TArray<string>);
 var
   FilePath: string;
   PasFilesList: TStringList;

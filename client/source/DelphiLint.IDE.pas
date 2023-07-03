@@ -210,7 +210,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorLineNotifier.LineChanged(OldLine, NewLine, Data: Integer);
+procedure TEditorLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
 begin
   FOnLineChanged(OldLine, NewLine, Data);
 end;

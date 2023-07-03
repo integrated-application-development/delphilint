@@ -107,7 +107,6 @@ uses
   , DelphiLint.ToolsApiBase
   , Winapi.Windows
   , Vcl.Graphics
-  , System.StrUtils
   , DelphiLint.Utils
   , DelphiLint.Settings
   , DelphiLint.SetupForm
@@ -405,7 +404,7 @@ var
   Index: Integer;
 begin
   for Index := 0 to LintActions.ActionCount - 1 do begin
-    LintActions.Actions[Index].Enabled := PluginEnabled;
+    LintActions[Index].Enabled := PluginEnabled;
   end;
 
 

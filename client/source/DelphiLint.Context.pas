@@ -389,7 +389,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function OrderByStartLine(const Left, Right: TLiveIssue): Integer;
+function OrderByStartLine(const Left: TLiveIssue; const Right: TLiveIssue): Integer;
 begin
   Result := TComparer<Integer>.Default.Compare(Left.OriginalStartLine, Right.OriginalStartLine);
 end;
@@ -617,7 +617,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.UpdateIssueLine(FilePath: string; OriginalLine, NewLine: Integer);
+procedure TLintContext.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 var
   SanitizedPath: string;
   Issue: TLiveIssue;
