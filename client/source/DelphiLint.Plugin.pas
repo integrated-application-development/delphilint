@@ -61,6 +61,7 @@ type
     FAddInOptions: TLintAddInOptions;
     FInfoIndex: Integer;
     FOptionsForm: TLintOptionsForm;
+    FEnabled: Boolean;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
@@ -74,6 +75,7 @@ type
     procedure SetAnalysisActionsEnabled(Value: Boolean);
 
     procedure RefreshAnalysisActions;
+    procedure SetPluginEnabled(Value: Boolean);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -81,7 +83,10 @@ type
     procedure RegisterToolFrame(Frame: TLintToolFrame);
     procedure OnRegister;
 
+    function BasicSetupComplete: Boolean;
+
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
+    property PluginEnabled: Boolean read FEnabled write SetPluginEnabled;
   end;
 
 procedure Register;
@@ -104,6 +109,8 @@ uses
   , Vcl.Graphics
   , System.StrUtils
   , DelphiLint.Utils
+  , DelphiLint.Settings
+  , DelphiLint.SetupForm
   ;
 
 //______________________________________________________________________________________________________________________
@@ -161,6 +168,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintPlugin.BasicSetupComplete: Boolean;
+begin
+  LintSettings.Load;
+  Result := FileExists(LintSettings.ServerJavaExe)
+    and FileExists(LintSettings.ServerJar)
+    and FileExists(LintSettings.SonarDelphiJar);
+end;
+
+//______________________________________________________________________________________________________________________
+
 function Plugin: TLintPlugin;
 begin
   Result := GPlugin;
@@ -186,6 +203,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.OnRegister;
+var
+  SetupForm: TLintSetupForm;
 begin
   // Editor notifier
   FEditor := TLintEditor.Create;
@@ -218,6 +237,17 @@ begin
 
   // Project options form
   (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintOptionsForm);
+
+  // Setup form
+  FEnabled := BasicSetupComplete;
+  if not FEnabled then begin
+    (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintSetupForm);
+    SetupForm := TLintSetupForm.Create(nil);
+    SetupForm.RefreshTheme;
+    SetupForm.ShowModal;
+  end;
+
+  RefreshAnalysisActions;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -362,9 +392,24 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.RefreshAnalysisActions;
+procedure TLintPlugin.SetPluginEnabled(Value: Boolean);
 begin
-  if FAnalysisActionsEnabled and (not LintContext.InAnalysis) then begin
+  FEnabled := Value;
+  RefreshAnalysisActions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.RefreshAnalysisActions;
+var
+  Index: Integer;
+begin
+  for Index := 0 to LintActions.ActionCount - 1 do begin
+    LintActions.Actions[Index].Enabled := PluginEnabled;
+  end;
+
+
+  if FAnalysisActionsEnabled and (not LintContext.InAnalysis) and PluginEnabled then begin
     ActionAnalyzeActiveFile.Enabled := True;
     ActionAnalyzeShort.Enabled := True;
     ActionAnalyzeOpenFiles.Enabled := True;
