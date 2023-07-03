@@ -136,7 +136,7 @@ begin
     FOptionsForm.RefreshTheme;
   end;
 
-  FOptionsForm.Show;
+  FOptionsForm.ShowModal;
 end;
 
 //______________________________________________________________________________________________________________________
