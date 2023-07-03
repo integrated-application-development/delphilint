@@ -19,40 +19,24 @@ unit DelphiLint.Logger;
 interface
 
 uses
-    ToolsAPI
-  , DelphiLint.Events
-  , System.Classes
-  , DelphiLint.ToolsApiBase
+    System.Classes
+  , System.SyncObjs
   ;
 
 type
-  TLintLogger = class;
-
-  TLoggerMessageNotifier = class(TMessageNotifierBase)
-  private
-    FOnMessageGroupDeleted: TEventNotifier<IOTAMessageGroup>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure MessageGroupDeleted(const Group: IOTAMessageGroup); override;
-
-    property OnMessageGroupDeleted: TEventNotifier<IOTAMessageGroup> read FOnMessageGroupDeleted;
-  end;
-
   TLintLogger = class(TObject)
   private
-    FLogMessageGroup: IOTAMessageGroup;
-    FMessageNotifier: TLoggerMessageNotifier;
     FIncludeTime: Boolean;
+    FLogPath: string;
+    FLock: TMutex;
 
     function GetMessagePrefix: string;
-    procedure MainThreadRun(Proc: TThreadProcedure);
 
+    procedure WriteLogFile(Msg: string);
   public
     constructor Create(MessageGroupName: string; IncludeTime: Boolean = True);
     destructor Destroy; override;
 
-    procedure Title(Msg: string);
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
     procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
@@ -65,6 +49,7 @@ implementation
 
 uses
     System.SysUtils
+  , System.IOUtils
   ;
 
 var
@@ -82,55 +67,20 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TLintLogger.Create(MessageGroupName: string; IncludeTime: Boolean = True);
-var
-  MessageServices: IOTAMessageServices;
-  NotifierIndex: Integer;
 begin
+  FLogPath := TPath.Combine(
+    TPath.GetTempPath,
+    Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
   FIncludeTime := IncludeTime;
-
-  MessageServices := BorlandIDEServices as IOTAMessageServices;
-
-  FLogMessageGroup := MessageServices.AddMessageGroup('DelphiLint - ' + MessageGroupName);
-  FMessageNotifier := TLoggerMessageNotifier.Create;
-  NotifierIndex := MessageServices.AddNotifier(FMessageNotifier);
-
-  FMessageNotifier.OnMessageGroupDeleted.AddListener(
-    procedure(const Group: IOTAMessageGroup) begin
-      if Assigned(FLogMessageGroup) and (Group.Name = FLogMessageGroup.Name) then begin
-        FLogMessageGroup := nil;
-      end;
-    end);
-  FMessageNotifier.OnReleased.AddListener(
-    procedure(const Notf: TNotifierBase) begin
-      (BorlandIDEServices as IOTAMessageServices).RemoveNotifier(NotifierIndex);
-    end);
-  FMessageNotifier.OnOwnerFreed.AddListener(
-    procedure(const Notf: TNotifierBase) begin
-      FLogMessageGroup := nil;
-    end);
+  FLock := TMutex.Create;
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TLintLogger.Destroy;
 begin
-  FMessageNotifier.Release;
-  if Assigned(FLogMessageGroup) then begin
-    (BorlandIDEServices as IOTAMessageServices).RemoveMessageGroup(FLogMessageGroup);
-  end;
+  FreeAndNil(FLock);
   inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintLogger.MainThreadRun(Proc: TThreadProcedure);
-begin
-  if TThread.Current.ThreadID = MainThreadID then begin
-    Proc;
-  end
-  else begin
-    TThread.Queue(TThread.Current, Proc);
-  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -149,7 +99,6 @@ end;
 
 procedure TLintLogger.Clear;
 begin
-  (BorlandIDEServices as IOTAMessageServices).ClearMessageGroup(FLogMessageGroup);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -164,26 +113,22 @@ end;
 procedure TLintLogger.Info(Msg, FileName: string; Line, Column: Integer);
 var
   Prefix: string;
-  LogProc: TThreadProcedure;
 begin
   Prefix := GetMessagePrefix;
-  LogProc :=
-    procedure
-    var
-      Dummy: Pointer;
-    begin
-      (BorlandIDEServices as IOTAMessageServices).AddToolMessage(
-        FileName,
-        Msg,
-        Prefix,
-        Line,
-        Column,
-        nil,
-        Dummy,
-        FLogMessageGroup);
-    end;
 
-  MainThreadRun(LogProc);
+  WriteLogFile(Format('[%s] %s', [Prefix, Msg]));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintLogger.WriteLogFile(Msg: string);
+begin
+  FLock.Acquire;
+  try
+    TFile.AppendAllText(FLogPath, Msg + #13#10);
+  finally
+    FLock.Release;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -191,39 +136,6 @@ end;
 procedure TLintLogger.Info(const Msg: string; const Args: array of const);
 begin
   Info(Format(Msg, Args));
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintLogger.Title(Msg: string);
-var
-  LogProc: TThreadProcedure;
-begin
-  LogProc :=
-    procedure begin
-      (BorlandIDEServices as IOTAMessageServices).AddTitleMessage(Msg, FLogMessageGroup);
-    end;
-
-  MainThreadRun(LogProc);
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLoggerMessageNotifier.Create;
-begin
-  inherited;
-  FOnMessageGroupDeleted := TEventNotifier<IOTAMessageGroup>.Create;
-end;
-
-destructor TLoggerMessageNotifier.Destroy;
-begin
-  FreeAndNil(FOnMessageGroupDeleted);
-  inherited;
-end;
-
-procedure TLoggerMessageNotifier.MessageGroupDeleted(const Group: IOTAMessageGroup);
-begin
-  FOnMessageGroupDeleted.Notify(Group);
 end;
 
 //______________________________________________________________________________________________________________________
