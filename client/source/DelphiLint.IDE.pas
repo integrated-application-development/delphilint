@@ -276,33 +276,51 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintEditor.InitView(const View: IOTAEditView);
-var
-  Tracker: TEditorLineTracker;
-  Notifier: TLintView;
-  NotifierIndex: Integer;
+
+  procedure InitTracker;
+  var
+    Tracker: TEditorLineTracker;
+    FileIssues: TArray<TLiveIssue>;
+    Issue: TLiveIssue;
+  begin
+    Tracker := TEditorLineTracker.Create(View.Buffer.GetEditLineTracker);
+    FTrackers.Add(Tracker);
+    Tracker.OnLineChanged.AddListener(OnTrackedLineChanged);
+    Tracker.OnEditorClosed.AddListener(
+      procedure (const Trckr: TEditorLineTracker) begin
+        FTrackers.Remove(Trckr);
+      end);
+
+    FileIssues := LintContext.GetIssues(Tracker.FilePath);
+    for Issue in FileIssues do begin
+      Tracker.TrackLine(Issue.StartLine);
+      Issue.NewLineMoveSession;
+    end;
+  end;
+
+  procedure InitNotifier;
+  var
+    Notifier: TLintView;
+    NotifierIndex: Integer;
+  begin
+    Notifier := TLintView.Create;
+    FNotifiers.Add(Notifier);
+    NotifierIndex := View.AddNotifier(Notifier);
+    Notifier.OnReleased.AddListener(
+      procedure(const Notf: TNotifierBase) begin
+        View.RemoveNotifier(NotifierIndex);
+      end);
+    Notifier.OnOwnerFreed.AddListener(
+      procedure(const Notf: TNotifierBase) begin
+        // Only one notifier per view so this is OK
+        FNotifiers.Remove(Notf);
+        FInitedViews.Remove(View);
+      end);
+  end;
+
 begin
-  Tracker := TEditorLineTracker.Create(View.Buffer.GetEditLineTracker);
-  FTrackers.Add(Tracker);
-  Tracker.OnLineChanged.AddListener(OnTrackedLineChanged);
-  Tracker.OnEditorClosed.AddListener(
-    procedure (const Trckr: TEditorLineTracker) begin
-      FTrackers.Remove(Trckr);
-    end);
-
-  Notifier := TLintView.Create;
-  FNotifiers.Add(Notifier);
-  NotifierIndex := View.AddNotifier(Notifier);
-  Notifier.OnReleased.AddListener(
-    procedure(const Notf: TNotifierBase) begin
-      View.RemoveNotifier(NotifierIndex);
-    end);
-  Notifier.OnOwnerFreed.AddListener(
-    procedure(const Notf: TNotifierBase) begin
-      // Only one notifier per view so this is OK
-      FNotifiers.Remove(Notf);
-      FInitedViews.Remove(View);
-    end);
-
+  InitTracker;
+  InitNotifier;
   FInitedViews.Add(View);
 end;
 
