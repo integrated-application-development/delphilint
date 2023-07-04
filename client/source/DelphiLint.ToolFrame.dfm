@@ -122,6 +122,21 @@ object LintToolFrame: TLintToolFrame
       OnMouseMove = SplitPanelMouseMove
       OnMouseUp = SplitPanelMouseUp
     end
+    object ResizeIndicatorPanel: TPanel
+      Left = 176
+      Top = 126
+      Width = 185
+      Height = 41
+      BevelOuter = bvNone
+      Caption = 'ResizeIndicatorPanel'
+      Color = clGray
+      UseDockManager = False
+      ParentBackground = False
+      ShowCaption = False
+      TabOrder = 3
+      Visible = False
+      StyleElements = []
+    end
   end
   object TopPanel: TPanel
     Left = 0

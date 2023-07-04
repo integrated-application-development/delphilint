@@ -69,6 +69,7 @@ type
     AnalyzeOpenFiles1: TMenuItem;
     StatusPanel: TPanel;
     ProgLabel: TLabel;
+    ResizeIndicatorPanel: TPanel;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -266,13 +267,18 @@ procedure TLintToolFrame.SplitPanelMouseDown(
 begin
   FResizing := True;
   FDragStartX := X;
+  ResizeIndicatorPanel.Visible := True;
+  ResizeIndicatorPanel.BoundsRect := SplitPanel.BoundsRect;
+  ResizeIndicatorPanel.BringToFront;
+
+  SendMessage(IssueListBox.Handle, WM_SETREDRAW, 0, 0);
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
 begin
-  // TODO: Implement visual feedback
+  ResizeIndicatorPanel.Left := SplitPanel.Left + X;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -287,6 +293,8 @@ var
   NewWidth: Integer;
 begin
   FResizing := False;
+  SendMessage(IssueListBox.Handle, WM_SETREDRAW, 1, 0);
+  ResizeIndicatorPanel.Visible := False;
   NewWidth := RulePanel.Width - (X - FDragStartX);
 
   if (NewWidth < ContentPanel.Width - 10) then begin
