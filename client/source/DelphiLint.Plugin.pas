@@ -310,7 +310,7 @@ var
 begin
   NTAServices := (BorlandIDEServices as INTAServices);
   FMainMenu := TMenuItem.Create(NTAServices.MainMenu);
-  FMainMenu.Caption := 'DelphiLint';
+  FMainMenu.Caption := 'Delphi&Lint';
 
   AddItem(ActionShowToolWindow);
   AddSeparator;

@@ -413,17 +413,17 @@ object LintPlugin: TLintPlugin
     Left = 120
     Top = 32
     object ActionShowToolWindow: TAction
-      Caption = 'Show DelphiLint'
+      Caption = '&Show DelphiLint'
       ImageIndex = 7
       OnExecute = ActionShowToolWindowExecute
     end
     object ActionAnalyzeActiveFile: TAction
-      Caption = 'Analyze This File'
+      Caption = 'Analyze &This File'
       ImageIndex = 8
       OnExecute = ActionAnalyzeActiveFileExecute
     end
     object ActionAnalyzeOpenFiles: TAction
-      Caption = 'Analyze All Open Files'
+      Caption = 'Analyze &All Open Files'
       ImageIndex = 9
       OnExecute = ActionAnalyzeOpenFilesExecute
     end
@@ -433,15 +433,15 @@ object LintPlugin: TLintPlugin
       OnExecute = ActionAnalyzeActiveFileExecute
     end
     object ActionOpenProjectOptions: TAction
-      Caption = 'Project Options...'
+      Caption = 'Project &Options...'
       OnExecute = ActionOpenProjectOptionsExecute
     end
     object ActionOpenSettings: TAction
-      Caption = 'Settings...'
+      Caption = 'Se&ttings...'
       OnExecute = ActionOpenSettingsExecute
     end
     object ActionRestartServer: TAction
-      Caption = 'Restart Server'
+      Caption = '&Restart Server'
       OnExecute = ActionRestartServerExecute
     end
   end
