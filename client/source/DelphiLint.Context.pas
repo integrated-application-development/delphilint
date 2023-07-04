@@ -101,6 +101,7 @@ type
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
     FServerTerminateEvent: TEvent;
+    FServerLock: TMutex;
 
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
@@ -284,33 +285,31 @@ begin
     Exit;
   end;
 
-  try
-    Server := GetInitedServer;
-  except
-    on E: ELintServerError do begin
-      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
-      Exit;
-    end;
-  end;
-
   IncludedFiles := FilterNonProjectFiles(Files, BaseDir);
   FCurrentAnalysis := TCurrentAnalysis.Create(IncludedFiles);
   FOnAnalysisStarted.Notify(IncludedFiles);
 
+  FServerLock.Acquire;
   try
-    Server.Analyze(
-      BaseDir,
-      IncludedFiles,
-      OnAnalyzeResult,
-      OnAnalyzeError,
-      SonarHostUrl,
-      ProjectKey,
-      ApiToken,
-      ProjectPropertiesPath);
-  except
-    on E: ELintServerError do begin
-      OnAnalyzeError(Format('Error during analysis: %s.', [E.Message]));
+    try
+      Server := GetInitedServer;
+      Server.Analyze(
+        BaseDir,
+        IncludedFiles,
+        OnAnalyzeResult,
+        OnAnalyzeError,
+        SonarHostUrl,
+        ProjectKey,
+        ApiToken,
+        ProjectPropertiesPath);
+    except
+      on E: ELintServerError do begin
+        TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+        Exit;
+      end;
     end;
+  finally
+    FServerLock.Release;
   end;
 end;
 
@@ -356,6 +355,7 @@ begin
   FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
   FRules := TObjectDictionary<string, TRule>.Create;
+  FServerLock := TMutex.Create;
   FServer := nil;
 
   Log.Clear;
@@ -366,14 +366,19 @@ end;
 
 destructor TLintContext.Destroy;
 begin
-  if Assigned(FServer) then begin
-    FServerTerminateEvent := TEvent.Create;
-    try
-      FServer.Terminate;
-      FServerTerminateEvent.WaitFor(1200);
-    finally
-      FreeAndNil(FServerTerminateEvent);
+  FServerLock.Acquire;
+  try
+    if Assigned(FServer) then begin
+      FServerTerminateEvent := TEvent.Create;
+      try
+        FServer.Terminate;
+        FServerTerminateEvent.WaitFor(1200);
+      finally
+        FreeAndNil(FServerTerminateEvent);
+      end;
     end;
+  finally
+    FServerLock.Release;
   end;
 
   FreeAndNil(FRules);
@@ -383,6 +388,7 @@ begin
   FreeAndNil(FOnAnalysisComplete);
   FreeAndNil(FOnAnalysisFailed);
   FreeAndNil(FCurrentAnalysis);
+  FreeAndNil(FServerLock);
 
   inherited;
 end;
@@ -437,9 +443,15 @@ end;
 
 procedure TLintContext.EnsureServerInited;
 begin
-  if not Assigned(FServer) then begin
-    FServer := TLintServer.Create(LintSettings.ServerPort);
-    FServer.OnTerminate := OnServerTerminated;
+  FServerLock.Acquire;
+  try
+    if not Assigned(FServer) then begin
+      FServer := TLintServer.Create(LintSettings.ServerPort);
+      FServer.OnTerminate := OnServerTerminated;
+      FServer.FreeOnTerminate := True;
+    end;
+  finally
+    FServerLock.Release;
   end;
 end;
 
@@ -447,6 +459,17 @@ end;
 
 procedure TLintContext.OnServerTerminated(Sender: TObject);
 begin
+  FServerLock.Acquire;
+  try
+    FServer := nil;
+  finally
+    FServerLock.Release;
+  end;
+
+  if InAnalysis then begin
+    OnAnalyzeError('Analysis failed as the server was terminated');
+  end;
+
   if Assigned(FServerTerminateEvent) then begin
     FServerTerminateEvent.SetEvent;
   end;
@@ -660,15 +683,6 @@ begin
   end;
 
   try
-    Server := GetInitedServer;
-  except
-    on E: ELintServerError do begin
-      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
-      Exit;
-    end;
-  end;
-
-  try
     RulesRetrieved := TEvent.Create;
     ProjectOptions := TLintProjectOptions.Create(ProjectFile);
     TimedOut := False;
@@ -679,33 +693,47 @@ begin
       SonarHostToken := ProjectOptions.SonarHostToken;
     end;
 
-    Server.RetrieveRules(
-      SonarHostUrl,
-      ProjectKey,
-      procedure(Rules: TObjectDictionary<string, TRule>)
-      begin
-        if not TimedOut then begin
-          // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
-          // If FRules is ever accessed by a third thread a mutex will be required.
-          FreeAndNil(FRules);
-          FRules := Rules;
-          RulesRetrieved.SetEvent;
-          Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
-        end
-        else begin
-          Log.Info('Server retrieved rules after timeout had expired');
+    FServerLock.Acquire;
+    try
+      try
+        Server := GetInitedServer;
+      except
+        on E: ELintServerError do begin
+          TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+          Exit;
         end;
-      end,
-      procedure(ErrorMsg: string) begin
-        if not TimedOut then begin
-          RulesRetrieved.SetEvent;
-          Log.Info('Error retrieving latest rules: ' + ErrorMsg);
-        end
-        else begin
-          Log.Info('Server rule retrieval returned error after timeout had expired');
-        end;
-      end,
-      SonarHostToken);
+      end;
+
+      Server.RetrieveRules(
+        SonarHostUrl,
+        ProjectKey,
+        procedure(Rules: TObjectDictionary<string, TRule>)
+        begin
+          if not TimedOut then begin
+            // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
+            // If FRules is ever accessed by a third thread a mutex will be required.
+            FreeAndNil(FRules);
+            FRules := Rules;
+            RulesRetrieved.SetEvent;
+            Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
+          end
+          else begin
+            Log.Info('Server retrieved rules after timeout had expired');
+          end;
+        end,
+        procedure(ErrorMsg: string) begin
+          if not TimedOut then begin
+            RulesRetrieved.SetEvent;
+            Log.Info('Error retrieving latest rules: ' + ErrorMsg);
+          end
+          else begin
+            Log.Info('Server rule retrieval returned error after timeout had expired');
+          end;
+        end,
+        SonarHostToken);
+    finally
+      FServerLock.Release;
+    end;
 
     if RulesRetrieved.WaitFor(3000) = TWaitResult.wrSignaled then begin
       Result := True;
@@ -724,18 +752,23 @@ end;
 
 procedure TLintContext.RestartServer;
 begin
-  if Assigned(FServer) then begin
-    FServerTerminateEvent := TEvent.Create;
-    try
-      FServer.Terminate;
-      FServer := nil;
+  FServerLock.Acquire;
+  try
+    if Assigned(FServer) then begin
+      FServerTerminateEvent := TEvent.Create;
+      try
+        FServer.Terminate;
+        FServer := nil;
 
-      if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
-        TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
+        if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
+          TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
+        end;
+      finally
+        FreeAndNil(FServerTerminateEvent);
       end;
-    finally
-      FreeAndNil(FServerTerminateEvent);
     end;
+  finally
+    FServerLock.Release;
   end;
 
   if InAnalysis then begin
@@ -743,7 +776,7 @@ begin
   end;
 
   try
-    GetInitedServer;
+    EnsureServerInited;
     TaskMessageDlg('DelphiLint', 'Server restarted successfully.', mtInformation, [mbOK], 0);
   except
     on E: ELintServerError do begin
