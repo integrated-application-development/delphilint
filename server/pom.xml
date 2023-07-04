@@ -5,121 +5,46 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>au.com.integradev.delphilint</groupId>
-  <artifactId>delphilint-server</artifactId>
+  <artifactId>delphilint-parent</artifactId>
   <version>1.0-SNAPSHOT</version>
-  
-  <name>DelphiLint Server</name>
-  <description>Code analysis server for SonarDelphi</description>
-  <inceptionYear>2023</inceptionYear>
-  <url>https://github.com/Integrated-Application-Development/delphilint</url>
+  <packaging>pom</packaging>
 
-  <organization>
-    <name>Integrated Application Development</name>
-    <url>https://www.integradev.com.au/</url>
-  </organization>
+  <modules>
+    <module>delphilint-server</module>
+    <module>sonarlint-core-overrides</module>
+  </modules>
 
-  <developers>
-    <developer>
-      <id>ejh</id>
-      <name>Elliot Hillary</name>
-      <email>ehillary@integradev.com.au</email>
-      <organization>Integrated Application Development</organization>
-      <organizationUrl>https://www.integradev.com.au/</organizationUrl>
-      <roles>
-        <role>architect</role>
-        <role>developer</role>
-      </roles>
-    </developer>
-  </developers>
-  
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <compiler.languageLevel>11</compiler.languageLevel>
-    <maven.compiler.release>11</maven.compiler.release>
-  </properties>
-
-  <repositories>
-    <repository>
-      <id>repo</id>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>ignore</checksumPolicy>
-      </releases>
-      <url>${project.baseUri}repo</url>
-    </repository>
-  </repositories>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.9.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>iad.external.sonarlint-overrides</groupId>
-      <artifactId>sonarlint-core-overrides</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonarsource.sonarlint.core</groupId>
-      <artifactId>sonarlint-analysis-engine</artifactId>
-      <version>8.19.0.72745</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonarsource.sonarlint.core</groupId>
-      <artifactId>sonarlint-core</artifactId>
-      <version>8.19.0.72745</version>
-    </dependency>
-    <dependency>
-      <groupId>org.sonarsource.sonarlint.core</groupId>
-      <artifactId>sonarlint-issue-tracking</artifactId>
-      <version>8.19.0.72745</version>
-    </dependency>
-    <dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-databind</artifactId>
-    <version>2.14.1</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.15</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>2.20.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>2.20.0</version>
-    </dependency>
-  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>au.com.integradev.delphilint</groupId>
+        <artifactId>sonarlint-core-overrides</artifactId>
+        <version>1.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonarsource.sonarlint.core</groupId>
+        <artifactId>sonarlint-core</artifactId>
+        <version>8.19.0.72745</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonarsource.sonarlint.core</groupId>
+        <artifactId>sonarlint-analysis-engine</artifactId>
+        <version>8.19.0.72745</version>
+      </dependency>
+      <dependency>
+        <groupId>org.sonarsource.sonarlint.core</groupId>
+        <artifactId>sonarlint-issue-tracking</artifactId>
+        <version>8.19.0.72745</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <build>
-    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+    <pluginManagement>
       <plugins>
-        <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>
-        </plugin>
-        <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
-        <plugin>
-          <groupId>com.diffplug.spotless</groupId>
-          <artifactId>spotless-maven-plugin</artifactId>
-          <version>2.27.2</version>
-          <configuration>
-            <java>
-              <googleJavaFormat>
-                <version>1.15.0</version>
-                <style>GOOGLE</style>
-                <reflowLongStrings>true</reflowLongStrings>
-              </googleJavaFormat>
-            </java>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
@@ -140,16 +65,6 @@
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>3.6.0</version>
-          <configuration>
-            <archive>
-              <manifest>
-                <mainClass>au.com.integradev.delphilint.App</mainClass>
-              </manifest>
-            </archive>
-            <descriptorRefs>
-              <descriptorRef>jar-with-dependencies</descriptorRef>
-            </descriptorRefs>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
@@ -159,41 +74,21 @@
           <artifactId>maven-deploy-plugin</artifactId>
           <version>2.8.2</version>
         </plugin>
-        <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
         <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.7.1</version>
-        </plugin>
-        <plugin>
-          <artifactId>maven-project-info-reports-plugin</artifactId>
-          <version>3.0.0</version>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.27.2</version>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <version>1.15.0</version>
+                <style>GOOGLE</style>
+                <reflowLongStrings>true</reflowLongStrings>
+              </googleJavaFormat>
+            </java>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>com.diffplug.spotless</groupId>
-        <artifactId>spotless-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>apply</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
   </build>
 </project>
