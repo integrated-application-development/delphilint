@@ -314,7 +314,7 @@ begin
     end;
   end;
 
-  Log.Info('Server connected.');
+  Log.Info('DelphiLint server connected');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -356,7 +356,7 @@ begin
 
         FTcpClient.CheckForGracefulDisconnect(False);
         if not FTcpClient.Connected then begin
-          Log.Info('TCP connection to server was unexpectedly terminated.');
+          Log.Info('TCP connection was unexpectedly terminated, terminating server thread');
           Break;
         end;
       end;
@@ -365,8 +365,6 @@ begin
       end;
     end;
   end;
-
-  Log.Info('End of thread');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -380,7 +378,7 @@ var
   InitializeMsg: TLintMessage;
   InitializeCompletedEvent: TEvent;
 begin
-  Log.Info('Requesting initialization.');
+  Log.Info('Requesting initialization...');
 
   try
     InitializeMsg := TLintMessage.Initialize(
@@ -399,7 +397,7 @@ begin
       raise ELintServerTimedOut.Create('Initialize timed out');
     end;
 
-    Log.Info('Initialization complete.');
+    Log.Info('...initialized');
   finally
     FreeAndNil(InitializeMsg);
     FreeAndNil(InitializeCompletedEvent);
@@ -433,9 +431,10 @@ procedure TLintServer.Analyze(
 var
   AnalyzeMsg: TLintMessage;
 begin
-  Log.Info('Requesting analysis.');
+  Log.Info('Requesting analysis - checking initialization status');
   Initialize;
 
+  Log.Info('Requesting analysis - sending request');
   AnalyzeMsg := TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath);
   try
     SendMessage(
@@ -471,19 +470,17 @@ var
   ErrorMsg: string;
   ErrorCat: Byte;
 begin
-  Log.Info('Analysis response received (%d)', [Response.Category]);
-
   if Response.Category <> C_AnalyzeResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 
-    Log.Info('Analyze error (%d): %s', [ErrorCat, ErrorMsg]);
+    Log.Info('Analysis returned error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
     Issues := ParseIssues(Response.Data.GetValue<TJSONArray>('issues'));
 
-    Log.Info('Calling post-analyze action.');
+    Log.Info('Analysis returned %d issues', [Issues.Count]);
     OnResult(Issues);
   end;
 end;
@@ -507,7 +504,6 @@ begin
     SendMessage(
       RuleRetrieveMsg,
       procedure (const Response: TLintMessage) begin
-        Log.Info('Rule retrieval response retrieved');
         OnRuleRetrieveResponse(Response, OnResult, OnError);
       end);
   finally
@@ -538,19 +534,17 @@ var
   ErrorCat: Byte;
   Rules: TObjectDictionary<string, TRule>;
 begin
-  Log.Info('Rule retrieve response received (%d)', [Response.Category]);
-
   if Response.Category <> C_RuleRetrieveResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 
-    Log.Info('Rule retrieve error (%d): %s', [ErrorCat, ErrorMsg]);
+    Log.Info('Rule retrieve returned error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
     Rules := ParseRules(Response.Data.GetValue<TJSONObject>('rules'));
 
-    Log.Info('Calling post-rule retrieve action.');
+    Log.Info('Rule retrieve returned %d rules', [Rules.Count]);
     OnResult(Rules);
   end;
 end;
@@ -559,7 +553,7 @@ end;
 
 procedure TLintServer.OnUnhandledMessage(Message: TLintMessage);
 begin
-  Log.Info('Unhandled message (code %d) received: <%s>', [Message.Category, Message.Data]);
+  Log.Info('Unhandled message (%d) received: <%s>', [Message.Category, Message.Data]);
 end;
 
 //______________________________________________________________________________________________________________________

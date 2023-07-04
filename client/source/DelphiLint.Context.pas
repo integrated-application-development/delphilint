@@ -281,7 +281,7 @@ var
   IncludedFiles: TArray<string>;
 begin
   if InAnalysis then begin
-    Log.Info('Already in analysis.');
+    Log.Info('Analysis requested, but we are currently in analysis - ignoring');
     Exit;
   end;
 
@@ -330,9 +330,7 @@ begin
         OutFiles.Add(FileName);
       end
       else begin
-        Log.Info(
-          'Excluding non-project file ' + FileName +
-          ' from analysis. Please set a custom base directory if this file should have been included.');
+        Log.Info('Excluding non-project file %s from analysis', [FileName]);
       end;
     end;
 
@@ -359,7 +357,7 @@ begin
   FServer := nil;
 
   Log.Clear;
-  Log.Info('Context initialised.');
+  Log.Info('DelphiLint context initialised');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -715,7 +713,7 @@ begin
             FreeAndNil(FRules);
             FRules := Rules;
             RulesRetrieved.SetEvent;
-            Log.Info('Retrieved ' + IntToStr(FRules.Count) + ' rules');
+            Log.Info('Retrieved %d rules', [FRules.Count]);
           end
           else begin
             Log.Info('Server retrieved rules after timeout had expired');
@@ -795,7 +793,7 @@ begin
     Result := FRules[RuleKey];
   end
   else if AllowRefresh then begin
-    Log.Info('No rule with rulekey ' + RuleKey + ' found, refreshing.');
+    Log.Info('No rule with rulekey %s found, refreshing ruleset', [RuleKey]);
     if TryRefreshRules then begin
       Result := GetRule(RuleKey, False);
     end;
@@ -866,7 +864,6 @@ begin
   Delta := LineNum - StartLine;
   if (Delta >= 0) and (Delta < FLines.Count) then begin
     if (FLines[Delta] <> LineText) then begin
-      Log.Info('Issue at line %d untethered: <%s> -> <%s>', [LineNum, FLines[Delta], LineText]);
       FTethered := False;
     end;
   end

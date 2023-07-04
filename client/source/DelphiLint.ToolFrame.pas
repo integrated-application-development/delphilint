@@ -342,7 +342,7 @@ begin
           end;
         end
         else begin
-          Log.Info('Could not get analysis history for file ' + Path + ' with apparently outdated analysis.');
+          Log.Info('Could not get analysis history for file %s with apparently outdated analysis', [Path]);
           UpdateFileStatus(cfsNotAnalyzed);
         end;
       fasUpToDateAnalysis:
@@ -360,7 +360,7 @@ begin
           end;
         end
         else begin
-          Log.Info('Could not get analysis history for file ' + Path + ' with apparently up-to-date analysis.');
+          Log.Info('Could not get analysis history for file %s with apparently up-to-date analysis', [Path]);
           UpdateFileStatus(cfsNotAnalyzed);
         end;
     end;
