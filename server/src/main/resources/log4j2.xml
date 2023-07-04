@@ -4,7 +4,7 @@
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <PatternLayout pattern="[%d{yyy-MM-dd HH:mm:ss.SSS} %5level] %logger{1}: %msg%n"/>
     </Console>
-    <File name="FileAppender" fileName="delphilint-server.log" immediateFlush="false" append="true">
+    <File name="FileAppender" fileName="logs\delphilint-server.log" immediateFlush="true" append="true">
       <PatternLayout pattern="[%d{yyy-MM-dd HH:mm:ss.SSS} %5level] %logger{1}: %msg%n"/>
     </File>
   </Appenders>

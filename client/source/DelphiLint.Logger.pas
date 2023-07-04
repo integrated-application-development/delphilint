@@ -67,10 +67,12 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TLintLogger.Create(MessageGroupName: string; IncludeTime: Boolean = True);
+var
+  LogDir: string;
 begin
-  FLogPath := TPath.Combine(
-    TPath.GetTempPath,
-    Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
+  LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
+  TDirectory.CreateDirectory(LogDir);
+  FLogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
   FIncludeTime := IncludeTime;
   FLock := TMutex.Create;
 end;
