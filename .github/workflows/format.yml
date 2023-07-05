@@ -1,0 +1,19 @@
+name: Format
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    paths:
+      - '.github/workflows/format.yml'
+      - 'server/**'
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: axel-op/googlejavaformat-action@v3
+        with:
+          args: "--set-exit-if-changed --dry-run"
