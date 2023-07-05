@@ -1,4 +1,5 @@
-# DelphiLint
+# ![DelphiLint](delphilint-title-dark.png#gh-dark-mode-only)![DelphiLint](delphilint-title-light.png#gh-light-mode-only)
+
 DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analysis and linting, powered by
 [SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi).
 
