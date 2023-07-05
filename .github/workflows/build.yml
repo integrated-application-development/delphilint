@@ -1,0 +1,25 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    paths:
+      - '.github/workflows/build.yml'
+      - 'server/**'
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
+      - name: Run Maven Verify
+        working-directory: ./server
+        run: mvn --batch-mode --update-snapshots verify
