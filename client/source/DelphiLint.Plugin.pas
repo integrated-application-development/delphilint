@@ -339,16 +339,9 @@ var
   Handle: HBITMAP;
   VersionStr: string;
 begin
-  VersionStr := Format(
-    '%d.%d.%d',
-    [
-      C_DlMajorVersion,
-      C_DlMinorVersion,
-      C_DlPatchVersion
-    ]);
-
+  VersionStr := Format('%d.%d.%d', [C_DlMajorVersion, C_DlMinorVersion, C_DlPatchVersion]);
   if C_DlIsDevVersion then begin
-    VersionStr := Format('%s (dev)', [VersionStr]);
+    VersionStr := Format('%s.%s', [VersionStr, C_DlCommit]);
   end;
 
   Icon := TBitmap.Create(24, 24);
