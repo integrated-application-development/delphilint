@@ -18,7 +18,10 @@
 package au.com.integradev.delphilint;
 
 import au.com.integradev.delphilint.server.LintServer;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,13 +29,20 @@ public class App {
   private static final Logger LOG = LogManager.getLogger(App.class);
 
   public static void main(String[] args) throws IOException {
-    int port = 14000;
+    var server = new LintServer();
+
     if (args.length > 0) {
-      port = Integer.parseInt(args[0]);
+      File portFile = new File(args[0]);
+      if (portFile.exists()) {
+        Files.write(
+            portFile.toPath(), String.valueOf(server.getPort()).getBytes(StandardCharsets.UTF_8));
+        LOG.info("Server port written to port file at {}", portFile.toPath());
+      } else {
+        LOG.info("Port file at {} does not exist", portFile.toPath());
+      }
     }
-    LOG.info("Starting server on port {}", port);
-    var server = new LintServer(port);
+
     server.run();
-    LOG.info("Server stopped");
+    LOG.info("Application stopped");
   }
 }

@@ -59,11 +59,13 @@ public class LintServer {
   private final ObjectMapper mapper;
   private boolean running;
 
-  public LintServer(int port) throws IOException {
+  public LintServer() throws IOException {
     engine = null;
-    serverSocket = new ServerSocket(port);
+    serverSocket = new ServerSocket(0);
     running = false;
     mapper = new ObjectMapper();
+
+    LOG.info("Server started on port {}", serverSocket.getLocalPort());
   }
 
   public void run() throws IOException {
@@ -87,6 +89,10 @@ public class LintServer {
     out.close();
     in.close();
     clientSocket.close();
+  }
+
+  public int getPort() {
+    return serverSocket.getLocalPort();
   }
 
   private void writeStream(OutputStream out, int id, LintMessage response) {

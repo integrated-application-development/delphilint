@@ -116,12 +116,11 @@ type
     procedure OnUnhandledMessage(Message: TLintMessage);
     procedure ReceiveMessage;
 
-    procedure StartExtServer(
+    function StartExtServer(
       Jar: string;
       JavaExe: string;
-      Port: Integer;
       WorkingDir: string;
-      ShowConsole: Boolean);
+      ShowConsole: Boolean): Integer;
     procedure StopExtServer;
 
     procedure OnInitializeResponse(
@@ -178,6 +177,8 @@ uses
   , Winapi.Windows
   , DelphiLint.Settings
   , IdStack
+  , System.IOUtils
+  , System.TimeSpan
   ;
 
 //______________________________________________________________________________________________________________________
@@ -292,19 +293,17 @@ begin
 
   FResponseActions := TDictionary<Integer, TResponseAction>.Create;
 
-  if LintSettings.ServerAutoLaunch then begin
-    StartExtServer(
-      LintSettings.ServerJar,
-      LintSettings.ServerJavaExe,
-      Port,
-      LintSettings.SettingsDirectory,
-      LintSettings.ServerShowConsole);
-    Sleep(LintSettings.ServerStartDelay);
-  end;
-
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
-  FTcpClient.Port := Port;
+  FTcpClient.Port := 0;
+
+  if LintSettings.ServerAutoLaunch then begin
+    FTcpClient.Port := StartExtServer(
+      LintSettings.ServerJar,
+      LintSettings.ServerJavaExe,
+      LintSettings.SettingsDirectory,
+      LintSettings.ServerShowConsole);
+  end;
 
   try
     FTcpClient.Connect;
@@ -586,12 +585,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.StartExtServer(
+function TLintServer.StartExtServer(
   Jar: string;
   JavaExe: string;
-  Port: Integer;
   WorkingDir: string;
-  ShowConsole: Boolean);
+  ShowConsole: Boolean): Integer;
 const
   C_Title = 'DelphiLint Server';
 var
@@ -600,6 +598,10 @@ var
   ProcessInfo: TProcessInformation;
   ErrorCode: Integer;
   CreationFlags: Cardinal;
+  PortFile: string;
+  PortStr: string;
+  ClientChangedTime: TDateTime;
+  ChangedTime: TDateTime;
 begin
   if not FileExists(Jar) then begin
     raise ELintServerMisconfigured.CreateFmt('Server jar not found at path "%s"', [Jar]);
@@ -609,7 +611,12 @@ begin
     raise ELintServerMisconfigured.CreateFmt('Java executable not found at path "%s"', [JavaExe]);
   end;
 
-  CommandLine := Format(' -jar "%s" %d', [Jar, Port]);
+  PortFile := TPath.GetTempFileName;
+  if not FileAge(PortFile, ClientChangedTime) then begin
+    raise EFileNotFoundException.Create('Could not get details of temp file containing port');
+  end;
+
+  CommandLine := Format(' -jar "%s" "%s"', [Jar, PortFile]);
 
   ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
   StartupInfo.cb := SizeOf(TStartupInfo);
@@ -643,6 +650,22 @@ begin
 
   FExtProcessHandle := ProcessInfo.hProcess;
   CloseHandle(ProcessInfo.hThread);
+
+  while
+    FileAge(PortFile, ChangedTime)
+    and (ChangedTime = ClientChangedTime)
+    and (TTimeSpan.Subtract(Now, ChangedTime).TotalMilliseconds < LintSettings.ServerStartDelay)
+  do begin
+    Sleep(50);
+  end;
+
+  PortStr := TFile.ReadAllText(PortFile);
+  if (PortStr = '') or not IsNumeric(PortStr) then begin
+    raise ELintServerFailed.CreateFmt('Server reported nonsense port "%s"', [PortStr]);
+  end;
+  TFile.Delete(PortFile);
+
+  Result := StrToInt(PortStr);
 end;
 
 //______________________________________________________________________________________________________________________
