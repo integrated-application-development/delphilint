@@ -54,6 +54,9 @@ type
     procedure OkButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure SonarDelphiJarBrowseButtonClick(Sender: TObject);
+    procedure ServerJarBrowseButtonClick(Sender: TObject);
+    procedure JavaExeBrowseButtonClick(Sender: TObject);
   private
     FSaved: Boolean;
 
@@ -182,6 +185,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintSetupForm.JavaExeBrowseButtonClick(Sender: TObject);
+begin
+  ExeBrowseButtonClick(JavaExeEdit);
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintSetupForm.JavaExeEditChange(Sender: TObject);
 begin
   UpdateValidState(JavaExeEdit, JavaExeIndicator);
@@ -189,9 +199,23 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintSetupForm.ServerJarBrowseButtonClick(Sender: TObject);
+begin
+  JarBrowseButtonClick(ServerJarEdit);
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintSetupForm.ServerJarEditChange(Sender: TObject);
 begin
   UpdateValidState(ServerJarEdit, ServerJarIndicator);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSetupForm.SonarDelphiJarBrowseButtonClick(Sender: TObject);
+begin
+  JarBrowseButtonClick(SonarDelphiJarEdit);
 end;
 
 //______________________________________________________________________________________________________________________

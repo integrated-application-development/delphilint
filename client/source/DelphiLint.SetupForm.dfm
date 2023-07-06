@@ -340,7 +340,7 @@ object LintSetupForm: TLintSetupForm
       359
       367)
     object JavaExeIndicator: TShape
-      Left = 307
+      Left = 303
       Top = 50
       Width = 26
       Height = 23
@@ -349,7 +349,7 @@ object LintSetupForm: TLintSetupForm
       Pen.Color = clGray
     end
     object ServerJarIndicator: TShape
-      Left = 307
+      Left = 303
       Top = 142
       Width = 26
       Height = 23
@@ -358,7 +358,7 @@ object LintSetupForm: TLintSetupForm
       Pen.Color = clGray
     end
     object SonarDelphiJarIndicator: TShape
-      Left = 307
+      Left = 303
       Top = 233
       Width = 26
       Height = 23
@@ -369,7 +369,7 @@ object LintSetupForm: TLintSetupForm
     object OkButton: TButton
       Left = 24
       Top = 306
-      Width = 309
+      Width = 305
       Height = 35
       Anchors = [akLeft, akRight, akBottom]
       Caption = 'Apply this configuration'
@@ -383,12 +383,12 @@ object LintSetupForm: TLintSetupForm
       Height = 25
       Caption = 'Browse...'
       TabOrder = 1
-      OnClick = ExeBrowseButtonClick
+      OnClick = JavaExeBrowseButtonClick
     end
     object JavaExeEdit: TLabeledEdit
       Left = 24
       Top = 50
-      Width = 289
+      Width = 285
       Height = 23
       Anchors = [akLeft, akTop, akRight]
       EditLabel.Width = 204
@@ -405,12 +405,12 @@ object LintSetupForm: TLintSetupForm
       Height = 25
       Caption = 'Browse...'
       TabOrder = 3
-      OnClick = JarBrowseButtonClick
+      OnClick = ServerJarBrowseButtonClick
     end
     object ServerJarEdit: TLabeledEdit
       Left = 24
       Top = 142
-      Width = 289
+      Width = 285
       Height = 23
       Anchors = [akLeft, akTop, akRight]
       EditLabel.Width = 212
@@ -427,12 +427,12 @@ object LintSetupForm: TLintSetupForm
       Height = 25
       Caption = 'Browse...'
       TabOrder = 5
-      OnClick = JarBrowseButtonClick
+      OnClick = SonarDelphiJarBrowseButtonClick
     end
     object SonarDelphiJarEdit: TLabeledEdit
       Left = 24
       Top = 233
-      Width = 289
+      Width = 285
       Height = 23
       Anchors = [akLeft, akTop, akRight]
       EditLabel.Width = 259
