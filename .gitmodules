@@ -1,0 +1,3 @@
+[submodule "client/lib/HtmlViewer"]
+	path = client/lib/HtmlViewer
+	url = https://github.com/BerndGabriel/HtmlViewer
