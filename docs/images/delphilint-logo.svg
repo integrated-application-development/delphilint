@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="256"
+   height="256"
+   viewBox="0 0 256 256"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <g
+     id="layer1">
+    <rect
+       style="fill:#2d2f32;fill-opacity:1;fill-rule:nonzero;stroke-width:0.56405"
+       id="rect117"
+       width="256"
+       height="256"
+       x="0"
+       y="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:204.8px;font-family:'Source Sans Pro';-inkscape-font-specification:'Source Sans Pro Bold Italic';letter-spacing:-10.24px;fill:#fff9f3;fill-opacity:1;fill-rule:nonzero;stroke-width:1.024"
+       x="42.393696"
+       y="174.69441"
+       id="text4659"><tspan
+         id="tspan4657"
+         x="42.393696"
+         y="174.69441"
+         style="font-style:italic;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:204.8px;font-family:'Source Sans Pro';-inkscape-font-specification:'Source Sans Pro Bold Italic';fill:#fff9f3;fill-opacity:1;stroke-width:1.024">dl</tspan></text>
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:nonzero;stroke:#ffa800;stroke-width:20.7975;stroke-dasharray:none;stroke-opacity:1"
+       d="m 16.384,216.064 c 0,0 16.878633,-15.36 28.16,-15.36 11.281367,0 16.878633,15.36 28.16,15.36 11.281367,0 16.878633,-15.36 28.16,-15.36 11.28137,0 16.87863,15.36 28.16,15.36 11.28137,0 16.87863,-15.36 28.16,-15.36 11.28137,0 16.87863,15.36 28.16,15.36 11.28137,0 16.87863,-15.36 28.16,-15.36 11.28137,0 28.16,15.36 28.16,15.36"
+       id="path7110-2" />
+  </g>
+</svg>

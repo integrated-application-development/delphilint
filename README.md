@@ -1,4 +1,4 @@
-# ![DelphiLint](delphilint-title-dark.png#gh-dark-mode-only)![DelphiLint](delphilint-title-light.png#gh-light-mode-only)
+# ![DelphiLint](docs/images/delphilint-title-dark.png#gh-dark-mode-only)![DelphiLint](docs/images/delphilint-title-light.png#gh-light-mode-only)
 
 [![Build](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml) [![Format](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml)
 
