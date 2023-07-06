@@ -27,7 +27,6 @@ type
     ServerConfigGroupBox: TGroupBox;
     ServerJarEdit: TLabeledEdit;
     ServerJavaExeEdit: TLabeledEdit;
-    ServerPortEdit: TLabeledEdit;
     ServerShowConsoleCheckBox: TCheckBox;
     ServerAutoLaunchCheckBox: TCheckBox;
     ServerStartDelayEdit: TLabeledEdit;
@@ -118,7 +117,6 @@ procedure TLintSettingsFrame.Init;
 begin
   LintSettings.Load;
   ServerJarEdit.Text := LintSettings.ServerJar;
-  ServerPortEdit.Text := IntToStr(LintSettings.ServerPort);
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
   SonarDelphiJarEdit.Text := LintSettings.SonarDelphiJar;
   ServerJavaExeEdit.Text := LintSettings.ServerJavaExe;
@@ -132,7 +130,6 @@ end;
 procedure TLintSettingsFrame.Save;
 begin
   LintSettings.ServerJar := ServerJarEdit.Text;
-  LintSettings.ServerPort := StrToInt(ServerPortEdit.Text);
   LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
   LintSettings.SonarDelphiJar := SonarDelphiJarEdit.Text;
   LintSettings.ServerJavaExe := ServerJavaExeEdit.Text;
@@ -148,8 +145,7 @@ function TLintSettingsFrame.Validate: Boolean;
 begin
   Result := FileExists(ServerJarEdit.Text)
     and FileExists(SonarDelphiJarEdit.Text)
-    and FileExists(ServerJavaExeEdit.Text)
-    and (StrToInt(ServerPortEdit.Text) > 0);
+    and FileExists(ServerJavaExeEdit.Text);
 end;
 
 //______________________________________________________________________________________________________________________

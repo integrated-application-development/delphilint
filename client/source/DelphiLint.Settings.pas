@@ -37,13 +37,12 @@ type
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
     property ServerJar: string index 0 read GetValueStr write SetValueStr;
-    property ServerPort: Integer index 1 read GetValueInt write SetValueInt;
-    property ServerShowConsole: Boolean index 2 read GetValueBool write SetValueBool;
-    property SonarDelphiJar: string index 3 read GetValueStr write SetValueStr;
-    property ServerJavaExe: string index 4 read GetValueStr write SetValueStr;
-    property ServerStartDelay: Integer index 5 read GetValueInt write SetValueInt;
-    property ServerAutoLaunch: Boolean index 6 read GetValueBool write SetValueBool;
-    property ClientDarkMode: Boolean index 7 read GetValueBool write SetValueBool;
+    property ServerShowConsole: Boolean index 1 read GetValueBool write SetValueBool;
+    property SonarDelphiJar: string index 2 read GetValueStr write SetValueStr;
+    property ServerJavaExe: string index 3 read GetValueStr write SetValueStr;
+    property ServerStartDelay: Integer index 4 read GetValueInt write SetValueInt;
+    property ServerAutoLaunch: Boolean index 5 read GetValueBool write SetValueBool;
+    property ClientDarkMode: Boolean index 6 read GetValueBool write SetValueBool;
 
     property SettingsDirectory: string read FSettingsDir;
   end;
@@ -93,18 +92,16 @@ begin
     // 0
     TCustomStringPropField.Create('Server', 'Jar', GetDefaultServerJar),
     // 1
-    TIntPropField.Create('Server', 'Port', 14000),
-    // 2
     TBoolPropField.Create('Server', 'ShowConsole', False),
-    // 3
+    // 2
     TCustomStringPropField.Create('SonarDelphi', 'Jar', GetDefaultSonarDelphiJar),
-    // 4
+    // 3
     TCustomStringPropField.Create('Server', 'JavaExe', GetDefaultServerJavaExe),
-    // 5
+    // 4
     TIntPropField.Create('Server', 'StartDelay', 1000),
-    // 6
+    // 5
     TBoolPropField.Create('Server', 'AutoLaunch', True),
-    // 7
+    // 6
     TCustomBoolPropField.Create('Client', 'DarkMode', GetDefaultClientDarkMode)
   ];
 end;

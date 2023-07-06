@@ -162,25 +162,13 @@ object LintSettingsFrame: TLintSettingsFrame
           TabOrder = 1
           Text = ''
         end
-        object ServerPortEdit: TLabeledEdit
-          Left = 11
-          Top = 46
-          Width = 78
-          Height = 23
-          EditLabel.Width = 22
-          EditLabel.Height = 15
-          EditLabel.Caption = 'Port'
-          NumbersOnly = True
-          TabOrder = 2
-          Text = ''
-        end
         object ServerShowConsoleCheckBox: TCheckBox
           Left = 19
           Top = 283
           Width = 142
           Height = 17
           Caption = 'Show server console'
-          TabOrder = 3
+          TabOrder = 2
         end
         object ServerAutoLaunchCheckBox: TCheckBox
           Left = 19
@@ -188,18 +176,18 @@ object LintSettingsFrame: TLintSettingsFrame
           Width = 174
           Height = 17
           Caption = 'Launch server automatically'
-          TabOrder = 4
+          TabOrder = 3
         end
         object ServerStartDelayEdit: TLabeledEdit
-          Left = 103
+          Left = 11
           Top = 46
           Width = 130
           Height = 23
-          EditLabel.Width = 120
+          EditLabel.Width = 134
           EditLabel.Height = 15
-          EditLabel.Caption = 'Connection delay (ms)'
+          EditLabel.Caption = 'Connection timeout (ms)'
           NumbersOnly = True
-          TabOrder = 5
+          TabOrder = 4
           Text = ''
         end
         object ServerJarBrowseButton: TButton
@@ -208,7 +196,7 @@ object LintSettingsFrame: TLintSettingsFrame
           Width = 75
           Height = 23
           Caption = 'Browse...'
-          TabOrder = 6
+          TabOrder = 5
           OnClick = ServerJarBrowseButtonClick
         end
         object ServerJavaExeBrowseButton: TButton
@@ -217,7 +205,7 @@ object LintSettingsFrame: TLintSettingsFrame
           Width = 75
           Height = 23
           Caption = 'Browse...'
-          TabOrder = 7
+          TabOrder = 6
           OnClick = ServerJavaExeBrowseButtonClick
         end
       end

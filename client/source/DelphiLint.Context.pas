@@ -444,7 +444,7 @@ begin
   FServerLock.Acquire;
   try
     if not Assigned(FServer) then begin
-      FServer := TLintServer.Create(LintSettings.ServerPort);
+      FServer := TLintServer.Create;
       FServer.OnTerminate := OnServerTerminated;
       FServer.FreeOnTerminate := True;
     end;

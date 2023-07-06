@@ -143,7 +143,7 @@ type
     procedure DoTerminate; override;
 
   public
-    constructor Create(Port: Integer);
+    constructor Create;
     destructor Destroy; override;
 
     procedure Execute; override;
@@ -284,7 +284,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintServer.Create(Port: Integer);
+constructor TLintServer.Create;
 begin
   inherited Create(False);
 
@@ -309,7 +309,7 @@ begin
     FTcpClient.Connect;
   except
     on EIdSocketError do begin
-      raise ELintPortRefused.CreateFmt('Connection refused to port %d', [Port]);
+      raise ELintPortRefused.Create('Connection refused for TCP client');
     end;
   end;
 
