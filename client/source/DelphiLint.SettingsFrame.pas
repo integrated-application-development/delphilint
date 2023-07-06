@@ -25,31 +25,17 @@ uses
 type
   TLintSettingsFrame = class(TFrame)
     ServerConfigGroupBox: TGroupBox;
-    ServerJarEdit: TLabeledEdit;
-    ServerJavaExeEdit: TLabeledEdit;
     ServerShowConsoleCheckBox: TCheckBox;
     ServerAutoLaunchCheckBox: TCheckBox;
     ServerStartDelayEdit: TLabeledEdit;
-    AdvancedLabel: TLabel;
     ClientConfigGroupBox: TGroupBox;
     ClientDarkModeCheckBox: TCheckBox;
-    SonarDelphiConfigGroupBox: TGroupBox;
-    SonarDelphiJarEdit: TLabeledEdit;
-    JarOpenDialog: TOpenDialog;
-    ExeOpenDialog: TOpenDialog;
-    SonarDelphiJarBrowseButton: TButton;
-    ServerJarBrowseButton: TButton;
-    ServerJavaExeBrowseButton: TButton;
-    SettingsGridPanel: TGridPanel;
-    LeftPanel: TPanel;
-    RightPanel: TPanel;
-    procedure SonarDelphiJarBrowseButtonClick(Sender: TObject);
-    procedure ServerJarBrowseButtonClick(Sender: TObject);
-    procedure ServerJavaExeBrowseButtonClick(Sender: TObject);
+    ComponentsGroupBox: TGroupBox;
+    ComponentsButton: TButton;
+    procedure ComponentsButtonClick(Sender: TObject);
   public
     procedure Init;
     procedure Save;
-    function Validate: Boolean;
   end;
 
   TLintAddInOptions = class(TAddInOptionsBase)
@@ -60,13 +46,13 @@ type
     function GetCaption: string; override;
     procedure FrameCreated(AFrame: TCustomFrame); override;
     procedure DialogClosed(Accepted: Boolean); override;
-    function ValidateContents: Boolean; override;
   end;
 
 implementation
 
 uses
     DelphiLint.Settings
+  , DelphiLint.SetupForm
   ;
 
 {$R *.dfm}
@@ -106,20 +92,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintAddInOptions.ValidateContents: Boolean;
-begin
-  Result := FFrame.Validate;
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintSettingsFrame.Init;
 begin
   LintSettings.Load;
-  ServerJarEdit.Text := LintSettings.ServerJar;
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
-  SonarDelphiJarEdit.Text := LintSettings.SonarDelphiJar;
-  ServerJavaExeEdit.Text := LintSettings.ServerJavaExe;
   ServerStartDelayEdit.Text := IntToStr(LintSettings.ServerStartDelay);
   ServerAutoLaunchCheckBox.Checked := LintSettings.ServerAutoLaunch;
   ClientDarkModeCheckBox.Checked := LintSettings.ClientDarkMode;
@@ -129,10 +105,7 @@ end;
 
 procedure TLintSettingsFrame.Save;
 begin
-  LintSettings.ServerJar := ServerJarEdit.Text;
   LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
-  LintSettings.SonarDelphiJar := SonarDelphiJarEdit.Text;
-  LintSettings.ServerJavaExe := ServerJavaExeEdit.Text;
   LintSettings.ServerStartDelay := StrToInt(ServerStartDelayEdit.Text);
   LintSettings.ServerAutoLaunch := ServerAutoLaunchCheckBox.Checked;
   LintSettings.ClientDarkMode := ClientDarkModeCheckBox.Checked;
@@ -141,43 +114,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintSettingsFrame.Validate: Boolean;
+procedure TLintSettingsFrame.ComponentsButtonClick(Sender: TObject);
+var
+  SetupForm: TLintSetupForm;
 begin
-  Result := FileExists(ServerJarEdit.Text)
-    and FileExists(SonarDelphiJarEdit.Text)
-    and FileExists(ServerJavaExeEdit.Text);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSettingsFrame.ServerJarBrowseButtonClick(Sender: TObject);
-begin
-  JarOpenDialog.InitialDir := ExtractFilePath(ServerJarEdit.Text);
-  JarOpenDialog.FileName := '';
-  if JarOpenDialog.Execute then begin
-    ServerJarEdit.Text := JarOpenDialog.FileName;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSettingsFrame.ServerJavaExeBrowseButtonClick(Sender: TObject);
-begin
-  ExeOpenDialog.InitialDir := ExtractFilePath(ServerJavaExeEdit.Text);
-  ExeOpenDialog.FileName := '';
-  if ExeOpenDialog.Execute then begin
-    ServerJavaExeEdit.Text := ExeOpenDialog.FileName;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSettingsFrame.SonarDelphiJarBrowseButtonClick(Sender: TObject);
-begin
-  JarOpenDialog.InitialDir := ExtractFilePath(SonarDelphiJarEdit.Text);
-  JarOpenDialog.FileName := '';
-  if JarOpenDialog.Execute then begin
-    SonarDelphiJarEdit.Text := JarOpenDialog.FileName;
+  SetupForm := TLintSetupForm.Create(nil);
+  try
+    SetupForm.RefreshTheme;
+    SetupForm.ShowModal;
+  finally
+    FreeAndNil(SetupForm);
   end;
 end;
 

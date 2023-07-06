@@ -238,9 +238,9 @@ begin
   (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintOptionsForm);
 
   // Setup form
+  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintSetupForm);
   FEnabled := BasicSetupComplete;
   if not FEnabled then begin
-    (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintSetupForm);
     SetupForm := TLintSetupForm.Create(nil);
     SetupForm.RefreshTheme;
     SetupForm.ShowModal;

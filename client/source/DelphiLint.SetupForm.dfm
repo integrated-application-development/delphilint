@@ -3,7 +3,7 @@ object LintSetupForm: TLintSetupForm
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
-  Caption = 'DelphiLint Setup'
+  Caption = 'DelphiLint External Resources Setup'
   ClientHeight = 367
   ClientWidth = 704
   Color = clBtnFace
@@ -28,7 +28,7 @@ object LintSetupForm: TLintSetupForm
     TabOrder = 0
     object Image1: TImage
       Left = 137
-      Top = 18
+      Top = 34
       Width = 48
       Height = 48
       Picture.Data = {
@@ -254,11 +254,11 @@ object LintSetupForm: TLintSetupForm
       Transparent = True
     end
     object Label1: TLabel
-      Left = 48
-      Top = 69
-      Width = 217
+      Left = 24
+      Top = 88
+      Width = 273
       Height = 30
-      Caption = 'Welcome to DelphiLint!'
+      Caption = 'DelphiLint External Resources'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -21
@@ -268,7 +268,7 @@ object LintSetupForm: TLintSetupForm
     end
     object Label2: TLabel
       Left = 24
-      Top = 108
+      Top = 124
       Width = 291
       Height = 49
       AutoSize = False
@@ -279,7 +279,7 @@ object LintSetupForm: TLintSetupForm
     end
     object Label3: TLabel
       Left = 24
-      Top = 147
+      Top = 163
       Width = 291
       Height = 61
       AutoSize = False
@@ -292,20 +292,20 @@ object LintSetupForm: TLintSetupForm
     end
     object Label4: TLabel
       Left = 24
-      Top = 219
+      Top = 233
       Width = 291
       Height = 86
       AutoSize = False
       Caption = 
         'To run, DelphiLint requires both the server and SonarDelphi, as well ' +
-        'as a Java 11 or above executable. One or more of these has been detected ' +
-        'to be missing. Please ensure all components have been installed and ' +
-        'the settings visible to the right are correctly configured.'
+        'as a Java 11 or above executable. Please ensure all resources have ' +
+        'been installed and the settings visible to the right are correctly ' +
+        'configured.'
       WordWrap = True
     end
     object Label5: TLabel
       Left = 24
-      Top = 304
+      Top = 303
       Width = 291
       Height = 32
       AutoSize = False
@@ -314,7 +314,7 @@ object LintSetupForm: TLintSetupForm
     end
     object LinkLabel1: TLinkLabel
       Left = 38
-      Top = 319
+      Top = 318
       Width = 188
       Height = 19
       Caption = 
@@ -331,6 +331,8 @@ object LintSetupForm: TLintSetupForm
     Align = alClient
     BevelOuter = bvNone
     Caption = 'RightPanel'
+    Color = clWindow
+    ParentBackground = False
     ShowCaption = False
     TabOrder = 1
     StyleElements = [seFont, seBorder]
@@ -338,8 +340,8 @@ object LintSetupForm: TLintSetupForm
       359
       367)
     object JavaExeIndicator: TShape
-      Left = 308
-      Top = 67
+      Left = 307
+      Top = 50
       Width = 26
       Height = 23
       Anchors = [akTop, akRight]
@@ -347,8 +349,8 @@ object LintSetupForm: TLintSetupForm
       Pen.Color = clGray
     end
     object ServerJarIndicator: TShape
-      Left = 309
-      Top = 152
+      Left = 307
+      Top = 142
       Width = 26
       Height = 23
       Anchors = [akTop, akRight]
@@ -356,8 +358,8 @@ object LintSetupForm: TLintSetupForm
       Pen.Color = clGray
     end
     object SonarDelphiJarIndicator: TShape
-      Left = 309
-      Top = 239
+      Left = 307
+      Top = 233
       Width = 26
       Height = 23
       Anchors = [akTop, akRight]
@@ -366,17 +368,17 @@ object LintSetupForm: TLintSetupForm
     end
     object OkButton: TButton
       Left = 24
-      Top = 317
-      Width = 305
+      Top = 306
+      Width = 309
       Height = 35
       Anchors = [akLeft, akRight, akBottom]
-      Caption = 'Start using DelphiLint'
+      Caption = 'Apply this configuration'
       TabOrder = 0
       OnClick = OkButtonClick
     end
     object JavaExeBrowseButton: TButton
       Left = 24
-      Top = 96
+      Top = 79
       Width = 75
       Height = 25
       Caption = 'Browse...'
@@ -385,7 +387,7 @@ object LintSetupForm: TLintSetupForm
     end
     object JavaExeEdit: TLabeledEdit
       Left = 24
-      Top = 67
+      Top = 50
       Width = 289
       Height = 23
       Anchors = [akLeft, akTop, akRight]
@@ -398,7 +400,7 @@ object LintSetupForm: TLintSetupForm
     end
     object ServerJarBrowseButton: TButton
       Left = 24
-      Top = 181
+      Top = 171
       Width = 75
       Height = 25
       Caption = 'Browse...'
@@ -407,7 +409,7 @@ object LintSetupForm: TLintSetupForm
     end
     object ServerJarEdit: TLabeledEdit
       Left = 24
-      Top = 152
+      Top = 142
       Width = 289
       Height = 23
       Anchors = [akLeft, akTop, akRight]
@@ -420,7 +422,7 @@ object LintSetupForm: TLintSetupForm
     end
     object SonarDelphiJarBrowseButton: TButton
       Left = 24
-      Top = 268
+      Top = 262
       Width = 75
       Height = 25
       Caption = 'Browse...'
@@ -429,7 +431,7 @@ object LintSetupForm: TLintSetupForm
     end
     object SonarDelphiJarEdit: TLabeledEdit
       Left = 24
-      Top = 239
+      Top = 233
       Width = 289
       Height = 23
       Anchors = [akLeft, akTop, akRight]
