@@ -6,7 +6,7 @@
 
   <groupId>au.com.integradev.delphilint</groupId>
   <artifactId>delphilint-parent</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.0.0.${changelist}</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -19,7 +19,7 @@
       <dependency>
         <groupId>au.com.integradev.delphilint</groupId>
         <artifactId>sonarlint-core-overrides</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.sonarsource.sonarlint.core</groupId>
