@@ -98,8 +98,8 @@ the `/server` directory succeeds with no changes generated.
 The Delphi project is built with and only officially supports Delphi 11.2. Other versions may also be able to compile
 the project, but no assurances are made.
 
-To build, open the `DelphiLintClient.dproj` file in RAD Studio and choose `Project > Build DelphiLintClient`. The
-output Delphi package file will be generated at `/client/target/DelphiLintClient.bpl`, and can be installed as usual.
+To build, open `/client/source/DelphiLintClient.dproj` in RAD Studio and choose `Project > Build DelphiLintClient`. The
+output Delphi package file will be generated at `/client/target/DelphiLintClient.bpl`.
 
 #### Building the server project
 
