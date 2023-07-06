@@ -103,7 +103,7 @@ output Delphi package file will be generated at `/client/target/DelphiLintClient
 
 #### Building the server project
 
-The server project is built with Maven and requires Java 11 or above.
+To build the server project, Java 11+ and Maven 3.5.0+ are required.
 
-To build, run `mvn package` in the `/server` directory. The output server jar will be generated at
+To build, run `/server/build.ps1`. The output server jar will be generated at
 `/server/delphilint-server/target/delphilint-server-<version>-with-dependencies.jar`.
