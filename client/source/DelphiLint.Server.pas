@@ -726,7 +726,8 @@ var
   Id: SmallInt;
   Category: Byte;
   Length: Integer;
-  DataStr: string;
+  DataBuffer: TBytes;
+  IdDataBuffer: TIdBytes;
   DataJsonValue: TJSONValue;
   Message: TLintMessage;
 begin
@@ -735,12 +736,14 @@ begin
     Category := FTcpClient.IOHandler.ReadByte;
     Id := FTcpClient.IOHandler.ReadInt32;
     Length := FTcpClient.IOHandler.ReadInt32;
-    DataStr := FTcpClient.IOHandler.ReadString(Length, IndyTextEncoding_UTF8);
+    FTcpClient.IOHandler.ReadBytes(IdDataBuffer, Length);
   finally
     FTcpLock.Release;
   end;
 
-  DataJsonValue := TJSONValue.ParseJSONValue(DataStr);
+  DataBuffer := TBytes(IdDataBuffer);
+
+  DataJsonValue := TJSONValue.ParseJSONValue(DataBuffer, 0, Length, True);
   Message := TLintMessage.Create(Category, DataJsonValue);
   try
     if FResponseActions.ContainsKey(Id) then begin

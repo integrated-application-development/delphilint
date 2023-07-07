@@ -39,16 +39,16 @@ public enum MessageCategory {
   INVALID_REQUEST(241, String.class),
   UNEXPECTED_ERROR(242, String.class);
 
-  private int code;
+  private final byte code;
   private final Class<?> dataClass;
 
   MessageCategory(int code) {
-    this.code = code;
+    this.code = (byte) code;
     this.dataClass = null;
   }
 
   MessageCategory(int code, Class<?> clazz) {
-    this.code = code;
+    this.code = (byte) code;
     this.dataClass = clazz;
   }
 
@@ -62,7 +62,7 @@ public enum MessageCategory {
     return null;
   }
 
-  public int getCode() {
+  public byte getCode() {
     return code;
   }
 

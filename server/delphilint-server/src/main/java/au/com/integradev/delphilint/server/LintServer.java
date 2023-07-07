@@ -110,9 +110,12 @@ public class LintServer {
     var dataBytes = dataString.getBytes(StandardCharsets.UTF_8);
 
     try {
-      out.write(response.getCategory().getCode());
-      out.write(ByteBuffer.allocate(4).putInt(id).array());
-      out.write(ByteBuffer.allocate(4).putInt(dataBytes.length).array());
+      out.write(
+          ByteBuffer.allocate(9)
+              .put(response.getCategory().getCode())
+              .putInt(id)
+              .putInt(dataBytes.length)
+              .array());
       out.write(dataBytes);
     } catch (IOException e) {
       LOG.error("Unexpected IO exception while writing message data to stream", e);

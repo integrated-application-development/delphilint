@@ -92,18 +92,13 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     LOG.info("Added {} extra properties", properties.size());
 
-    if (connection != null) {
-      Set<ActiveRule> activeRules =
-          connection.getActiveRules().stream()
-              .filter(rule -> !RuleUtils.isIncompatible(rule.getRuleKey()))
-              .map(RemoteActiveRule::toSonarLintActiveRule)
-              .collect(Collectors.toSet());
-      configBuilder.addActiveRules(activeRules);
-      LOG.info("Added {} active rules", activeRules.size());
-    } else {
-      // TODO: Have a local set of rules
-      LOG.warn("Because there is no SonarQube connection, no rules will be active");
-    }
+    Set<ActiveRule> activeRules =
+        connection.getActiveRules().stream()
+            .filter(rule -> !RuleUtils.isIncompatible(rule.getRuleKey()))
+            .map(RemoteActiveRule::toSonarLintActiveRule)
+            .collect(Collectors.toSet());
+    configBuilder.addActiveRules(activeRules);
+    LOG.info("Added {} active rules", activeRules.size());
 
     return configBuilder.build();
   }
