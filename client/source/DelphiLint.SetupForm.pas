@@ -53,7 +53,6 @@ type
     procedure ExeBrowseButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SonarDelphiJarBrowseButtonClick(Sender: TObject);
     procedure ServerJarBrowseButtonClick(Sender: TObject);
     procedure JavaExeBrowseButtonClick(Sender: TObject);
@@ -63,10 +62,13 @@ type
     procedure UpdateControls;
     procedure UpdateValidState(Edit: TCustomEdit; Indicator: TShape);
     procedure UpdateOkButton;
-    function IsValidValue(Value: string): Boolean;
+    class function IsValidValue(Value: string): Boolean;
     function IsAllValid: Boolean;
   public
     procedure RefreshTheme;
+
+    class function TryFixSetup(SetPluginEnabled: Boolean = True): Boolean;
+    class function IsSetupValid: Boolean;
   end;
 
 implementation
@@ -79,6 +81,39 @@ uses
   , ToolsAPI
   , Vcl.Themes
   ;
+
+//______________________________________________________________________________________________________________________
+
+class function TLintSetupForm.IsSetupValid: Boolean;
+begin
+  LintSettings.Load;
+  Result := IsValidValue(LintSettings.ServerJavaExe)
+    and IsValidValue(LintSettings.ServerJar)
+    and IsValidValue(LintSettings.SonarDelphiJar);
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TLintSetupForm.TryFixSetup(SetPluginEnabled: Boolean = True): Boolean;
+var
+  Form: TLintSetupForm;
+begin
+  Result := IsSetupValid;
+  if not Result then begin
+    Form := TLintSetupForm.Create(nil);
+    try
+      Form.RefreshTheme;
+      Form.ShowModal;
+      Result := IsSetupValid;
+    finally
+      FreeAndNil(Form);
+    end;
+  end;
+
+  if SetPluginEnabled then begin
+    Plugin.PluginEnabled := Result;
+  end;
+end;
 
 //______________________________________________________________________________________________________________________
 
@@ -116,13 +151,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSetupForm.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := caFree;
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintSetupForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if FSaved then begin
@@ -148,7 +176,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintSetupForm.IsValidValue(Value: string): Boolean;
+class function TLintSetupForm.IsValidValue(Value: string): Boolean;
 begin
   Result := FileExists(Value);
 end;

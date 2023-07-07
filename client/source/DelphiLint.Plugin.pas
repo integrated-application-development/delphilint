@@ -83,8 +83,6 @@ type
     procedure RegisterToolFrame(Frame: TLintToolFrame);
     procedure OnRegister;
 
-    function BasicSetupComplete: Boolean;
-
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
     property PluginEnabled: Boolean read FEnabled write SetPluginEnabled;
   end;
@@ -108,7 +106,6 @@ uses
   , Winapi.Windows
   , Vcl.Graphics
   , DelphiLint.Utils
-  , DelphiLint.Settings
   , DelphiLint.SetupForm
   ;
 
@@ -167,16 +164,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintPlugin.BasicSetupComplete: Boolean;
-begin
-  LintSettings.Load;
-  Result := FileExists(LintSettings.ServerJavaExe)
-    and FileExists(LintSettings.ServerJar)
-    and FileExists(LintSettings.SonarDelphiJar);
-end;
-
-//______________________________________________________________________________________________________________________
-
 function Plugin: TLintPlugin;
 begin
   Result := GPlugin;
@@ -202,8 +189,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.OnRegister;
-var
-  SetupForm: TLintSetupForm;
 begin
   // Editor notifier
   FEditor := TLintEditor.Create;
@@ -239,12 +224,7 @@ begin
 
   // Setup form
   (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintSetupForm);
-  FEnabled := BasicSetupComplete;
-  if not FEnabled then begin
-    SetupForm := TLintSetupForm.Create(nil);
-    SetupForm.RefreshTheme;
-    SetupForm.ShowModal;
-  end;
+  FEnabled := TLintSetupForm.TryFixSetup(False);
 
   RefreshAnalysisActions;
 end;

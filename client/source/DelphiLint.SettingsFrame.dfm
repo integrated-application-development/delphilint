@@ -5,6 +5,12 @@ object LintSettingsFrame: TLintSettingsFrame
   Height = 319
   Constraints.MinHeight = 300
   Constraints.MinWidth = 586
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clBtnText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  ParentFont = False
   TabOrder = 0
   DesignSize = (
     586
@@ -34,6 +40,20 @@ object LintSettingsFrame: TLintSettingsFrame
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
     TabOrder = 1
+    object BrokenSetupWarningLabel: TLabel
+      Left = 175
+      Top = 38
+      Width = 210
+      Height = 15
+      Caption = 'External resources are misconfigured.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clRed
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+      StyleElements = [seClient, seBorder]
+    end
     object ComponentsButton: TButton
       Left = 12
       Top = 32

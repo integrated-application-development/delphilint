@@ -179,6 +179,7 @@ uses
   , IdStack
   , System.IOUtils
   , System.TimeSpan
+  , DelphiLint.SetupForm
   ;
 
 //______________________________________________________________________________________________________________________
@@ -297,6 +298,10 @@ begin
   FTcpClient.Host := '127.0.0.1';
   FTcpClient.Port := 0;
 
+  if not TLintSetupForm.TryFixSetup then begin
+    raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
+  end;
+
   if LintSettings.ServerAutoLaunch then begin
     FTcpClient.Port := StartExtServer(
       LintSettings.ServerJar,
@@ -378,6 +383,10 @@ var
   InitializeCompletedEvent: TEvent;
 begin
   Log.Info('Requesting initialization...');
+
+  if not TLintSetupForm.TryFixSetup then begin
+    raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
+  end;
 
   try
     InitializeMsg := TLintMessage.Initialize(

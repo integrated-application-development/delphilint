@@ -32,6 +32,7 @@ type
     ClientDarkModeCheckBox: TCheckBox;
     ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
+    BrokenSetupWarningLabel: TLabel;
     procedure ComponentsButtonClick(Sender: TObject);
   public
     procedure Init;
@@ -99,6 +100,7 @@ begin
   ServerStartDelayEdit.Text := IntToStr(LintSettings.ServerStartDelay);
   ServerAutoLaunchCheckBox.Checked := LintSettings.ServerAutoLaunch;
   ClientDarkModeCheckBox.Checked := LintSettings.ClientDarkMode;
+  BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -125,6 +127,8 @@ begin
   finally
     FreeAndNil(SetupForm);
   end;
+
+  BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
 end;
 
 //______________________________________________________________________________________________________________________

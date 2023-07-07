@@ -12,7 +12,6 @@ object LintSetupForm: TLintSetupForm
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   TextHeight = 15
