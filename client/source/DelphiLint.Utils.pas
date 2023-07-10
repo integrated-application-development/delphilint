@@ -44,6 +44,7 @@ function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = T
 
 // ToolsAPI utils
 function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
+function GetDelphiVersion: string;
 
 implementation
 
@@ -54,6 +55,7 @@ uses
   , System.SysUtils
   , DelphiLint.ProjectOptions
   , Winapi.ShLwApi
+  , DelphiLint.Logger
   ;
 
 //______________________________________________________________________________________________________________________
@@ -91,6 +93,32 @@ begin
         Break;
       end;
     end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function GetDelphiVersion: string;
+var
+  ProductVersion: string;
+begin
+  ProductVersion := (BorlandIDEServices as IOTAServices).ExpandRootMacro('$(ProductVersion)');
+  Log.Info(ProductVersion);
+
+  if ProductVersion = '21.0' then begin
+    Result := 'VER340';
+  end
+  else if ProductVersion = '20.0' then begin
+    Result := 'VER330';
+  end
+  else if ProductVersion = '19.0' then begin
+    Result := 'VER320';
+  end
+  else if ProductVersion = '18.0' then begin
+    Result := 'VER310';
+  end
+  else begin
+    Result := 'VER350';
   end;
 end;
 

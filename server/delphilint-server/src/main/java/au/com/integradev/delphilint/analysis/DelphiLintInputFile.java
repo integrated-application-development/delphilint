@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
@@ -30,13 +29,10 @@ import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 public class DelphiLintInputFile implements ClientInputFile {
   private final Path baseDir;
   private final Path relativePath;
-  private final Charset charset;
 
   public DelphiLintInputFile(Path baseDir, Path relativePath) {
     this.baseDir = baseDir;
     this.relativePath = relativePath;
-    // TODO: pass in charset
-    this.charset = StandardCharsets.ISO_8859_1;
   }
 
   @Override
@@ -55,7 +51,7 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public Charset getCharset() {
-    return charset;
+    return Charset.defaultCharset();
   }
 
   @Override

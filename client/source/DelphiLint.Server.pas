@@ -180,6 +180,7 @@ uses
   , System.IOUtils
   , System.TimeSpan
   , DelphiLint.SetupForm
+  , DelphiLint.Utils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -374,10 +375,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintServer.Initialize;
-const
-  // TODO: Expose compiler version as a setting
-  C_CompilerVersion = 'VER350';
-  C_LanguageKey = 'delph';
 var
   InitializeMsg: TLintMessage;
   InitializeCompletedEvent: TEvent;
@@ -391,7 +388,7 @@ begin
   try
     InitializeMsg := TLintMessage.Initialize(
       (BorlandIDEServices as IOTAServices).GetRootDirectory,
-      C_CompilerVersion,
+      GetDelphiVersion,
       LintSettings.SonarDelphiJar);
     InitializeCompletedEvent := TEvent.Create;
 
