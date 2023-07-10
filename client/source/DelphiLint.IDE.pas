@@ -384,7 +384,9 @@ end;
 
 destructor TLintView.Destroy;
 begin
-  LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  if LintContextValid then begin
+    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  end;
   inherited;
 end;
 
