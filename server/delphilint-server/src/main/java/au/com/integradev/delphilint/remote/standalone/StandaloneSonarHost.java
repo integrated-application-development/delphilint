@@ -17,14 +17,14 @@
  */
 package au.com.integradev.delphilint.remote.standalone;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
 import au.com.integradev.delphilint.remote.SonarHost;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -81,7 +81,8 @@ public class StandaloneSonarHost implements SonarHost {
     var standaloneRulesData =
         StandaloneRulesData.fromStream(
             new InputStreamReader(
-                getClass().getResourceAsStream("/au/com/integradev/delphilint/standalone_rules.json"),
+                getClass()
+                    .getResourceAsStream("/au/com/integradev/delphilint/standalone_rules.json"),
                 StandardCharsets.UTF_8));
 
     this.activeRules =

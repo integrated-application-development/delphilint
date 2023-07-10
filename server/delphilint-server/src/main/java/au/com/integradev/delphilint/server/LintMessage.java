@@ -17,9 +17,9 @@
  */
 package au.com.integradev.delphilint.server;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class LintMessage {
   @JsonProperty private MessageCategory category;

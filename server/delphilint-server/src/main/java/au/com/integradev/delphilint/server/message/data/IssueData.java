@@ -17,8 +17,8 @@
  */
 package au.com.integradev.delphilint.server.message.data;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import au.com.integradev.delphilint.analysis.TextRange;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class IssueData {
   @JsonProperty private String ruleKey;

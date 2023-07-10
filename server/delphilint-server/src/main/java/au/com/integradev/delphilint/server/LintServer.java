@@ -17,8 +17,6 @@
  */
 package au.com.integradev.delphilint.server;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
 import au.com.integradev.delphilint.remote.SonarHost;
@@ -34,6 +32,8 @@ import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

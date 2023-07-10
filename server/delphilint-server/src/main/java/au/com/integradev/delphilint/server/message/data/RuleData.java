@@ -1,9 +1,9 @@
 package au.com.integradev.delphilint.server.message.data;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class RuleData {
   @JsonProperty private String key;

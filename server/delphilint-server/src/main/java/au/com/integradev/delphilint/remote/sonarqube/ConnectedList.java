@@ -17,11 +17,11 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
+import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import au.com.integradev.delphilint.remote.SonarHostException;
-import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;

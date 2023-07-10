@@ -17,12 +17,12 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import au.com.integradev.delphilint.remote.JsonHttpHandler;
 import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarHostStatusCodeException;
 import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;

@@ -17,8 +17,8 @@
  */
 package au.com.integradev.delphilint.server.message;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import au.com.integradev.delphilint.server.message.data.RuleData;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 public class ResponseRuleRetrieveResult {

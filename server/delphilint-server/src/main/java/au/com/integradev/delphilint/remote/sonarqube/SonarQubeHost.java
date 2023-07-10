@@ -17,8 +17,6 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemoteRule;
@@ -26,6 +24,8 @@ import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;

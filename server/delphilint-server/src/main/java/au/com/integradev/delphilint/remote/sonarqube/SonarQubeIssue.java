@@ -17,9 +17,9 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
+import au.com.integradev.delphilint.analysis.TextRange;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import au.com.integradev.delphilint.analysis.TextRange;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 

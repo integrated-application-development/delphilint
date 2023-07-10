@@ -17,9 +17,9 @@
  */
 package au.com.integradev.delphilint.server.message;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import au.com.integradev.delphilint.analysis.TextRange;
 import au.com.integradev.delphilint.server.message.data.IssueData;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
