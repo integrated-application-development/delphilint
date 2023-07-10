@@ -34,10 +34,18 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>DelphiLintClient</SanitizedProjectName>
+        <DCC_BplOutput>.\target\$(Platform)\$(Config)</DCC_BplOutput>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
@@ -56,6 +64,7 @@ $(PreBuildEvent)]]>
         <DCC_Description>DelphiLint</DCC_Description>
         <DCC_UsePackage>vcl;rtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
+        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -68,17 +77,18 @@ $(PreBuildEvent)]]>
         <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <DCC_BplOutput>.\target</DCC_BplOutput>
-        <DCC_DcpOutput>.\target</DCC_DcpOutput>
-        <DCC_DcuOutput>.\target\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <Debugger_HostApplication>C:\Program Files (x86)\Embarcadero\Studio\22.0\bin\bds.exe</Debugger_HostApplication>
+        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
