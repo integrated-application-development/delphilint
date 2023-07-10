@@ -25,42 +25,33 @@ uses
 type
   TLintSetupForm = class(TForm)
     Label1: TLabel;
-    Image1: TImage;
     Label2: TLabel;
     Label3: TLabel;
-    JavaExeEdit: TLabeledEdit;
-    JavaExeIndicator: TShape;
-    ServerJarIndicator: TShape;
-    ServerJarEdit: TLabeledEdit;
-    SonarDelphiJarEdit: TLabeledEdit;
-    SonarDelphiJarIndicator: TShape;
-    JavaExeBrowseButton: TButton;
-    ServerJarBrowseButton: TButton;
-    SonarDelphiJarBrowseButton: TButton;
     OkButton: TButton;
     ExeOpenDialog: TOpenDialog;
-    JarOpenDialog: TOpenDialog;
     Label4: TLabel;
     LeftPanel: TPanel;
     RightPanel: TPanel;
     Label5: TLabel;
     LinkLabel1: TLinkLabel;
+    SonarDelphiJarLabel: TLabel;
+    RefreshButton: TButton;
+    ServerJarBrowseButton: TButton;
+    JavaExeLabel: TLabel;
+    ServerJarLabel: TLabel;
+    ServerJarIndicator: TPanel;
+    SonarDelphiJarIndicator: TPanel;
+    JavaExeIndicator: TPanel;
     procedure FormCreate(Sender: TObject);
-    procedure JavaExeEditChange(Sender: TObject);
-    procedure ServerJarEditChange(Sender: TObject);
-    procedure SonarDelphiJarEditChange(Sender: TObject);
-    procedure JarBrowseButtonClick(Sender: TObject);
-    procedure ExeBrowseButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure SonarDelphiJarBrowseButtonClick(Sender: TObject);
-    procedure ServerJarBrowseButtonClick(Sender: TObject);
     procedure JavaExeBrowseButtonClick(Sender: TObject);
+    procedure RefreshButtonClick(Sender: TObject);
   private
     FSaved: Boolean;
 
     procedure UpdateControls;
-    procedure UpdateValidState(Edit: TCustomEdit; Indicator: TShape);
+    procedure UpdateValidState(Indicator: TPanel);
     procedure UpdateOkButton;
     class function IsValidValue(Value: string): Boolean;
     function IsAllValid: Boolean;
@@ -128,14 +119,22 @@ end;
 
 procedure TLintSetupForm.OkButtonClick(Sender: TObject);
 begin
-  LintSettings.ServerJavaExe := JavaExeEdit.Text;
-  LintSettings.ServerJar := ServerJarEdit.Text;
-  LintSettings.SonarDelphiJar := SonarDelphiJarEdit.Text;
+  LintSettings.ServerJavaExe := JavaExeIndicator.Caption;
   LintSettings.Save;
 
   FSaved := True;
   Plugin.PluginEnabled := True;
   Close;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSetupForm.RefreshButtonClick(Sender: TObject);
+begin
+  UpdateValidState(JavaExeIndicator);
+  UpdateValidState(ServerJarIndicator);
+  UpdateValidState(SonarDelphiJarIndicator);
+  UpdateOkButton;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -169,9 +168,9 @@ end;
 
 function TLintSetupForm.IsAllValid: Boolean;
 begin
-  Result := IsValidValue(JavaExeEdit.Text)
-    and IsValidValue(ServerJarEdit.Text)
-    and IsValidValue(SonarDelphiJarEdit.Text);
+  Result := IsValidValue(JavaExeIndicator.Caption)
+    and IsValidValue(LintSettings.ServerJar)
+    and IsValidValue(LintSettings.SonarDelphiJar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -183,86 +182,27 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSetupForm.ExeBrowseButtonClick(Sender: TObject);
-var
-  Edit: TCustomEdit;
-begin
-  Edit := TCustomEdit(Sender);
-
-  ExeOpenDialog.InitialDir := ExtractFilePath(Edit.Text);
-  ExeOpenDialog.FileName := '';
-  if ExeOpenDialog.Execute then begin
-    Edit.Text := ExeOpenDialog.FileName;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.JarBrowseButtonClick(Sender: TObject);
-var
-  Edit: TCustomEdit;
-begin
-  Edit := TCustomEdit(Sender);
-
-  JarOpenDialog.InitialDir := ExtractFilePath(Edit.Text);
-  JarOpenDialog.FileName := '';
-  if JarOpenDialog.Execute then begin
-    Edit.Text := JarOpenDialog.FileName;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintSetupForm.JavaExeBrowseButtonClick(Sender: TObject);
 begin
-  ExeBrowseButtonClick(JavaExeEdit);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.JavaExeEditChange(Sender: TObject);
-begin
-  UpdateValidState(JavaExeEdit, JavaExeIndicator);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.ServerJarBrowseButtonClick(Sender: TObject);
-begin
-  JarBrowseButtonClick(ServerJarEdit);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.ServerJarEditChange(Sender: TObject);
-begin
-  UpdateValidState(ServerJarEdit, ServerJarIndicator);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.SonarDelphiJarBrowseButtonClick(Sender: TObject);
-begin
-  JarBrowseButtonClick(SonarDelphiJarEdit);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintSetupForm.SonarDelphiJarEditChange(Sender: TObject);
-begin
-  UpdateValidState(SonarDelphiJarEdit, SonarDelphiJarIndicator);
+  ExeOpenDialog.InitialDir := ExtractFilePath(JavaExeIndicator.Caption);
+  ExeOpenDialog.FileName := '';
+  if ExeOpenDialog.Execute then begin
+    JavaExeIndicator.Caption := ExeOpenDialog.FileName;
+  end;
+  UpdateValidState(JavaExeIndicator);
+  UpdateOkButton;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintSetupForm.UpdateControls;
 begin
-  JavaExeEdit.Text := LintSettings.ServerJavaExe;
-  ServerJarEdit.Text := LintSettings.ServerJar;
-  SonarDelphiJarEdit.Text := LintSettings.SonarDelphiJar;
-  UpdateValidState(JavaExeEdit, JavaExeIndicator);
-  UpdateValidState(ServerJarEdit, ServerJarIndicator);
-  UpdateValidState(SonarDelphiJarEdit, SonarDelphiJarIndicator);
+  JavaExeIndicator.Caption := LintSettings.ServerJavaExe;
+  ServerJarIndicator.Caption := LintSettings.ServerJar;
+  SonarDelphiJarIndicator.Caption := LintSettings.SonarDelphiJar;
+  UpdateValidState(JavaExeIndicator);
+  UpdateValidState(ServerJarIndicator);
+  UpdateValidState(SonarDelphiJarIndicator);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -274,13 +214,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSetupForm.UpdateValidState(Edit: TCustomEdit; Indicator: TShape);
+procedure TLintSetupForm.UpdateValidState(Indicator: TPanel);
 begin
-  if IsValidValue(Edit.Text) then begin
-    Indicator.Brush.Color := clLime;
+  if IsValidValue(Indicator.Caption) then begin
+    Indicator.Color := clGreen;
+    Indicator.Font.Color := clWhite;
   end
   else begin
-    Indicator.Brush.Color := clRed;
+    Indicator.Color := clMaroon;
+    Indicator.Font.Color := clWhite;
   end;
 
   UpdateOkButton;
