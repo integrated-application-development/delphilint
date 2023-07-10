@@ -21,7 +21,7 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 
 Before installing, the following prerequisites must be installed on your system:
 
-* RAD Studio 11.2+
+* RAD Studio 11
 * Java 11+
 
 The process for installing is as follows:
@@ -91,19 +91,43 @@ To contribute, please create a pull request, link it to an existing issue, and c
 Please ensure that any Delphi code follows the same style as the existing code, and that running `mvn verify` in
 the `/server` directory succeeds with no changes generated.
 
-### Building from source
+## Building from source
 
-#### Building the client project
+Building DelphiLint from source is relatively simple.
 
-The Delphi project is built with and only officially supports Delphi 11.2. Other versions may also be able to compile
-the project, but no assurances are made.
+Prerequisites:
 
-To build, open `/client/source/DelphiLintClient.dproj` in RAD Studio and choose `Project > Build DelphiLintClient`. The
-output Delphi package file will be generated at `/client/target/DelphiLintClient.bpl`.
+* RAD Studio 11
+* Maven 3.5.0+
+* Java 11+
 
-#### Building the server project
+### 1. Set up the repository
 
-To build the server project, Java 11+ and Maven 3.5.0+ are required.
+1. Clone this repository.
+2. Initialise submodules using `git submodule init`, then `git submodule update`.
 
-To build, run `/server/build.ps1`. The output server jar will be generated at
-`/server/delphilint-server/target/delphilint-server-<version>-with-dependencies.jar`.
+### 2. Build SonarDelphi
+
+1. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
+2. Copy the plugin jar to `%APPDATA%\DelphiLint\sonar-delphi-plugin.jar`.
+
+### 3. Build the server project
+
+1. Run `/server/build.ps1`.
+2. Copy the generated .jar from `/server/delphilint-server/target/delphilint-server-<version>-with-dependencies.jar`
+   to `%APPDATA%\DelphiLint\delphilint-server.jar`.
+
+### 4. Build HtmlViewer
+
+DelphiLint uses [HtmlViewer](https://github.com/BerndGabriel/HtmlViewer) to render HTML descriptions for rules in the
+issue view.
+
+1. Build the runtime package `client/lib/HtmlViewer/Rad Studio 11/FrameViewer.dpk`.
+2. Build the design-time package `client/lib/HtmlViewer/Rad Studio 11/dclFrameViewer.dpk`, referencing the runtime
+   package.
+3. Install the generated `dclFrameViewer.bpl` into your IDE.
+
+### 5. Build DelphiLintClient
+
+1. Build the design-time package `/client/source/DelphiLintClient.dproj`.
+2. Install the generated `DelphiLintClient.bpl` into your IDE.
