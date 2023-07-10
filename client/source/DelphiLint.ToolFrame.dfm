@@ -27,68 +27,27 @@ object LintToolFrame: TLintToolFrame
       Caption = 'RulePanel'
       ShowCaption = False
       TabOrder = 3
-      object RuleDescLabel: TLabel
-        AlignWithMargins = True
-        Left = 6
-        Top = 49
-        Width = 253
-        Height = 239
-        Margins.Left = 6
-        Margins.Top = 0
-        Margins.Right = 6
-        Margins.Bottom = 6
-        Align = alClient
-        AutoSize = False
-        Caption = 'Rule description'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Segoe UI'
-        Font.Style = []
-        ParentFont = False
-        WordWrap = True
-      end
-      object RuleHeading: TPanel
+      object RuleHtmlView: THtmlViewer
         Left = 0
         Top = 0
         Width = 265
-        Height = 49
-        Align = alTop
-        BevelOuter = bvNone
-        Caption = 'RuleHeading'
-        ShowCaption = False
+        Height = 294
+        BorderStyle = htNone
+        DefFontName = 'Sans-Serif'
+        DefFontSize = 10
+        HistoryMaxCount = 0
+        NoSelect = False
+        PrintMarginBottom = 2.000000000000000000
+        PrintMarginLeft = 2.000000000000000000
+        PrintMarginRight = 2.000000000000000000
+        PrintMarginTop = 2.000000000000000000
+        PrintScale = 1.000000000000000000
+        Text = ''
+        OnHotSpotClick = RuleHtmlViewHotSpotClick
+        Align = alClient
         TabOrder = 0
-        DesignSize = (
-          265
-          49)
-        object RuleNameLabel: TLabel
-          Left = 6
-          Top = 6
-          Width = 251
-          Height = 15
-          Anchors = [akLeft, akTop, akRight]
-          AutoSize = False
-          Caption = 'Rule name'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = [fsBold]
-          ParentFont = False
-        end
-        object RuleTypeLabel: TLabel
-          Left = 6
-          Top = 24
-          Width = 49
-          Height = 15
-          Caption = 'Rule type'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = [fsItalic]
-          ParentFont = False
-        end
+        Touch.InteractiveGestures = [igPan]
+        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia]
       end
     end
     object IssueListBox: TListBox

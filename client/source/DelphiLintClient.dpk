@@ -33,6 +33,7 @@ requires
   rtl,
   vcl,
   designide,
+  FrameViewer,
   IndyProtocols;
 
 contains

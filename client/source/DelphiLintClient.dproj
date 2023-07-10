@@ -62,7 +62,7 @@ $(PreBuildEvent)]]>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Description>DelphiLint</DCC_Description>
-        <DCC_UsePackage>vcl;rtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;IndyProtocols;FrameViewer;$(DCC_UsePackage)</DCC_UsePackage>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
         <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
@@ -97,6 +97,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="FrameViewer.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="DelphiLint.IDE.pas"/>
         <DCCReference Include="DelphiLint.Server.pas"/>
@@ -236,19 +237,19 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

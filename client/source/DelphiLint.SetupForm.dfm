@@ -44,8 +44,8 @@ object LintSetupForm: TLintSetupForm
       Height = 49
       AutoSize = False
       Caption = 
-        'DelphiLint integrates a Delphi code analyzer into the Delphi IDE ' +
-        'to provide on-the-fly linting. '
+        'DelphiLint integrates a Delphi code analyzer into the Delphi IDE' +
+        ' to provide on-the-fly linting. '
       WordWrap = True
     end
     object Label3: TLabel
@@ -55,10 +55,10 @@ object LintSetupForm: TLintSetupForm
       Height = 61
       AutoSize = False
       Caption = 
-        'There are three primary components to DelphiLint: the IDE plugin ' +
-        'itself, a companion Java server that runs in the background, and ' +
-        'the IntegraDev SonarDelphi plugin, which the server uses to carry ' +
-        'out analysis.'
+        'There are three primary components to DelphiLint: the IDE plugin' +
+        ' itself, a companion Java server that runs in the background, an' +
+        'd the IntegraDev SonarDelphi plugin, which the server uses to ca' +
+        'rry out analysis.'
       WordWrap = True
     end
     object Label4: TLabel
@@ -68,9 +68,9 @@ object LintSetupForm: TLintSetupForm
       Height = 86
       AutoSize = False
       Caption = 
-        'To run, DelphiLint requires both the server and SonarDelphi, as well ' +
-        'as a Java 11 or above executable. Please ensure all resources have ' +
-        'been installed.'
+        'To run, DelphiLint requires both the server and SonarDelphi, as ' +
+        'well as a Java 11 or above executable. Please ensure all resourc' +
+        'es have been installed.'
       WordWrap = True
     end
     object Label5: TLabel
@@ -88,8 +88,8 @@ object LintSetupForm: TLintSetupForm
       Width = 188
       Height = 19
       Caption = 
-        '<a href="https://github.com/Integrated-Application-Development/delphilint">the ' +
-        'DelphiLint README on GitHub.</a>'
+        '<a href="https://github.com/Integrated-Application-Development/d' +
+        'elphilint">the DelphiLint README on GitHub.</a>'
       TabOrder = 0
     end
   end
@@ -133,7 +133,7 @@ object LintSetupForm: TLintSetupForm
     object OkButton: TButton
       Left = 32
       Top = 264
-      Width = 489
+      Width = 481
       Height = 35
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Apply this configuration'
@@ -143,7 +143,7 @@ object LintSetupForm: TLintSetupForm
     object RefreshButton: TButton
       Left = 32
       Top = 234
-      Width = 489
+      Width = 481
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Refresh'
@@ -151,7 +151,7 @@ object LintSetupForm: TLintSetupForm
       OnClick = RefreshButtonClick
     end
     object ServerJarBrowseButton: TButton
-      Left = 441
+      Left = 433
       Top = 55
       Width = 80
       Height = 30
@@ -163,7 +163,7 @@ object LintSetupForm: TLintSetupForm
     object ServerJarIndicator: TPanel
       Left = 32
       Top = 114
-      Width = 489
+      Width = 481
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -178,7 +178,7 @@ object LintSetupForm: TLintSetupForm
     object SonarDelphiJarIndicator: TPanel
       Left = 32
       Top = 174
-      Width = 489
+      Width = 481
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -193,7 +193,7 @@ object LintSetupForm: TLintSetupForm
     object JavaExeIndicator: TPanel
       Left = 32
       Top = 55
-      Width = 403
+      Width = 395
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]

@@ -21,20 +21,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase;
+  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, HTMLUn2, HtmlView;
 
 type
-  THtmlRemover = class(TObject)
-  private
-    FBrRegex: TRegEx;
-    FTagRegex: TRegEx;
-    FConsecutiveSpaceRegex: TRegEx;
-    FConsecutiveNewlineRegex: TRegEx;
-  public
-    constructor Create;
-    function Process(Text: string): string;
-  end;
-
   TCurrentFileStatus = (
     cfsNotAnalyzable,
     cfsNotAnalyzed,
@@ -55,12 +44,8 @@ type
     IssueListBox: TListBox;
     LintButtonPanel: TPanel;
     RulePanel: TPanel;
-    RuleNameLabel: TLabel;
-    RuleTypeLabel: TLabel;
-    RuleDescLabel: TLabel;
     ContentPanel: TPanel;
     SplitPanel: TPanel;
-    RuleHeading: TPanel;
     TopPanel: TPanel;
     LintToolBar: TToolBar;
     AnalyzeShortButton: TToolButton;
@@ -70,6 +55,7 @@ type
     StatusPanel: TPanel;
     ProgLabel: TLabel;
     ResizeIndicatorPanel: TPanel;
+    RuleHtmlView: THtmlViewer;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -78,6 +64,7 @@ type
     procedure OnIssueDoubleClicked(Sender: TObject);
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
+    procedure RuleHtmlViewHotSpotClick(Sender: TObject; const SRC: string; var Handled: Boolean);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -96,7 +83,6 @@ type
     FResizing: Boolean;
     FDragStartX: Integer;
     FCurrentPath: string;
-    FHtmlRemover: THtmlRemover;
     FIssues: TArray<TLiveIssue>;
 
     procedure UpdateFileNameLabel(NewText: string = '');
@@ -118,7 +104,6 @@ type
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
   public
     constructor Create(Owner: TComponent); override;
-    destructor Destroy; override;
 
     procedure ChangeActiveFile(const Path: string);
     procedure RefreshActiveFile;
@@ -141,6 +126,8 @@ uses
   , System.IOUtils
   , DelphiLint.Logger
   , DelphiLint.Plugin
+  , Vcl.Themes
+  , Winapi.ShellAPI
   ;
 
 {$R *.dfm}
@@ -151,8 +138,6 @@ var
 begin
   inherited Create(Owner);
   FResizing := False;
-
-  FHtmlRemover := THtmlRemover.Create;
   FCurrentPath := '';
 
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
@@ -182,14 +167,6 @@ begin
   end;
 
   Plugin.RegisterToolFrame(Self);
-end;
-
-//______________________________________________________________________________________________________________________
-
-destructor TLintToolFrame.Destroy;
-begin
-  FreeAndNil(FHtmlRemover);
-  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -653,33 +630,75 @@ procedure TLintToolFrame.SetRuleView(
   Severity: TRuleSeverity;
   Desc: string
 );
+
+  function ColorToHex(Color : TColor): string;
+  begin
+    Result := '#' +
+      IntToHex(GetRValue(Color), 2) +
+      IntToHex(GetGValue(Color), 2) +
+      IntToHex(GetBValue(Color), 2);
+  end;
+
+var
+  TextColor: string;
+  BgColor: string;
+  CodeBgColor: string;
+  LinkColor: string;
+  Theme: TCustomStyleServices;
 begin
-  RuleNameLabel.Caption := Name;
-  RuleTypeLabel.Caption := C_RuleTypeStrs[RuleType] + ' - ' + C_RuleSeverityStrs[Severity];
-  RuleDescLabel.Caption := FHtmlRemover.Process(Desc);
+  Theme := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices;
+  TextColor := ColorToHex(Theme.GetSystemColor(clBtnText));
+  BgColor := ColorToHex(Theme.GetSystemColor(clWindow));
+  CodeBgColor := ColorToHex(Theme.GetSystemColor(clBtnFace));
+  LinkColor := ColorToHex(Theme.GetSystemColor(clHighlight));
+
+  RuleHtmlView.LoadFromString(Format(
+    '<!DOCTYPE html>' +
+    '<html>' +
+    '<head>' +
+    '  <style>' +
+    '    body {' +
+    '      font-family: ''Segoe UI'', ''Helvetica Neue'', ''Helvetica'', ''Arial'', sans-serif;' +
+    '      color: %s;' +
+    '      background-color: %s;' +
+    '    }' +
+    '    h1 { margin-top: 6px; font-size: 18px; }' +
+    '    h2 { margin-top: -6px; font-size: 14px; }' +
+    '    pre {' +
+    '      background-color: %s;' +
+    '      padding: 0.3em 0.5em;' +
+    '      font-size: 1em;' +
+    '      font-family: ''Consolas'', monospace;' +
+    '    }' +
+    '    a { color: %s; }' +
+    '  </style>' +
+    '</head>' +
+    '<body>' +
+    '  <h1>%s</h1>' +
+    '  <h2>%s - %s</h2>' +
+    '  %s' +
+    '</body>' +
+    '</html>',
+    [
+      TextColor,
+      BgColor,
+      CodeBgColor,
+      LinkColor,
+      Name,
+      C_RuleTypeStrs[RuleType],
+      C_RuleSeverityStrs[Severity],
+      Desc
+    ]));
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor THtmlRemover.Create;
+procedure TLintToolFrame.RuleHtmlViewHotSpotClick(Sender: TObject; const SRC: string; var Handled: Boolean);
 begin
-  FBrRegex := TRegEx.Create('<br[^>]*\/?[^>]*>', [roCompiled]);
-  FTagRegex := TRegEx.Create('<[^>]*>', [roCompiled]);
-  FConsecutiveSpaceRegex := TRegEx.Create('[ \t](?=[ \t])', [roCompiled]);
-  FConsecutiveNewlineRegex := TRegEx.Create('\n', [roCompiled]);
-end;
-
-function THtmlRemover.Process(Text: string): string;
-begin
-  Result := Text;
-  Result := FConsecutiveNewlineRegex.Replace(Result, '');
-  Result := FBrRegex.Replace(Result, #13#10);
-  Result := FTagRegex.Replace(Result, '');
-  Result := FConsecutiveSpaceRegex.Replace(Result, '');
+  ShellExecute(0, 'open', PChar(SRC), nil, nil, SW_SHOWNORMAL);
 end;
 
 //______________________________________________________________________________________________________________________
-
 
 function TLintToolFormInfo.GetIdentifier: string;
 begin
