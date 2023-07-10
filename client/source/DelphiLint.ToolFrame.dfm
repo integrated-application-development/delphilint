@@ -16,7 +16,7 @@ object LintToolFrame: TLintToolFrame
     BevelOuter = bvNone
     Caption = 'ContentPanel'
     ShowCaption = False
-    TabOrder = 0
+    TabOrder = 1
     object RulePanel: TPanel
       Left = 443
       Top = 0
@@ -26,7 +26,7 @@ object LintToolFrame: TLintToolFrame
       BevelOuter = bvNone
       Caption = 'RulePanel'
       ShowCaption = False
-      TabOrder = 0
+      TabOrder = 3
       object RuleDescLabel: TLabel
         AlignWithMargins = True
         Left = 6
@@ -100,7 +100,7 @@ object LintToolFrame: TLintToolFrame
       Align = alClient
       BorderStyle = bsNone
       ItemHeight = 20
-      TabOrder = 1
+      TabOrder = 0
       OnClick = OnIssueSelected
       OnDblClick = OnIssueDoubleClicked
       OnDrawItem = OnDrawIssueItem
@@ -133,7 +133,7 @@ object LintToolFrame: TLintToolFrame
       UseDockManager = False
       ParentBackground = False
       ShowCaption = False
-      TabOrder = 3
+      TabOrder = 1
       Visible = False
       StyleElements = []
     end
@@ -148,7 +148,7 @@ object LintToolFrame: TLintToolFrame
     BevelOuter = bvNone
     Caption = 'TopPanel'
     ShowCaption = False
-    TabOrder = 1
+    TabOrder = 0
     object FileHeadingPanel: TPanel
       Left = 0
       Top = 0

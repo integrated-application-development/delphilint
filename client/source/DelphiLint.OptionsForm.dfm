@@ -57,7 +57,7 @@ object LintOptionsForm: TLintOptionsForm
       Width = 266
       Height = 239
       Caption = 'SonarQube connection'
-      TabOrder = 0
+      TabOrder = 2
       DesignSize = (
         266
         239)
@@ -83,7 +83,7 @@ object LintOptionsForm: TLintOptionsForm
         EditLabel.Width = 105
         EditLabel.Height = 15
         EditLabel.Caption = 'Authorization token'
-        TabOrder = 1
+        TabOrder = 2
         Text = ''
         OnChange = SonarHostTokenEditChange
       end
@@ -96,7 +96,7 @@ object LintOptionsForm: TLintOptionsForm
         EditLabel.Width = 58
         EditLabel.Height = 15
         EditLabel.Caption = 'Project key'
-        TabOrder = 2
+        TabOrder = 1
         Text = ''
         OnChange = ProjectKeyEditChange
       end
@@ -158,7 +158,7 @@ object LintOptionsForm: TLintOptionsForm
       Width = 267
       Height = 71
       Caption = 'Analysis mode'
-      TabOrder = 2
+      TabOrder = 0
       object AnalysisModeGroup: TRadioGroup
         Left = 0
         Top = 11

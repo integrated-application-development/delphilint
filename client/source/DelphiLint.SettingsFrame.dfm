@@ -39,7 +39,7 @@ object LintSettingsFrame: TLintSettingsFrame
     Height = 73
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
-    TabOrder = 1
+    TabOrder = 2
     object BrokenSetupWarningLabel: TLabel
       Left = 175
       Top = 38
@@ -71,14 +71,14 @@ object LintSettingsFrame: TLintSettingsFrame
     Height = 129
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Server configuration'
-    TabOrder = 2
+    TabOrder = 1
     object ServerShowConsoleCheckBox: TCheckBox
       Left = 12
       Top = 79
       Width = 142
       Height = 17
       Caption = 'Show server console'
-      TabOrder = 0
+      TabOrder = 1
     end
     object ServerAutoLaunchCheckBox: TCheckBox
       Left = 12
@@ -86,7 +86,7 @@ object LintSettingsFrame: TLintSettingsFrame
       Width = 174
       Height = 17
       Caption = 'Launch server automatically'
-      TabOrder = 1
+      TabOrder = 2
     end
     object ServerStartDelayEdit: TLabeledEdit
       Left = 11
@@ -97,7 +97,7 @@ object LintSettingsFrame: TLintSettingsFrame
       EditLabel.Height = 15
       EditLabel.Caption = 'Connection timeout (ms)'
       NumbersOnly = True
-      TabOrder = 2
+      TabOrder = 0
       Text = ''
     end
   end
