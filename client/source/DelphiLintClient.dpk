@@ -32,8 +32,9 @@ package DelphiLintClient;
 requires
   rtl,
   vcl,
+  vclie,
+  vcledge,
   designide,
-  FrameViewer,
   IndyProtocols;
 
 contains

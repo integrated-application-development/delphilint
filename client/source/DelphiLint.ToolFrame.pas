@@ -21,7 +21,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, System.RegularExpressions, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, HTMLUn2, HtmlView;
+  Vcl.ToolWin, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, Vcl.OleCtrls, SHDocVw, System.Generics.Collections;
 
 type
   TCurrentFileStatus = (
@@ -55,7 +55,7 @@ type
     StatusPanel: TPanel;
     ProgLabel: TLabel;
     ResizeIndicatorPanel: TPanel;
-    RuleHtmlView: THtmlViewer;
+    RuleBrowser: TWebBrowser;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -64,7 +64,6 @@ type
     procedure OnIssueDoubleClicked(Sender: TObject);
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
-    procedure RuleHtmlViewHotSpotClick(Sender: TObject; const SRC: string; var Handled: Boolean);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -84,6 +83,7 @@ type
     FDragStartX: Integer;
     FCurrentPath: string;
     FIssues: TArray<TLiveIssue>;
+    FRuleHtmls: TDictionary<string, string>;
 
     procedure UpdateFileNameLabel(NewText: string = '');
 
@@ -102,8 +102,17 @@ type
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
+
+    procedure CreateRuleHtml(
+      Name: string;
+      RuleKey: string;
+      RuleType: TRuleType;
+      Severity: TRuleSeverity;
+      Desc: string
+    );
   public
     constructor Create(Owner: TComponent); override;
+    destructor Destroy; override;
 
     procedure ChangeActiveFile(const Path: string);
     procedure RefreshActiveFile;
@@ -127,7 +136,6 @@ uses
   , DelphiLint.Logger
   , DelphiLint.Plugin
   , Vcl.Themes
-  , Winapi.ShellAPI
   ;
 
 {$R *.dfm}
@@ -139,6 +147,7 @@ begin
   inherited Create(Owner);
   FResizing := False;
   FCurrentPath := '';
+  FRuleHtmls := TDictionary<string, string>.Create;
 
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
@@ -167,6 +176,20 @@ begin
   end;
 
   Plugin.RegisterToolFrame(Self);
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLintToolFrame.Destroy;
+var
+  RuleKey: string;
+begin
+  for RuleKey in FRuleHtmls.Keys do begin
+    TFile.Delete(FRuleHtmls[RuleKey]);
+  end;
+
+  FreeAndNil(FRuleHtmls);
+  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -623,13 +646,8 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.SetRuleView(
-  Name: string;
-  RuleKey: string;
-  RuleType: TRuleType;
-  Severity: TRuleSeverity;
-  Desc: string
-);
+procedure TLintToolFrame.CreateRuleHtml(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity;
+  Desc: string);
 
   function ColorToHex(Color : TColor): string;
   begin
@@ -645,6 +663,8 @@ var
   CodeBgColor: string;
   LinkColor: string;
   Theme: TCustomStyleServices;
+  HtmlStr: string;
+  FileName: string;
 begin
   Theme := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices;
   TextColor := ColorToHex(Theme.GetSystemColor(clBtnText));
@@ -652,18 +672,23 @@ begin
   CodeBgColor := ColorToHex(Theme.GetSystemColor(clBtnFace));
   LinkColor := ColorToHex(Theme.GetSystemColor(clHighlight));
 
-  RuleHtmlView.LoadFromString(Format(
+  HtmlStr := Format(
     '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
     '  <style>' +
+    '    html {' +
+    '      overflow-x: hidden;' +
+    '      overflow-y: auto;' +
+    '    }' +
     '    body {' +
     '      font-family: ''Segoe UI'', ''Helvetica Neue'', ''Helvetica'', ''Arial'', sans-serif;' +
     '      color: %s;' +
     '      background-color: %s;' +
+    '      font-size: 12px;' +
     '    }' +
-    '    h1 { margin-top: 6px; font-size: 18px; }' +
-    '    h2 { margin-top: -6px; font-size: 14px; }' +
+    '    h1 { margin-top: 0px; font-size: 18px; }' +
+    '    h2 { margin-top: -12px; margin-bottom: -4px; font-size: 14px; }' +
     '    pre {' +
     '      background-color: %s;' +
     '      padding: 0.3em 0.5em;' +
@@ -688,14 +713,28 @@ begin
       C_RuleTypeStrs[RuleType],
       C_RuleSeverityStrs[Severity],
       Desc
-    ]));
+    ]);
+
+  FileName := TPath.GetTempFileName;
+  TFile.WriteAllText(FileName, HtmlStr, TEncoding.UTF8);
+  FRuleHtmls.Add(RuleKey, FileName);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.RuleHtmlViewHotSpotClick(Sender: TObject; const SRC: string; var Handled: Boolean);
+procedure TLintToolFrame.SetRuleView(
+  Name: string;
+  RuleKey: string;
+  RuleType: TRuleType;
+  Severity: TRuleSeverity;
+  Desc: string
+);
 begin
-  ShellExecute(0, 'open', PChar(SRC), nil, nil, SW_SHOWNORMAL);
+  if (not FRuleHtmls.ContainsKey(RuleKey)) or (not FileExists(FRuleHtmls[RuleKey])) then begin
+    CreateRuleHtml(Name, RuleKey, RuleType, Severity, Desc);
+  end;
+
+  RuleBrowser.Navigate(ExpandUNCFileName(FRuleHtmls[RuleKey]));
 end;
 
 //______________________________________________________________________________________________________________________

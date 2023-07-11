@@ -27,27 +27,19 @@ object LintToolFrame: TLintToolFrame
       Caption = 'RulePanel'
       ShowCaption = False
       TabOrder = 3
-      object RuleHtmlView: THtmlViewer
+      object RuleBrowser: TWebBrowser
         Left = 0
         Top = 0
         Width = 265
         Height = 294
-        BorderStyle = htNone
-        DefFontName = 'Sans-Serif'
-        DefFontSize = 10
-        HistoryMaxCount = 0
-        NoSelect = False
-        PrintMarginBottom = 2.000000000000000000
-        PrintMarginLeft = 2.000000000000000000
-        PrintMarginRight = 2.000000000000000000
-        PrintMarginTop = 2.000000000000000000
-        PrintScale = 1.000000000000000000
-        Text = ''
-        OnHotSpotClick = RuleHtmlViewHotSpotClick
         Align = alClient
         TabOrder = 0
-        Touch.InteractiveGestures = [igPan]
-        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia]
+        ControlData = {
+          4C000000631B0000631E00000100000001020000000000000000000000000000
+          000000004C000000000000000000000001000000E0D057007335CF11AE690800
+          2B2E126200000000000000004C0000000114020000000000C000000000000046
+          8000000000000000000000000000000000000000000000000000000000000000
+          00000000000000000100000000000000000000000000000000000000}
       end
     end
     object IssueListBox: TListBox
