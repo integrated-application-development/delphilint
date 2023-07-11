@@ -119,17 +119,7 @@ Prerequisites:
 2. Copy the generated .jar from `/server/delphilint-server/target/delphilint-server-<version>-with-dependencies.jar`
    to `%APPDATA%\DelphiLint\delphilint-server.jar`.
 
-### 4. Build HtmlViewer
-
-DelphiLint uses [HtmlViewer](https://github.com/BerndGabriel/HtmlViewer) to render HTML descriptions for rules in the
-issue view.
-
-1. Build the runtime package `client/lib/HtmlViewer/Rad Studio 11/FrameViewer.dpk`.
-2. Build the design-time package `client/lib/HtmlViewer/Rad Studio 11/dclFrameViewer.dpk`, referencing the runtime
-   package.
-3. Install the generated `dclFrameViewer.bpl` into your IDE.
-
-### 5. Build DelphiLintClient
+### 4. Build DelphiLintClient
 
 1. Build the design-time package `/client/source/DelphiLintClient.dproj`.
 2. Install the generated `DelphiLintClient.bpl` into your IDE.
