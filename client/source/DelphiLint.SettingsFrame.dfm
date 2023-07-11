@@ -2,8 +2,8 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 319
-  Constraints.MinHeight = 300
+  Height = 250
+  Constraints.MinHeight = 250
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBtnText
@@ -14,32 +14,15 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    319)
-  object ClientConfigGroupBox: TGroupBox
-    Left = 12
-    Top = 16
-    Width = 555
-    Height = 57
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'IDE configuration'
-    TabOrder = 0
-    object ClientDarkModeCheckBox: TCheckBox
-      Left = 11
-      Top = 30
-      Width = 174
-      Height = 17
-      Caption = 'Dark mode'
-      TabOrder = 0
-    end
-  end
+    250)
   object ComponentsGroupBox: TGroupBox
     Left = 12
-    Top = 232
+    Top = 160
     Width = 556
     Height = 73
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
-    TabOrder = 2
+    TabOrder = 1
     object BrokenSetupWarningLabel: TLabel
       Left = 175
       Top = 38
@@ -66,12 +49,12 @@ object LintSettingsFrame: TLintSettingsFrame
   end
   object ServerConfigGroupBox: TGroupBox
     Left = 12
-    Top = 88
+    Top = 16
     Width = 556
     Height = 129
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Server configuration'
-    TabOrder = 1
+    TabOrder = 0
     object ServerShowConsoleCheckBox: TCheckBox
       Left = 12
       Top = 79

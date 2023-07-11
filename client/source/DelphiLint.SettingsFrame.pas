@@ -28,8 +28,6 @@ type
     ServerShowConsoleCheckBox: TCheckBox;
     ServerAutoLaunchCheckBox: TCheckBox;
     ServerStartDelayEdit: TLabeledEdit;
-    ClientConfigGroupBox: TGroupBox;
-    ClientDarkModeCheckBox: TCheckBox;
     ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
     BrokenSetupWarningLabel: TLabel;
@@ -99,7 +97,6 @@ begin
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
   ServerStartDelayEdit.Text := IntToStr(LintSettings.ServerStartDelay);
   ServerAutoLaunchCheckBox.Checked := LintSettings.ServerAutoLaunch;
-  ClientDarkModeCheckBox.Checked := LintSettings.ClientDarkMode;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
 end;
 
@@ -110,7 +107,6 @@ begin
   LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
   LintSettings.ServerStartDelay := StrToInt(ServerStartDelayEdit.Text);
   LintSettings.ServerAutoLaunch := ServerAutoLaunchCheckBox.Checked;
-  LintSettings.ClientDarkMode := ClientDarkModeCheckBox.Checked;
   LintSettings.Save;
 end;
 

@@ -32,7 +32,6 @@ type
     function GetDefaultServerJar: string;
     function GetDefaultSonarDelphiJar: string;
     function GetDefaultServerJavaExe: string;
-    function GetDefaultClientDarkMode: Boolean;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
@@ -42,7 +41,6 @@ type
     property ServerJavaExe: string index 3 read GetValueStr write SetValueStr;
     property ServerStartDelay: Integer index 4 read GetValueInt write SetValueInt;
     property ServerAutoLaunch: Boolean index 5 read GetValueBool write SetValueBool;
-    property ClientDarkMode: Boolean index 6 read GetValueBool write SetValueBool;
 
     property SettingsDirectory: string read FSettingsDir;
   end;
@@ -54,10 +52,6 @@ implementation
 uses
     System.SysUtils
   , System.IOUtils
-  , ToolsAPI
-  , Vcl.Themes
-  , Vcl.Graphics
-  , Winapi.Windows
   ;
 
 var
@@ -100,23 +94,8 @@ begin
     // 4
     TIntPropField.Create('Server', 'StartDelay', 1000),
     // 5
-    TBoolPropField.Create('Server', 'AutoLaunch', True),
-    // 6
-    TCustomBoolPropField.Create('Client', 'DarkMode', GetDefaultClientDarkMode)
+    TBoolPropField.Create('Server', 'AutoLaunch', True)
   ];
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintSettings.GetDefaultClientDarkMode: Boolean;
-var
-  BgColor: TColor;
-  Color: LongInt;
-begin
-  BgColor := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetStyleColor(scGenericBackground);
-  Color := ColorToRGB(BgColor);
-
-  Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);
 end;
 
 //______________________________________________________________________________________________________________________

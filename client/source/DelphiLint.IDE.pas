@@ -131,6 +131,7 @@ uses
   , DelphiLint.Logger
   , DelphiLint.Utils
   , DelphiLint.Settings
+  , Vcl.Themes
   ;
 
 //______________________________________________________________________________________________________________________
@@ -413,6 +414,17 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
   const TextWidth: Word; const LineAttributes: TOTAAttributeArray; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 
+  function InDarkMode: Boolean;
+  var
+    BgColor: TColor;
+    Color: LongInt;
+  begin
+    BgColor := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetStyleColor(scGenericBackground);
+    Color := ColorToRGB(BgColor);
+
+    Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);
+  end;
+
   function ColumnToPx(const Col: Integer): Integer;
   begin
     Result := TextRect.Left + (Col + 1 - View.LeftColumn) * CellSize.Width;
@@ -456,7 +468,7 @@ begin
   Issues := LintContext.GetIssues(View.Buffer.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
-    if LintSettings.ClientDarkMode then begin
+    if InDarkMode then begin
       TextColor := clWebGold;
     end
     else begin
