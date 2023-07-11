@@ -39,6 +39,7 @@ type
     property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
     property ProjectReadProperties: Boolean index 4 read GetValueBool write SetValueBool;
     property AnalysisConnectedMode: Boolean index 5 read GetValueBool write SetValueBool;
+    property AnalysisDownloadPlugin: Boolean index 6 read GetValueBool write SetValueBool;
 
     property ProjectBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
     property ProjectPropertiesPath: string read GetProjectPropertiesPath;
@@ -97,7 +98,9 @@ begin
     // 4
     TBoolPropField.Create('Analysis', 'ReadProperties', True),
     // 5
-    TBoolPropField.Create('Analysis', 'ConnectedMode', False)
+    TBoolPropField.Create('Analysis', 'ConnectedMode', False),
+    // 6
+    TBoolPropField.Create('Analysis', 'DownloadPlugin', True)
   ];
 end;
 

@@ -3,8 +3,8 @@ object LintOptionsForm: TLintOptionsForm
   Top = 0
   BorderStyle = bsSingle
   Caption = 'Project Options'
-  ClientHeight = 334
-  ClientWidth = 577
+  ClientHeight = 369
+  ClientWidth = 589
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object LintOptionsForm: TLintOptionsForm
   object HeaderPanel: TPanel
     Left = 0
     Top = 0
-    Width = 577
+    Width = 589
     Height = 35
     Align = alTop
     BevelOuter = bvNone
@@ -43,8 +43,8 @@ object LintOptionsForm: TLintOptionsForm
   object ContentPanel: TPanel
     Left = 0
     Top = 35
-    Width = 577
-    Height = 262
+    Width = 589
+    Height = 297
     Align = alClient
     BevelOuter = bvNone
     Caption = 'ContentPanel'
@@ -55,12 +55,12 @@ object LintOptionsForm: TLintOptionsForm
       Left = 305
       Top = 14
       Width = 266
-      Height = 239
+      Height = 275
       Caption = 'SonarQube connection'
       TabOrder = 2
       DesignSize = (
         266
-        239)
+        275)
       object SonarHostUrlEdit: TLabeledEdit
         Left = 16
         Top = 48
@@ -108,6 +108,15 @@ object LintOptionsForm: TLintOptionsForm
         Caption = 'Create Token'
         TabOrder = 3
         OnClick = CreateTokenButtonClick
+      end
+      object AnalysisDownloadPluginCheckBox: TCheckBox
+        Left = 14
+        Top = 243
+        Width = 234
+        Height = 17
+        Caption = 'Use server'#39's SonarDelphi version'
+        TabOrder = 4
+        OnClick = AnalysisDownloadPluginCheckBoxClick
       end
     end
     object AnalysisGroup: TGroupBox
@@ -175,8 +184,8 @@ object LintOptionsForm: TLintOptionsForm
   end
   object FooterPanel: TPanel
     Left = 0
-    Top = 297
-    Width = 577
+    Top = 332
+    Width = 589
     Height = 37
     Align = alBottom
     BevelOuter = bvNone

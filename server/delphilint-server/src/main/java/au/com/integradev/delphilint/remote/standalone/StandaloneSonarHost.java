@@ -27,11 +27,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sonarsource.sonarlint.core.commons.Language;
@@ -51,13 +54,18 @@ public class StandaloneSonarHost implements SonarHost {
       try {
         return mapper.readValue(reader, StandaloneRulesData.class);
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new UncheckedIOException(e);
       }
     }
 
     public List<String> getActives() {
       return actives;
     }
+  }
+
+  public StandaloneSonarHost() {
+    this.rules = Collections.emptySet();
+    this.activeRules = Collections.emptySet();
   }
 
   public StandaloneSonarHost(LoadedPlugins loadedPlugins) {
@@ -98,6 +106,10 @@ public class StandaloneSonarHost implements SonarHost {
             .collect(Collectors.toSet());
   }
 
+  public String getName() {
+    return "";
+  }
+
   @Override
   public Map<String, String> getRuleNamesByRuleKey() {
     return getRules().stream().collect(Collectors.toMap(RemoteRule::getKey, RemoteRule::getName));
@@ -116,5 +128,13 @@ public class StandaloneSonarHost implements SonarHost {
   @Override
   public Set<RemoteActiveRule> getActiveRules() {
     return activeRules;
+  }
+
+  public Optional<Path> getPluginJar() {
+    return Optional.empty();
+  }
+
+  public Optional<String> getPluginJarName() {
+    return Optional.empty();
   }
 }

@@ -26,11 +26,13 @@ import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
@@ -41,14 +43,21 @@ public class SonarQubeHost implements SonarHost {
 
   private final String projectKey;
   private final String languageKey;
+  private final String pluginKey;
   private final ObjectMapper jsonMapper;
   private final ApiConnection api;
 
-  public SonarQubeHost(String hostUrl, String projectKey, String languageKey, String apiToken) {
+  public SonarQubeHost(
+      String hostUrl, String projectKey, String languageKey, String pluginKey, String apiToken) {
     this.api = new ApiConnection(hostUrl, apiToken);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
+    this.pluginKey = pluginKey;
     this.jsonMapper = new ObjectMapper();
+  }
+
+  public String getName() {
+    return "SonarQube instance at " + api.getHostUrl();
   }
 
   private SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
@@ -246,5 +255,34 @@ public class SonarQubeHost implements SonarHost {
     }
 
     return activeRules;
+  }
+
+  public Optional<Path> getPluginJar() throws SonarHostException {
+    return Optional.ofNullable(api.getFile("/api/plugins/download?plugin=" + pluginKey));
+  }
+
+  public Optional<String> getPluginJarName() throws SonarHostException {
+    var rootNode = api.getJson("/api/plugins/installed");
+    if (rootNode == null) {
+      throw new SonarHostException("Could not retrieve installed plugins from SonarQube");
+    }
+
+    String pluginJarName = "";
+
+    var pluginsArray = rootNode.get("plugins");
+    for (var plugin : pluginsArray) {
+      var keyProp = plugin.get("key");
+      var filenameProp = plugin.get("filename");
+      if (keyProp != null && filenameProp != null && pluginKey.equals(keyProp.asText())) {
+        pluginJarName = filenameProp.asText();
+        break;
+      }
+    }
+
+    if (pluginJarName.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(pluginJarName);
+    }
   }
 }

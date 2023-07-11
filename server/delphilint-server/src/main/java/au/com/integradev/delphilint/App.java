@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,7 +30,14 @@ public class App {
   private static final Logger LOG = LogManager.getLogger(App.class);
 
   public static void main(String[] args) throws IOException {
-    var server = new LintServer();
+    Path settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
+    Path pluginsPath = settingsPath.resolve("plugins");
+
+    if (!Files.exists(pluginsPath)) {
+      Files.createDirectory(pluginsPath);
+    }
+
+    var server = new LintServer(pluginsPath);
 
     if (args.length > 0) {
       File portFile = new File(args[0]);

@@ -17,8 +17,10 @@
  */
 package au.com.integradev.delphilint.remote;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public interface SonarHost {
@@ -29,4 +31,10 @@ public interface SonarHost {
   Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths);
 
   Set<RemoteActiveRule> getActiveRules() throws SonarHostException;
+
+  Optional<Path> getPluginJar() throws SonarHostException;
+
+  Optional<String> getPluginJarName() throws SonarHostException;
+
+  String getName();
 }

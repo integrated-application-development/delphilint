@@ -40,7 +40,7 @@ const
   C_RuleRetrieveResult = 45;
   C_RuleRetrieveError = 46;
   C_Initialized = 25;
-  C_Uninitialized = 26;
+  C_InitializeError = 26;
   C_InvalidRequest = 241;
   C_UnexpectedError = 242;
 
@@ -61,7 +61,9 @@ type
     class function Initialize(
       BdsPath: string;
       CompilerVersion: string;
-      SonarDelphiJarPath: string
+      DefaultSonarDelphiJarPath: string;
+      SonarHostUrl: string = '';
+  ApiToken: string = ''
     ): TLintMessage; static;
     class function Analyze(
       BaseDir: string;
@@ -125,7 +127,8 @@ type
 
     procedure OnInitializeResponse(
       const Response: TLintMessage;
-      InitializeEvent: TEvent
+      InitializeEvent: TEvent;
+      var ErrorMsg: string
     );
     procedure OnAnalyzeResponse(
       Response: TLintMessage;
@@ -148,7 +151,7 @@ type
 
     procedure Execute; override;
 
-    procedure Initialize;
+    procedure Initialize(SonarHostUrl: string; ApiToken: string; DownloadPlugin: Boolean);
     procedure Analyze(
       BaseDir: string;
       DelphiFiles: TArray<string>;
@@ -157,13 +160,15 @@ type
       SonarHostUrl: string = '';
       ProjectKey: string = '';
       ApiToken: string = '';
-      ProjectPropertiesPath: string = '');
+      ProjectPropertiesPath: string = '';
+      DownloadPlugin: Boolean = True);
     procedure RetrieveRules(
       SonarHostUrl: string;
       ProjectKey: string;
       OnResult: TRuleRetrieveResultAction;
       OnError: TErrorAction;
-      ApiToken: string = '');
+      ApiToken: string = '';
+      DownloadPlugin: Boolean = True);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -212,7 +217,9 @@ end;
 class function TLintMessage.Initialize(
   BdsPath: string;
   CompilerVersion: string;
-  SonarDelphiJarPath: string
+  DefaultSonarDelphiJarPath: string;
+  SonarHostUrl: string = '';
+  ApiToken: string = ''
 ): TLintMessage;
 var
   Json: TJSONObject;
@@ -221,7 +228,9 @@ begin
   Json := TJSONObject.Create;
   Json.AddPair('bdsPath', BdsPath);
   Json.AddPair('compilerVersion', CompilerVersion);
-  Json.AddPair('sonarDelphiJarPath', SonarDelphiJarPath);
+  Json.AddPair('defaultSonarDelphiJarPath', DefaultSonarDelphiJarPath);
+  Json.AddPair('sonarHostUrl', SonarHostUrl);
+  Json.AddPair('apiToken', ApiToken);
 
   Result := TLintMessage.Create(C_Initialize, Json);
 end;
@@ -374,10 +383,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.Initialize;
+procedure TLintServer.Initialize(SonarHostUrl: string; ApiToken: string; DownloadPlugin: Boolean);
 var
   InitializeMsg: TLintMessage;
   InitializeCompletedEvent: TEvent;
+  DownloadUrl: string;
+  ErrorMsg: string;
 begin
   Log.Info('Requesting initialization...');
 
@@ -386,20 +397,33 @@ begin
   end;
 
   try
+    if DownloadPlugin then begin
+      DownloadUrl := SonarHostUrl;
+    end
+    else begin
+      DownloadUrl := '';
+    end;
+
     InitializeMsg := TLintMessage.Initialize(
       (BorlandIDEServices as IOTAServices).GetRootDirectory,
       GetDelphiVersion,
-      LintSettings.SonarDelphiJar);
+      LintSettings.SonarDelphiJar,
+      DownloadUrl,
+      ApiToken);
     InitializeCompletedEvent := TEvent.Create;
 
     SendMessage(
       InitializeMsg,
       procedure(const Response: TLintMessage) begin
-        OnInitializeResponse(Response, InitializeCompletedEvent);
+        OnInitializeResponse(Response, InitializeCompletedEvent, ErrorMsg);
       end);
 
     if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
       raise ELintServerTimedOut.Create('Initialize timed out');
+    end
+    else if (ErrorMsg <> '') then begin
+      Log.Info('Error during initialization');
+      raise ELintServerFailed.Create(ErrorMsg);
     end;
 
     Log.Info('...initialized');
@@ -411,14 +435,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.OnInitializeResponse(const Response: TLintMessage; InitializeEvent: TEvent);
+procedure TLintServer.OnInitializeResponse(const Response: TLintMessage; InitializeEvent: TEvent; var ErrorMsg: string);
 begin
   if Assigned(InitializeEvent) then begin
     InitializeEvent.SetEvent;
   end;
 
   if Response.Category <> C_Initialized then begin
-    Log.Info('Initialize error (%d): %s', [Response.Category, Response.Data.ToString]);
+    ErrorMsg := Response.Data.Value;
+    Log.Info('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
+  end
+  else begin
+    ErrorMsg := '';
   end;
 end;
 
@@ -432,12 +460,20 @@ procedure TLintServer.Analyze(
   SonarHostUrl: string = '';
   ProjectKey: string = '';
   ApiToken: string = '';
-  ProjectPropertiesPath: string = '');
+  ProjectPropertiesPath: string = '';
+  DownloadPlugin: Boolean = True);
 var
   AnalyzeMsg: TLintMessage;
 begin
   Log.Info('Requesting analysis - checking initialization status');
-  Initialize;
+  try
+    Initialize(SonarHostUrl, ApiToken, DownloadPlugin);
+  except
+    on E: ELintServerError do begin
+      OnError(E.Message);
+      Exit;
+    end;
+  end;
 
   Log.Info('Requesting analysis - sending request');
   AnalyzeMsg := TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath);
@@ -476,7 +512,7 @@ var
   ErrorCat: Byte;
 begin
   if Response.Category <> C_AnalyzeResult then begin
-    ErrorMsg := Response.Data.AsType<string>;
+    ErrorMsg := Response.Data.Value;
     ErrorCat := Response.Category;
 
     Log.Info('Analysis returned error (%d): %s', [ErrorCat, ErrorMsg]);
@@ -497,11 +533,19 @@ procedure TLintServer.RetrieveRules(
   ProjectKey: string;
   OnResult: TRuleRetrieveResultAction;
   OnError: TErrorAction;
-  ApiToken: string = ''
+  ApiToken: string = '';
+  DownloadPlugin: Boolean = True
 );
 var RuleRetrieveMsg: TLintMessage;
 begin
-  Initialize;
+  try
+    Initialize(SonarHostUrl, ApiToken, DownloadPlugin);
+  except
+    on E: ELintServerError do begin
+      OnError(E.Message);
+      Exit;
+    end;
+  end;
 
   RuleRetrieveMsg := TLintMessage.RuleRetrieve(SonarHostUrl, ProjectKey, ApiToken);
 

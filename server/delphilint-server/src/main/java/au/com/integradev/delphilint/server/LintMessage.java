@@ -30,12 +30,12 @@ public class LintMessage {
     this.data = data;
   }
 
-  public static LintMessage uninitialized() {
-    return new LintMessage(MessageCategory.UNINITIALIZED, null);
-  }
-
   public static LintMessage initialized() {
     return new LintMessage(MessageCategory.INITIALIZED, null);
+  }
+
+  public static LintMessage initializeError(String message) {
+    return new LintMessage(MessageCategory.INITIALIZE_ERROR, message);
   }
 
   public static LintMessage unexpectedError(String message) {

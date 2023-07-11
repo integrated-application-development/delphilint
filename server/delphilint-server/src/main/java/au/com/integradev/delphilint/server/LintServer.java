@@ -32,6 +32,8 @@ import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
 import au.com.integradev.delphilint.server.message.ResponseAnalyzeResult;
 import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
+import au.com.integradev.delphilint.server.plugin.CachingPluginDownloader;
+import au.com.integradev.delphilint.server.plugin.DownloadedPlugin;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -45,25 +47,30 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
 
 public class LintServer {
-  private static final String LANGUAGE_KEY = "delph";
   private static final Logger LOG = LogManager.getLogger(LintServer.class);
   private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
+  private final CachingPluginDownloader pluginDownloader;
+  private DownloadedPlugin currentPlugin;
   private final ObjectMapper mapper;
   private boolean running;
 
-  public LintServer() throws IOException {
+  public LintServer(Path pluginsPath) throws IOException {
     engine = null;
     serverSocket = new ServerSocket(0);
     running = false;
     mapper = new ObjectMapper();
+    pluginDownloader = new CachingPluginDownloader(pluginsPath);
+    currentPlugin = null;
 
     LOG.info("Server started on port {}", serverSocket.getLocalPort());
   }
@@ -202,7 +209,8 @@ public class LintServer {
 
   private void handleAnalyze(RequestAnalyze requestAnalyze, Consumer<LintMessage> sendMessage) {
     if (engine == null) {
-      sendMessage.accept(LintMessage.uninitialized());
+      sendMessage.accept(
+          LintMessage.unexpectedError("Please initialize before attempting to analyze"));
       return;
     }
 
@@ -278,16 +286,54 @@ public class LintServer {
 
   private void handleInitialize(
       RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
-    if (engine == null) {
-      var delphiConfig =
-          new EngineStartupConfiguration(
-              requestInitialize.getBdsPath(),
-              requestInitialize.getCompilerVersion(),
-              Path.of(requestInitialize.getSonarDelphiJarPath()));
+    try {
+      SonarHost host =
+          getSonarHost(requestInitialize.getSonarHostUrl(), "", requestInitialize.getApiToken());
+      DownloadedPlugin pluginToUse = pluginDownloader.getRemotePluginJar(host).orElse(null);
 
-      engine = new DelphiAnalysisEngine(delphiConfig);
+      if (!Objects.equals(currentPlugin, pluginToUse) || engine == null) {
+        currentPlugin = pluginToUse;
+        LOG.info("Starting analysis engine with new plugin");
+
+        var delphiConfig =
+            new EngineStartupConfiguration(
+                requestInitialize.getBdsPath(),
+                requestInitialize.getCompilerVersion(),
+                currentPlugin == null
+                    ? Path.of(requestInitialize.getDefaultSonarDelphiJarPath())
+                    : currentPlugin.getPath());
+
+        engine = new DelphiAnalysisEngine(delphiConfig);
+      }
+      sendMessage.accept(LintMessage.initialized());
+    } catch (SonarHostUnauthorizedException e) {
+      LOG.warn("API returned an unauthorized response", e);
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "Authorization is required to access the configured SonarQube instance. Please"
+                  + " provide an appropriate authorization token."));
+    } catch (SonarHostConnectException e) {
+      LOG.warn("API could not be accessed", e);
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "Could not connect to the configured SonarQube instance. Please confirm that the URL"
+                  + " is correct and the instance is running."));
+    } catch (SonarHostException | UncheckedSonarHostException e) {
+      LOG.warn("API returned an unexpected response", e);
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "The configured SonarQube instance could not be accessed: " + e));
+    } catch (Exception e) {
+      LOG.error("Unknown error during analysis", e);
+      e.printStackTrace();
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "Unknown error during analysis: "
+                  + e.getMessage()
+                  + " ("
+                  + e.getClass().getSimpleName()
+                  + ")"));
     }
-    sendMessage.accept(LintMessage.initialized());
   }
 
   private void handleRuleRetrieve(
@@ -315,11 +361,21 @@ public class LintServer {
 
   private SonarHost getSonarHost(String url, String projectKey, String apiToken) {
     if (url.isEmpty()) {
-      LOG.info("Using standalone mode");
-      return new StandaloneSonarHost(engine.getLoadedPlugins());
+      if (engine == null) {
+        LOG.info("Using stub standalone mode - analysis engine is not initialized");
+        return new StandaloneSonarHost();
+      } else {
+        LOG.info("Using standalone mode");
+        return new StandaloneSonarHost(engine.getLoadedPlugins());
+      }
     } else {
       LOG.info("Using connected mode");
-      return new SonarQubeHost(url, projectKey, LANGUAGE_KEY, apiToken);
+      return new SonarQubeHost(
+          url,
+          projectKey,
+          Language.DELPHI.getLanguageKey(),
+          Language.DELPHI.getPluginKey(),
+          apiToken);
     }
   }
 }

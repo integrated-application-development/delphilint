@@ -121,7 +121,8 @@ type
       const SonarHostUrl: string = '';
       const ProjectKey: string = '';
       const ApiToken: string = '';
-  const ProjectPropertiesPath: string = '');
+      const ProjectPropertiesPath: string = '';
+      const DownloadPlugin: Boolean = True);
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
   public
     constructor Create;
@@ -260,7 +261,8 @@ begin
       SonarHostUrl,
       ProjectKey,
       SonarHostToken,
-      ProjectOptions.ProjectPropertiesPath
+      ProjectOptions.ProjectPropertiesPath,
+      ProjectOptions.AnalysisDownloadPlugin
     );
   finally
     FreeAndNil(ProjectOptions);
@@ -275,7 +277,8 @@ procedure TLintContext.AnalyzeFiles(
   const SonarHostUrl: string = '';
   const ProjectKey: string = '';
   const ApiToken: string = '';
-  const ProjectPropertiesPath: string = '');
+  const ProjectPropertiesPath: string = '';
+  const DownloadPlugin: Boolean = True);
 var
   Server: TLintServer;
   IncludedFiles: TArray<string>;
@@ -301,7 +304,8 @@ begin
         SonarHostUrl,
         ProjectKey,
         ApiToken,
-        ProjectPropertiesPath);
+        ProjectPropertiesPath,
+        DownloadPlugin);
     except
       on E: ELintServerError do begin
         TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
@@ -671,6 +675,7 @@ var
   SonarHostUrl: string;
   ProjectKey: string;
   SonarHostToken: string;
+  DownloadPlugin: Boolean;
 begin
   Log.Info('Refreshing ruleset');
   Result := False;
@@ -685,10 +690,12 @@ begin
     ProjectOptions := TLintProjectOptions.Create(ProjectFile);
     TimedOut := False;
 
+    DownloadPlugin := False;
     if ProjectOptions.AnalysisConnectedMode then begin
       SonarHostUrl := ProjectOptions.SonarHostUrl;
       ProjectKey := ProjectOptions.ProjectKey;
       SonarHostToken := ProjectOptions.SonarHostToken;
+      DownloadPlugin := ProjectOptions.AnalysisDownloadPlugin;
     end;
 
     FServerLock.Acquire;
@@ -728,7 +735,8 @@ begin
             Log.Info('Server rule retrieval returned error after timeout had expired');
           end;
         end,
-        SonarHostToken);
+        SonarHostToken,
+        DownloadPlugin);
     finally
       FServerLock.Release;
     end;

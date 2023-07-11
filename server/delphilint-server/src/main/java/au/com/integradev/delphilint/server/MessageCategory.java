@@ -29,7 +29,7 @@ public enum MessageCategory {
   QUIT(15),
   INITIALIZE(20, RequestInitialize.class),
   INITIALIZED(25),
-  UNINITIALIZED(26),
+  INITIALIZE_ERROR(26, String.class),
   ANALYZE(30, RequestAnalyze.class),
   ANALYZE_RESULT(35, ResponseAnalyzeResult.class),
   ANALYZE_ERROR(36, String.class),
