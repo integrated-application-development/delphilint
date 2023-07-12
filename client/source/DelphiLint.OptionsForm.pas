@@ -115,6 +115,7 @@ begin
     ProjectKeyEdit.Enabled := True;
     SonarHostTokenEdit.Enabled := True;
     SonarHostGroup.Enabled := True;
+    AnalysisDownloadPluginCheckBox.Enabled := True;
   end
   else begin
     AnalysisModeGroup.ItemIndex := 0;
@@ -122,6 +123,7 @@ begin
     ProjectKeyEdit.Enabled := False;
     SonarHostTokenEdit.Enabled := False;
     SonarHostGroup.Enabled := False;
+    AnalysisDownloadPluginCheckBox.Enabled := False;
   end;
 
   if Assigned(FProjectOptions) then begin
