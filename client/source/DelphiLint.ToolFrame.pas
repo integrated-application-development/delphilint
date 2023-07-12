@@ -73,6 +73,13 @@ type
       const PostData: OleVariant;
       const Headers: OleVariant;
       var Cancel: WordBool);
+    procedure RuleBrowserNewWindow3(
+      ASender: TObject;
+      var PDisp: IDispatch;
+      var Cancel: WordBool;
+      Flags: Cardinal;
+      const UrlContext: WideString;
+      const Url: WideString);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -770,9 +777,28 @@ var
 begin
   Cancel := not FRuleHtmls.ContainsValue(URL);
   if Cancel then begin
+    Log.Info('External navigation requested, intercepting and showing externally');
     UrlStr := URL;
     ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.RuleBrowserNewWindow3(
+  ASender: TObject;
+  var PDisp: IDispatch;
+  var Cancel: WordBool;
+  Flags: Cardinal;
+  const UrlContext: WideString;
+  const Url: WideString);
+var
+  UrlStr: string;
+begin
+  Log.Info('New window requested, intercepting and showing externally');
+  Cancel := True;
+  UrlStr := Url;
+  ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
 end;
 
 //______________________________________________________________________________________________________________________
