@@ -34,6 +34,7 @@ object LintToolFrame: TLintToolFrame
         Height = 294
         Align = alClient
         TabOrder = 0
+        OnBeforeNavigate2 = RuleBrowserBeforeNavigate2
         ControlData = {
           4C000000631B0000631E00000100000001020000000000000000000000000000
           000000004C000000000000000000000001000000E0D057007335CF11AE690800

@@ -64,6 +64,15 @@ type
     procedure OnIssueDoubleClicked(Sender: TObject);
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
+    procedure RuleBrowserBeforeNavigate2(
+      ASender: TObject;
+      const PDisp: IDispatch;
+      const URL: OleVariant;
+      const Flags: OleVariant;
+      const TargetFrameName: OleVariant;
+      const PostData: OleVariant;
+      const Headers: OleVariant;
+      var Cancel: WordBool);
   private const
     C_RuleSeverityStrs: array[TRuleSeverity] of string = (
       'Info',
@@ -84,6 +93,7 @@ type
     FCurrentPath: string;
     FIssues: TArray<TLiveIssue>;
     FRuleHtmls: TDictionary<string, string>;
+    FNavigationAllowed: Boolean;
 
     procedure UpdateFileNameLabel(NewText: string = '');
 
@@ -136,6 +146,7 @@ uses
   , DelphiLint.Logger
   , DelphiLint.Plugin
   , Vcl.Themes
+  , Winapi.ShellAPI
   ;
 
 {$R *.dfm}
@@ -147,6 +158,7 @@ begin
   inherited Create(Owner);
   FResizing := False;
   FCurrentPath := '';
+  FNavigationAllowed := False;
   FRuleHtmls := TDictionary<string, string>.Create;
 
   LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
@@ -717,7 +729,7 @@ begin
 
   FileName := TPath.GetTempFileName;
   TFile.WriteAllText(FileName, HtmlStr, TEncoding.UTF8);
-  FRuleHtmls.Add(RuleKey, FileName);
+  FRuleHtmls.Add(RuleKey, ExpandUNCFileName(FileName));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -734,7 +746,33 @@ begin
     CreateRuleHtml(Name, RuleKey, RuleType, Severity, Desc);
   end;
 
-  RuleBrowser.Navigate(ExpandUNCFileName(FRuleHtmls[RuleKey]));
+  try
+    FNavigationAllowed := True;
+    RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+  finally
+    FNavigationAllowed := False;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.RuleBrowserBeforeNavigate2(
+  ASender: TObject;
+  const PDisp: IDispatch;
+  const URL: OleVariant;
+  const Flags: OleVariant;
+  const TargetFrameName: OleVariant;
+  const PostData: OleVariant;
+  const Headers: OleVariant;
+  var Cancel: WordBool);
+var
+  UrlStr: string;
+begin
+  Cancel := not FRuleHtmls.ContainsValue(URL);
+  if Cancel then begin
+    UrlStr := URL;
+    ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
