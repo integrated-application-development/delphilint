@@ -676,6 +676,14 @@ procedure TLintToolFrame.CreateRuleHtml(Name: string; RuleKey: string; RuleType:
       IntToHex(GetBValue(Color), 2);
   end;
 
+  function Process(HtmlDesc: string): string;
+  begin
+    Result := Trim(HtmlDesc);
+    if not StartsText(Result, '<p>') then begin
+      Result := Format('<p>%s</p>', [Result]);
+    end;
+  end;
+
 var
   TextColor: string;
   BgColor: string;
@@ -731,7 +739,7 @@ begin
       Name,
       C_RuleTypeStrs[RuleType],
       C_RuleSeverityStrs[Severity],
-      Desc
+      Process(Desc)
     ]);
 
   FileName := TPath.GetTempFileName;
