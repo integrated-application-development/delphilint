@@ -50,8 +50,8 @@
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <PostBuildEvent>
-            <![CDATA[copy dlversion.inc.orig dlversion.inc
-del dlversion.inc.orig
+            <![CDATA[copy dlversion.inc.orig dlversion.inc 
+ del dlversion.inc.orig
 $(PostBuildEvent)]]>
         </PostBuildEvent>
         <PreBuildEvent>
@@ -238,25 +238,19 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
-</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
-&amp;del dlversion.inc.orig
-</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc &amp; del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
-</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
-&amp;del dlversion.inc.orig
-</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc &amp; del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>
