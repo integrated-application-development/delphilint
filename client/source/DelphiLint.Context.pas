@@ -51,6 +51,7 @@ type
 
     procedure NewLineMoveSession;
     procedure UpdateTether(LineNum: Integer; LineText: string);
+    procedure Untether;
 
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
@@ -657,7 +658,12 @@ begin
       Issue := FActiveIssues[SanitizedPath][Index];
 
       if Issue.OriginalStartLine = OriginalLine then begin
-        Issue.LinesMoved := Delta;
+        if NewLine = -1 then begin
+          Issue.Untether;
+        end
+        else begin
+          Issue.LinesMoved := Delta;
+        end;
       end;
     end;
   end;
@@ -861,18 +867,25 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLiveIssue.Untether;
+begin
+  FTethered := False;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLiveIssue.UpdateTether(LineNum: Integer; LineText: string);
 var
   Delta: Integer;
 begin
-  if not FTethered then begin
+  if not Tethered then begin
     Exit;
   end;
 
   Delta := LineNum - StartLine;
   if (Delta >= 0) and (Delta < FLines.Count) then begin
     if (FLines[Delta] <> LineText) then begin
-      FTethered := False;
+      Untether;
     end;
   end
   else begin
