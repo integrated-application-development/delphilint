@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - 'master'
+    paths:
+      - '.github/workflows/format.yml'
+      - 'server/**'
   pull_request:
     paths:
       - '.github/workflows/format.yml'
