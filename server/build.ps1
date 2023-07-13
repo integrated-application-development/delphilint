@@ -1,2 +1,8 @@
 #! powershell -File
-mvn clean package "-Dchangelist=$(& git rev-parse --short HEAD)"
+
+Push-Location $PSScriptRoot
+try {
+  mvn clean package "-Dchangelist=$(& git rev-parse --short HEAD)"
+} finally {
+  Pop-Location
+}
