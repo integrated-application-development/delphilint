@@ -353,6 +353,8 @@ begin
   if Assigned(OnTerminate) then begin
     OnTerminate(Self);
   end;
+
+  Log.Info('Lint server thread terminated');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -747,6 +749,8 @@ begin
     end;
     CloseHandle(FExtProcessHandle);
   end;
+
+  Log.Info('External server terminated');
 end;
 
 //______________________________________________________________________________________________________________________

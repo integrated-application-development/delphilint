@@ -162,7 +162,6 @@ uses
   , System.IOUtils
   , System.StrUtils
   , System.Generics.Defaults
-  , DelphiLint.Settings
   , Vcl.Dialogs
   , System.Hash
   , DelphiLint.Logger
@@ -764,23 +763,22 @@ end;
 
 procedure TLintContext.RestartServer;
 begin
-  FServerLock.Acquire;
+  FServerTerminateEvent := TEvent.Create;
   try
-    if Assigned(FServer) then begin
-      FServerTerminateEvent := TEvent.Create;
-      try
+    FServerLock.Acquire;
+    try
+      if Assigned(FServer) then begin
         FServer.Terminate;
-        FServer := nil;
-
-        if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
-          TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
-        end;
-      finally
-        FreeAndNil(FServerTerminateEvent);
       end;
+    finally
+      FServerLock.Release;
+    end;
+
+    if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
+      TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
     end;
   finally
-    FServerLock.Release;
+    FreeAndNil(FServerTerminateEvent);
   end;
 
   if InAnalysis then begin
