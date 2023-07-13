@@ -27,7 +27,6 @@ type
     ServerConfigGroupBox: TGroupBox;
     ServerShowConsoleCheckBox: TCheckBox;
     ServerAutoLaunchCheckBox: TCheckBox;
-    ServerStartDelayEdit: TLabeledEdit;
     ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
     BrokenSetupWarningLabel: TLabel;
@@ -95,7 +94,6 @@ procedure TLintSettingsFrame.Init;
 begin
   LintSettings.Load;
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
-  ServerStartDelayEdit.Text := IntToStr(LintSettings.ServerStartDelay);
   ServerAutoLaunchCheckBox.Checked := LintSettings.ServerAutoLaunch;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
 end;
@@ -105,7 +103,6 @@ end;
 procedure TLintSettingsFrame.Save;
 begin
   LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
-  LintSettings.ServerStartDelay := StrToInt(ServerStartDelayEdit.Text);
   LintSettings.ServerAutoLaunch := ServerAutoLaunchCheckBox.Checked;
   LintSettings.Save;
 end;

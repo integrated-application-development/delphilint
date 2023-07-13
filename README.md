@@ -116,8 +116,8 @@ Prerequisites:
 ### 3. Build the server project
 
 1. Run `/server/build.ps1`.
-2. Copy the generated .jar from `/server/delphilint-server/target/delphilint-server-<version>-with-dependencies.jar`
-   to `%APPDATA%\DelphiLint\delphilint-server.jar`.
+2. Copy the generated .jar from `/server/delphilint-server/target/delphilint-server-<version>.jar`
+   to `%APPDATA%\DelphiLint\delphilint-server-<version>.jar`.
 
 ### 4. Build DelphiLintClient
 

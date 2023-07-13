@@ -29,19 +29,21 @@ type
 
     constructor Create;
 
-    function GetDefaultServerJar: string;
-    function GetDefaultSonarDelphiJar: string;
+    function GetServerJar(Index: Integer): string;
+    function GetSonarDelphiJar(Index: Integer): string;
+
     function GetDefaultServerJavaExe: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
-    property ServerJar: string index 0 read GetValueStr write SetValueStr;
-    property ServerShowConsole: Boolean index 1 read GetValueBool write SetValueBool;
-    property SonarDelphiJar: string index 2 read GetValueStr write SetValueStr;
-    property ServerJavaExe: string index 3 read GetValueStr write SetValueStr;
-    property ServerStartDelay: Integer index 4 read GetValueInt write SetValueInt;
-    property ServerAutoLaunch: Boolean index 5 read GetValueBool write SetValueBool;
+    property ServerJarOverride: string index 0 read GetValueStr write SetValueStr;
+    property SonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
+    property ServerJavaExe: string index 2 read GetValueStr write SetValueStr;
+    property ServerShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
+    property ServerAutoLaunch: Boolean index 4 read GetValueBool write SetValueBool;
 
+    property ServerJar: string index 0 read GetServerJar;
+    property SonarDelphiJar: string index 1 read GetSonarDelphiJar;
     property SettingsDirectory: string read FSettingsDir;
   end;
 
@@ -52,6 +54,7 @@ implementation
 uses
     System.SysUtils
   , System.IOUtils
+  , DelphiLint.Version
   ;
 
 var
@@ -84,25 +87,36 @@ function TLintSettings.RegisterFields: TArray<TPropFieldBase>;
 begin
   Result := [
     // 0
-    TCustomStringPropField.Create('Server', 'Jar', GetDefaultServerJar),
+    TStringPropField.Create('Resources', 'ServerJarOverride', ''),
     // 1
-    TBoolPropField.Create('Server', 'ShowConsole', False),
+    TStringPropField.Create('Resources', 'SonarDelphiJarOverride', ''),
     // 2
-    TCustomStringPropField.Create('SonarDelphi', 'Jar', GetDefaultSonarDelphiJar),
+    TCustomStringPropField.Create('Resources', 'JavaExe', GetDefaultServerJavaExe),
     // 3
-    TCustomStringPropField.Create('Server', 'JavaExe', GetDefaultServerJavaExe),
+    TBoolPropField.Create('Server', 'ShowConsole', False),
     // 4
-    TIntPropField.Create('Server', 'StartDelay', 1000),
-    // 5
     TBoolPropField.Create('Server', 'AutoLaunch', True)
   ];
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintSettings.GetDefaultServerJar: string;
+function TLintSettings.GetServerJar(Index: Integer): string;
 begin
-  Result := TPath.Combine(FSettingsDir, 'delphilint-server.jar');
+  Result := GetValueStr(Index);
+  if Result = '' then begin
+    Result := TPath.Combine(FSettingsDir, Format('delphilint-server-%s.jar', [DelphiLintVersion]));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetSonarDelphiJar(Index: Integer): string;
+begin
+  Result := GetValueStr(Index);
+  if Result = '' then begin
+    Result := TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar');
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -117,13 +131,6 @@ begin
   if JavaHome <> '' then begin
     Result := Format('%s\bin\java.exe', [JavaHome]);
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintSettings.GetDefaultSonarDelphiJar: string;
-begin
-  Result := TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar');
 end;
 
 //______________________________________________________________________________________________________________________

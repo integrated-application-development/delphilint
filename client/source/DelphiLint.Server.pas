@@ -704,7 +704,7 @@ begin
   while
     FileAge(PortFile, ChangedTime)
     and (ChangedTime = ClientChangedTime)
-    and (TTimeSpan.Subtract(Now, ChangedTime).TotalMilliseconds < LintSettings.ServerStartDelay)
+    and (TTimeSpan.Subtract(Now, ChangedTime).TotalMilliseconds < 3000)
   do begin
     Sleep(50);
   end;
