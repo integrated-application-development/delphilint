@@ -32,7 +32,6 @@ const
   C_ImgSuccessWarn = 5;
   C_ImgIssuesWarn = 6;
 
-{$I dlversion.inc}
 
 type
   TLintPlugin = class(TDataModule)
@@ -107,6 +106,7 @@ uses
   , Vcl.Graphics
   , DelphiLint.Utils
   , DelphiLint.SetupForm
+  , DelphiLint.Version
   ;
 
 //______________________________________________________________________________________________________________________
@@ -319,11 +319,7 @@ var
   Handle: HBITMAP;
   VersionStr: string;
 begin
-  VersionStr := Format('%d.%d.%d', [C_DlMajorVersion, C_DlMinorVersion, C_DlPatchVersion]);
-  if C_DlIsDevVersion then begin
-    VersionStr := Format('%s.%s', [VersionStr, C_DlCommit]);
-  end;
-
+  VersionStr := DelphiLintVersion;
   Icon := TBitmap.Create(24, 24);
   try
     Icon.LoadFromResourceName(HInstance, 'DELPHILINT_SPLASH');

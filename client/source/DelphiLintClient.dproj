@@ -134,6 +134,7 @@ $(PreBuildEvent)]]>
             <Form>LintSetupForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="DelphiLint.Version.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DELPHILINT_SPLASH</ResourceId>
@@ -165,7 +166,7 @@ $(PreBuildEvent)]]>
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="target\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClient.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
