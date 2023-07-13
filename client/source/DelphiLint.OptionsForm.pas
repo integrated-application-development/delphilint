@@ -28,8 +28,8 @@ type
     SonarHostUrlEdit: TLabeledEdit;
     SonarHostTokenEdit: TLabeledEdit;
     AnalysisGroup: TGroupBox;
-    ProjectKeyEdit: TLabeledEdit;
-    ProjectBaseDirEdit: TLabeledEdit;
+    SonarHostProjectKeyEdit: TLabeledEdit;
+    AnalysisBaseDirEdit: TLabeledEdit;
     ProjectNameLabel: TLabel;
     CreateTokenButton: TButton;
     HeaderPanel: TPanel;
@@ -38,14 +38,14 @@ type
     ProjectBaseDirBrowseButton: TButton;
     SaveButton: TButton;
     CancelButton: TButton;
-    ProjectReadPropertiesCheckBox: TCheckBox;
+    AnalysisReadPropertiesCheckBox: TCheckBox;
     AnalysisModeGroup: TRadioGroup;
     AnalysisModeGroupBox: TGroupBox;
     BaseDirDialog: TFileOpenDialog;
-    AnalysisDownloadPluginCheckBox: TCheckBox;
-    procedure ProjectBaseDirEditChange(Sender: TObject);
+    SonarHostDownloadPluginCheckBox: TCheckBox;
+    procedure AnalysisBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
-    procedure ProjectKeyEditChange(Sender: TObject);
+    procedure SonarHostProjectKeyEditChange(Sender: TObject);
     procedure SonarHostTokenEditChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -53,10 +53,10 @@ type
     procedure ProjectBaseDirBrowseButtonClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
     procedure CancelButtonClick(Sender: TObject);
-    procedure ProjectReadPropertiesCheckBoxClick(Sender: TObject);
+    procedure AnalysisReadPropertiesCheckBoxClick(Sender: TObject);
     procedure AnalysisModeGroupClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure AnalysisDownloadPluginCheckBoxClick(Sender: TObject);
+    procedure SonarHostDownloadPluginCheckBoxClick(Sender: TObject);
   private
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
@@ -112,27 +112,27 @@ begin
   if IsConnectedMode then begin
     AnalysisModeGroup.ItemIndex := 1;
     SonarHostUrlEdit.Enabled := True;
-    ProjectKeyEdit.Enabled := True;
+    SonarHostProjectKeyEdit.Enabled := True;
     SonarHostTokenEdit.Enabled := True;
+    SonarHostDownloadPluginCheckBox.Enabled := True;
     SonarHostGroup.Enabled := True;
-    AnalysisDownloadPluginCheckBox.Enabled := True;
   end
   else begin
     AnalysisModeGroup.ItemIndex := 0;
     SonarHostUrlEdit.Enabled := False;
-    ProjectKeyEdit.Enabled := False;
+    SonarHostProjectKeyEdit.Enabled := False;
     SonarHostTokenEdit.Enabled := False;
+    SonarHostDownloadPluginCheckBox.Enabled := False;
     SonarHostGroup.Enabled := False;
-    AnalysisDownloadPluginCheckBox.Enabled := False;
   end;
 
   if Assigned(FProjectOptions) then begin
     SonarHostUrlEdit.Text := FProjectOptions.SonarHostUrl;
     SonarHostTokenEdit.Text := FProjectOptions.SonarHostToken;
-    ProjectKeyEdit.Text := FProjectOptions.ProjectKey;
-    ProjectBaseDirEdit.Text := FProjectOptions.ProjectBaseDir;
-    ProjectReadPropertiesCheckBox.Checked := FProjectOptions.ProjectReadProperties;
-    AnalysisDownloadPluginCheckBox.Checked := FProjectOptions.AnalysisDownloadPlugin;
+    SonarHostProjectKeyEdit.Text := FProjectOptions.SonarHostProjectKey;
+    SonarHostDownloadPluginCheckBox.Checked := FProjectOptions.SonarHostDownloadPlugin;
+    AnalysisBaseDirEdit.Text := FProjectOptions.AnalysisBaseDir;
+    AnalysisReadPropertiesCheckBox.Checked := FProjectOptions.AnalysisReadProperties;
     SaveButton.Enabled := True;
 
     ProjectName := TPath.GetFileName(FProjectFile);
@@ -142,10 +142,10 @@ begin
   else begin
     SonarHostUrlEdit.Text := '';
     SonarHostTokenEdit.Text := '';
-    ProjectKeyEdit.Text := '';
-    ProjectBaseDirEdit.Text := '';
-    ProjectReadPropertiesCheckBox.Checked := False;
-    AnalysisDownloadPluginCheckBox.Checked := False;
+    SonarHostProjectKeyEdit.Text := '';
+    SonarHostDownloadPluginCheckBox.Checked := False;
+    AnalysisBaseDirEdit.Text := '';
+    AnalysisReadPropertiesCheckBox.Checked := False;
     SaveButton.Enabled := False;
 
     ProjectNameLabel.Caption := 'DelphiLint: (no project)';
@@ -215,19 +215,19 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.ProjectBaseDirEditChange(Sender: TObject);
+procedure TLintOptionsForm.AnalysisBaseDirEditChange(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
-    FProjectOptions.ProjectBaseDir := ProjectBaseDirEdit.Text;
+    FProjectOptions.AnalysisBaseDir := AnalysisBaseDirEdit.Text;
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.AnalysisDownloadPluginCheckBoxClick(Sender: TObject);
+procedure TLintOptionsForm.SonarHostDownloadPluginCheckBoxClick(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
-    FProjectOptions.AnalysisDownloadPlugin := AnalysisDownloadPluginCheckBox.Checked;
+    FProjectOptions.SonarHostDownloadPlugin := SonarHostDownloadPluginCheckBox.Checked;
   end;
 end;
 
@@ -263,19 +263,19 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.ProjectKeyEditChange(Sender: TObject);
+procedure TLintOptionsForm.SonarHostProjectKeyEditChange(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
-    FProjectOptions.ProjectKey := ProjectKeyEdit.Text;
+    FProjectOptions.SonarHostProjectKey := SonarHostProjectKeyEdit.Text;
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.ProjectReadPropertiesCheckBoxClick(Sender: TObject);
+procedure TLintOptionsForm.AnalysisReadPropertiesCheckBoxClick(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
-    FProjectOptions.ProjectReadProperties := ProjectReadPropertiesCheckBox.Checked;
+    FProjectOptions.AnalysisReadProperties := AnalysisReadPropertiesCheckBox.Checked;
   end;
 end;
 
@@ -283,10 +283,10 @@ end;
 
 procedure TLintOptionsForm.ProjectBaseDirBrowseButtonClick(Sender: TObject);
 begin
-  BaseDirDialog.DefaultFolder := ExtractFilePath(ProjectBaseDirEdit.Text);
+  BaseDirDialog.DefaultFolder := ExtractFilePath(AnalysisBaseDirEdit.Text);
   BaseDirDialog.FileName := '';
   if BaseDirDialog.Execute then begin
-    ProjectBaseDirEdit.Text := BaseDirDialog.FileName;
+    AnalysisBaseDirEdit.Text := BaseDirDialog.FileName;
   end;
 end;
 

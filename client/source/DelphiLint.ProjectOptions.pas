@@ -33,15 +33,15 @@ type
   public
     constructor Create(Path: string);
 
-    property ProjectKey: string index 0 read GetValueStr write SetValueStr;
+    property SonarHostProjectKey: string index 0 read GetValueStr write SetValueStr;
     property SonarHostUrl: string index 1 read GetValueStr write SetValueStr;
-    property ProjectBaseDir: string index 2 read GetValueStr write SetValueStr;
-    property SonarHostToken: string index 3 read GetValueStr write SetValueStr;
-    property ProjectReadProperties: Boolean index 4 read GetValueBool write SetValueBool;
-    property AnalysisConnectedMode: Boolean index 5 read GetValueBool write SetValueBool;
-    property AnalysisDownloadPlugin: Boolean index 6 read GetValueBool write SetValueBool;
+    property SonarHostToken: string index 2 read GetValueStr write SetValueStr;
+    property SonarHostDownloadPlugin: Boolean index 3 read GetValueBool write SetValueBool;
+    property AnalysisBaseDir: string index 4 read GetValueStr write SetValueStr;
+    property AnalysisReadProperties: Boolean index 5 read GetValueBool write SetValueBool;
+    property AnalysisConnectedMode: Boolean index 6 read GetValueBool write SetValueBool;
 
-    property ProjectBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
+    property AnalysisBaseDirAbsolute: string read GetProjectBaseDirAbsolute;
     property ProjectPropertiesPath: string read GetProjectPropertiesPath;
   end;
 
@@ -66,7 +66,7 @@ end;
 
 function TLintProjectOptions.GetProjectBaseDirAbsolute: string;
 begin
-  Result := ProjectBaseDir;
+  Result := AnalysisBaseDir;
   if (Result <> '') and TPath.IsRelativePath(Result) then begin
     Result := ToAbsolutePath(Result, FDir);
   end;
@@ -77,8 +77,8 @@ end;
 function TLintProjectOptions.GetProjectPropertiesPath: string;
 begin
   Result := '';
-  if ProjectReadProperties then begin
-    Result := TPath.Combine(ProjectBaseDirAbsolute, 'sonar-project.properties');
+  if AnalysisReadProperties then begin
+    Result := TPath.Combine(AnalysisBaseDirAbsolute, 'sonar-project.properties');
   end;
 end;
 
@@ -92,15 +92,15 @@ begin
     // 1
     TStringPropField.Create('SonarHost', 'Url'),
     // 2
-    TStringPropField.Create('Analysis', 'BaseDir', '.'),
-    // 3
     TStringPropField.Create('SonarHost', 'Token'),
+    // 3
+    TBoolPropField.Create('SonarHost', 'DownloadPlugin', True),
     // 4
-    TBoolPropField.Create('Analysis', 'ReadProperties', True),
+    TStringPropField.Create('Analysis', 'BaseDir', '.'),
     // 5
-    TBoolPropField.Create('Analysis', 'ConnectedMode', False),
+    TBoolPropField.Create('Analysis', 'ReadProperties', True),
     // 6
-    TBoolPropField.Create('Analysis', 'DownloadPlugin', True)
+    TBoolPropField.Create('Analysis', 'ConnectedMode', False)
   ];
 end;
 

@@ -87,7 +87,7 @@ object LintOptionsForm: TLintOptionsForm
         Text = ''
         OnChange = SonarHostTokenEditChange
       end
-      object ProjectKeyEdit: TLabeledEdit
+      object SonarHostProjectKeyEdit: TLabeledEdit
         Left = 16
         Top = 112
         Width = 234
@@ -98,7 +98,7 @@ object LintOptionsForm: TLintOptionsForm
         EditLabel.Caption = 'Project key'
         TabOrder = 1
         Text = ''
-        OnChange = ProjectKeyEditChange
+        OnChange = SonarHostProjectKeyEditChange
       end
       object CreateTokenButton: TButton
         Left = 16
@@ -109,14 +109,14 @@ object LintOptionsForm: TLintOptionsForm
         TabOrder = 3
         OnClick = CreateTokenButtonClick
       end
-      object AnalysisDownloadPluginCheckBox: TCheckBox
+      object SonarHostDownloadPluginCheckBox: TCheckBox
         Left = 14
         Top = 243
         Width = 234
         Height = 17
         Caption = 'Use server'#39's SonarDelphi version'
         TabOrder = 4
-        OnClick = AnalysisDownloadPluginCheckBoxClick
+        OnClick = SonarHostDownloadPluginCheckBoxClick
       end
     end
     object AnalysisGroup: TGroupBox
@@ -129,7 +129,7 @@ object LintOptionsForm: TLintOptionsForm
       DesignSize = (
         267
         145)
-      object ProjectBaseDirEdit: TLabeledEdit
+      object AnalysisBaseDirEdit: TLabeledEdit
         Left = 16
         Top = 48
         Width = 235
@@ -140,7 +140,7 @@ object LintOptionsForm: TLintOptionsForm
         EditLabel.Caption = 'Base directory'
         TabOrder = 0
         Text = ''
-        OnChange = ProjectBaseDirEditChange
+        OnChange = AnalysisBaseDirEditChange
       end
       object ProjectBaseDirBrowseButton: TButton
         Left = 16
@@ -151,14 +151,14 @@ object LintOptionsForm: TLintOptionsForm
         TabOrder = 1
         OnClick = ProjectBaseDirBrowseButtonClick
       end
-      object ProjectReadPropertiesCheckBox: TCheckBox
+      object AnalysisReadPropertiesCheckBox: TCheckBox
         Left = 15
         Top = 115
         Width = 234
         Height = 17
         Caption = 'Read sonar-project.properties if present'
         TabOrder = 2
-        OnClick = ProjectReadPropertiesCheckBoxClick
+        OnClick = AnalysisReadPropertiesCheckBoxClick
       end
     end
     object AnalysisModeGroupBox: TGroupBox

@@ -249,21 +249,21 @@ begin
   try
     if ProjectOptions.AnalysisConnectedMode then begin
       SonarHostUrl := ProjectOptions.SonarHostUrl;
-      ProjectKey := ProjectOptions.ProjectKey;
+      ProjectKey := ProjectOptions.SonarHostProjectKey;
       SonarHostToken := ProjectOptions.SonarHostToken;
     end;
 
     AnalyzeFiles(
       Files,
       IfThen(
-        ProjectOptions.ProjectBaseDir <> '',
-        ProjectOptions.ProjectBaseDirAbsolute,
+        ProjectOptions.AnalysisBaseDir <> '',
+        ProjectOptions.AnalysisBaseDirAbsolute,
         TPath.GetDirectoryName(ProjectFile)),
       SonarHostUrl,
       ProjectKey,
       SonarHostToken,
       ProjectOptions.ProjectPropertiesPath,
-      ProjectOptions.AnalysisDownloadPlugin
+      ProjectOptions.SonarHostDownloadPlugin
     );
   finally
     FreeAndNil(ProjectOptions);
@@ -699,9 +699,9 @@ begin
     DownloadPlugin := False;
     if ProjectOptions.AnalysisConnectedMode then begin
       SonarHostUrl := ProjectOptions.SonarHostUrl;
-      ProjectKey := ProjectOptions.ProjectKey;
+      ProjectKey := ProjectOptions.SonarHostProjectKey;
       SonarHostToken := ProjectOptions.SonarHostToken;
-      DownloadPlugin := ProjectOptions.AnalysisDownloadPlugin;
+      DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;
     end;
 
     FServerLock.Acquire;

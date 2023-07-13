@@ -161,7 +161,7 @@ begin
     Result := True;
 
     if ReadOptions then begin
-      ProjectDir := TLintProjectOptions.Create(ProjectFile).ProjectBaseDirAbsolute;
+      ProjectDir := TLintProjectOptions.Create(ProjectFile).AnalysisBaseDirAbsolute;
 
       if ProjectDir <> '' then begin
         Exit;
