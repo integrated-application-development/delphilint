@@ -654,6 +654,8 @@ var
   PortStr: string;
   ClientChangedTime: TDateTime;
   ChangedTime: TDateTime;
+  TempChangedTime: TDateTime;
+  Attempts: Integer;
 begin
   if not FileExists(Jar) then begin
     raise ELintServerMisconfigured.CreateFmt('Server jar not found at path "%s"', [Jar]);
@@ -703,16 +705,38 @@ begin
   FExtProcessHandle := ProcessInfo.hProcess;
   CloseHandle(ProcessInfo.hThread);
 
-  while
-    FileAge(PortFile, ChangedTime)
-    and (ChangedTime = ClientChangedTime)
-    and (TTimeSpan.Subtract(Now, ChangedTime).TotalMilliseconds < 3000)
-  do begin
+  ChangedTime := ClientChangedTime;
+  Attempts := 0;
+  repeat
     Sleep(50);
+    if FileAge(PortFile, TempChangedTime) then begin
+      ChangedTime := TempChangedTime;
+    end;
+    Inc(Attempts);
+  until (ChangedTime <> ClientChangedTime) or (Attempts > 50);
+
+  if ChangedTime = ClientChangedTime then begin
+    raise ELintServerFailed.Create('Server failed to communicate port');
   end;
 
-  PortStr := TFile.ReadAllText(PortFile);
-  if (PortStr = '') or not IsNumeric(PortStr) then begin
+  PortStr := '';
+  Attempts := 0;
+  repeat
+    try
+      PortStr := TFile.ReadAllText(PortFile);
+    except
+      on EReadError do begin
+        // File was locked, try again
+        Sleep(50);
+      end;
+    end;
+    Inc(Attempts);
+  until (PortStr <> '') or (Attempts > 5);
+
+  if (PortStr = '') then begin
+    raise ELintServerFailed.Create('Server port file was unreadable');
+  end
+  else if not IsNumeric(PortStr) then begin
     raise ELintServerFailed.CreateFmt('Server reported nonsense port "%s"', [PortStr]);
   end;
   TFile.Delete(PortFile);
