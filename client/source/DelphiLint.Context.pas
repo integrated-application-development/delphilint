@@ -367,20 +367,29 @@ end;
 //______________________________________________________________________________________________________________________
 
 destructor TLintContext.Destroy;
+var
+  WaitForTerminate: Boolean;
 begin
-  FServerLock.Acquire;
+  WaitForTerminate := False;
+
+  FServerTerminateEvent := TEvent.Create;
   try
-    if Assigned(FServer) then begin
-      FServerTerminateEvent := TEvent.Create;
-      try
+    FServerLock.Acquire;
+    try
+      if Assigned(FServer) then begin
+        WaitForTerminate := True;
+        FServer.OnTerminate := nil;
         FServer.Terminate;
-        FServerTerminateEvent.WaitFor(1200);
-      finally
-        FreeAndNil(FServerTerminateEvent);
       end;
+    finally
+      FServerLock.Release;
+    end;
+
+    if WaitForTerminate then begin
+      FServerTerminateEvent.WaitFor(1200);
     end;
   finally
-    FServerLock.Release;
+    FreeAndNil(FServerTerminateEvent);
   end;
 
   FreeAndNil(FRules);
@@ -762,19 +771,23 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintContext.RestartServer;
+var
+  WaitForTerminate: Boolean;
 begin
+  WaitForTerminate := False;
   FServerTerminateEvent := TEvent.Create;
   try
     FServerLock.Acquire;
     try
       if Assigned(FServer) then begin
+        WaitForTerminate := True;
         FServer.Terminate;
       end;
     finally
       FServerLock.Release;
     end;
 
-    if FServerTerminateEvent.WaitFor(3000) <> wrSignaled then begin
+    if WaitForTerminate and (FServerTerminateEvent.WaitFor(3000) <> wrSignaled) then begin
       TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
     end;
   finally
