@@ -1,3 +1,9 @@
+# Unified
+target/
+
+# Java
+.idea/
+
 # Delphi
 *.~*
 *.dproj.local
@@ -6,17 +12,9 @@
 *.identcache
 *.dres
 *.rc
-
-# Project Magician
 *.prjmgc
-
-# DelphiLint
 *.delphilint
 
 # SonarDelphi
-delph.xml
 .scannerwork/
 __recovery/
-
-# Other
-target/
