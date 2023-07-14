@@ -7,7 +7,7 @@ if($?) {
   $Commit = (& git rev-parse --short HEAD)
 
   $IncContents = Get-Content -Raw $IncFile
-  Set-Content -Path $IncFile -Value ($IncContents -replace "{START_COMMIT}[^{]*{END_COMMIT}","'$Commit'")
+  Set-Content -Path $IncFile -Value ($IncContents -replace "{COMMIT}[^{]*{\/COMMIT}","'$Commit'")
   Write-Output "Commit macro expanded."
 } else {
   Write-Output "Not in a Git repository - macro not expanded."

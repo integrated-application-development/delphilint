@@ -1,6 +1,6 @@
 const
-  C_DlMajorVersion: Integer = 0;
-  C_DlMinorVersion: Integer = 0;
-  C_DlPatchVersion: Integer = 0;
-  C_DlIsDevVersion: Boolean = True;
-  C_DlCommit: String = {START_COMMIT}'unversioned'{END_COMMIT};
+  C_DlMajorVersion: Integer = {MAJOR}0{/MAJOR};
+  C_DlMinorVersion: Integer = {MINOR}0{/MINOR};
+  C_DlPatchVersion: Integer = {PATCH}0{/PATCH};
+  C_DlIsDevVersion: Boolean = {DEV}True{/DEV};
+  C_DlCommit: String = {COMMIT}'unversioned'{/COMMIT};
