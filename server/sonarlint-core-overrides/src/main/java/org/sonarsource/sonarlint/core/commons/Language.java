@@ -29,8 +29,8 @@ import java.util.Set;
 public enum Language {
   DELPHI;
 
-  private static final String LANGUAGE_KEY = "delph";
-  private static final String PLUGIN_KEY = "delphi";
+  private static final String LANGUAGE_KEY = "delphi";
+  private static final String PLUGIN_KEY = "communitydelphi";
   private static final String LABEL = "Delphi";
   private static final String[] DEFAULT_FILE_SUFFIXES = new String[] {".pas", ".dpr", ".dpk"};
   private static final String FILE_SUFFIXES_PROP_KEY = "sonar.delphi.file.suffixes";

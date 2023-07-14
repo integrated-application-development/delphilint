@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -86,16 +85,9 @@ public class StandaloneSonarHost implements SonarHost {
                         RuleType.fromSonarLintRuleType(ruleDef.getType())))
             .collect(Collectors.toSet());
 
-    var standaloneRulesData =
-        StandaloneRulesData.fromStream(
-            new InputStreamReader(
-                getClass()
-                    .getResourceAsStream("/au/com/integradev/delphilint/standalone_rules.json"),
-                StandardCharsets.UTF_8));
-
     this.activeRules =
         ruleDefs.stream()
-            .filter(ruleDef -> standaloneRulesData.getActives().contains(ruleDef.getKey()))
+            .filter(SonarLintRuleDefinition::isActiveByDefault)
             .map(
                 ruleDef ->
                     new RemoteActiveRule(
