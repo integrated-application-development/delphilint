@@ -93,9 +93,17 @@ To contribute, please create a pull request, link it to an existing issue, and c
 Please ensure that any Delphi code follows the same style as the existing code, and that running `mvn verify` in
 the `/server` directory succeeds with no changes generated.
 
+## Installation
+
+1. Download [the latest DelphiLint release](https://github.com/Integrated-Application-Development/delphilint/releases)
+   or [build from source](#building-from-source).
+2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
+3. Run `./setup.ps1 -SonarDelphiJarLocation <path>` in the DelphiLint release folder downloaded in step 1.
+4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
+
 ## Building from source
 
-Building DelphiLint from source is relatively simple.
+Building DelphiLint from source is very simple.
 
 Prerequisites:
 
@@ -103,23 +111,8 @@ Prerequisites:
 * Maven 3.5.0+
 * Java 11+
 
-### 1. Set up the repository
-
-1. Clone this repository.
-2. Initialise submodules using `git submodule init`, then `git submodule update`.
-
-### 2. Build SonarDelphi
-
-1. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
-2. Copy the plugin jar to `%APPDATA%\DelphiLint\sonar-delphi-plugin.jar`.
-
-### 3. Build the server project
-
-1. Run `/server/build.ps1`.
-2. Copy the generated .jar from `/server/delphilint-server/target/delphilint-server-<version>.jar`
-   to `%APPDATA%\DelphiLint\delphilint-server-<version>.jar`.
-
-### 4. Build DelphiLintClient
-
-1. Build the design-time package `/client/source/DelphiLintClient.dproj`.
-2. Install the generated `DelphiLintClient.bpl` into your IDE.
+1. Build the server project by running `/server/build.ps1`.
+2. Build the client project by compiling `/client/source/DelphiLintClient.dproj` with Delphi 11 or above.
+3. Run `/package.ps1 -Version <version>` after compiling the two projects to create a .zip containing
+   all the build artifacts and a setup script.
+4. Follow the [installation steps](#installation).
