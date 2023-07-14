@@ -61,7 +61,7 @@ function Test-ClientVersion([string]$Path, [string]$Version) {
     $CurrentCommit = (& git rev-parse --short HEAD)
     $MatchCommit = $CurrentCommit -imatch $Commit
   } else {
-    $MatchCommit = $false
+    $MatchCommit = $true
   }
 
 
@@ -79,6 +79,43 @@ function Wait-ClientVersion([string]$Version, [string]$Message) {
     }
   }
   Write-Host "Version is set correctly as $Version in dlversion.inc."
+}
+
+function New-SetupScript([string]$Path, [string]$Version) {
+  $SetupScript = @(
+    '#! powershell -File',
+    'param(',
+    '  [Parameter(Mandatory)]',
+    '  [string]$SonarDelphiJarLocation',
+    ')',
+    '',
+    '$ErrorActionPreference = "Stop"',
+    '',
+    "`$Version = '$Version'",
+    '',
+    '$DelphiLintFolder = Join-Path $env:APPDATA "DelphiLint"',
+    '',
+    'Write-Host "Setting up DelphiLint $Version."',
+    'New-Item -Path $DelphiLintFolder -ItemType Directory -ErrorAction Ignore | Out-Null',
+    'Write-Host "Created DelphiLint folder."',
+    '',
+    'Remove-Item (Join-Path $DelphiLintFolder "DelphiLintClient*.bpl") -ErrorAction Continue',
+    'Remove-Item (Join-Path $DelphiLintFolder "delphilint-server*.jar") -ErrorAction Continue',
+    'Write-Host "Deleted any existing build artifacts."',
+    '',
+    '@("DelphiLintClient-$Version.bpl", "delphilint-server-$Version.jar") | ForEach-Object {',
+    '  Copy-Item -Path (Join-Path $PSScriptRoot $_) -Destination (Join-Path $DelphiLintFolder $_) -Force',
+    '}',
+    'Write-Host "Copied resources."',
+    '',
+    '$SonarDelphiJar = Resolve-Path $SonarDelphiJarLocation',
+    'Copy-Item -Path $SonarDelphiJar -Destination (Join-Path $DelphiLintFolder "sonar-delphi-plugin.jar") -Force',
+    'Write-Host "Copied SonarDelphi."',
+    '',
+    'Write-Host "Setup completed for DelphiLint $Version."'
+  )
+
+  Set-Content -Path $Path -Value $SetupScript
 }
 
 function Get-ClientBpl([string]$BuildConfig) {
@@ -117,6 +154,7 @@ Write-Host "Package directory created."
 
 Copy-Item $ClientBpl (Join-Path $PackageDir "DelphiLintClient-$Version.bpl") | Out-Null
 Copy-Item $ServerJar (Join-Path $PackageDir "delphilint-server-$Version.jar") | Out-Null
+New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
 
 Write-Host "Build artifacts copied."
 
