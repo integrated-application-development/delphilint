@@ -53,6 +53,7 @@ type
   private
     FEditor: TLintEditor;
     FEditorNotifier: Integer;
+    FActionListIndex: Integer;
     FMainMenu: TMenuItem;
     FAnalysisActionsEnabled: Boolean;
     FToolFormInfo: TLintToolFormInfo;
@@ -75,6 +76,8 @@ type
 
     procedure RefreshAnalysisActions;
     procedure SetPluginEnabled(Value: Boolean);
+
+    procedure RemoveToolbarActions;
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -201,6 +204,7 @@ begin
   FEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(FEditor);
 
   // Main menu
+  FActionListIndex := (BorlandIDEServices as INTAIDEInsightService).AddActionList(LintActions);
   CreateMainMenu;
 
   // Analysis callbacks
@@ -253,6 +257,8 @@ begin
     LintContext.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
   end;
 
+  (BorlandIDEServices as INTAIDEInsightService).RemoveActionList(FActionListIndex);
+  RemoveToolbarActions;
   DestroyMainMenu;
   (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
   (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
@@ -266,6 +272,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.CreateMainMenu;
+var
+  NTAServices: INTAServices;
 
   procedure AddItem(Action: TAction);
   var
@@ -274,6 +282,7 @@ procedure TLintPlugin.CreateMainMenu;
     MenuItem := TMenuItem.Create(FMainMenu);
     MenuItem.Action := Action;
     FMainMenu.Add(MenuItem);
+    NTAServices.AddActionMenu('', Action, nil);
   end;
 
   procedure AddSeparator;
@@ -285,10 +294,10 @@ procedure TLintPlugin.CreateMainMenu;
     FMainMenu.Add(MenuItem);
   end;
 
-var
-  NTAServices: INTAServices;
 begin
   NTAServices := (BorlandIDEServices as INTAServices);
+  NTAServices.AddImages(LintImages);
+
   FMainMenu := TMenuItem.Create(NTAServices.MainMenu);
   FMainMenu.Caption := 'Delphi&Lint';
 
@@ -395,6 +404,47 @@ procedure TLintPlugin.RegisterToolFrame(Frame: TLintToolFrame);
 begin
   FEditor.OnActiveFileChanged.AddListener(Frame.ChangeActiveFile);
   FEditor.OnActiveFileChanged.AddListener(OnActiveFileChanged);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.RemoveToolbarActions;
+
+  procedure RemoveAction(Action: TAction; ToolBar: TToolBar);
+  var
+    I: Integer;
+    Button: TToolButton;
+  begin
+    for I := ToolBar.ButtonCount - 1 downto 0 do
+    begin
+      Button := ToolBar.Buttons[I];
+      if Button.Action = Action then begin
+        ToolBar.Perform(CM_CONTROLCHANGE, WPARAM(Button), 0);
+        FreeAndNil(Button);
+      end;
+    end;
+  end;
+
+const
+  CToolBars: array of string = [
+    sCustomToolBar, sStandardToolBar, sDebugToolBar, sViewToolBar, sDesktopToolBar,
+    sAlignToolbar, sBrowserToolbar, sHTMLDesignToolbar, sHTMLFormatToolbar, sHTMLTableToolbar, sPersonalityToolBar,
+    sPositionToolbar, sSpacingToolbar, sIDEInsightToolbar, sPlatformDeviceToolbar
+  ];
+var
+  NTAServices: INTAServices;
+  ToolBar: string;
+begin
+  NTAServices := (BorlandIDEServices as INTAServices);
+
+  for ToolBar in CToolBars do begin
+    RemoveAction(ActionAnalyzeActiveFile, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionAnalyzeOpenFiles, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionShowToolWindow, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionOpenProjectOptions, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionOpenSettings, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionRestartServer, NTAServices.ToolBar[ToolBar]);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
