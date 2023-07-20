@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2023-07-20
+
 ### Added
 
 * Analysis server that uses [SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi)
@@ -16,4 +18,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval
 * Support for reading `sonar-project.properties`
 
-[unreleased]: https://github.com/Integrated-Application-Development/delphilint
+[unreleased]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Integrated-Application-Development/delphilint/releases/tag/v0.1.0
