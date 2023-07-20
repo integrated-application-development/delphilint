@@ -18,3 +18,4 @@ target/
 # SonarDelphi
 .scannerwork/
 __recovery/
+sonar-project.properties
