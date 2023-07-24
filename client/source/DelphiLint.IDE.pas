@@ -19,9 +19,7 @@ unit DelphiLint.IDE;
 interface
 
 uses
-    System.SysUtils
-  , ToolsAPI
-  , Vcl.Dialogs
+    ToolsAPI
   , Vcl.Graphics
   , Winapi.Windows
   , System.Classes
@@ -130,8 +128,8 @@ uses
   , DelphiLint.Context
   , DelphiLint.Logger
   , DelphiLint.Utils
-  , DelphiLint.Settings
   , Vcl.Themes
+  , System.SysUtils
   ;
 
 //______________________________________________________________________________________________________________________

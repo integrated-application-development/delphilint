@@ -422,12 +422,14 @@ object LintPlugin: TLintPlugin
       Category = 'DelphiLint'
       Caption = 'Analyze &This File'
       ImageIndex = 8
+      ShortCut = 24652
       OnExecute = ActionAnalyzeActiveFileExecute
     end
     object ActionAnalyzeOpenFiles: TAction
       Category = 'DelphiLint'
       Caption = 'Analyze &All Open Files'
       ImageIndex = 9
+      ShortCut = 57420
       OnExecute = ActionAnalyzeOpenFilesExecute
     end
     object ActionAnalyzeShort: TAction
