@@ -266,7 +266,7 @@ public class LintServer {
       LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
           LintMessage.analyzeError(
-              "The configured SonarQube instance could not be accessed: " + e));
+              "The configured SonarQube instance could not be accessed: " + e.getMessage()));
     } catch (Exception e) {
       LOG.error("Unknown error during analysis", e);
       e.printStackTrace();

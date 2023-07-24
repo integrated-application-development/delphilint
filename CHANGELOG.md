@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Keyboard shortcuts for Analyze This File (Shift+Ctrl+L) and Analyze All Open Files (Shift+Ctrl+Alt+L)
 * Friendly error messages for common analysis errors
 
+### Fixed
+
+* Scanning a large number of units at once in Connected Mode no longer produces a SonarQube access error
+
 ## [0.1.0] - 2023-07-20
 
 ### Added

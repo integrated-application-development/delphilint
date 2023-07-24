@@ -159,9 +159,10 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         .forEachRemaining(trackable -> returnIssues.add(trackable.getClientObject()));
 
     LOG.info(
-        "{}/{} issues matched with resolved server issues and discarded",
+        "{}/{} issues matched with {} resolved server issues and discarded",
         issues.size() - returnIssues.size(),
-        issues.size());
+        issues.size(),
+        resolvedIssues.size());
 
     return returnIssues;
   }

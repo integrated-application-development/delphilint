@@ -27,14 +27,15 @@ import au.com.integradev.delphilint.remote.SonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -166,33 +167,47 @@ public class SonarQubeHost implements SonarHost {
       return null;
     }
 
-    String componentKeysStr =
-        relativeFilePaths.stream()
-            .map(filePath -> projectKey + ":" + filePath)
-            .collect(Collectors.joining(","));
+    List<String> componentKeysStrs = new ArrayList<>();
+    StringBuilder compKeyBuilder = new StringBuilder();
 
-    LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
+    for (String filePath : relativeFilePaths) {
+      compKeyBuilder.append(projectKey).append(":").append(filePath);
+      if (compKeyBuilder.length() < 1500) {
+        compKeyBuilder.append(",");
+      } else {
+        componentKeysStrs.add(compKeyBuilder.toString());
+        compKeyBuilder.setLength(0);
+      }
+    }
 
-    ConnectedList<SonarQubeIssue> resolvedIssues =
-        new ConnectedList<>(
-            api,
-            "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
-            "issues",
-            SonarQubeIssue.class);
+    if (compKeyBuilder.length() > 0) {
+      componentKeysStrs.add(compKeyBuilder.toString());
+    }
 
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
-    for (SonarQubeIssue sqIssue : resolvedIssues) {
-      remoteIssues.add(
-          new RemoteIssue(
-              sqIssue.getServerIssueKey(),
-              sqIssue.getRuleKey(),
-              sqIssue.getLine(),
-              sqIssue.getLineHash(),
-              sqIssue.getTextRange(),
-              sqIssue.getMessage(),
-              RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
-              RuleType.fromSonarLintRuleType(sqIssue.getType())));
+    for (String componentKeysStr : componentKeysStrs) {
+      LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
+
+      ConnectedList<SonarQubeIssue> resolvedIssues =
+          new ConnectedList<>(
+              api,
+              "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
+              "issues",
+              SonarQubeIssue.class);
+
+      for (SonarQubeIssue sqIssue : resolvedIssues) {
+        remoteIssues.add(
+            new RemoteIssue(
+                sqIssue.getServerIssueKey(),
+                sqIssue.getRuleKey(),
+                sqIssue.getLine(),
+                sqIssue.getLineHash(),
+                sqIssue.getTextRange(),
+                sqIssue.getMessage(),
+                RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
+                RuleType.fromSonarLintRuleType(sqIssue.getType())));
+      }
     }
 
     return remoteIssues;
