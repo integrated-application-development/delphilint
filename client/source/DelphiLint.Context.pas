@@ -90,8 +90,6 @@ type
   );
 
   TLintContext = class(TObject)
-  private const
-    C_ErrorTitle = 'DelphiLint error';
   private
     FServer: TLintServer;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -196,11 +194,24 @@ var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
 begin
-  if TryGetCurrentSourceEditor(SourceEditor) and TryGetProjectFile(ProjectFile) then begin
-    AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
+  if not TryGetProjectFile(ProjectFile) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze the active file.',
+      'There is no open Delphi project.',
+      mtWarning,
+      [mbOK],
+      0);
+  end
+  else if not TryGetCurrentSourceEditor(SourceEditor) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze the active file.',
+      'There are no open files that can be analyzed.',
+      mtWarning,
+      [mbOK],
+      0);
   end
   else begin
-    TaskMessageDlg(C_ErrorTitle, 'There are no open analyzable files.', TMsgDlgType.mtError, [mbOK], 0);
+    AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
     Exit;
   end;
 end;
@@ -218,7 +229,12 @@ begin
     Files[Length(Files) - 1] := ProjectFile;
 
     if Length(Files) = 1 then begin
-      TaskMessageDlg(C_ErrorTitle, 'There are no open files that can be analyzed.', mtError, [mbOK], 0);
+      TaskMessageDlg(
+        'DelphiLint cannot analyze all open files.',
+        'There are no open files that can be analyzed.',
+        mtWarning,
+        [mbOK],
+        0);
       Exit;
     end;
 
@@ -226,12 +242,11 @@ begin
   end
   else begin
     TaskMessageDlg(
-      C_ErrorTitle,
-      'Could not analyze file - please open a Delphi project first.',
-      mtError,
+      'DelphiLint cannot analyze all open files.',
+      'There is no open Delphi project.',
+      mtWarning,
       [mbOK],
       0);
-    Exit;
   end;
 end;
 
@@ -308,7 +323,7 @@ begin
         DownloadPlugin);
     except
       on E: ELintServerError do begin
-        TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+        TaskMessageDlg('The DelphiLint server encountered an error.', Format('%s.', [E.Message]), mtError, [mbOK], 0);
         Exit;
       end;
     end;
@@ -536,7 +551,7 @@ begin
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisFailed.Notify(Paths);
 
-      TaskMessageDlg(C_ErrorTitle, Message + '.', mtError, [mbOK], 0);
+      TaskMessageDlg('DelphiLint encountered a problem during analysis.', Message + '.', mtWarning, [mbOK], 0);
     end);
 end;
 
@@ -718,7 +733,7 @@ begin
         Server := GetInitedServer;
       except
         on E: ELintServerError do begin
-          TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+          TaskMessageDlg('The DelphiLint server encountered an error.', Format('%s.', [E.Message]), mtError, [mbOK], 0);
           Exit;
         end;
       end;
@@ -788,7 +803,12 @@ begin
     end;
 
     if WaitForTerminate and (FServerTerminateEvent.WaitFor(3000) <> wrSignaled) then begin
-      TaskMessageDlg(C_ErrorTitle, 'Server was unresponsive to termination request.', mtError, [mbOK], 0);
+      TaskMessageDlg(
+        'The DelphiLint server could not be terminated gracefully.',
+        'The DelphiLint server was unresponsive to a termination request, so it was forcibly terminated.',
+        mtWarning,
+        [mbOK],
+        0);
     end;
   finally
     FreeAndNil(FServerTerminateEvent);
@@ -800,10 +820,15 @@ begin
 
   try
     EnsureServerInited;
-    TaskMessageDlg('DelphiLint', 'Server restarted successfully.', mtInformation, [mbOK], 0);
+    MessageDlg('The DelphiLint server has been restarted.', mtInformation, [mbOK], 0);
   except
     on E: ELintServerError do begin
-      TaskMessageDlg(C_ErrorTitle, Format('%s.', [E.Message]), mtError, [mbOK], 0);
+      TaskMessageDlg(
+        'The DelphiLint server encountered a problem while restarting.',
+        Format('%s.', [E.Message]),
+        mtError,
+        [mbOK],
+        0);
     end;
   end;
 end;

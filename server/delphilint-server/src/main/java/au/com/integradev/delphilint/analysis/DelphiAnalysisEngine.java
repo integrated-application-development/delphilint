@@ -126,16 +126,13 @@ public class DelphiAnalysisEngine implements AutoCloseable {
 
     LOG.info("Analysis finished");
 
-    if (host != null) {
-      Set<String> fileRelativePaths = new HashSet<>();
-      config
-          .inputFiles()
-          .iterator()
-          .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
-      issues = postProcessIssues(fileRelativePaths, issues, host);
-    }
+    Set<String> fileRelativePaths = new HashSet<>();
+    config
+        .inputFiles()
+        .iterator()
+        .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
 
-    return issues;
+    return postProcessIssues(fileRelativePaths, issues, host);
   }
 
   private Set<Issue> postProcessIssues(

@@ -19,6 +19,7 @@ package au.com.integradev.delphilint.server;
 
 import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
+import au.com.integradev.delphilint.analysis.SonarDelphiUtils;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
@@ -242,8 +243,8 @@ public class LintServer {
 
       if (logOutput.containsError()) {
         LOG.error("Error logged during SonarDelphi analysis: {}", logOutput.getError());
-        sendMessage.accept(
-            LintMessage.analyzeError("Error logged during analysis: " + logOutput.getError()));
+        String friendlyError = SonarDelphiUtils.convertSonarDelphiError(logOutput.getError());
+        sendMessage.accept(LintMessage.analyzeError(friendlyError));
       } else {
         ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
         result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
@@ -254,13 +255,13 @@ public class LintServer {
       sendMessage.accept(
           LintMessage.analyzeError(
               "Authorization is required to access the configured SonarQube instance. Please"
-                  + " provide an appropriate authorization token."));
+                  + " provide an appropriate authorization token"));
     } catch (SonarHostConnectException e) {
       LOG.warn("API could not be accessed", e);
       sendMessage.accept(
           LintMessage.analyzeError(
               "Could not connect to the configured SonarQube instance. Please confirm that the URL"
-                  + " is correct and the instance is running."));
+                  + " is correct and the instance is running"));
     } catch (SonarHostException | UncheckedSonarHostException e) {
       LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
