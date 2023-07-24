@@ -21,7 +21,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, Vcl.OleCtrls, SHDocVw, System.Generics.Collections;
+  Vcl.ToolWin, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, Vcl.OleCtrls, SHDocVw,
+  System.Generics.Collections;
 
 type
   TCurrentFileStatus = (
@@ -441,8 +442,21 @@ begin
     cfsFailed: Result := 'Failed';
     cfsNoIssues: Result := 'No issues';
     cfsNoIssuesOutdated: Result := 'No issues (outdated)';
-    cfsIssues: Result := Format('%d issues', [NumIssues]);
-    cfsIssuesOutdated: Result := Format('%d issues (outdated)', [NumIssues]);
+    cfsIssues: begin
+      if NumIssues = 1 then begin
+        Result := '1 issue';
+      end
+      else begin
+        Result := Format('%d issues', [NumIssues]);
+      end;
+    end;
+    cfsIssuesOutdated:
+      if NumIssues = 1 then begin
+        Result := '1 issue (outdated)';
+      end
+      else begin
+        Result := Format('%d issues (outdated)', [NumIssues]);
+      end;
   else
     Result := 'Not analyzable';
   end;

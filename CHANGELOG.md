@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Scanning a large number of units at once in Connected Mode no longer produces a SonarQube access error
+* Files with one issue now display "1 issue" instead of "1 issues"
 
 ## [0.1.0] - 2023-07-20
 
