@@ -131,9 +131,8 @@ end;
 
 procedure TLintSetupForm.RefreshButtonClick(Sender: TObject);
 begin
-  UpdateValidState(JavaExeIndicator);
-  UpdateValidState(ServerJarIndicator);
-  UpdateValidState(SonarDelphiJarIndicator);
+  LintSettings.Load;
+  UpdateControls;
   UpdateOkButton;
 end;
 

@@ -44,8 +44,8 @@ object LintSetupForm: TLintSetupForm
       Height = 49
       AutoSize = False
       Caption = 
-        'DelphiLint integrates a Delphi code analyzer into the Delphi IDE' +
-        ' to provide on-the-fly linting. '
+        'DelphiLint integrates a Delphi code analyzer into the Delphi IDE ' +
+        'to provide on-the-fly linting. '
       WordWrap = True
     end
     object Label3: TLabel
@@ -55,10 +55,10 @@ object LintSetupForm: TLintSetupForm
       Height = 61
       AutoSize = False
       Caption = 
-        'There are three primary components to DelphiLint: the IDE plugin' +
-        ' itself, a companion Java server that runs in the background, an' +
-        'd the IntegraDev SonarDelphi plugin, which the server uses to ca' +
-        'rry out analysis.'
+        'There are three primary components to DelphiLint: the IDE plugin ' +
+        'itself, a companion Java server that runs in the background, and ' +
+        'the IntegraDev SonarDelphi plugin, which the server uses to carry ' +
+        'out analysis.'
       WordWrap = True
     end
     object Label4: TLabel
@@ -68,9 +68,9 @@ object LintSetupForm: TLintSetupForm
       Height = 86
       AutoSize = False
       Caption = 
-        'To run, DelphiLint requires both the server and SonarDelphi, as ' +
-        'well as a Java 11 or above executable. Please ensure all resourc' +
-        'es have been installed.'
+        'To run, DelphiLint requires both the server and SonarDelphi, as well ' +
+        'as a Java 11 or above executable. Please ensure all resources have ' +
+        'been installed.'
       WordWrap = True
     end
     object Label5: TLabel
@@ -88,8 +88,8 @@ object LintSetupForm: TLintSetupForm
       Width = 188
       Height = 19
       Caption = 
-        '<a href="https://github.com/Integrated-Application-Development/d' +
-        'elphilint">the DelphiLint README on GitHub.</a>'
+        '<a href="https://github.com/Integrated-Application-Development/delphilint">the ' +
+        'DelphiLint README on GitHub.</a>'
       TabOrder = 0
     end
   end
