@@ -16,9 +16,9 @@ export function analyzeThisFile(server: LintServer, issueCollection: vscode.Diag
   display.showInfo("Initializing server...");
   server.initialize(
     {
-      bdsPath: vscode.workspace.getConfiguration().get("delphilint-vscode.bdsPath") as string,
+      bdsPath: settings.getBdsPath(),
       apiToken: "",
-      compilerVersion: vscode.workspace.getConfiguration().get("delphilint-vscode.compilerVersion") as string,
+      compilerVersion: settings.getCompilerVersion(),
       defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
       sonarHostUrl: ""
     },
