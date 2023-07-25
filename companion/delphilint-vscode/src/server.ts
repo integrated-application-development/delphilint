@@ -105,27 +105,31 @@ export class LintServer {
     this.sendMessageWithId(category, id, data);
   }
 
-  initialize(msg: RequestInitialize, onInitialized: () => void, onError: (err: string) => void) {
-    this.sendMessage(LintMessageType.initialize, msg, (msg) => {
-      if(msg.category === LintMessageType.initialized) {
-        onInitialized();
-      } else if (msg.category === LintMessageType.initializeError) {
-        onError(msg.data);
-      } else {
-        onError("Unknown category " + msg.category.valueOf());
-      }
+  initialize(msg: RequestInitialize): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.sendMessage(LintMessageType.initialize, msg, (msg) => {
+        if(msg.category === LintMessageType.initialized) {
+          resolve();
+        } else if (msg.category === LintMessageType.initializeError) {
+          reject(msg.data);
+        } else {
+          reject("Unknown category " + msg.category.valueOf());
+        }
+      });
     });
   }
 
-  analyze(msg: RequestAnalyze, onResult: (issues: LintIssue[]) => void, onError: (err: string) => void) {
-    this.sendMessage(LintMessageType.analyze, msg, (msg) => {
-      if(msg.category === LintMessageType.analyzeResult) {
-        onResult(msg.data.issues);
-      } else if (msg.category === LintMessageType.analyzeError) {
-        onError(msg.data);
-      } else {
-        onError("Unknown category " + msg.category.valueOf());
-      }
+  analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
+    return new Promise((resolve, reject) => {
+      this.sendMessage(LintMessageType.analyze, msg, (msg) => {
+        if(msg.category === LintMessageType.analyzeResult) {
+          resolve(msg.data.issues);
+        } else if (msg.category === LintMessageType.analyzeError) {
+          reject(msg.data);
+        } else {
+          reject("Unknown category " + msg.category.valueOf());
+        }
+      });
     });
   }
 }

@@ -14,29 +14,27 @@ export function analyzeThisFile(server: LintServer, issueCollection: vscode.Diag
   let currentFileUri = activeTextEditor.document.uri;
 
   display.showInfo("Initializing server...");
-  server.initialize(
-    {
+  server.initialize({
       bdsPath: settings.getBdsPath(),
       apiToken: "",
       compilerVersion: settings.getCompilerVersion(),
       defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
       sonarHostUrl: ""
-    },
-    () => {
+  })
+    .then(() => {
       display.showInfo("Analyzing " + currentFileUri.fsPath + "...");
-      server.analyze(
-        {
+      server.analyze({
           apiToken: "",
           baseDir: path.parse(currentFileUri.fsPath).dir,
           inputFiles: [currentFileUri.fsPath],
           projectKey: "",
           projectPropertiesPath: "",
           sonarHostUrl: ""
-        },
-        (issues: LintIssue[]) => {
+      })
+        .then((issues: LintIssue[]) => {
           display.showIssues(issues, issueCollection);
-        },
-        display.showError);
-    },
-    display.showError);
+        })
+        .catch(display.showError);
+    })
+    .catch(display.showError);
 }
