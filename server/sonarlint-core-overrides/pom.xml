@@ -12,6 +12,9 @@
       <relativePath>../pom.xml</relativePath>
   </parent>
 
+  <name>DelphiLint :: SonarLint Core Overrides</name>
+  <description>Shadow of sonarlint-core to add Delphi language support</description>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <compiler.languageLevel>11</compiler.languageLevel>
