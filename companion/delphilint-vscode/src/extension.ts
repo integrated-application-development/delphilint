@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
-import { LintServer } from './server';
-
+import { LintIssue, LintServer } from './server';
+import * as path from 'path';
 
 let lintIssueCollection: vscode.DiagnosticCollection;
 let server = new LintServer(14000);
+let settingsPath = path.join(process.env.APPDATA as string, "DelphiLint");
+let sonarDelphiJarPath = path.join(settingsPath, "sonar-delphi-plugin.jar");
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('DelphiLint activated.');
@@ -18,28 +20,46 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		let path = activeTextEditor.document.fileName;
+		let currentFileUri = activeTextEditor.document.uri;
 
-		vscode.window.showInformationMessage("Analyzing " + path + "...");
-		let diagnostics: vscode.Diagnostic[] = [];
-
-		let issueRange = new vscode.Range(0, 0, 0, 10);
-		diagnostics.push(new vscode.Diagnostic(issueRange, "Test message", vscode.DiagnosticSeverity.Warning));
-
-		lintIssueCollection.set(activeTextEditor.document.uri, diagnostics);
-
+		vscode.window.showInformationMessage("Initializing server...");
 		server.initialize(
 			{
-				bdsPath: "",
+				bdsPath: vscode.workspace.getConfiguration().get("delphilint-vscode.bdsPath") as string,
 				apiToken: "",
-				compilerVersion: "VER350",
-				defaultSonarDelphiJarPath: "",
+				compilerVersion: vscode.workspace.getConfiguration().get("delphilint-vscode.compilerVersion") as string,
+				defaultSonarDelphiJarPath: sonarDelphiJarPath,
 				sonarHostUrl: ""
 			},
-			() => { vscode.window.showInformationMessage("Server initialized!"); },
+			() => {
+				vscode.window.showInformationMessage("Analyzing " + currentFileUri.fsPath + "...");
+				server.analyze(
+					{
+						apiToken: "",
+						baseDir: path.parse(currentFileUri.fsPath).dir,
+						inputFiles: [currentFileUri.fsPath],
+						projectKey: "",
+						projectPropertiesPath: "",
+						sonarHostUrl: ""
+					},
+					(issues: LintIssue[]) => {
+						lintIssueCollection.set(currentFileUri, undefined);
+
+						let diagnostics: vscode.Diagnostic[] = [];
+
+						for(const element of issues) {
+							let issue = element;
+							if(issue.range) {
+								let issueRange = new vscode.Range(issue.range.startLine - 1, issue.range.startOffset, issue.range.endLine - 1, issue.range.endOffset);
+								diagnostics.push(new vscode.Diagnostic(issueRange, issue.message, vscode.DiagnosticSeverity.Warning));
+							}
+						}
+
+						lintIssueCollection.set(currentFileUri, diagnostics);
+					},
+					(err) => { vscode.window.showErrorMessage(err); });
+			},
 			(err) => { vscode.window.showErrorMessage(err); });
 		});
 	context.subscriptions.push(analyzeThisFileCommand);
 }
-
-export function deactivate() {}

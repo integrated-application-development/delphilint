@@ -4,7 +4,10 @@ import { TextDecoder, TextEncoder } from 'util';
 export enum LintMessageType {
   initialize = 20,
   initialized = 25,
-  initializeError = 26
+  initializeError = 26,
+  analyze = 30,
+  analyzeResult = 35,
+  analyzeError = 36
 };
 
 export type RequestInitialize = {
@@ -13,6 +16,27 @@ export type RequestInitialize = {
   defaultSonarDelphiJarPath: string,
   sonarHostUrl: string,
   apiToken: string
+};
+
+export type RequestAnalyze = {
+  baseDir: string,
+  inputFiles: Iterable<string>,
+  sonarHostUrl: string,
+  projectKey: string,
+  apiToken: string,
+  projectPropertiesPath: string
+};
+
+export type LintIssue = {
+  ruleKey: string,
+  message: string,
+  file: string,
+  range?: {
+    startLine: number,
+    startOffset: number,
+    endLine: number,
+    endOffset: number
+  }
 };
 
 export type LintMessage = {
@@ -81,14 +105,26 @@ export class LintServer {
     this.sendMessageWithId(category, id, data);
   }
 
-  initialize(msg: RequestInitialize, onInitialized: () => void, onInitializeError: (err: string) => void) {
+  initialize(msg: RequestInitialize, onInitialized: () => void, onError: (err: string) => void) {
     this.sendMessage(LintMessageType.initialize, msg, (msg) => {
       if(msg.category === LintMessageType.initialized) {
         onInitialized();
       } else if (msg.category === LintMessageType.initializeError) {
-        onInitializeError(msg.data);
+        onError(msg.data);
       } else {
-        onInitializeError("Unknown category " + msg.category.valueOf());
+        onError("Unknown category " + msg.category.valueOf());
+      }
+    });
+  }
+
+  analyze(msg: RequestAnalyze, onResult: (issues: LintIssue[]) => void, onError: (err: string) => void) {
+    this.sendMessage(LintMessageType.analyze, msg, (msg) => {
+      if(msg.category === LintMessageType.analyzeResult) {
+        onResult(msg.data.issues);
+      } else if (msg.category === LintMessageType.analyzeError) {
+        onError(msg.data);
+      } else {
+        onError("Unknown category " + msg.category.valueOf());
       }
     });
   }
