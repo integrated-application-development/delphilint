@@ -1,11 +1,10 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { LintServer } from './server';
+
 
 let lintIssueCollection: vscode.DiagnosticCollection;
+let server = new LintServer(14000);
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	console.log('DelphiLint activated.');
 
@@ -28,9 +27,19 @@ export function activate(context: vscode.ExtensionContext) {
 		diagnostics.push(new vscode.Diagnostic(issueRange, "Test message", vscode.DiagnosticSeverity.Warning));
 
 		lintIssueCollection.set(activeTextEditor.document.uri, diagnostics);
-	});
+
+		server.initialize(
+			{
+				bdsPath: "",
+				apiToken: "",
+				compilerVersion: "VER350",
+				defaultSonarDelphiJarPath: "",
+				sonarHostUrl: ""
+			},
+			() => { vscode.window.showInformationMessage("Server initialized!"); },
+			(err) => { vscode.window.showErrorMessage(err); });
+		});
 	context.subscriptions.push(analyzeThisFileCommand);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
