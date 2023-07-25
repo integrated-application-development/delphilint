@@ -1,0 +1,36 @@
+{
+  "name": "delphilint-vscode",
+  "displayName": "DelphiLint for VS Code",
+  "description": "VS Code extension for the DelphiLint Delphi code analysis server, powered by SonarDelphi",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.54.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": ["onLanguage:delphi", "onLanguage:objectpascal"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "delphilint-vscode.analyzeThisFile",
+        "title": "DelphiLint: Analyze This File"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.54.0",
+    "@types/node": "20.2.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.8",
+    "@typescript-eslint/parser": "^5.59.8",
+    "eslint": "^8.41.0",
+    "typescript": "^5.1.3"
+  }
+}
