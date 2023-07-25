@@ -45,6 +45,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -221,12 +222,12 @@ public class LintServer {
             requestAnalyze.getProjectKey(),
             requestAnalyze.getApiToken());
 
-    Map<String, String> properties;
+    Map<String, String> properties = Collections.emptyMap();
     if (!requestAnalyze.getProjectProperties().isEmpty()) {
-      properties =
-          new SonarProjectProperties(Path.of(requestAnalyze.getProjectProperties())).toMap();
-    } else {
-      properties = Collections.emptyMap();
+      Path projectPropertiesPath = Path.of(requestAnalyze.getProjectProperties());
+      if (Files.exists(projectPropertiesPath)) {
+        properties = new SonarProjectProperties(projectPropertiesPath).toMap();
+      }
     }
 
     try {

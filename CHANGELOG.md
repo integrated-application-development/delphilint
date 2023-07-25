@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Scanning a large number of units at once in Connected Mode no longer produces a SonarQube access error
 * Files with one issue now display "1 issue" instead of "1 issues"
+* Running an analysis with "Read sonar-project.properties if present" enabled no longer produces an error
+  if there is no `sonar-project.properties` file present
 
 ## [0.1.0] - 2023-07-20
 
