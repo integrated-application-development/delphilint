@@ -17,7 +17,22 @@
         "command": "delphilint-vscode.analyzeThisFile",
         "title": "DelphiLint: Analyze This File"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "DelphiLint",
+      "properties": {
+        "delphilint-vscode.bdsPath": {
+          "type": "string",
+          "default": "C:\\Program Files (x86)\\Embarcadero\\Studio\\22.0",
+          "description": "The path to the Embarcadero BDS directory (e.g. `C:\\Program Files (x86)\\Embarcadero\\Studio\\22.0`)."
+        },
+        "delphilint-vscode.compilerVersion": {
+          "type": "string",
+          "default": "VER350",
+          "description": "The symbol for the compiler version to target (e.g. `VER350`)."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
