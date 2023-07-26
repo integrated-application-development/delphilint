@@ -55,14 +55,19 @@ class ExternalServer {
   private process: ChildProcess;
   private isExited: boolean;
 
-  constructor(command: string, args: string[], workingDir: string, showConsole: boolean) {
+  constructor(
+    command: string,
+    args: string[],
+    workingDir: string,
+    showConsole: boolean
+  ) {
     this.isExited = false;
 
-    this.process = spawn(
-      command,
-      args,
-      { cwd: workingDir, windowsHide: !showConsole, detached: showConsole }
-    );
+    this.process = spawn(command, args, {
+      cwd: workingDir,
+      windowsHide: !showConsole,
+      detached: showConsole,
+    });
     this.process.on("exit", () => (this.isExited = true));
   }
 
@@ -218,13 +223,13 @@ export class LintServer {
   }
 
   quit() {
-    if(!this.externalServer) {
+    if (!this.externalServer) {
       return;
     }
 
     this.sendMessage(LintMessageType.quit, null);
     setTimeout(() => {
-      if(this.externalServer && !this.externalServer.exited) {
+      if (this.externalServer && !this.externalServer.exited) {
         this.externalServer.kill();
       }
     }, 2000);

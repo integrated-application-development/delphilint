@@ -1,9 +1,12 @@
-import * as path from 'path';
-import * as ini from 'ini';
-import * as fs from 'fs';
-import * as vscode from 'vscode';
+import * as path from "path";
+import * as ini from "ini";
+import * as fs from "fs";
+import * as vscode from "vscode";
 
-export const SETTINGS_DIR = path.join(process.env.APPDATA as string, "DelphiLint");
+export const SETTINGS_DIR = path.join(
+  process.env.APPDATA as string,
+  "DelphiLint"
+);
 export const SETTINGS_FILE = path.join(SETTINGS_DIR, "delphilint.ini");
 
 let version: string = "";
@@ -14,18 +17,18 @@ export function registerVersion(ver: string) {
 
 type LintSettingsIni = {
   Server: {
-    ShowConsole: number,
-    AutoLaunch: number
-  },
+    ShowConsole: number;
+    AutoLaunch: number;
+  };
   Resources: {
-    JavaExe: string,
-    ServerJarOverride: string,
-    SonarDelphiJarOverride: string
-  }
+    JavaExe: string;
+    ServerJarOverride: string;
+    SonarDelphiJarOverride: string;
+  };
 };
 
 function getSettings(path: string): LintSettingsIni {
-  let settingsStr = fs.readFileSync(path, 'utf8');
+  let settingsStr = fs.readFileSync(path, "utf8");
   let settings = ini.parse(settingsStr);
   return settings as LintSettingsIni;
 }
@@ -40,13 +43,18 @@ function getServerVersion(): string {
 
 export function getSonarDelphiJar(): string {
   let settings = getSettings(SETTINGS_FILE);
-  return settings.Resources.SonarDelphiJarOverride || path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar");
+  return (
+    settings.Resources.SonarDelphiJarOverride ||
+    path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar")
+  );
 }
 
 export function getServerJar(): string {
   let settings = getSettings(SETTINGS_FILE);
-  return settings.Resources.ServerJarOverride
-    || path.join(SETTINGS_DIR, "delphilint-server-" + getServerVersion() + ".jar");
+  return (
+    settings.Resources.ServerJarOverride ||
+    path.join(SETTINGS_DIR, "delphilint-server-" + getServerVersion() + ".jar")
+  );
 }
 
 export function getJavaExe(): string {
