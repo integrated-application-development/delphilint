@@ -30,6 +30,8 @@ type
     ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
     BrokenSetupWarningLabel: TLabel;
+    ClientConfigGroupBox: TGroupBox;
+    ClientAutoShowToolWindowCheckBox: TCheckBox;
     procedure ComponentsButtonClick(Sender: TObject);
   public
     procedure Init;
@@ -94,8 +96,9 @@ procedure TLintSettingsFrame.Init;
 begin
   LintSettings.Load;
   ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
-  ServerAutoLaunchCheckBox.Checked := LintSettings.ServerAutoLaunch;
+  ServerAutoLaunchCheckBox.Checked := not LintSettings.ServerAutoLaunch;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
+  ClientAutoShowToolWindowCheckBox.Checked := LintSettings.ClientAutoShowToolWindow;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -103,7 +106,8 @@ end;
 procedure TLintSettingsFrame.Save;
 begin
   LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
-  LintSettings.ServerAutoLaunch := ServerAutoLaunchCheckBox.Checked;
+  LintSettings.ServerAutoLaunch := not ServerAutoLaunchCheckBox.Checked;
+  LintSettings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
   LintSettings.Save;
 end;
 

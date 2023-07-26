@@ -2,7 +2,7 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 200
+  Height = 265
   Constraints.MinHeight = 200
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
@@ -14,12 +14,12 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    200)
+    265)
   object ComponentsGroupBox: TGroupBox
     Left = 12
-    Top = 112
-    Width = 556
-    Height = 73
+    Top = 88
+    Width = 560
+    Height = 65
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
     TabOrder = 1
@@ -49,8 +49,8 @@ object LintSettingsFrame: TLintSettingsFrame
   end
   object ServerConfigGroupBox: TGroupBox
     Left = 12
-    Top = 16
-    Width = 556
+    Top = 168
+    Width = 560
     Height = 81
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Server configuration'
@@ -66,10 +66,27 @@ object LintSettingsFrame: TLintSettingsFrame
     object ServerAutoLaunchCheckBox: TCheckBox
       Left = 12
       Top = 54
-      Width = 174
+      Width = 237
       Height = 17
-      Caption = 'Launch server automatically'
+      Caption = 'Connect to external DelphiLint server'
       TabOrder = 1
+    end
+  end
+  object ClientConfigGroupBox: TGroupBox
+    Left = 12
+    Top = 16
+    Width = 560
+    Height = 57
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'IDE configuration'
+    TabOrder = 2
+    object ClientAutoShowToolWindowCheckBox: TCheckBox
+      Left = 12
+      Top = 31
+      Width = 333
+      Height = 17
+      Caption = 'Show the DelphiLint window when an analysis is started'
+      TabOrder = 0
     end
   end
 end

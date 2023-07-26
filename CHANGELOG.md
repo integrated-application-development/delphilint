@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Security hotspots are now suppressed when they match reviewed server hotspots
+* When an analysis is started, by default the DelphiLint window is shown if it is not already visible
+* New user setting to optionally disable the above window auto-show behaviour
 
 ### Fixed
 

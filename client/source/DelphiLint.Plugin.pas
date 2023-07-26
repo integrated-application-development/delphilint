@@ -19,9 +19,8 @@ unit DelphiLint.Plugin;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, DelphiLint.IDE, Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame,
-  DelphiLint.OptionsForm;
+  System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus, DelphiLint.IDE,
+  Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame, DelphiLint.OptionsForm;
 
 const
   C_ImgDefault = 0;
@@ -62,6 +61,8 @@ type
     FInfoIndex: Integer;
     FOptionsForm: TLintOptionsForm;
     FEnabled: Boolean;
+
+    procedure ShowToolWindow;
 
     procedure CreateMainMenu;
     procedure DestroyMainMenu;
@@ -110,12 +111,18 @@ uses
   , DelphiLint.Utils
   , DelphiLint.SetupForm
   , DelphiLint.Version
+  , System.SysUtils
+  , Vcl.ComCtrls
+  , DelphiLint.Settings
   ;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.ActionAnalyzeActiveFileExecute(Sender: TObject);
 begin
+  if LintSettings.ClientAutoShowToolWindow then begin
+    ShowToolWindow;
+  end;
   LintContext.AnalyzeActiveFile;
 end;
 
@@ -123,6 +130,9 @@ end;
 
 procedure TLintPlugin.ActionAnalyzeOpenFilesExecute(Sender: TObject);
 begin
+  if LintSettings.ClientAutoShowToolWindow then begin
+    ShowToolWindow;
+  end;
   LintContext.AnalyzeOpenFiles;
 end;
 
@@ -156,13 +166,20 @@ end;
 
 procedure TLintPlugin.ActionShowToolWindowExecute(Sender: TObject);
 begin
+  ShowToolWindow;
+  FToolForm.SetFocus;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintPlugin.ShowToolWindow;
+begin
   if not Assigned(FToolForm) then begin
     FToolForm := (BorlandIDEServices as INTAServices).CreateDockableForm(FToolFormInfo);
     (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FToolForm);
   end;
 
   FToolForm.Show;
-  FToolForm.SetFocus;
 end;
 
 //______________________________________________________________________________________________________________________

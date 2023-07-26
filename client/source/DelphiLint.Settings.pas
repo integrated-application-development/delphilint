@@ -41,6 +41,7 @@ type
     property ServerJavaExe: string index 2 read GetValueStr write SetValueStr;
     property ServerShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
     property ServerAutoLaunch: Boolean index 4 read GetValueBool write SetValueBool;
+    property ClientAutoShowToolWindow: Boolean index 5 read GetValueBool write SetValueBool;
 
     property ServerJar: string index 0 read GetServerJar;
     property SonarDelphiJar: string index 1 read GetSonarDelphiJar;
@@ -95,7 +96,9 @@ begin
     // 3
     TBoolPropField.Create('Server', 'ShowConsole', False),
     // 4
-    TBoolPropField.Create('Server', 'AutoLaunch', True)
+    TBoolPropField.Create('Server', 'AutoLaunch', True),
+    // 5
+    TBoolPropField.Create('Client', 'AutoShowToolWindow', True)
   ];
 end;
 
