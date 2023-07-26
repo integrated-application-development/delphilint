@@ -421,9 +421,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function OrderByStartLine(const Left: TLiveIssue; const Right: TLiveIssue): Integer;
+function OrderIssuesByRange(const Left: TLiveIssue; const Right: TLiveIssue): Integer;
 begin
   Result := TComparer<Integer>.Default.Compare(Left.OriginalStartLine, Right.OriginalStartLine);
+  if Result = 0 then begin
+    Result := TComparer<Integer>.Default.Compare(Left.StartLineOffset, Right.StartLineOffset);
+  end;
+  if Result = 0 then begin
+    Result := TComparer<string>.Default.Compare(Left.RuleKey, Right.RuleKey);
+  end;
+  if Result = 0 then begin
+    Result := TComparer<Integer>.Default.Compare(Left.EndLineOffset, Right.EndLineOffset);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -445,7 +454,7 @@ begin
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
-      TArray.Sort<TLiveIssue>(Result, TComparer<TLiveIssue>.Construct(OrderByStartLine));
+      TArray.Sort<TLiveIssue>(Result, TComparer<TLiveIssue>.Construct(OrderIssuesByRange));
     end
     else begin
       ResultList := TList<TLiveIssue>.Create;
@@ -456,7 +465,7 @@ begin
           end;
         end;
 
-        ResultList.Sort(TComparer<TLiveIssue>.Construct(OrderByStartLine));
+        ResultList.Sort(TComparer<TLiveIssue>.Construct(OrderIssuesByRange));
         Result := ResultList.ToArray;
       finally
         FreeAndNil(ResultList);
