@@ -17,8 +17,8 @@ export function registerVersion(ver: string) {
 
 type LintSettingsIni = {
   Server: {
-    ShowConsole: number;
-    AutoLaunch: number;
+    ShowConsole: 0 | 1;
+    AutoLaunch: 0 | 1;
   };
   Resources: {
     JavaExe: string;

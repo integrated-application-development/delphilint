@@ -1,8 +1,10 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { LintServer, LintIssue, RequestAnalyze } from "./server";
+import * as fs from "fs";
+import { LintServer, RequestAnalyze } from "./server";
 import * as display from "./display";
 import * as settings from "./settings";
+import { ProjectOptions } from "./project";
 
 const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
@@ -29,12 +31,27 @@ export async function chooseActiveDproj() {
   }
 }
 
-async function getActiveDproj() {
+async function getActiveDproj(): Promise<string> {
   if (!activeDproj) {
     await chooseActiveDproj();
   }
 
-  return activeDproj;
+  if (activeDproj) {
+    return activeDproj;
+  } else {
+    throw new Error("There is no active Delphi project.");
+  }
+}
+
+function getProjectOptionsForDproj(
+  dprojPath: string
+): ProjectOptions | undefined {
+  let projectOptionsPath = dprojPath
+    .toLowerCase()
+    .replace(".dproj", ".delphilint");
+  if (fs.existsSync(projectOptionsPath)) {
+    return new ProjectOptions(projectOptionsPath);
+  }
 }
 
 async function analyzeFiles(
@@ -60,6 +77,17 @@ async function analyzeFiles(
   let dprojFile = await getActiveDproj();
   if (dprojFile) {
     msg.inputFiles.push(dprojFile);
+
+    let projectOptions = getProjectOptionsForDproj(dprojFile);
+    if (projectOptions) {
+      msg.baseDir = projectOptions.baseDir();
+      msg.projectPropertiesPath = projectOptions.projectPropertiesPath();
+      if (projectOptions.connectedMode()) {
+        msg.sonarHostUrl = projectOptions.sonarHostUrl();
+        msg.projectKey = projectOptions.projectKey();
+        msg.apiToken = projectOptions.apiToken();
+      }
+    }
   }
 
   await vscode.window.withProgress(
@@ -85,6 +113,49 @@ async function analyzeFiles(
   );
 }
 
+async function analyzeFilesWithProjectOptions(
+  server: LintServer,
+  issueCollection: vscode.DiagnosticCollection,
+  files: string[]
+) {
+  let apiToken = "";
+  let sonarHostUrl = "";
+  let projectKey = "";
+  let baseDir = "";
+  let projectPropertiesPath = "";
+
+  let dproj = await getActiveDproj();
+  baseDir = path.dirname(dproj);
+
+  let projectOptions = getProjectOptionsForDproj(dproj);
+  if (projectOptions) {
+    baseDir = projectOptions.baseDir();
+    projectPropertiesPath = projectOptions.projectPropertiesPath();
+    if (projectOptions.connectedMode()) {
+      sonarHostUrl = projectOptions.sonarHostUrl();
+      projectKey = projectOptions.projectKey();
+      apiToken = projectOptions.apiToken();
+    }
+  }
+
+  await server.initialize({
+    bdsPath: settings.getBdsPath(),
+    apiToken: apiToken,
+    compilerVersion: settings.getCompilerVersion(),
+    defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
+    sonarHostUrl: sonarHostUrl,
+  });
+
+  await analyzeFiles(server, issueCollection, {
+    baseDir: baseDir,
+    inputFiles: [...files, dproj],
+    projectKey: projectKey,
+    projectPropertiesPath: projectPropertiesPath,
+    sonarHostUrl: sonarHostUrl,
+    apiToken: apiToken,
+  });
+}
+
 export async function analyzeThisFile(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection
@@ -107,22 +178,9 @@ export async function analyzeThisFile(
   let currentFileUri = activeTextEditor.document.uri;
 
   try {
-    await server.initialize({
-      bdsPath: settings.getBdsPath(),
-      apiToken: "",
-      compilerVersion: settings.getCompilerVersion(),
-      defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
-      sonarHostUrl: "",
-    });
-
-    await analyzeFiles(server, issueCollection, {
-      baseDir: path.parse(currentFileUri.fsPath).dir,
-      inputFiles: [currentFileUri.fsPath],
-      projectKey: "",
-      projectPropertiesPath: "",
-      sonarHostUrl: "",
-      apiToken: "",
-    });
+    await analyzeFilesWithProjectOptions(server, issueCollection, [
+      currentFileUri.fsPath,
+    ]);
   } catch (err) {
     display.showError(err as string);
   }
