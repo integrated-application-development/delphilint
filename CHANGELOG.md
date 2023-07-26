@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Issues on the same line are now always displayed in the same order
 * When autolaunch is off, DelphiLint now attempts to connect to a server on port 14000 instead of hanging
+* Issues are no longer suppressed when they match server issues marked as REMOVED
 
 ## [0.2.0] - 2023-07-25
 

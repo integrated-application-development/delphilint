@@ -201,7 +201,11 @@ public class SonarQubeHost implements SonarHost {
       ConnectedList<SonarQubeIssue> resolvedIssues =
           new ConnectedList<>(
               api,
-              "/api/issues/search?resolved=true&componentKeys=" + componentKeyBatch,
+              "/api/issues/search"
+                  + "?resolved=true"
+                  + "&resolutions=FALSE-POSITIVE,WONTFIX,FIXED"
+                  + "&componentKeys="
+                  + componentKeyBatch,
               "issues",
               SonarQubeIssue.class);
 
