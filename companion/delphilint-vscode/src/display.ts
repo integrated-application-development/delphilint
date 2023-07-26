@@ -35,11 +35,6 @@ export function showIssues(
     }
 
     issueCollection.set(uri, diagnostics);
-    vscode.window.showInformationMessage(
-      `${fileIssues.length} ${
-        fileIssues.length === 1 ? "issue" : "issues"
-      } found in ${path.basename(fsPath)}.`
-    );
   }
 }
 

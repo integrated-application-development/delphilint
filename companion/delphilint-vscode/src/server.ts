@@ -25,7 +25,7 @@ export type RequestInitialize = {
 
 export type RequestAnalyze = {
   baseDir: string;
-  inputFiles: Iterable<string>;
+  inputFiles: string[];
   sonarHostUrl: string;
   projectKey: string;
   apiToken: string;
