@@ -27,6 +27,7 @@ package DelphiLintClient;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'DelphiLint'}
+{$DESIGNONLY}
 {$IMPLICITBUILD ON}
 
 requires

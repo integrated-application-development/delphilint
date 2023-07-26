@@ -47,6 +47,7 @@
         <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
         <DCC_DcuOutput>.\target\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <PostBuildEvent>
@@ -79,6 +80,7 @@ $(PreBuildEvent)]]>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <Debugger_HostApplication>$(BDSBIN)\bds.exe</Debugger_HostApplication>
+        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
         <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
