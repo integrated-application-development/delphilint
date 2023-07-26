@@ -7,6 +7,35 @@ import * as settings from "./settings";
 const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
 let inAnalysis: boolean = false;
+let activeDproj: string | undefined = undefined;
+
+async function getDprojFilesInWorkspace() {
+  return (await vscode.workspace.findFiles("**/*.dproj")).map(
+    (uri) => uri.fsPath
+  );
+}
+
+export async function chooseActiveDproj() {
+  let dprojFiles: string[] = await getDprojFilesInWorkspace();
+
+  let newDproj = await vscode.window.showQuickPick(dprojFiles, {
+    canPickMany: false,
+    title: "Choose Active Delphi Project for DelphiLint",
+    ignoreFocusOut: true,
+  });
+
+  if (newDproj) {
+    activeDproj = newDproj;
+  }
+}
+
+async function getActiveDproj() {
+  if (!activeDproj) {
+    await chooseActiveDproj();
+  }
+
+  return activeDproj;
+}
 
 async function analyzeFiles(
   server: LintServer,
@@ -27,6 +56,11 @@ async function analyzeFiles(
   let flagshipFile = path.basename(sourceFiles[0]);
   let otherSourceFilesMsg =
     sourceFiles.length > 1 ? ` + ${sourceFiles.length - 1} more` : "";
+
+  let dprojFile = await getActiveDproj();
+  if (dprojFile) {
+    msg.inputFiles.push(dprojFile);
+  }
 
   await vscode.window.withProgress(
     {

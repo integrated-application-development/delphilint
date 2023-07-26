@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { LintServer } from "./server";
-import { analyzeThisFile } from "./command";
+import { analyzeThisFile, chooseActiveDproj } from "./command";
 import { registerVersion } from "./settings";
 
 let server: LintServer;
@@ -19,6 +19,12 @@ export function activate(context: vscode.ExtensionContext) {
     async () => await analyzeThisFile(server, lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
+
+  let chooseActiveDprojCommand = vscode.commands.registerCommand(
+    "delphilint-vscode.chooseActiveDproj",
+    async () => await chooseActiveDproj()
+  );
+  context.subscriptions.push(chooseActiveDprojCommand);
 }
 
 export function deactivate() {
