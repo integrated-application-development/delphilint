@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class App {
+  private static final int DEFAULT_PORT = 14000;
   private static final Logger LOG = LogManager.getLogger(App.class);
 
   public static void main(String[] args) throws IOException {
@@ -37,9 +38,11 @@ public class App {
       Files.createDirectory(pluginsPath);
     }
 
-    var server = new LintServer(pluginsPath);
+    LintServer server;
 
     if (args.length > 0) {
+      server = new LintServer(pluginsPath);
+
       File portFile = new File(args[0]);
       if (portFile.exists()) {
         Files.write(
@@ -47,7 +50,10 @@ public class App {
         LOG.info("Server port written to port file at {}", portFile.toPath());
       } else {
         LOG.info("Port file at {} does not exist", portFile.toPath());
+        server = new LintServer(pluginsPath, DEFAULT_PORT);
       }
+    } else {
+      server = new LintServer(pluginsPath, DEFAULT_PORT);
     }
 
     server.run();

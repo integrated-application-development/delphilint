@@ -306,7 +306,6 @@ begin
 
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
-  FTcpClient.Port := 0;
 
   if not TLintSetupForm.TryFixSetup then begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
@@ -318,6 +317,9 @@ begin
       LintSettings.ServerJavaExe,
       LintSettings.SettingsDirectory,
       LintSettings.ServerShowConsole);
+  end
+  else begin
+    FTcpClient.Port := 14000;
   end;
 
   try
