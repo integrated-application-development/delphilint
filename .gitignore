@@ -19,3 +19,7 @@ target/
 .scannerwork/
 __recovery/
 sonar-project.properties
+
+# JavaScript
+node_modules/
+out/
