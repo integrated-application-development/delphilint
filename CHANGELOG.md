@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Security hotspots are now suppressed when they match reviewed server hotspots
+
 ### Fixed
 
 * Issues on the same line are now always displayed in the same order

@@ -67,8 +67,12 @@ public class LintServer {
   private boolean running;
 
   public LintServer(Path pluginsPath) throws IOException {
+    this(pluginsPath, 0);
+  }
+
+  public LintServer(Path pluginsPath, int port) throws IOException {
     engine = null;
-    serverSocket = new ServerSocket(0);
+    serverSocket = new ServerSocket(port);
     running = false;
     mapper = new ObjectMapper();
     pluginDownloader = new CachingPluginDownloader(pluginsPath);

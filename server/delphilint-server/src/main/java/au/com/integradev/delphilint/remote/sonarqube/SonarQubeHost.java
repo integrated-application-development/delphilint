@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -162,37 +163,45 @@ public class SonarQubeHost implements SonarHost {
     return ruleSet;
   }
 
-  public Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths) {
-    if (projectKey.isEmpty()) {
-      return null;
-    }
+  private List<String> joinStringsWithLimit(
+      Set<String> values, Function<String, String> mapper, int maxChars) {
+    List<String> strings = new ArrayList<>();
+    var stringBuilder = new StringBuilder();
 
-    List<String> componentKeysStrs = new ArrayList<>();
-    StringBuilder compKeyBuilder = new StringBuilder();
-
-    for (String filePath : relativeFilePaths) {
-      compKeyBuilder.append(projectKey).append(":").append(filePath);
-      if (compKeyBuilder.length() < 1500) {
-        compKeyBuilder.append(",");
+    for (String value : values) {
+      stringBuilder.append(mapper.apply(value));
+      if (stringBuilder.length() < maxChars) {
+        stringBuilder.append(",");
       } else {
-        componentKeysStrs.add(compKeyBuilder.toString());
-        compKeyBuilder.setLength(0);
+        strings.add(stringBuilder.toString());
+        stringBuilder.setLength(0);
       }
     }
 
-    if (compKeyBuilder.length() > 0) {
-      componentKeysStrs.add(compKeyBuilder.toString());
+    if (stringBuilder.length() > 0) {
+      strings.add(stringBuilder.toString());
     }
+
+    return strings;
+  }
+
+  public Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths) {
+    if (projectKey.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    List<String> componentKeyBatches =
+        joinStringsWithLimit(relativeFilePaths, filePath -> projectKey + ":" + filePath, 1500);
 
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
-    for (String componentKeysStr : componentKeysStrs) {
-      LOG.info("Getting resolved issues for component keys: {}", componentKeysStr);
+    for (String componentKeyBatch : componentKeyBatches) {
+      LOG.info("Getting resolved issues for component keys: {}", componentKeyBatch);
 
       ConnectedList<SonarQubeIssue> resolvedIssues =
           new ConnectedList<>(
               api,
-              "/api/issues/search?resolved=true&componentKeys=" + componentKeysStr,
+              "/api/issues/search?resolved=true&componentKeys=" + componentKeyBatch,
               "issues",
               SonarQubeIssue.class);
 
@@ -207,6 +216,37 @@ public class SonarQubeHost implements SonarHost {
                 sqIssue.getMessage(),
                 RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
                 RuleType.fromSonarLintRuleType(sqIssue.getType())));
+      }
+    }
+
+    List<String> filePathBatches = joinStringsWithLimit(relativeFilePaths, s -> s, 1500);
+
+    for (String filePathBatch : filePathBatches) {
+      LOG.info("Getting reviewed hotspots for files: {}", filePathBatch);
+
+      ConnectedList<SonarQubeHotspot> resolvedIssues =
+          new ConnectedList<>(
+              api,
+              "/api/hotspots/search"
+                  + "?projectKey="
+                  + projectKey
+                  + "&status=REVIEWED"
+                  + "&files="
+                  + filePathBatch,
+              "hotspots",
+              SonarQubeHotspot.class);
+
+      for (SonarQubeHotspot sqHotspot : resolvedIssues) {
+        remoteIssues.add(
+            new RemoteIssue(
+                sqHotspot.getKey(),
+                sqHotspot.getRuleKey(),
+                sqHotspot.getLine(),
+                null, // Security hotspots don't expose a hash
+                sqHotspot.getTextRange(),
+                sqHotspot.getMessage(),
+                RuleSeverity.MAJOR,
+                RuleType.SECURITY_HOTSPOT));
       }
     }
 
