@@ -3,10 +3,12 @@ import { LintServer } from './server';
 import { analyzeThisFile } from './command';
 import { registerVersion } from './settings';
 
-export function activate(context: vscode.ExtensionContext) {
-  let server = new LintServer(14000);
+let server: LintServer;
 
+export function activate(context: vscode.ExtensionContext) {
   registerVersion(context.extension.packageJSON.version);
+
+  server = new LintServer();
 
   let lintIssueCollection = vscode.languages.createDiagnosticCollection("delphilint");
   context.subscriptions.push(lintIssueCollection);
@@ -16,4 +18,8 @@ export function activate(context: vscode.ExtensionContext) {
     () => analyzeThisFile(server, lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
+}
+
+export function deactivate() {
+  server.quit();
 }

@@ -5,15 +5,18 @@ import * as display from './display';
 import * as settings from './settings';
 
 export function analyzeThisFile(server: LintServer, issueCollection: vscode.DiagnosticCollection) {
+  if(!server.ready()) {
+    display.showError("The DelphiLint server is not connected.");
+  }
+
   let activeTextEditor = vscode.window.activeTextEditor;
   if (activeTextEditor === undefined) {
-    display.showError("There is no active file to analyze.");
+    display.showError("There is no active file for DelphiLint to analyze.");
     return;
   }
 
   let currentFileUri = activeTextEditor.document.uri;
 
-  display.showInfo("Initializing server...");
   server.initialize({
       bdsPath: settings.getBdsPath(),
       apiToken: "",
@@ -22,7 +25,7 @@ export function analyzeThisFile(server: LintServer, issueCollection: vscode.Diag
       sonarHostUrl: ""
   })
     .then(() => {
-      display.showInfo("Analyzing " + currentFileUri.fsPath + "...");
+      display.showInfo(`Analyzing ${(path.basename(currentFileUri.fsPath))}...`);
       server.analyze({
           apiToken: "",
           baseDir: path.parse(currentFileUri.fsPath).dir,

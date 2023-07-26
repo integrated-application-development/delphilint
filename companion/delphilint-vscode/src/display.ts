@@ -1,25 +1,45 @@
-import * as vscode from 'vscode';
-import { LintIssue } from './server';
+import * as vscode from "vscode";
+import * as path from "path";
+import { LintIssue } from "./server";
 
-export function showIssues(issues: LintIssue[], issueCollection: vscode.DiagnosticCollection) {
+export function showIssues(
+  issues: LintIssue[],
+  issueCollection: vscode.DiagnosticCollection
+) {
   let files: Map<string, LintIssue[]> = issues.reduce(
-    (aggregate, issue) => aggregate.set(issue.file, [...aggregate.get(issue.file) ?? [], issue]),
+    (aggregate, issue) =>
+      aggregate.set(issue.file, [...(aggregate.get(issue.file) ?? []), issue]),
     new Map<string, LintIssue[]>()
   );
 
-  for(const fsPath of files.keys()) {
+  for (const [fsPath, fileIssues] of files.entries()) {
     const uri = vscode.Uri.file(fsPath);
     let diagnostics: vscode.Diagnostic[] = [];
 
-    for(const element of files.get(fsPath) as LintIssue[]) {
-      let issue = element;
-      if(issue.range) {
-        let issueRange = new vscode.Range(issue.range.startLine - 1, issue.range.startOffset, issue.range.endLine - 1, issue.range.endOffset);
-        diagnostics.push(new vscode.Diagnostic(issueRange, issue.message, vscode.DiagnosticSeverity.Warning));
+    for (const issue of fileIssues) {
+      if (issue.range) {
+        let issueRange = new vscode.Range(
+          issue.range.startLine - 1,
+          issue.range.startOffset,
+          issue.range.endLine - 1,
+          issue.range.endOffset
+        );
+        diagnostics.push(
+          new vscode.Diagnostic(
+            issueRange,
+            issue.message,
+            vscode.DiagnosticSeverity.Warning
+          )
+        );
       }
     }
 
     issueCollection.set(uri, diagnostics);
+    vscode.window.showInformationMessage(
+      `${fileIssues.length} ${
+        fileIssues.length === 1 ? "issue" : "issues"
+      } found in ${path.basename(fsPath)}.`
+    );
   }
 }
 

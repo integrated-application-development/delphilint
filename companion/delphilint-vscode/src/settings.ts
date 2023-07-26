@@ -13,11 +13,15 @@ export function registerVersion(ver: string) {
 }
 
 type LintSettingsIni = {
-  ServerJarOverride: string,
-  SonarDelphiJarOverride: string,
-  JavaExe: string,
-  ShowConsole: boolean,
-  AutoLaunch: boolean
+  Server: {
+    ShowConsole: number,
+    AutoLaunch: number
+  },
+  Resources: {
+    JavaExe: string,
+    ServerJarOverride: string,
+    SonarDelphiJarOverride: string
+  }
 };
 
 function getSettings(path: string): LintSettingsIni {
@@ -26,32 +30,41 @@ function getSettings(path: string): LintSettingsIni {
   return settings as LintSettingsIni;
 }
 
+function getVscodeConfig(section: string): string {
+  return vscode.workspace.getConfiguration().get(section) as string;
+}
+
+function getServerVersion(): string {
+  return getVscodeConfig("delphilint.serverVersion") || version;
+}
+
 export function getSonarDelphiJar(): string {
   let settings = getSettings(SETTINGS_FILE);
-  return settings.SonarDelphiJarOverride || path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar");
+  return settings.Resources.SonarDelphiJarOverride || path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar");
 }
 
 export function getServerJar(): string {
   let settings = getSettings(SETTINGS_FILE);
-  return settings.ServerJarOverride || path.join(SETTINGS_DIR, "delphilint-server-" + version + ".jar");
+  return settings.Resources.ServerJarOverride
+    || path.join(SETTINGS_DIR, "delphilint-server-" + getServerVersion() + ".jar");
 }
 
 export function getJavaExe(): string {
-  return getSettings(SETTINGS_FILE).JavaExe;
+  return getSettings(SETTINGS_FILE).Resources.JavaExe;
 }
 
 export function getShowConsole(): boolean {
-  return getSettings(SETTINGS_FILE).ShowConsole;
+  return getSettings(SETTINGS_FILE).Server.ShowConsole !== 0;
 }
 
 export function getAutoLaunch(): boolean {
-  return getSettings(SETTINGS_FILE).AutoLaunch;
+  return getSettings(SETTINGS_FILE).Server.AutoLaunch !== 0;
 }
 
 export function getBdsPath(): string {
-  return vscode.workspace.getConfiguration().get("delphilint-vscode.bdsPath") as string;
+  return getVscodeConfig("delphilint.bdsPath");
 }
 
 export function getCompilerVersion(): string {
-  return vscode.workspace.getConfiguration().get("delphilint-vscode.compilerVersion") as string;
+  return getVscodeConfig("delphilint.compilerVersion");
 }
