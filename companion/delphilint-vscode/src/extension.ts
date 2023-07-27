@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   let analyzeThisFileCommand = vscode.commands.registerCommand(
     "delphilint-vscode.analyzeThisFile",
-    async () => await analyzeThisFile(await getServer(), lintIssueCollection)
+    async () => await analyzeThisFile(getServer, lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
 

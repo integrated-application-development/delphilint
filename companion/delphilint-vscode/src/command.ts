@@ -17,6 +17,9 @@ const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
 let inAnalysis: boolean = false;
 
+export type ServerSupplier = () => Promise<LintServer>;
+export type LoggerFunction = (msg: string) => void;
+
 function isFileDelphiSource(filePath: string): boolean {
   return DELPHI_SOURCE_EXTENSIONS.includes(path.extname(filePath));
 }
@@ -45,7 +48,7 @@ function constructInputFiles(
 async function doAnalyze(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
-  statusUpdate: (msg: string) => void,
+  statusUpdate: LoggerFunction,
   msg: RequestAnalyze
 ) {
   let sourceFiles = msg.inputFiles.filter((file) => isFileDelphiSource(file));
@@ -70,10 +73,13 @@ async function doAnalyze(
 async function analyzeFiles(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
-  files: string[]
+  files: string[],
+  statusUpdate: LoggerFunction
 ) {
   inAnalysis = true;
   try {
+    statusUpdate("Selecting project...");
+
     let apiToken = "";
     let sonarHostUrl = "";
     let projectKey = "";
@@ -99,6 +105,8 @@ async function analyzeFiles(
       }
     }
 
+    statusUpdate("Checking files...");
+
     let inputFiles = constructInputFiles(files, baseDir, projectFile);
     if (!inputFiles) {
       throw new NoAnalyzableFileError(
@@ -106,43 +114,33 @@ async function analyzeFiles(
       );
     }
 
-    try {
-      display.setStatusAction("Initializing...");
+    statusUpdate("Initializing server...");
 
-      await server.initialize({
-        bdsPath: settings.getBdsPath(),
-        apiToken: apiToken,
-        compilerVersion: settings.getCompilerVersion(),
-        defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
-        sonarHostUrl: sonarHostUrl,
-      });
+    await server.initialize({
+      bdsPath: settings.getBdsPath(),
+      apiToken: apiToken,
+      compilerVersion: settings.getCompilerVersion(),
+      defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
+      sonarHostUrl: sonarHostUrl,
+    });
 
-      display.setStatusAction("Analyzing...");
-
-      await doAnalyze(server, issueCollection, display.setStatusAction, {
-        baseDir: baseDir,
-        inputFiles: [...files, projectFile],
-        projectKey: projectKey,
-        projectPropertiesPath: projectPropertiesPath,
-        sonarHostUrl: sonarHostUrl,
-        apiToken: apiToken,
-      });
-    } finally {
-      display.setStatusAction();
-    }
+    await doAnalyze(server, issueCollection, display.setStatusAction, {
+      baseDir: baseDir,
+      inputFiles: [...files, projectFile],
+      projectKey: projectKey,
+      projectPropertiesPath: projectPropertiesPath,
+      sonarHostUrl: sonarHostUrl,
+      apiToken: apiToken,
+    });
   } finally {
     inAnalysis = false;
   }
 }
 
 export async function analyzeThisFile(
-  server: LintServer,
+  serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection
 ) {
-  if (!server.ready()) {
-    display.showError("The DelphiLint server is not connected.");
-  }
-
   let activeTextEditor = vscode.window.activeTextEditor;
   if (!activeTextEditor) {
     display.showError("There is no active file for DelphiLint to analyze.");
@@ -157,12 +155,26 @@ export async function analyzeThisFile(
   let currentFileUri = activeTextEditor.document.uri;
 
   try {
-    await analyzeFiles(server, issueCollection, [currentFileUri.fsPath]);
+    display.setStatusAction("Starting server...");
+    let server = await serverSupplier();
+
+    if (!server.ready()) {
+      display.showError("Unable to connect to the DelphiLint server.");
+    }
+
+    await analyzeFiles(
+      server,
+      issueCollection,
+      [currentFileUri.fsPath],
+      display.setStatusAction
+    );
   } catch (err) {
     if (err instanceof LintError) {
       display.showError(err.message);
     } else if (err instanceof Error) {
       display.showError("Unexpected error: " + err.message);
     }
+  } finally {
+    display.setStatusAction();
   }
 }
