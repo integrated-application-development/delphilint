@@ -21,7 +21,7 @@
         "title": "DelphiLint: Analyze This File"
       },
       {
-        "command": "delphilint-vscode.chooseActiveDproj",
+        "command": "delphilint-vscode.chooseActiveProject",
         "title": "DelphiLint: Choose Active Delphi Project"
       }
     ],

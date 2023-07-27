@@ -1,62 +1,21 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import * as fs from "fs";
 import { LintServer, RequestAnalyze } from "./server";
 import * as display from "./display";
 import * as settings from "./settings";
-import { ProjectOptions } from "./project";
 import {
   LintError,
   NoAnalyzableFileError,
   NoDelphiProjectError,
 } from "./error";
+import {
+  getOrPromptActiveProject,
+  getProjectOptions,
+} from "./delphiProjectUtils";
 
 const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
 let inAnalysis: boolean = false;
-let activeDproj: string | undefined = undefined;
-async function getDprojFilesInWorkspace() {
-  return (await vscode.workspace.findFiles("**/*.dproj")).map(
-    (uri) => uri.fsPath
-  );
-}
-
-export async function chooseActiveDproj() {
-  let dprojFiles: string[] = await getDprojFilesInWorkspace();
-
-  let newDproj = await vscode.window.showQuickPick(dprojFiles, {
-    canPickMany: false,
-    title: "Choose Active Delphi Project for DelphiLint",
-    ignoreFocusOut: true,
-  });
-
-  if (newDproj) {
-    activeDproj = newDproj;
-  }
-}
-
-async function getActiveDproj(): Promise<string> {
-  if (!activeDproj) {
-    await chooseActiveDproj();
-  }
-
-  if (activeDproj) {
-    return activeDproj;
-  } else {
-    throw new NoDelphiProjectError("There is no active Delphi project.");
-  }
-}
-
-function getProjectOptionsForDproj(
-  dprojPath: string
-): ProjectOptions | undefined {
-  let projectOptionsPath = dprojPath
-    .toLowerCase()
-    .replace(".dproj", ".delphilint");
-  if (fs.existsSync(projectOptionsPath)) {
-    return new ProjectOptions(projectOptionsPath);
-  }
-}
 
 function isFileDelphiSource(filePath: string): boolean {
   return DELPHI_SOURCE_EXTENSIONS.includes(path.extname(filePath));
@@ -86,6 +45,7 @@ function constructInputFiles(
 async function doAnalyze(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
+  statusUpdate: (msg: string) => void,
   msg: RequestAnalyze
 ) {
   let sourceFiles = msg.inputFiles.filter((file) => isFileDelphiSource(file));
@@ -93,23 +53,17 @@ async function doAnalyze(
   let flagshipFile = path.basename(sourceFiles[0]);
   let otherSourceFilesMsg =
     sourceFiles.length > 1 ? ` + ${sourceFiles.length - 1} more` : "";
+  let analyzingMsg = `Analyzing ${flagshipFile}${otherSourceFilesMsg}...`;
+  statusUpdate(analyzingMsg);
 
-  await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      cancellable: false,
-      title: `Analyzing ${flagshipFile}${otherSourceFilesMsg}...`,
-    },
-    async (progress) => {
-      let issues = await server.analyze(msg);
-      display.showIssues(issues, issueCollection);
+  let issues = await server.analyze(msg);
+  display.showIssues(issues, issueCollection);
 
-      let issueWord = issues.length === 1 ? "issue" : "issues";
-      let fileWord = sourceFiles.length === 1 ? "file" : "files";
-      display.showInfo(
-        `${issues.length} ${issueWord} found in ${sourceFiles.length} ${fileWord}.`
-      );
-    }
+  let issueWord = issues.length === 1 ? "issue" : "issues";
+  let fileWord = sourceFiles.length === 1 ? "file" : "files";
+
+  display.showInfo(
+    `${issues.length} ${issueWord} found in ${sourceFiles.length} ${fileWord}.`
   );
 }
 
@@ -126,10 +80,15 @@ async function analyzeFiles(
     let baseDir = "";
     let projectPropertiesPath = "";
 
-    let dproj = await getActiveDproj();
-    baseDir = path.dirname(dproj);
+    let projectFileTmp = await getOrPromptActiveProject();
+    if (!projectFileTmp) {
+      throw new NoDelphiProjectError("There is no active Delphi project.");
+    }
+    let projectFile = projectFileTmp;
 
-    let projectOptions = getProjectOptionsForDproj(dproj);
+    baseDir = path.dirname(projectFile);
+
+    let projectOptions = getProjectOptions(projectFile);
     if (projectOptions) {
       baseDir = projectOptions.baseDir();
       projectPropertiesPath = projectOptions.projectPropertiesPath();
@@ -140,29 +99,37 @@ async function analyzeFiles(
       }
     }
 
-    let inputFiles = constructInputFiles(files, baseDir, dproj);
+    let inputFiles = constructInputFiles(files, baseDir, projectFile);
     if (!inputFiles) {
       throw new NoAnalyzableFileError(
         "There are no selected Delphi files that are analyzable under the current project."
       );
     }
 
-    await server.initialize({
-      bdsPath: settings.getBdsPath(),
-      apiToken: apiToken,
-      compilerVersion: settings.getCompilerVersion(),
-      defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
-      sonarHostUrl: sonarHostUrl,
-    });
+    try {
+      display.setStatusAction("Initializing...");
 
-    await doAnalyze(server, issueCollection, {
-      baseDir: baseDir,
-      inputFiles: [...files, dproj],
-      projectKey: projectKey,
-      projectPropertiesPath: projectPropertiesPath,
-      sonarHostUrl: sonarHostUrl,
-      apiToken: apiToken,
-    });
+      await server.initialize({
+        bdsPath: settings.getBdsPath(),
+        apiToken: apiToken,
+        compilerVersion: settings.getCompilerVersion(),
+        defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
+        sonarHostUrl: sonarHostUrl,
+      });
+
+      display.setStatusAction("Analyzing...");
+
+      await doAnalyze(server, issueCollection, display.setStatusAction, {
+        baseDir: baseDir,
+        inputFiles: [...files, projectFile],
+        projectKey: projectKey,
+        projectPropertiesPath: projectPropertiesPath,
+        sonarHostUrl: sonarHostUrl,
+        apiToken: apiToken,
+      });
+    } finally {
+      display.setStatusAction();
+    }
   } finally {
     inAnalysis = false;
   }
