@@ -31,20 +31,22 @@ type
 
     function GetServerJar(Index: Integer): string;
     function GetSonarDelphiJar(Index: Integer): string;
-
-    function GetDefaultServerJavaExe: string;
+    function GetJavaExe(Index: Integer): string;
+    function GetDefaultJavaExe: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
     property ServerJarOverride: string index 0 read GetValueStr write SetValueStr;
-    property SonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
-    property ServerJavaExe: string index 2 read GetValueStr write SetValueStr;
+    property ServerSonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
+    property ServerJavaExeOverride: string index 2 read GetValueStr write SetValueStr;
     property DebugShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
     property DebugExternalServer: Boolean index 4 read GetValueBool write SetValueBool;
     property ClientAutoShowToolWindow: Boolean index 5 read GetValueBool write SetValueBool;
 
     property ServerJar: string index 0 read GetServerJar;
     property SonarDelphiJar: string index 1 read GetSonarDelphiJar;
+    property JavaExe: string index 2 read GetJavaExe;
+    property DefaultJavaExe: string read GetDefaultJavaExe;
     property SettingsDirectory: string read FSettingsDir;
   end;
 
@@ -92,7 +94,7 @@ begin
     // 1
     TStringPropField.Create('Resources', 'SonarDelphiJarOverride', ''),
     // 2
-    TCustomStringPropField.Create('Resources', 'JavaExe', GetDefaultServerJavaExe),
+    TStringPropField.Create('Resources', 'JavaExeOverride', ''),
     // 3
     TBoolPropField.Create('Debug', 'ShowConsole', False),
     // 4
@@ -124,15 +126,23 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintSettings.GetDefaultServerJavaExe: string;
+function TLintSettings.GetDefaultJavaExe: string;
 var
   JavaHome: string;
 begin
-  Result := '';
-
   JavaHome := GetEnvironmentVariable('JAVA_HOME');
   if JavaHome <> '' then begin
     Result := Format('%s\bin\java.exe', [JavaHome]);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetJavaExe(Index: Integer): string;
+begin
+  Result := GetValueStr(Index);
+  if Result = '' then begin
+    Result := GetDefaultJavaExe;
   end;
 end;
 

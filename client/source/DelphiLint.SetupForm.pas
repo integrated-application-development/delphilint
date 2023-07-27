@@ -19,39 +19,41 @@ unit DelphiLint.SetupForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask;
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 type
   TLintSetupForm = class(TForm)
     Label1: TLabel;
     Label2: TLabel;
-    Label3: TLabel;
     OkButton: TButton;
     ExeOpenDialog: TOpenDialog;
-    Label4: TLabel;
     LeftPanel: TPanel;
     RightPanel: TPanel;
-    Label5: TLabel;
-    LinkLabel1: TLinkLabel;
     SonarDelphiJarLabel: TLabel;
     RefreshButton: TButton;
-    ServerJarBrowseButton: TButton;
+    JavaExeBrowseButton: TButton;
     JavaExeLabel: TLabel;
     ServerJarLabel: TLabel;
     ServerJarIndicator: TPanel;
     SonarDelphiJarIndicator: TPanel;
     JavaExeIndicator: TPanel;
+    JavaExeClearButton: TButton;
+    Label7: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure JavaExeBrowseButtonClick(Sender: TObject);
     procedure RefreshButtonClick(Sender: TObject);
+    procedure JavaExeClearButtonClick(Sender: TObject);
   private
     FSaved: Boolean;
+    FJavaExeOverride: string;
+
+    function GetEffectiveJavaExe: string;
+    function GetJavaExeCaption: string;
 
     procedure UpdateControls;
-    procedure UpdateValidState(Indicator: TPanel);
+    procedure UpdateValidState(Indicator: TPanel; Valid: Boolean);
     procedure UpdateOkButton;
     class function IsValidValue(Value: string): Boolean;
     function IsAllValid: Boolean;
@@ -71,6 +73,8 @@ uses
   , DelphiLint.Plugin
   , ToolsAPI
   , Vcl.Themes
+  , System.StrUtils
+  , System.SysUtils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -78,7 +82,7 @@ uses
 class function TLintSetupForm.IsSetupValid: Boolean;
 begin
   LintSettings.Load;
-  Result := IsValidValue(LintSettings.ServerJavaExe)
+  Result := IsValidValue(LintSettings.JavaExe)
     and IsValidValue(LintSettings.ServerJar)
     and IsValidValue(LintSettings.SonarDelphiJar);
 end;
@@ -117,9 +121,23 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintSetupForm.GetEffectiveJavaExe: string;
+begin
+  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintSettings.DefaultJavaExe);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSetupForm.GetJavaExeCaption: string;
+begin
+  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, 'JAVA_HOME (' + LintSettings.DefaultJavaExe + ')');
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintSetupForm.OkButtonClick(Sender: TObject);
 begin
-  LintSettings.ServerJavaExe := JavaExeIndicator.Caption;
+  LintSettings.ServerJavaExeOverride := FJavaExeOverride;
   LintSettings.Save;
 
   FSaved := True;
@@ -167,7 +185,7 @@ end;
 
 function TLintSetupForm.IsAllValid: Boolean;
 begin
-  Result := IsValidValue(JavaExeIndicator.Caption)
+  Result := IsValidValue(GetEffectiveJavaExe)
     and IsValidValue(LintSettings.ServerJar)
     and IsValidValue(LintSettings.SonarDelphiJar);
 end;
@@ -183,25 +201,41 @@ end;
 
 procedure TLintSetupForm.JavaExeBrowseButtonClick(Sender: TObject);
 begin
-  ExeOpenDialog.InitialDir := ExtractFilePath(JavaExeIndicator.Caption);
+  ExeOpenDialog.InitialDir := ExtractFilePath(
+    IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintSettings.DefaultJavaExe));
   ExeOpenDialog.FileName := '';
+
   if ExeOpenDialog.Execute then begin
-    JavaExeIndicator.Caption := ExeOpenDialog.FileName;
+    FJavaExeOverride := ExeOpenDialog.FileName;
+    JavaExeIndicator.Caption := GetJavaExeCaption;
+    JavaExeClearButton.Enabled := FJavaExeOverride <> '';
   end;
-  UpdateValidState(JavaExeIndicator);
+  UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
   UpdateOkButton;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSetupForm.JavaExeClearButtonClick(Sender: TObject);
+begin
+  FJavaExeOverride := '';
+  JavaExeIndicator.Caption := GetJavaExeCaption;
+  JavaExeClearButton.Enabled := False;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintSetupForm.UpdateControls;
 begin
-  JavaExeIndicator.Caption := LintSettings.ServerJavaExe;
+  FJavaExeOverride := LintSettings.ServerJavaExeOverride;
+  JavaExeClearButton.Enabled := (FJavaExeOverride <> '');
+
+  JavaExeIndicator.Caption := GetJavaExeCaption;
   ServerJarIndicator.Caption := LintSettings.ServerJar;
   SonarDelphiJarIndicator.Caption := LintSettings.SonarDelphiJar;
-  UpdateValidState(JavaExeIndicator);
-  UpdateValidState(ServerJarIndicator);
-  UpdateValidState(SonarDelphiJarIndicator);
+  UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
+  UpdateValidState(ServerJarIndicator, IsValidValue(LintSettings.ServerJar));
+  UpdateValidState(SonarDelphiJarIndicator, IsValidValue(LintSettings.SonarDelphiJar));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -213,9 +247,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintSetupForm.UpdateValidState(Indicator: TPanel);
+procedure TLintSetupForm.UpdateValidState(Indicator: TPanel; Valid: Boolean);
 begin
-  if IsValidValue(Indicator.Caption) then begin
+  if Valid then begin
     Indicator.Color := clGreen;
     Indicator.Font.Color := clWhite;
   end

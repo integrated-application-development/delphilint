@@ -316,7 +316,7 @@ begin
   else begin
     FTcpClient.Port := StartExtServer(
       LintSettings.ServerJar,
-      LintSettings.ServerJavaExe,
+      LintSettings.JavaExe,
       LintSettings.SettingsDirectory,
       LintSettings.DebugShowConsole);
   end;
