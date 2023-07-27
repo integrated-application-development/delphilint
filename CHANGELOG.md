@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "Debug" section in the settings file
 * DelphiLint now retrieves the Java executable to use from the `JAVA_HOME` environment variable unless there
   is an override defined (it previously only read `JAVA_HOME` when the setting was first initialized)
+* The link colour in rule description view is now consistent with the IDE link colour
 
 ## [0.2.1] - 2023-07-26
 

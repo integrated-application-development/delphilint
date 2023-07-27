@@ -684,6 +684,7 @@ procedure TLintToolFrame.CreateRuleHtml(Name: string; RuleKey: string; RuleType:
 
   function ColorToHex(Color : TColor): string;
   begin
+    Color := ColorToRGB(Color);
     Result := '#' +
       IntToHex(GetRValue(Color), 2) +
       IntToHex(GetGValue(Color), 2) +
@@ -711,7 +712,7 @@ begin
   TextColor := ColorToHex(Theme.GetSystemColor(clBtnText));
   BgColor := ColorToHex(Theme.GetSystemColor(clWindow));
   CodeBgColor := ColorToHex(Theme.GetSystemColor(clBtnFace));
-  LinkColor := ColorToHex(Theme.GetSystemColor(clHighlight));
+  LinkColor := ColorToHex(Theme.GetSystemColor(clHotLight));
 
   HtmlStr := Format(
     '<!DOCTYPE html>' +
