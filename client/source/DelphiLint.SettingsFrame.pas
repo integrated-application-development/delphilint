@@ -24,9 +24,6 @@ uses
 
 type
   TLintSettingsFrame = class(TFrame)
-    ServerConfigGroupBox: TGroupBox;
-    ServerShowConsoleCheckBox: TCheckBox;
-    ServerAutoLaunchCheckBox: TCheckBox;
     ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
     BrokenSetupWarningLabel: TLabel;
@@ -95,8 +92,6 @@ end;
 procedure TLintSettingsFrame.Init;
 begin
   LintSettings.Load;
-  ServerShowConsoleCheckBox.Checked := LintSettings.ServerShowConsole;
-  ServerAutoLaunchCheckBox.Checked := not LintSettings.ServerAutoLaunch;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
   ClientAutoShowToolWindowCheckBox.Checked := LintSettings.ClientAutoShowToolWindow;
 end;
@@ -105,8 +100,6 @@ end;
 
 procedure TLintSettingsFrame.Save;
 begin
-  LintSettings.ServerShowConsole := ServerShowConsoleCheckBox.Checked;
-  LintSettings.ServerAutoLaunch := not ServerAutoLaunchCheckBox.Checked;
   LintSettings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
   LintSettings.Save;
 end;

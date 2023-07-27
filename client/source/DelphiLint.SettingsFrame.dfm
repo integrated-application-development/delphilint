@@ -2,8 +2,8 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 265
-  Constraints.MinHeight = 200
+  Height = 170
+  Constraints.MinHeight = 170
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBtnText
@@ -14,7 +14,7 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    265)
+    170)
   object ComponentsGroupBox: TGroupBox
     Left = 12
     Top = 88
@@ -22,7 +22,7 @@ object LintSettingsFrame: TLintSettingsFrame
     Height = 65
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
-    TabOrder = 1
+    TabOrder = 0
     object BrokenSetupWarningLabel: TLabel
       Left = 175
       Top = 38
@@ -47,31 +47,6 @@ object LintSettingsFrame: TLintSettingsFrame
       OnClick = ComponentsButtonClick
     end
   end
-  object ServerConfigGroupBox: TGroupBox
-    Left = 12
-    Top = 168
-    Width = 560
-    Height = 81
-    Anchors = [akLeft, akTop, akRight]
-    Caption = 'Server configuration'
-    TabOrder = 0
-    object ServerShowConsoleCheckBox: TCheckBox
-      Left = 12
-      Top = 31
-      Width = 142
-      Height = 17
-      Caption = 'Show server console'
-      TabOrder = 0
-    end
-    object ServerAutoLaunchCheckBox: TCheckBox
-      Left = 12
-      Top = 54
-      Width = 237
-      Height = 17
-      Caption = 'Connect to external DelphiLint server'
-      TabOrder = 1
-    end
-  end
   object ClientConfigGroupBox: TGroupBox
     Left = 12
     Top = 16
@@ -79,7 +54,7 @@ object LintSettingsFrame: TLintSettingsFrame
     Height = 57
     Anchors = [akLeft, akTop, akRight]
     Caption = 'IDE configuration'
-    TabOrder = 2
+    TabOrder = 1
     object ClientAutoShowToolWindowCheckBox: TCheckBox
       Left = 12
       Top = 31

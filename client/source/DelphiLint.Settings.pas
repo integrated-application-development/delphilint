@@ -39,8 +39,8 @@ type
     property ServerJarOverride: string index 0 read GetValueStr write SetValueStr;
     property SonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
     property ServerJavaExe: string index 2 read GetValueStr write SetValueStr;
-    property ServerShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
-    property ServerAutoLaunch: Boolean index 4 read GetValueBool write SetValueBool;
+    property DebugShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
+    property DebugExternalServer: Boolean index 4 read GetValueBool write SetValueBool;
     property ClientAutoShowToolWindow: Boolean index 5 read GetValueBool write SetValueBool;
 
     property ServerJar: string index 0 read GetServerJar;
@@ -94,9 +94,9 @@ begin
     // 2
     TCustomStringPropField.Create('Resources', 'JavaExe', GetDefaultServerJavaExe),
     // 3
-    TBoolPropField.Create('Server', 'ShowConsole', False),
+    TBoolPropField.Create('Debug', 'ShowConsole', False),
     // 4
-    TBoolPropField.Create('Server', 'AutoLaunch', True),
+    TBoolPropField.Create('Debug', 'ExternalServer', False),
     // 5
     TBoolPropField.Create('Client', 'AutoShowToolWindow', True)
   ];

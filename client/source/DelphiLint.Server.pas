@@ -183,7 +183,6 @@ uses
   , DelphiLint.Settings
   , IdStack
   , System.IOUtils
-  , System.TimeSpan
   , DelphiLint.SetupForm
   , DelphiLint.Utils
   ;
@@ -311,15 +310,15 @@ begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 
-  if LintSettings.ServerAutoLaunch then begin
+  if LintSettings.DebugExternalServer then begin
+    FTcpClient.Port := 14000;
+  end
+  else begin
     FTcpClient.Port := StartExtServer(
       LintSettings.ServerJar,
       LintSettings.ServerJavaExe,
       LintSettings.SettingsDirectory,
-      LintSettings.ServerShowConsole);
-  end
-  else begin
-    FTcpClient.Port := 14000;
+      LintSettings.DebugShowConsole);
   end;
 
   try
