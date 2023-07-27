@@ -1,14 +1,38 @@
 import * as vscode from "vscode";
 import { LintServer } from "./server";
 import { analyzeThisFile, chooseActiveDproj } from "./command";
-import { registerVersion } from "./settings";
+import * as settings from "./settings";
 
-let server: LintServer;
+let server: LintServer | undefined;
+let serverPromise: Promise<LintServer> | undefined;
+
+async function getServer() {
+  if (!server) {
+    if (!serverPromise) {
+      serverPromise = createServer();
+    }
+    let s = await serverPromise;
+    serverPromise = undefined;
+    return s;
+  } else {
+    return server;
+  }
+}
+
+async function createServer(): Promise<LintServer> {
+  let s = new LintServer();
+  await s.startExternalServer(
+    settings.getServerJar(),
+    settings.getJavaExe(),
+    settings.SETTINGS_DIR,
+    settings.getShowConsole()
+  );
+  server = s;
+  return s;
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  registerVersion(context.extension.packageJSON.version);
-
-  server = new LintServer();
+  settings.registerVersion(context.extension.packageJSON.version);
 
   let lintIssueCollection =
     vscode.languages.createDiagnosticCollection("delphilint");
@@ -16,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   let analyzeThisFileCommand = vscode.commands.registerCommand(
     "delphilint-vscode.analyzeThisFile",
-    async () => await analyzeThisFile(server, lintIssueCollection)
+    async () => await analyzeThisFile(await getServer(), lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
 
@@ -28,5 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  server.quit();
+  if (server) {
+    server.quit();
+  }
 }

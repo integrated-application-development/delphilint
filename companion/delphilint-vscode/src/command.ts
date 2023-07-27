@@ -5,12 +5,16 @@ import { LintServer, RequestAnalyze } from "./server";
 import * as display from "./display";
 import * as settings from "./settings";
 import { ProjectOptions } from "./project";
+import {
+  LintError,
+  NoAnalyzableFileError,
+  NoDelphiProjectError,
+} from "./error";
 
 const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
 let inAnalysis: boolean = false;
 let activeDproj: string | undefined = undefined;
-
 async function getDprojFilesInWorkspace() {
   return (await vscode.workspace.findFiles("**/*.dproj")).map(
     (uri) => uri.fsPath
@@ -39,7 +43,7 @@ async function getActiveDproj(): Promise<string> {
   if (activeDproj) {
     return activeDproj;
   } else {
-    throw new Error("There is no active Delphi project.");
+    throw new NoDelphiProjectError("There is no active Delphi project.");
   }
 }
 
@@ -54,41 +58,41 @@ function getProjectOptionsForDproj(
   }
 }
 
-async function analyzeFiles(
+function isFileDelphiSource(filePath: string): boolean {
+  return DELPHI_SOURCE_EXTENSIONS.includes(path.extname(filePath));
+}
+
+function isFileInProject(filePath: string, baseDir: string): boolean {
+  return path
+    .normalize(filePath)
+    .toLowerCase()
+    .startsWith(path.normalize(baseDir).toLowerCase());
+}
+
+function constructInputFiles(
+  inputFiles: string[],
+  baseDir: string,
+  dproj: string
+): string[] | undefined {
+  let sourceFiles = inputFiles.filter(
+    (file) => isFileDelphiSource(file) && isFileInProject(file, baseDir)
+  );
+
+  if (sourceFiles.length > 0) {
+    return [...sourceFiles, dproj];
+  }
+}
+
+async function doAnalyze(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
   msg: RequestAnalyze
 ) {
-  let sourceFiles = msg.inputFiles.filter((file) =>
-    DELPHI_SOURCE_EXTENSIONS.includes(path.extname(file).toLowerCase())
-  );
-
-  if (sourceFiles.length === 0) {
-    display.showError(
-      "There are no Delphi source files for DelphiLint to analyze."
-    );
-    return;
-  }
+  let sourceFiles = msg.inputFiles.filter((file) => isFileDelphiSource(file));
 
   let flagshipFile = path.basename(sourceFiles[0]);
   let otherSourceFilesMsg =
     sourceFiles.length > 1 ? ` + ${sourceFiles.length - 1} more` : "";
-
-  let dprojFile = await getActiveDproj();
-  if (dprojFile) {
-    msg.inputFiles.push(dprojFile);
-
-    let projectOptions = getProjectOptionsForDproj(dprojFile);
-    if (projectOptions) {
-      msg.baseDir = projectOptions.baseDir();
-      msg.projectPropertiesPath = projectOptions.projectPropertiesPath();
-      if (projectOptions.connectedMode()) {
-        msg.sonarHostUrl = projectOptions.sonarHostUrl();
-        msg.projectKey = projectOptions.projectKey();
-        msg.apiToken = projectOptions.apiToken();
-      }
-    }
-  }
 
   await vscode.window.withProgress(
     {
@@ -97,63 +101,71 @@ async function analyzeFiles(
       title: `Analyzing ${flagshipFile}${otherSourceFilesMsg}...`,
     },
     async (progress) => {
-      try {
-        let issues = await server.analyze(msg);
-        display.showIssues(issues, issueCollection);
+      let issues = await server.analyze(msg);
+      display.showIssues(issues, issueCollection);
 
-        let issueWord = issues.length === 1 ? "issue" : "issues";
-        let fileWord = sourceFiles.length === 1 ? "file" : "files";
-        display.showInfo(
-          `${issues.length} ${issueWord} found in ${sourceFiles.length} ${fileWord}.`
-        );
-      } catch (err) {
-        display.showError(err as string);
-      }
+      let issueWord = issues.length === 1 ? "issue" : "issues";
+      let fileWord = sourceFiles.length === 1 ? "file" : "files";
+      display.showInfo(
+        `${issues.length} ${issueWord} found in ${sourceFiles.length} ${fileWord}.`
+      );
     }
   );
 }
 
-async function analyzeFilesWithProjectOptions(
+async function analyzeFiles(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
   files: string[]
 ) {
-  let apiToken = "";
-  let sonarHostUrl = "";
-  let projectKey = "";
-  let baseDir = "";
-  let projectPropertiesPath = "";
+  inAnalysis = true;
+  try {
+    let apiToken = "";
+    let sonarHostUrl = "";
+    let projectKey = "";
+    let baseDir = "";
+    let projectPropertiesPath = "";
 
-  let dproj = await getActiveDproj();
-  baseDir = path.dirname(dproj);
+    let dproj = await getActiveDproj();
+    baseDir = path.dirname(dproj);
 
-  let projectOptions = getProjectOptionsForDproj(dproj);
-  if (projectOptions) {
-    baseDir = projectOptions.baseDir();
-    projectPropertiesPath = projectOptions.projectPropertiesPath();
-    if (projectOptions.connectedMode()) {
-      sonarHostUrl = projectOptions.sonarHostUrl();
-      projectKey = projectOptions.projectKey();
-      apiToken = projectOptions.apiToken();
+    let projectOptions = getProjectOptionsForDproj(dproj);
+    if (projectOptions) {
+      baseDir = projectOptions.baseDir();
+      projectPropertiesPath = projectOptions.projectPropertiesPath();
+      if (projectOptions.connectedMode()) {
+        sonarHostUrl = projectOptions.sonarHostUrl();
+        projectKey = projectOptions.projectKey();
+        apiToken = projectOptions.apiToken();
+      }
     }
+
+    let inputFiles = constructInputFiles(files, baseDir, dproj);
+    if (!inputFiles) {
+      throw new NoAnalyzableFileError(
+        "There are no selected Delphi files that are analyzable under the current project."
+      );
+    }
+
+    await server.initialize({
+      bdsPath: settings.getBdsPath(),
+      apiToken: apiToken,
+      compilerVersion: settings.getCompilerVersion(),
+      defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
+      sonarHostUrl: sonarHostUrl,
+    });
+
+    await doAnalyze(server, issueCollection, {
+      baseDir: baseDir,
+      inputFiles: [...files, dproj],
+      projectKey: projectKey,
+      projectPropertiesPath: projectPropertiesPath,
+      sonarHostUrl: sonarHostUrl,
+      apiToken: apiToken,
+    });
+  } finally {
+    inAnalysis = false;
   }
-
-  await server.initialize({
-    bdsPath: settings.getBdsPath(),
-    apiToken: apiToken,
-    compilerVersion: settings.getCompilerVersion(),
-    defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
-    sonarHostUrl: sonarHostUrl,
-  });
-
-  await analyzeFiles(server, issueCollection, {
-    baseDir: baseDir,
-    inputFiles: [...files, dproj],
-    projectKey: projectKey,
-    projectPropertiesPath: projectPropertiesPath,
-    sonarHostUrl: sonarHostUrl,
-    apiToken: apiToken,
-  });
 }
 
 export async function analyzeThisFile(
@@ -178,10 +190,12 @@ export async function analyzeThisFile(
   let currentFileUri = activeTextEditor.document.uri;
 
   try {
-    await analyzeFilesWithProjectOptions(server, issueCollection, [
-      currentFileUri.fsPath,
-    ]);
+    await analyzeFiles(server, issueCollection, [currentFileUri.fsPath]);
   } catch (err) {
-    display.showError(err as string);
+    if (err instanceof LintError) {
+      display.showError(err.message);
+    } else if (err instanceof Error) {
+      display.showError("Unexpected error: " + err.message);
+    }
   }
 }

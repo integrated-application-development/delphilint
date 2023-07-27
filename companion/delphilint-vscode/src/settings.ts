@@ -16,12 +16,11 @@ export function registerVersion(ver: string) {
 }
 
 type LintSettingsIni = {
-  Server: {
+  Debug: {
     ShowConsole: 0 | 1;
-    AutoLaunch: 0 | 1;
   };
   Resources: {
-    JavaExe: string;
+    JavaExeOverride: string;
     ServerJarOverride: string;
     SonarDelphiJarOverride: string;
   };
@@ -58,15 +57,21 @@ export function getServerJar(): string {
 }
 
 export function getJavaExe(): string {
-  return getSettings(SETTINGS_FILE).Resources.JavaExe;
+  let override = getSettings(SETTINGS_FILE).Resources.JavaExeOverride;
+  if (override) {
+    return override;
+  }
+
+  let javaHome = process.env.JAVA_HOME;
+  if (!javaHome) {
+    return "";
+  } else {
+    return path.join(javaHome, "bin", "java.exe");
+  }
 }
 
 export function getShowConsole(): boolean {
-  return getSettings(SETTINGS_FILE).Server.ShowConsole !== 0;
-}
-
-export function getAutoLaunch(): boolean {
-  return getSettings(SETTINGS_FILE).Server.AutoLaunch !== 0;
+  return getSettings(SETTINGS_FILE).Debug.ShowConsole !== 0;
 }
 
 export function getBdsPath(): string {

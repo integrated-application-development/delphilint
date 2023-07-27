@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import * as tmp from "tmp";
 import * as fs from "fs";
 import * as settings from "./settings";
+import { AnalyzeError, InitializeError, ServerError } from "./error";
 
 export enum LintMessageType {
   quit = 15,
@@ -51,100 +52,62 @@ export type LintMessage = {
 
 export type LintResponseAction = (message: LintMessage) => void;
 
-class ExternalServer {
-  private process: ChildProcess;
-  private isExited: boolean;
-
-  constructor(
-    command: string,
-    args: string[],
-    workingDir: string,
-    showConsole: boolean
-  ) {
-    this.isExited = false;
-
-    this.process = spawn(command, args, {
-      cwd: workingDir,
-      windowsHide: !showConsole,
-      detached: showConsole,
-    });
-    this.process.on("exit", () => (this.isExited = true));
-  }
-
-  exited() {
-    return this.isExited;
-  }
-
-  kill() {
-    this.process.kill();
-  }
-}
-
 export class LintServer {
   private tcpClient: Socket;
   private textDecoder: TextDecoder;
   private textEncoder: TextEncoder;
   private nextId: number;
   private responseActions: Map<number, LintResponseAction>;
-  private externalServer?: ExternalServer;
-  private serverStarted: boolean;
+  private process: ChildProcess | undefined;
 
   constructor() {
     this.textDecoder = new TextDecoder();
     this.textEncoder = new TextEncoder();
     this.nextId = 0;
-    this.serverStarted = false;
+    this.process = undefined;
     this.responseActions = new Map<number, LintResponseAction>();
 
     this.tcpClient = new Socket();
     this.tcpClient.on("data", (buffer) => {
       this.onReceiveMessage(buffer);
     });
-
-    this.startExternalServer(
-      settings.getServerJar(),
-      settings.getJavaExe(),
-      settings.SETTINGS_DIR,
-      settings.getShowConsole()
-    )
-      .then((port) => {
-        this.serverStarted = true;
-        this.tcpClient.connect(port);
-      })
-      .catch((err) => console.error(err));
   }
 
-  private startExternalServer(
+  async startExternalServer(
     jar: string,
     javaExe: string,
     workingDir: string,
     showConsole: boolean
-  ): Promise<number> {
-    return new Promise((resolve, reject) => {
-      try {
-        let portFile = tmp.fileSync().name;
+  ): Promise<void> {
+    if (this.process) {
+      throw new ServerError("Server is already started.");
+    }
 
-        fs.watchFile(portFile, { interval: 50 }, (before, after) => {
-          fs.unwatchFile(portFile);
-          let portStr = fs.readFileSync(portFile, "utf8");
-          resolve(parseInt(portStr));
-          fs.rmSync(portFile);
-        });
+    let port = await new Promise<number>((resolve, reject) => {
+      let portFile = tmp.fileSync().name;
 
-        this.externalServer = new ExternalServer(
-          javaExe,
-          ["-jar", jar, portFile],
-          workingDir,
-          showConsole
-        );
-      } catch (err) {
-        reject(err);
-      }
+      fs.watchFile(portFile, { interval: 50 }, (before, after) => {
+        fs.unwatchFile(portFile);
+        let portStr = fs.readFileSync(portFile, "utf8");
+        resolve(parseInt(portStr));
+        fs.rmSync(portFile);
+      });
+
+      this.process = spawn(javaExe, ["-jar", jar, portFile], {
+        cwd: workingDir,
+        windowsHide: !showConsole,
+        detached: showConsole,
+      });
+
+      this.process.on("error", (err) => reject(err));
+      this.process.on("exit", () => (this.process = undefined));
     });
+
+    this.tcpClient.connect(port);
   }
 
   ready(): boolean {
-    return this.serverStarted;
+    return this.process !== undefined;
   }
 
   private onReceiveMessage(buffer: Buffer) {
@@ -194,44 +157,43 @@ export class LintServer {
     this.sendMessageWithId(category, id, data);
   }
 
-  initialize(msg: RequestInitialize): Promise<void> {
-    return new Promise((resolve, reject) => {
+  async initialize(msg: RequestInitialize): Promise<void> {
+    return await new Promise<void>((resolve, reject) => {
       this.sendMessage(LintMessageType.initialize, msg, (msg) => {
         if (msg.category === LintMessageType.initialized) {
           resolve();
         } else if (msg.category === LintMessageType.initializeError) {
-          reject(msg.data);
+          reject(new InitializeError(msg.data));
         } else {
-          reject("Unknown category " + msg.category.valueOf());
+          reject(new ServerError("Unknown category " + msg.category.valueOf()));
         }
       });
     });
   }
 
-  analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
-    return new Promise((resolve, reject) => {
+  async analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
+    return await new Promise<LintIssue[]>((resolve, reject) => {
       this.sendMessage(LintMessageType.analyze, msg, (msg) => {
         if (msg.category === LintMessageType.analyzeResult) {
           resolve(msg.data.issues);
         } else if (msg.category === LintMessageType.analyzeError) {
-          reject(msg.data);
+          reject(new AnalyzeError(msg.data));
         } else {
-          reject("Unknown category " + msg.category.valueOf());
+          reject(new ServerError("Unknown category " + msg.category.valueOf()));
         }
       });
     });
   }
 
   quit() {
-    if (!this.externalServer) {
-      return;
-    }
+    if (this.process) {
+      this.sendMessage(LintMessageType.quit, null);
 
-    this.sendMessage(LintMessageType.quit, null);
-    setTimeout(() => {
-      if (this.externalServer && !this.externalServer.exited) {
-        this.externalServer.kill();
-      }
-    }, 2000);
+      setTimeout(() => {
+        if (this.process) {
+          this.process.kill();
+        }
+      }, 2000);
+    }
   }
 }
