@@ -6,7 +6,7 @@
 
   <groupId>au.com.integradev.delphilint</groupId>
   <artifactId>delphilint-parent</artifactId>
-  <version>0.2.1.${changelist}</version>
+  <version>0.2.1+dev.${revision}</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -109,7 +109,7 @@
               <rules>
                 <requireMavenVersion>
                   <version>3.5.0</version>
-                  <message>DelphiLint uses `${changelist}`</message>
+                  <message>DelphiLint uses the `${revision}` placeholder in its Maven versioning.</message>
                 </requireMavenVersion>
                 <requireJavaVersion>
                   <version>11</version>
