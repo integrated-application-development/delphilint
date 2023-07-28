@@ -24,3 +24,4 @@ sonar-project.properties
 # JavaScript
 node_modules/
 out/
+*.vsix
