@@ -1,30 +1,7 @@
 #! powershell -File
-param(
-  [Parameter(Mandatory)]
-  [ValidatePattern("^\d\.\d\.\d(\.[A-Fa-f0-9]{7})?$")]
-  [string]$Version,
-  [Parameter()]
-  [string]$BuildConfig = "Release"
-)
-
 $ErrorActionPreference = "Stop"
-$ProgressPreference = "SilentlyContinue"
 
-function Test-PromptConfirmed([string]$Response) {
-  return $Response -imatch "^y"
-}
-
-function Wait-Prompt([string]$Message, [switch]$ExitOnNo) {
-  $Done = $false
-  $Response = "n"
-  while(-not $Done) {
-    $Response = Read-Host -Prompt "$Message (y/n)"
-    $Done = Test-PromptConfirmed $Response
-    if($ExitOnNo -and -not ($Done)) {
-      Exit
-    }
-  }
-}
+Import-Module "$PSScriptRoot/common" -Force
 
 function Wait-BuildArtifact([string]$Path, [string]$Message) {
   while(-not (Test-Path $Path)) {
@@ -38,38 +15,21 @@ function Wait-BuildArtifact([string]$Path, [string]$Message) {
 }
 
 function Test-ClientVersion([string]$Path, [string]$Version) {
-  if(-not ($Version -match "^(\d)\.(\d)\.(\d)(\.([A-Fa-f0-9]{7}))?$")) {
-    Write-Error "Invalid version format for $Version."
-    Exit
-  }
+  $Split = Split-Version $Version
 
-  $Major = $Matches[1]
-  $Minor = $Matches[2]
-  $Patch = $Matches[3]
-  $Commit = $Matches[5]
-  $DevVersion = ($null -ne $Commit)
-  $DevVersionStr = if($DevVersion) { "True" } else { "False" }
+  $DevVersionStr = if($Split.Dev) { "True" } else { "False" }
 
   $DlVersionContent = Get-Content $Path -Raw
-
-  $MatchMajor = $DlVersionContent -imatch ".*{MAJOR}$Major{\/MAJOR}.*"
-  $MatchMinor = $DlVersionContent -imatch ".*{MINOR}$Minor{\/MINOR}.*"
-  $MatchPatch = $DlVersionContent -imatch ".*{PATCH}$Patch{\/PATCH}.*"
+  $MatchMajor = $DlVersionContent -imatch ".*{MAJOR}$($Split.Major){\/MAJOR}.*"
+  $MatchMinor = $DlVersionContent -imatch ".*{MINOR}$($Split.Minor){\/MINOR}.*"
+  $MatchPatch = $DlVersionContent -imatch ".*{PATCH}$($Split.Patch){\/PATCH}.*"
   $MatchDevVersion = $DlVersionContent -imatch ".*{DEV}$DevVersionStr{\/DEV}.*"
 
-  if($DevVersion) {
-    $CurrentCommit = (& git rev-parse --short HEAD)
-    $MatchCommit = $CurrentCommit -imatch $Commit
-  } else {
-    $MatchCommit = $true
-  }
-
-
-  return $MatchMajor -and $MatchMinor -and $MatchPatch -and $MatchDevVersion -and $MatchCommit
+  return $MatchMajor -and $MatchMinor -and $MatchPatch -and $MatchDevVersion
 }
 
 function Wait-ClientVersion([string]$Version, [string]$Message) {
-  $Path = (Join-Path $PSScriptRoot "client/source/dlversion.inc")
+  $Path = (Join-Path $PSScriptRoot "../client/source/dlversion.inc")
 
   while(-not (Test-ClientVersion -Path $Path -Version $Version)) {
     Write-Host -ForegroundColor Red $Message
@@ -119,14 +79,19 @@ function New-SetupScript([string]$Path, [string]$Version) {
 }
 
 function Get-ClientBpl([string]$BuildConfig) {
-  return Join-Path $PSScriptRoot "client/target/Win32/$BuildConfig/DelphiLintClient.bpl"
+  return Resolve-Path (Join-Path $PSScriptRoot "../client/source/target/Win32/$BuildConfig/DelphiLintClient.bpl")
 }
 
 function Get-ServerJar([string]$Version) {
-  return Join-Path $PSScriptRoot "server/delphilint-server/target/delphilint-server-$Version.jar"
+  return Resolve-Path (Join-Path $PSScriptRoot "../server/delphilint-server/target/delphilint-server-$Version.jar")
 }
 
-Write-Host "Packaging DelphiLint $Version (build configuration $BuildConfig)."
+#-----------------------------------------------------------------------------------------------------------------------
+
+$Version = Get-Version
+$BuildConfig = "Release"
+
+Write-Host "Packaging DelphiLint $Version."
 
 Write-Host "`nDue diligence:"
 Wait-Prompt "  1. Is the client .bpl compiled for $Version in ${BuildConfig}?" -ExitOnNo
@@ -143,7 +108,7 @@ Wait-BuildArtifact -Path $ServerJar -Message "Build the server .jar for $Version
 
 Write-Host "Build artifacts validated.`n"
 
-$TargetDir = Join-Path $PSScriptRoot "target"
+$TargetDir = Resolve-Path (Join-Path $PSScriptRoot "../target")
 New-Item -ItemType Directory $TargetDir -Force | Out-Null
 Get-ChildItem -Path $TargetDir -Recurse | Remove-Item -Force -Recurse
 
@@ -163,4 +128,4 @@ Compress-Archive $PackageDir -DestinationPath $ZippedPackage -Force
 
 Write-Host "Package compressed at $ZippedPackage."
 
-Write-Host -ForegroundColor Green "DelphiLint $Version built."
+Write-Host -ForegroundColor Green "DelphiLint $Version packaged."
