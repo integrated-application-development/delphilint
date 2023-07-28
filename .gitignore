@@ -14,6 +14,7 @@ target/
 *.rc
 *.prjmgc
 *.delphilint
+*.delphilsp.json
 
 # SonarDelphi
 .scannerwork/
