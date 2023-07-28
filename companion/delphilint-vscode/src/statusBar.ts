@@ -28,7 +28,7 @@ export class LintStatusItem {
 
   update() {
     let activeProjectText = this.activeProject
-      ? path.basename(this.activeProject)
+      ? path.basename(this.activeProject).replace(".dproj", "")
       : "No project selected";
 
     let iconText = this.progress ? "$(loading~spin) " : "";
