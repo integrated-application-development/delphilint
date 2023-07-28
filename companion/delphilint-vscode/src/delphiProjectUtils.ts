@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from "path";
 import { ProjectOptions } from "./projectOptions";
 
 let activeProjectFile: string | undefined = undefined;
@@ -21,11 +22,37 @@ async function getProjectFilesInWorkspace() {
 export async function promptProject(): Promise<string | undefined> {
   let projectFiles: string[] = await getProjectFilesInWorkspace();
 
-  return await vscode.window.showQuickPick(projectFiles, {
+  let quickPickItems = projectFiles
+    .map((file) => {
+      let basename = path.basename(file);
+
+      let containingFolders = vscode.workspace.workspaceFolders?.filter(
+        (workspace) =>
+          file.toLowerCase().startsWith(workspace.uri.fsPath.toLowerCase())
+      );
+
+      let longPath: string = file.replace(path.sep + basename, "");
+      if (containingFolders && containingFolders.length > 0) {
+        longPath = path.relative(containingFolders[0].uri.fsPath, longPath);
+      }
+
+      return {
+        label: basename,
+        description: longPath,
+        path: file,
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+  let chosenItem = await vscode.window.showQuickPick(quickPickItems, {
     canPickMany: false,
-    title: "Choose Active Delphi Project for DelphiLint",
+    title: "DelphiLint: Choose Active Delphi Project",
     ignoreFocusOut: true,
   });
+
+  if (chosenItem) {
+    return chosenItem.path;
+  }
 }
 
 export async function promptActiveProject(): Promise<string | undefined> {
