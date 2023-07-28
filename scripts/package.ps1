@@ -86,9 +86,14 @@ function Get-ServerJar([string]$Version) {
   return Resolve-Path (Join-Path $PSScriptRoot "../server/delphilint-server/target/delphilint-server-$Version.jar")
 }
 
+function Get-VscClient([string]$Version) {
+  return Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphilint-vscode-$Version.vsix"
+}
+
 #-----------------------------------------------------------------------------------------------------------------------
 
 $Version = Get-Version
+$StaticVersion = $Version -replace "\+dev.*$","+dev"
 $BuildConfig = "Release"
 
 Write-Host "Packaging DelphiLint $Version."
@@ -96,15 +101,18 @@ Write-Host "Packaging DelphiLint $Version."
 Write-Host "`nDue diligence:"
 Wait-Prompt "  1. Is the client .bpl compiled for $Version in ${BuildConfig}?" -ExitOnNo
 Wait-Prompt "  2. Is the server .jar compiled for ${Version}?" -ExitOnNo
+Wait-Prompt "  3. Is the VS Code extension .vsix compiled for ${StaticVersion}?" -ExitOnNo
 
 Write-Host "`nValidating build artifacts..."
 
 $ClientBpl = Get-ClientBpl $BuildConfig
 $ServerJar = Get-ServerJar $Version
+$VscClientVsix = Get-VscClient $StaticVersion
 
 Wait-ClientVersion -Version $Version -Message "Update the constants in client/source/dlversion.inc to $Version."
 Wait-BuildArtifact -Path $ClientBpl -Message "Build the client .bpl for $BuildConfig."
 Wait-BuildArtifact -Path $ServerJar -Message "Build the server .jar for $Version."
+Wait-BuildArtifact -Path $VscClientVsix -Message "Build the VS Code extension .vsix for $StaticVersion."
 
 Write-Host "Build artifacts validated.`n"
 
@@ -119,6 +127,7 @@ Write-Host "Package directory created."
 
 Copy-Item $ClientBpl (Join-Path $PackageDir "DelphiLintClient-$Version.bpl") | Out-Null
 Copy-Item $ServerJar (Join-Path $PackageDir "delphilint-server-$Version.jar") | Out-Null
+Copy-Item $VscClientVsix (Join-Path $PackageDir "delphilint-vscode-$StaticVersion.vsix") | Out-Null
 New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
 
 Write-Host "Build artifacts copied."
