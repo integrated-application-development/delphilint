@@ -241,6 +241,11 @@ public class SonarQubeHost implements SonarHost {
               SonarQubeHotspot.class);
 
       for (SonarQubeHotspot sqHotspot : resolvedIssues) {
+        // Acknowledged hotspots should not suppress issues
+        if ("ACKNOWLEDGED".equals(sqHotspot.getResolution())) {
+          continue;
+        }
+
         remoteIssues.add(
             new RemoteIssue(
                 sqHotspot.getKey(),

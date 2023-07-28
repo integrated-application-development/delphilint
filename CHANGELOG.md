@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is an override defined (it previously only read `JAVA_HOME` when the setting was first initialized)
 * The link colour in rule description view is now consistent with the IDE link colour
 
+### Fixed
+
+* Security hotspots are no longer suppressed when they match server hotspots marked as acknowledged
+
 ## [0.2.1] - 2023-07-26
 
 ### Added
