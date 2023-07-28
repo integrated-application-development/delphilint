@@ -31,19 +31,19 @@ export function showIssues(
 
     for (const issue of fileIssues) {
       if (issue.range) {
-        let issueRange = new vscode.Range(
-          issue.range.startLine - 1,
-          issue.range.startOffset,
-          issue.range.endLine - 1,
-          issue.range.endOffset
+        let diagnostic = new vscode.Diagnostic(
+          new vscode.Range(
+            issue.range.startLine - 1,
+            issue.range.startOffset,
+            issue.range.endLine - 1,
+            issue.range.endOffset
+          ),
+          issue.message,
+          vscode.DiagnosticSeverity.Warning
         );
-        diagnostics.push(
-          new vscode.Diagnostic(
-            issueRange,
-            issue.message,
-            vscode.DiagnosticSeverity.Warning
-          )
-        );
+        diagnostic.code = issue.ruleKey;
+
+        diagnostics.push(diagnostic);
       }
     }
 
