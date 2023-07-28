@@ -5,14 +5,16 @@ export class LintStatusItem {
   private statusItem: vscode.StatusBarItem;
   private activeProject?: string;
   private action?: string;
+  private progress: boolean;
 
-  constructor(activeProject?: string, action?: string) {
+  constructor(activeProject?: string) {
     this.statusItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
       0
     );
     this.activeProject = activeProject;
-    this.action = action;
+    this.action = undefined;
+    this.progress = false;
 
     this.statusItem.name = "DelphiLint";
     this.statusItem.command = "delphilint-vscode.chooseActiveProject";
@@ -21,6 +23,7 @@ export class LintStatusItem {
     this.update();
 
     this.setActiveProject = this.setActiveProject.bind(this);
+    this.setAction = this.setAction.bind(this);
   }
 
   update() {
@@ -28,7 +31,7 @@ export class LintStatusItem {
       ? path.basename(this.activeProject)
       : "No project selected";
 
-    let iconText = this.action ? "$(loading~spin) " : "";
+    let iconText = this.progress ? "$(loading~spin) " : "";
     let actionText = this.action ?? "Idle";
 
     this.statusItem.text = `${iconText}DelphiLint: ${actionText} (${activeProjectText})`;
@@ -41,6 +44,16 @@ export class LintStatusItem {
 
   setAction(action?: string) {
     this.action = action;
+    this.update();
+  }
+
+  startProgress() {
+    this.progress = true;
+    this.update();
+  }
+
+  stopProgress() {
+    this.progress = false;
     this.update();
   }
 }

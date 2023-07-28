@@ -1,25 +1,18 @@
 import * as vscode from "vscode";
 import { LintIssue } from "./server";
-import {
-  addActiveProjectChangedListener,
-  getActiveProject,
-} from "./delphiProjectUtils";
+import { getActiveProject } from "./delphiProjectUtils";
 import { LintStatusItem } from "./statusBar";
+import { Exclusive } from "./resource";
 
-let statusItem: LintStatusItem | undefined;
+let statusItem: Exclusive<LintStatusItem> | undefined;
 
-export function getStatusItem(): LintStatusItem {
+export function getStatusItem(): Exclusive<LintStatusItem> {
   if (!statusItem) {
-    statusItem = new LintStatusItem(getActiveProject());
-    addActiveProjectChangedListener(statusItem.setActiveProject);
+    let statusItemRaw = new LintStatusItem(getActiveProject());
+    statusItem = new Exclusive(statusItemRaw);
   }
 
   return statusItem;
-}
-
-export function setStatusAction(action?: string) {
-  let statusItem = getStatusItem();
-  statusItem.setAction(action);
 }
 
 export function showIssues(

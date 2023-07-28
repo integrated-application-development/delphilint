@@ -4,28 +4,12 @@ import { ProjectOptions } from "./projectOptions";
 
 let activeProjectFile: string | undefined = undefined;
 
-type ActiveProjectChangedListener = (activeProject: string | undefined) => void;
-let projectListeners: ActiveProjectChangedListener[] = [];
-
-export function addActiveProjectChangedListener(
-  listener: ActiveProjectChangedListener
-) {
-  projectListeners.push(listener);
-}
-
-export function removeActiveProjectChangedListener(
-  listener: ActiveProjectChangedListener
-) {
-  projectListeners.splice(projectListeners.indexOf(listener), 1);
-}
-
 export function getActiveProject(): string | undefined {
   return activeProjectFile;
 }
 
 function setActiveProject(value: string | undefined) {
   activeProjectFile = value;
-  projectListeners.forEach((listener) => listener(activeProjectFile));
 }
 
 async function getProjectFilesInWorkspace() {

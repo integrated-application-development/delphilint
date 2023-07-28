@@ -11,7 +11,9 @@ import {
 import {
   getOrPromptActiveProject,
   getProjectOptions,
+  promptActiveProject,
 } from "./delphiProjectUtils";
+import { LintStatusItem } from "./statusBar";
 
 const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
 
@@ -63,22 +65,18 @@ async function doAnalyze(
   display.showIssues(issues, issueCollection);
 
   let issueWord = issues.length === 1 ? "issue" : "issues";
-  let fileWord = sourceFiles.length === 1 ? "file" : "files";
-
-  display.showInfo(
-    `${issues.length} ${issueWord} found in ${sourceFiles.length} ${fileWord}.`
-  );
+  statusUpdate(`${issues.length} ${issueWord} found`);
 }
 
 async function analyzeFiles(
   server: LintServer,
   issueCollection: vscode.DiagnosticCollection,
   files: string[],
-  statusUpdate: LoggerFunction
+  statusItem: LintStatusItem
 ) {
   inAnalysis = true;
   try {
-    statusUpdate("Selecting project...");
+    statusItem.setAction("Selecting project...");
 
     let apiToken = "";
     let sonarHostUrl = "";
@@ -91,6 +89,7 @@ async function analyzeFiles(
       throw new NoDelphiProjectError("There is no active Delphi project.");
     }
     let projectFile = projectFileTmp;
+    statusItem.setActiveProject(projectFile);
 
     baseDir = path.dirname(projectFile);
 
@@ -105,7 +104,7 @@ async function analyzeFiles(
       }
     }
 
-    statusUpdate("Checking files...");
+    statusItem.setAction("Checking files...");
 
     let inputFiles = constructInputFiles(files, baseDir, projectFile);
     if (!inputFiles) {
@@ -114,7 +113,7 @@ async function analyzeFiles(
       );
     }
 
-    statusUpdate("Initializing server...");
+    statusItem.setAction("Initializing server...");
 
     await server.initialize({
       bdsPath: settings.getBdsPath(),
@@ -124,7 +123,7 @@ async function analyzeFiles(
       sonarHostUrl: sonarHostUrl,
     });
 
-    await doAnalyze(server, issueCollection, display.setStatusAction, {
+    await doAnalyze(server, issueCollection, statusItem.setAction, {
       baseDir: baseDir,
       inputFiles: [...files, projectFile],
       projectKey: projectKey,
@@ -154,27 +153,38 @@ export async function analyzeThisFile(
 
   let currentFileUri = activeTextEditor.document.uri;
 
-  try {
-    display.setStatusAction("Starting server...");
-    let server = await serverSupplier();
+  await display.getStatusItem().with(async (statusItem) => {
+    try {
+      statusItem.startProgress();
+      statusItem.setAction("Starting server...");
+      let server = await serverSupplier();
 
-    if (!server.ready()) {
-      display.showError("Unable to connect to the DelphiLint server.");
-    }
+      if (!server.ready()) {
+        display.showError("Unable to connect to the DelphiLint server.");
+      }
 
-    await analyzeFiles(
-      server,
-      issueCollection,
-      [currentFileUri.fsPath],
-      display.setStatusAction
-    );
-  } catch (err) {
-    if (err instanceof LintError) {
-      display.showError(err.message);
-    } else if (err instanceof Error) {
-      display.showError("Unexpected error: " + err.message);
+      await analyzeFiles(
+        server,
+        issueCollection,
+        [currentFileUri.fsPath],
+        statusItem
+      );
+    } catch (err) {
+      statusItem.setAction("Analysis failed");
+      if (err instanceof LintError) {
+        display.showError(err.message);
+      } else if (err instanceof Error) {
+        display.showError("Unexpected error: " + err.message);
+      }
+    } finally {
+      statusItem.stopProgress();
     }
-  } finally {
-    display.setStatusAction();
-  }
+  });
+}
+
+export async function chooseActiveProject() {
+  let activeProject = await promptActiveProject();
+  display.getStatusItem().with(async (resource) => {
+    resource.setActiveProject(activeProject);
+  });
 }

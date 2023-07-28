@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { LintServer } from "./server";
-import { analyzeThisFile } from "./command";
-import { promptActiveProject } from "./delphiProjectUtils";
+import { analyzeThisFile, chooseActiveProject } from "./command";
 import { getStatusItem } from "./display";
 import * as settings from "./settings";
 
@@ -46,11 +45,11 @@ export function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(analyzeThisFileCommand);
 
-  let chooseActiveProject = vscode.commands.registerCommand(
+  let chooseActiveProjectCommand = vscode.commands.registerCommand(
     "delphilint-vscode.chooseActiveProject",
-    async () => await promptActiveProject()
+    async () => await chooseActiveProject()
   );
-  context.subscriptions.push(chooseActiveProject);
+  context.subscriptions.push(chooseActiveProjectCommand);
 
   getStatusItem();
 }
