@@ -1,14 +1,29 @@
 {
   "name": "delphilint-vscode",
   "displayName": "DelphiLint for VS Code",
-  "description": "VS Code extension for the DelphiLint Delphi code analysis server, powered by SonarDelphi",
-  "version": "0.0.1",
+  "description": "VS Code extension for the DelphiLint Delphi code analysis server, powered by SonarDelphi.",
+  "icon": "./images/icon.png",
+  "author": {
+    "name": "Integrated Application Development",
+    "url": "https://www.integradev.com.au/"
+  },
+  "license": "LGPL-3.0-or-later",
+  "version": "0.2.2+dev",
+  "preview": true,
   "engines": {
     "vscode": "^1.54.0"
   },
   "categories": [
-    "Other"
+    "Linters"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Integrated-Application-Development/delphilint"
+  },
+  "homepage": "https://github.com/Integrated-Application-Development/delphilint/blob/master/README.md",
+  "bugs": {
+    "url": "https://github.com/Integrated-Application-Development/delphilint/issues"
+  },
   "activationEvents": [
     "onLanguage:delphi",
     "onLanguage:objectpascal"
