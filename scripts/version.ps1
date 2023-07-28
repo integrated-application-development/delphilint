@@ -37,6 +37,19 @@ function Set-ServerVersion([string[]]$Paths, [string]$Version) {
   }
 }
 
+function Set-VscClientVersion([string]$Path, [string]$Version) {
+  $Split = Split-Version $Version
+
+  $DevStr = if ($Split.Dev) { "+dev" } else { "" }
+  $VersionStr = "$($Split.Major).$($Split.Minor).$($Split.Patch)$DevStr"
+
+  [regex]$VersionProp = "`"version`":\s*`".*?`""
+
+  $PackageContent = Get-Content $Path -Raw
+  $PackageContent = $VersionProp.replace($PackageContent, "`"version`": `"$VersionStr`"", 1)
+  Set-Content $Path -Value $PackageContent -NoNewline
+}
+
 #-----------------------------------------------------------------------------------------------------------------------
 
 $Version = Get-Version
@@ -47,3 +60,5 @@ $PomFiles = @("../server", "../server/delphilint-server", "../server/sonarlint-c
   ForEach-Object { "$PSScriptRoot/$_/pom.xml" }
 
 Set-ServerVersion $PomFiles $Version
+
+Set-VscClientVersion (Join-Path $PSScriptRoot "../companion/delphilint-vscode/package.json") $Version
