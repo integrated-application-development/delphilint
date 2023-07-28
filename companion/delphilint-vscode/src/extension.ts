@@ -1,6 +1,10 @@
 import * as vscode from "vscode";
 import { LintServer } from "./server";
-import { analyzeThisFile, chooseActiveProject } from "./command";
+import {
+  analyzeAllOpenFiles,
+  analyzeThisFile,
+  chooseActiveProject,
+} from "./command";
 import { getStatusItem } from "./display";
 import * as settings from "./settings";
 
@@ -44,6 +48,12 @@ export function activate(context: vscode.ExtensionContext) {
     async () => await analyzeThisFile(getServer, lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
+
+  let analyzeAllOpenFilesCommand = vscode.commands.registerCommand(
+    "delphilint-vscode.analyzeAllOpenFiles",
+    async () => await analyzeAllOpenFiles(getServer, lintIssueCollection)
+  );
+  context.subscriptions.push(analyzeAllOpenFilesCommand);
 
   let chooseActiveProjectCommand = vscode.commands.registerCommand(
     "delphilint-vscode.chooseActiveProject",

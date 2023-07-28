@@ -69,7 +69,7 @@ async function doAnalyze(
 }
 
 async function analyzeFiles(
-  server: LintServer,
+  serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection,
   files: string[],
   statusItem: LintStatusItem
@@ -113,8 +113,13 @@ async function analyzeFiles(
       );
     }
 
-    statusItem.setAction("Initializing server...");
+    statusItem.setAction("Starting server...");
+    let server = await serverSupplier();
+    if (!server.ready()) {
+      display.showError("Unable to connect to the DelphiLint server.");
+    }
 
+    statusItem.setAction("Initializing server...");
     await server.initialize({
       bdsPath: settings.getBdsPath(),
       apiToken: apiToken,
@@ -123,6 +128,7 @@ async function analyzeFiles(
       sonarHostUrl: sonarHostUrl,
     });
 
+    statusItem.setAction("Analyzing...");
     await doAnalyze(server, issueCollection, statusItem.setAction, {
       baseDir: baseDir,
       inputFiles: [...files, projectFile],
@@ -156,17 +162,52 @@ export async function analyzeThisFile(
   await display.getStatusItem().with(async (statusItem) => {
     try {
       statusItem.startProgress();
-      statusItem.setAction("Starting server...");
-      let server = await serverSupplier();
-
-      if (!server.ready()) {
-        display.showError("Unable to connect to the DelphiLint server.");
-      }
 
       await analyzeFiles(
-        server,
+        serverSupplier,
         issueCollection,
         [currentFileUri.fsPath],
+        statusItem
+      );
+    } catch (err) {
+      statusItem.setAction("Analysis failed");
+      if (err instanceof LintError) {
+        display.showError(err.message);
+      } else if (err instanceof Error) {
+        display.showError("Unexpected error: " + err.message);
+      }
+    } finally {
+      statusItem.stopProgress();
+    }
+  });
+}
+
+export async function analyzeAllOpenFiles(
+  serverSupplier: ServerSupplier,
+  issueCollection: vscode.DiagnosticCollection
+) {
+  let openTextEditors = vscode.workspace.textDocuments.map(
+    (doc) => doc.uri.fsPath
+  );
+
+  if (openTextEditors.length === 0) {
+    display.showError("There are no open files for DelphiLint to analyze.");
+    return;
+  }
+
+  if (inAnalysis) {
+    display.showError("A DelphiLint analysis is already in progress.");
+    return;
+  }
+
+  await display.getStatusItem().with(async (statusItem) => {
+    try {
+      statusItem.startProgress();
+
+      await analyzeFiles(
+        serverSupplier,
+        issueCollection,
+        [...openTextEditors],
         statusItem
       );
     } catch (err) {
