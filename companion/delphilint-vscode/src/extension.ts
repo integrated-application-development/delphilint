@@ -10,6 +10,7 @@ import * as settings from "./settings";
 
 let server: LintServer | undefined;
 let serverPromise: Promise<LintServer> | undefined;
+let serverOutputChannel: vscode.OutputChannel | undefined;
 
 async function getServer() {
   if (!server) {
@@ -25,12 +26,21 @@ async function getServer() {
 }
 
 async function createServer(): Promise<LintServer> {
+  let showConsole = settings.getShowConsole();
+  if (showConsole) {
+    if (serverOutputChannel) {
+      serverOutputChannel.dispose();
+    }
+    serverOutputChannel =
+      vscode.window.createOutputChannel("DelphiLint Server");
+  }
+
   let s = new LintServer();
   await s.startExternalServer(
     settings.getServerJar(),
     settings.getJavaExe(),
     settings.SETTINGS_DIR,
-    settings.getShowConsole()
+    showConsole ? (msg) => serverOutputChannel?.append(msg) : undefined
   );
   server = s;
   return s;

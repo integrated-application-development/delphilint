@@ -77,7 +77,7 @@ export class LintServer {
     jar: string,
     javaExe: string,
     workingDir: string,
-    showConsole: boolean
+    processLog?: (msg: string) => void
   ): Promise<void> {
     if (this.process) {
       throw new ServerError("Server is already started.");
@@ -95,12 +95,16 @@ export class LintServer {
 
       this.process = spawn(javaExe, ["-jar", jar, portFile], {
         cwd: workingDir,
-        windowsHide: !showConsole,
-        detached: showConsole,
       });
 
       this.process.on("error", (err) => reject(err));
       this.process.on("exit", () => (this.process = undefined));
+
+      if (processLog) {
+        this.process.stdout?.on("data", (data) => {
+          processLog(data.toString());
+        });
+      }
     });
 
     this.tcpClient.connect(port);
