@@ -186,9 +186,19 @@ export async function analyzeAllOpenFiles(
   serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection
 ) {
-  let openTextEditors = vscode.workspace.textDocuments.map(
-    (doc) => doc.uri.fsPath
+  let uris = vscode.window.tabGroups.all.flatMap((group) =>
+    group.tabs
+      .map((tab) => {
+        if (typeof tab.input === "object" && tab.input && "uri" in tab.input) {
+          return tab.input.uri as vscode.Uri;
+        } else {
+          return undefined;
+        }
+      })
+      .filter((tab) => tab !== undefined)
   );
+
+  let openTextEditors = uris.map((uri) => (uri as vscode.Uri).fsPath);
 
   if (openTextEditors.length === 0) {
     display.showError("There are no open files for DelphiLint to analyze.");
