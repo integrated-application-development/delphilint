@@ -127,7 +127,8 @@ Write-Host "Package directory created."
 
 Copy-Item $ClientBpl (Join-Path $PackageDir "DelphiLintClient-$Version.bpl") | Out-Null
 Copy-Item $ServerJar (Join-Path $PackageDir "delphilint-server-$Version.jar") | Out-Null
-Copy-Item $VscClientVsix (Join-Path $PackageDir "delphilint-vscode-$StaticVersion.vsix") | Out-Null
+Copy-Item $ServerJar (Join-Path $TargetDir "delphilint-server-$Version.jar") | Out-Null
+Copy-Item $VscClientVsix (Join-Path $TargetDir "delphilint-vscode-$StaticVersion.vsix") | Out-Null
 New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
 
 Write-Host "Build artifacts copied."
