@@ -20,19 +20,28 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 
 ## Installation
 
-Before installing, the following prerequisites must be installed on your system:
+1. [Build DelphiLint from source](#building-from-source) or, if you are using Delphi 11.2, download the packaged zip
+   artifact from [the latest release](https://github.com/Integrated-Application-Development/delphilint/releases/latest).
+2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
+3. Unzip the DelphiLint package folder from step 1, then run `./setup.ps1 -SonarDelphiJarLocation <path>` inside it.
+4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
+
+## Building from source
+
+Building DelphiLint from source is very simple.
+
+Prerequisites:
 
 * RAD Studio 11
+* Maven 3.5.0+
 * Java 11+
 
-The process for installing is as follows:
-
-1. Download the latest release zip from the releases page.
-2. Open RAD Studio and navigate to `Component > Install Packages`, then click the `Add...` button and navigate to
-   the `DelphiLintClient.bpl` package file on your filesystem.
-3. Copy the `delphilint-server.jar` file to `%APPDATA%\DelphiLint\delphilint-server.jar`.
-4. Download the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi)
-   and copy the `.jar` file to `%APPDATA%\DelphiLint\sonar-delphi-plugin.jar`.
+1. Clone the repository at the latest release.
+2. Build the server project by running `/server/build.ps1`.
+3. Build the client project by compiling `/client/source/DelphiLintClient.dproj` in Release with Delphi 11 or above.
+4. Run `/package.ps1` after compiling the two projects and follow the instructions to create a .zip containing
+   all the build artifacts and a setup script.
+5. Follow the rest of the [installation steps](#installation).
 
 ## Usage
 
@@ -92,27 +101,3 @@ you are planning to submit a pull request, please create an issue first so it ca
 To contribute, please create a pull request, link it to an existing issue, and clearly state what your change is.
 Please ensure that any Delphi code follows the same style as the existing code, and that running `mvn verify` in
 the `/server` directory succeeds with no changes generated.
-
-## Installation
-
-1. Download [the latest DelphiLint release](https://github.com/Integrated-Application-Development/delphilint/releases)
-   or [build from source](#building-from-source).
-2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
-3. Run `./setup.ps1 -SonarDelphiJarLocation <path>` in the DelphiLint release folder downloaded in step 1.
-4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
-
-## Building from source
-
-Building DelphiLint from source is very simple.
-
-Prerequisites:
-
-* RAD Studio 11
-* Maven 3.5.0+
-* Java 11+
-
-1. Build the server project by running `/server/build.ps1`.
-2. Build the client project by compiling `/client/source/DelphiLintClient.dproj` with Delphi 11 or above.
-3. Run `/package.ps1 -Version <version>` after compiling the two projects to create a .zip containing
-   all the build artifacts and a setup script.
-4. Follow the [installation steps](#installation).
