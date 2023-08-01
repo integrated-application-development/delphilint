@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Visual Studio Code companion extension to DelphiLint that uses the DelphiLint analysis engine to run analyses,
+  show issues, and read configuration files
+* Analyze All Files and Analyze All Open Files commands for the VS Code companion
+* Ability to choose the active Delphi project for analyses through the VS Code companion
+
 ## [0.2.2] - 2023-08-01
 
 ### Changed
