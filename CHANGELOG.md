@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2023-08-01
+
 ### Added
 
 * Visual Studio Code companion extension to DelphiLint that uses the DelphiLint analysis engine to run analyses,
@@ -70,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval
 * Support for reading `sonar-project.properties`
 
-[unreleased]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.2.2...HEAD
+[unreleased]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.1.0...v0.2.0
