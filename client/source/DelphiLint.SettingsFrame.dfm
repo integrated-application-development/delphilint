@@ -2,7 +2,7 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 170
+  Height = 192
   Constraints.MinHeight = 170
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
@@ -14,10 +14,10 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    170)
+    192)
   object ComponentsGroupBox: TGroupBox
     Left = 12
-    Top = 88
+    Top = 112
     Width = 560
     Height = 65
     Anchors = [akLeft, akTop, akRight]
@@ -51,7 +51,7 @@ object LintSettingsFrame: TLintSettingsFrame
     Left = 12
     Top = 16
     Width = 560
-    Height = 57
+    Height = 81
     Anchors = [akLeft, akTop, akRight]
     Caption = 'IDE configuration'
     TabOrder = 1
@@ -62,6 +62,20 @@ object LintSettingsFrame: TLintSettingsFrame
       Height = 17
       Caption = 'Show the DelphiLint window when an analysis is started'
       TabOrder = 0
+    end
+    object ClientSaveBeforeAnalysisCheckBox: TCheckBox
+      Left = 12
+      Top = 54
+      Width = 205
+      Height = 17
+      Hint = 
+        'DelphiLint analyses do not reflect unsaved changes, so files should ' +
+        'be saved before analyzing. Toggling this option makes this process ' +
+        'automatic.'
+      Caption = 'Save files before starting analysis'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
     end
   end
 end

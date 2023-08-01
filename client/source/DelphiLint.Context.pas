@@ -164,6 +164,7 @@ uses
   , System.Hash
   , DelphiLint.Logger
   , ToolsAPI
+  , DelphiLint.Settings
   ;
 
 var
@@ -211,6 +212,9 @@ begin
       0);
   end
   else begin
+    if LintSettings.ClientSaveBeforeAnalysis then begin
+      SourceEditor.Module.Save(False, True);
+    end;
     AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
     Exit;
   end;
@@ -221,10 +225,31 @@ end;
 procedure TLintContext.AnalyzeOpenFiles;
 var
   ProjectFile: string;
+  Modules: TArray<IOTAModule>;
   Files: TArray<string>;
+  Module: IOTAModule;
 begin
   if TryGetProjectFile(ProjectFile) then begin
-    Files := DelphiLint.Utils.GetOpenSourceFiles;
+    Modules := DelphiLint.Utils.GetOpenSourceModules;
+
+    if LintSettings.ClientSaveBeforeAnalysis then begin
+      for Module in Modules do begin
+        try
+          Module.Save(False, True);
+        except
+          on E: Exception do begin
+            Log.Info('Module %s could not be saved', [Module.FileName]);
+          end;
+        end;
+      end;
+    end;
+
+    Files := TArrayUtils.Map<IOTAModule, string>(
+      Modules,
+      function(Module: IOTAModule): string
+      begin
+        Result := Module.FileName;
+      end);
     SetLength(Files, Length(Files) + 1);
     Files[Length(Files) - 1] := ProjectFile;
 

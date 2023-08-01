@@ -20,8 +20,8 @@ interface
 
 uses
     ToolsAPI
+  , System.SysUtils
   ;
-
 
 // Project utils
 function ToAbsolutePath(const RelativePath: string; const BaseDir: string): string;
@@ -36,7 +36,7 @@ procedure ExtractFiles(
   out ProjectFile: string;
   out MainFile: string;
   out PasFiles: TArray<string>);
-function GetOpenSourceFiles: TArray<string>;
+function GetOpenSourceModules: TArray<IOTAModule>;
 function TryGetProjectFile(out ProjectFile: string): Boolean;
 function IsFileInProjectDirectory(const Path: string): Boolean;
 function IsFileInProject(const Path: string): Boolean;
@@ -46,16 +46,22 @@ function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = T
 function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
 function GetDelphiVersion: string;
 
+// General utils
+type
+  TArrayUtils = class(TObject)
+    class function Map<X, Y>(Arr: TArray<X>; Mapper: TFunc<X, Y>): TArray<Y>; static;
+  end;
+
 implementation
 
 uses
     System.IOUtils
   , System.Classes
   , System.StrUtils
-  , System.SysUtils
   , DelphiLint.ProjectOptions
   , Winapi.ShLwApi
   , DelphiLint.Logger
+  , System.Generics.Collections
   ;
 
 //______________________________________________________________________________________________________________________
@@ -124,26 +130,26 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetOpenSourceFiles: TArray<string>;
+function GetOpenSourceModules: TArray<IOTAModule>;
 var
   Index: Integer;
   Module: IOTAModule;
   ModuleServices: IOTAModuleServices;
-  Files: TStringList;
+  Files: TList<IOTAModule>;
 begin
   ModuleServices := (BorlandIDEServices as IOTAModuleServices);
 
-  Files := TStringList.Create;
+  Files := TList<IOTAModule>.Create;
   try
     for Index := 0 to ModuleServices.ModuleCount - 1 do begin
       Module := ModuleServices.Modules[Index];
 
       if IsPasFile(Module.FileName) then begin
-        Files.Add(Module.FileName);
+        Files.Add(Module);
       end;
     end;
 
-    Result := Files.ToStringArray;
+    Result := Files.ToArray;
   finally
     FreeAndNil(Files);
   end;
@@ -306,6 +312,19 @@ end;
 function IsFileInProject(const Path: string): Boolean;
 begin
   Result := (Path <> '') and IsDelphiSource(Path) and FileExists(Path) and IsFileInProjectDirectory(Path);
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TArrayUtils.Map<X, Y>(Arr: TArray<X>; Mapper: TFunc<X, Y>): TArray<Y>;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(Arr));
+
+  for I := 0 to Length(Arr) - 1 do begin
+    Result[I] := Mapper(Arr[I]);
+  end;
 end;
 
 end.

@@ -42,6 +42,7 @@ type
     property DebugShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
     property DebugExternalServer: Boolean index 4 read GetValueBool write SetValueBool;
     property ClientAutoShowToolWindow: Boolean index 5 read GetValueBool write SetValueBool;
+    property ClientSaveBeforeAnalysis: Boolean index 6 read GetValueBool write SetValueBool;
 
     property ServerJar: string index 0 read GetServerJar;
     property SonarDelphiJar: string index 1 read GetSonarDelphiJar;
@@ -100,7 +101,9 @@ begin
     // 4
     TBoolPropField.Create('Debug', 'ExternalServer', False),
     // 5
-    TBoolPropField.Create('Client', 'AutoShowToolWindow', True)
+    TBoolPropField.Create('Client', 'AutoShowToolWindow', True),
+    // 6
+    TBoolPropField.Create('Client', 'SaveBeforeAnalysis', True)
   ];
 end;
 

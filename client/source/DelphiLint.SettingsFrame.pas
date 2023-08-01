@@ -29,6 +29,7 @@ type
     BrokenSetupWarningLabel: TLabel;
     ClientConfigGroupBox: TGroupBox;
     ClientAutoShowToolWindowCheckBox: TCheckBox;
+    ClientSaveBeforeAnalysisCheckBox: TCheckBox;
     procedure ComponentsButtonClick(Sender: TObject);
   public
     procedure Init;
@@ -94,6 +95,7 @@ begin
   LintSettings.Load;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
   ClientAutoShowToolWindowCheckBox.Checked := LintSettings.ClientAutoShowToolWindow;
+  ClientSaveBeforeAnalysisCheckBox.Checked := LintSettings.ClientSaveBeforeAnalysis;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -101,6 +103,7 @@ end;
 procedure TLintSettingsFrame.Save;
 begin
   LintSettings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
+  LintSettings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
   LintSettings.Save;
 end;
 
