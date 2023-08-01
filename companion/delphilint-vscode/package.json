@@ -1,6 +1,6 @@
 {
   "name": "delphilint-vscode",
-  "displayName": "DelphiLint for VS Code",
+  "displayName": "DelphiLint Companion for VS Code",
   "description": "VS Code extension for the DelphiLint Delphi code analysis server, powered by SonarDelphi.",
   "icon": "./images/icon.png",
   "author": {
