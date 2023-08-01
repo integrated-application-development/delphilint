@@ -26,9 +26,19 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 3. Unzip the DelphiLint package folder from step 1, then run `./setup.ps1 -SonarDelphiJarLocation <path>` inside it.
 4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
 
-## Building from source
+### Installing the VS Code companion
 
-Building DelphiLint from source is very simple.
+1. [Build the VS Code companion from source](#building-the-vs-code-companion) or download the .vsix artifact from
+   [the latest release](https://github.com/Integrated-Application-Development/delphilint/releases/latest).
+2. Run `code --install-extension <vsix>` to install the extension.
+
+Note that there must be a DelphiLint installation with a matching version for the companion to work, as it looks for
+a server that matches its version. For example, the version of DelphiLint on the latest `master` will not be compatible
+with the version of the VS Code companion bundled with the most recent release - you will either have to check out the
+most recent release commit and [build DelphiLint from there](#building-from-source) (recommended), or
+[build the VS Code companion yourself](#building-the-vs-code-companion) from latest `master`.
+
+## Building from source
 
 Prerequisites:
 
@@ -41,7 +51,20 @@ Prerequisites:
 3. Build the client project by compiling `/client/source/DelphiLintClient.dproj` in Release with Delphi 11 or above.
 4. Run `/package.ps1` after compiling the two projects and follow the instructions to create a .zip containing
    all the build artifacts and a setup script.
-5. Follow the rest of the [installation steps](#installation).
+
+### Building the VS Code companion
+
+Prerequisite:
+
+* npm
+* VS Code
+* VS Code Extension Manager (Can be installed with `npm install --global @vscode/vsce`)
+
+1. Clone the repository at the latest release.
+2. In `/companion/delphilint-vscode`:
+   1. Run `npm install`.
+   2. Run `vsce package` to create a `.vsix` file in `/companion/delphilint-vscode`.
+3. Run `code --install-extension <vsix>` to install the extension.
 
 ## Usage
 
