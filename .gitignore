@@ -22,6 +22,7 @@ __recovery/
 sonar-project.properties
 
 # JavaScript
+package-lock.json
 node_modules/
 out/
 *.vsix
