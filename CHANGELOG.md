@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New user setting to toggle autosaving files before analysis, defaulting to yes
 * Issues now display server metadata such as creation date, status, and assignee when in Connected Mode
 
+### Fixed
+
+* VS Code companion: Improved error handling when the server responds unexpectedly
+
 ## [0.3.0] - 2023-08-01
 
 ### Added

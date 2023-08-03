@@ -4,7 +4,12 @@ import { spawn, ChildProcess } from "child_process";
 import * as tmp from "tmp";
 import * as fs from "fs";
 import * as settings from "./settings";
-import { AnalyzeError, InitializeError, ServerError } from "./error";
+import {
+  AnalyzeError,
+  InitializeError,
+  NoJavaExeError,
+  ServerError,
+} from "./error";
 
 export enum LintMessageType {
   quit = 15,
@@ -58,6 +63,7 @@ export class LintServer {
   private textEncoder: TextEncoder;
   private nextId: number;
   private responseActions: Map<number, LintResponseAction>;
+  private rejections: Map<number, (err: any) => void>;
   private process: ChildProcess | undefined;
 
   constructor() {
@@ -66,6 +72,7 @@ export class LintServer {
     this.nextId = 0;
     this.process = undefined;
     this.responseActions = new Map<number, LintResponseAction>();
+    this.rejections = new Map<number, (err: any) => void>();
 
     this.tcpClient = new Socket();
     this.tcpClient.on("data", (buffer) => {
@@ -81,6 +88,14 @@ export class LintServer {
   ): Promise<void> {
     if (this.process) {
       throw new ServerError("Server is already started.");
+    }
+
+    if (!fs.existsSync(javaExe)) {
+      throw new NoJavaExeError(`Java exe does not exist at ${javaExe}`);
+    }
+
+    if (!fs.existsSync(jar)) {
+      throw new NoJavaExeError(`Server jar does not exist at ${jar}.`);
     }
 
     let port = await new Promise<number>((resolve, reject) => {
@@ -118,16 +133,25 @@ export class LintServer {
     let category = buffer.readUint8(0);
     let id = buffer.readInt32BE(1);
 
-    let dataStr = buffer.toString("utf8", 1 + 4 + 4);
-    let dataObj = JSON.parse(dataStr);
+    try {
+      let dataStr = buffer.toString("utf8", 1 + 4 + 4);
+      let dataObj = JSON.parse(dataStr);
 
-    let onResponse = this.responseActions.get(id);
-    if (onResponse) {
-      onResponse({
-        category: category,
-        data: dataObj,
-      });
-      this.responseActions.delete(id);
+      let onResponse = this.responseActions.get(id);
+      if (onResponse) {
+        onResponse({
+          category: category,
+          data: dataObj,
+        });
+        this.responseActions.delete(id);
+      }
+    } catch (err) {
+      let reject = this.rejections.get(id);
+      if (reject) {
+        reject(err);
+      } else {
+        throw err;
+      }
     }
   }
 
@@ -151,10 +175,12 @@ export class LintServer {
   private sendMessage(
     category: LintMessageType,
     data: any,
+    rejection: (err: any) => void,
     onResponse?: LintResponseAction
   ) {
     let id = this.nextId;
     this.nextId += 1;
+    this.rejections.set(id, rejection);
     if (onResponse) {
       this.responseActions.set(id, onResponse);
     }
@@ -163,7 +189,7 @@ export class LintServer {
 
   async initialize(msg: RequestInitialize): Promise<void> {
     return await new Promise<void>((resolve, reject) => {
-      this.sendMessage(LintMessageType.initialize, msg, (msg) => {
+      this.sendMessage(LintMessageType.initialize, msg, reject, (msg) => {
         if (msg.category === LintMessageType.initialized) {
           resolve();
         } else if (msg.category === LintMessageType.initializeError) {
@@ -177,7 +203,7 @@ export class LintServer {
 
   async analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
     return await new Promise<LintIssue[]>((resolve, reject) => {
-      this.sendMessage(LintMessageType.analyze, msg, (msg) => {
+      this.sendMessage(LintMessageType.analyze, msg, reject, (msg) => {
         if (msg.category === LintMessageType.analyzeResult) {
           resolve(msg.data.issues);
         } else if (msg.category === LintMessageType.analyzeError) {
@@ -191,7 +217,7 @@ export class LintServer {
 
   quit() {
     if (this.process) {
-      this.sendMessage(LintMessageType.quit, null);
+      this.sendMessage(LintMessageType.quit, null, (err) => {});
 
       setTimeout(() => {
         if (this.process) {
