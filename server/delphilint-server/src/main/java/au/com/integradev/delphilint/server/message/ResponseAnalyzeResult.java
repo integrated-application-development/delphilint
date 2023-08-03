@@ -17,8 +17,10 @@
  */
 package au.com.integradev.delphilint.server.message;
 
+import au.com.integradev.delphilint.analysis.DelphiIssue;
 import au.com.integradev.delphilint.analysis.TextRange;
 import au.com.integradev.delphilint.server.message.data.IssueData;
+import au.com.integradev.delphilint.server.message.data.IssueMetadataData;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 import java.util.Set;
@@ -35,29 +37,36 @@ public class ResponseAnalyzeResult {
     issues.forEach(issue -> issue.setFile(baseDir.resolve(issue.getFile()).toString()));
   }
 
-  public static ResponseAnalyzeResult fromIssueSet(
-      Set<org.sonarsource.sonarlint.core.analysis.api.Issue> sonarIssues) {
+  public static ResponseAnalyzeResult fromIssueSet(Set<DelphiIssue> delphiIssues) {
     Set<IssueData> issues =
-        sonarIssues.stream()
+        delphiIssues.stream()
             .map(
-                sonarIssue -> {
+                delphiIssue -> {
                   TextRange range = null;
-                  if (sonarIssue.getTextRange() != null) {
+                  if (delphiIssue.getTextRange() != null) {
                     range =
                         new TextRange(
-                            sonarIssue.getTextRange().getStartLine(),
-                            sonarIssue.getTextRange().getStartLineOffset(),
-                            sonarIssue.getTextRange().getEndLine(),
-                            sonarIssue.getTextRange().getEndLineOffset());
+                            delphiIssue.getTextRange().getStartLine(),
+                            delphiIssue.getTextRange().getStartOffset(),
+                            delphiIssue.getTextRange().getEndLine(),
+                            delphiIssue.getTextRange().getEndOffset());
                   }
 
-                  String path = "";
-                  if (sonarIssue.getInputFile() != null) {
-                    path = sonarIssue.getInputFile().relativePath();
+                  IssueMetadataData metadata = null;
+                  if (delphiIssue.getMetadata() != null) {
+                    metadata =
+                        new IssueMetadataData(
+                            delphiIssue.getMetadata().getAssignee(),
+                            delphiIssue.getMetadata().getCreationDate(),
+                            delphiIssue.getMetadata().getStatus());
                   }
 
                   return new IssueData(
-                      sonarIssue.getRuleKey(), sonarIssue.getMessage(), path, range);
+                      delphiIssue.getRuleKey(),
+                      delphiIssue.getMessage(),
+                      delphiIssue.getFile(),
+                      range,
+                      metadata);
                 })
             .collect(Collectors.toSet());
 

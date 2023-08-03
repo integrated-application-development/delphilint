@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * New user setting to toggle autosaving files before analysis, defaulting to yes
+* Issues now display server metadata such as creation date, status, and assignee when in Connected Mode
 
 ## [0.3.0] - 2023-08-01
 

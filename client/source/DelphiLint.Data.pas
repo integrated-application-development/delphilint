@@ -43,18 +43,45 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TIssueStatus = (
+    issOpen,
+    issConfirmed,
+    issReopened,
+    issResolved,
+    issClosed,
+    issToReview,
+    issReviewed
+  );
+
+  TIssueMetadata = class(TObject)
+  private
+    FAssignee: string;
+    FCreationDate: string;
+    FStatus: TIssueStatus;
+  public
+    constructor FromJson(Json: TJSONObject);
+
+    property Assignee: string read FAssignee;
+    property CreationDate: string read FCreationDate;
+    property Status: TIssueStatus read FStatus;
+  end;
+
+//______________________________________________________________________________________________________________________
+
   TLintIssue = class(TObject)
   private
     FRuleKey: string;
     FMessage: string;
     FFilePath: string;
     FRange: TRange;
+    FMetadata: TIssueMetadata;
 
   public
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
     property FilePath: string read FFilePath;
     property Range: TRange read FRange write FRange;
+    property Metadata: TIssueMetadata read FMetadata write FMetadata;
 
     constructor FromJson(Json: TJsonObject);
     destructor Destroy; override;
@@ -119,6 +146,7 @@ end;
 constructor TLintIssue.FromJson(Json: TJsonObject);
 var
   RangeJson: TJsonValue;
+  MetadataJson: TJsonValue;
 begin
   FRuleKey := Json.GetValue<string>('ruleKey');
   FMessage := Json.GetValue<string>('message', FRuleKey);
@@ -129,6 +157,11 @@ begin
   if Assigned(RangeJson) and (RangeJson is TJsonObject) then begin
     FRange := TRange.FromJson(RangeJson as TJsonObject);
   end;
+
+  MetadataJson := Json.GetValue<TJSONValue>('metadata', nil);
+  if Assigned(MetadataJson) and (MetadataJson is TJSONObject) then begin
+    FMetadata := TIssueMetadata.FromJson(MetadataJson as TJSONObject);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -136,6 +169,7 @@ end;
 destructor TLintIssue.Destroy;
 begin
   FreeAndNil(FRange);
+  FreeAndNil(FMetadata);
   inherited;
 end;
 
@@ -151,6 +185,18 @@ begin
   FDesc := Json.GetValue<string>('desc');
   FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), C_Severities));
   FType := TRuleType(IndexStr(Json.GetValue<string>('type'), C_RuleTypes));
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TIssueMetadata.FromJson(Json: TJSONObject);
+const
+  C_Statuses: array of string = ['OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED', 'CLOSED', 'TO_REVIEW', 'REVIEWED'];
+begin
+  inherited;
+  FAssignee := Json.GetValue<string>('assignee');
+  FCreationDate := Json.GetValue<string>('creationDate');
+  FStatus := TIssueStatus(IndexStr(Json.GetValue<string>('status'), C_Statuses));
 end;
 
 end.

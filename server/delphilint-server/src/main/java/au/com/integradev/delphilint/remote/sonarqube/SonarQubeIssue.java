@@ -39,6 +39,8 @@ public class SonarQubeIssue {
   @JsonProperty private String message;
   @JsonProperty private IssueSeverity severity;
   @JsonProperty private RuleType type;
+  @JsonProperty private String assignee;
+  @JsonProperty private String creationDate;
 
   public String getRuleKey() {
     return rule;
@@ -73,5 +75,25 @@ public class SonarQubeIssue {
 
   public String getServerIssueKey() {
     return key;
+  }
+
+  public String getProject() {
+    return project;
+  }
+
+  public String getResolution() {
+    return resolution;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public String getAssignee() {
+    return assignee;
+  }
+
+  public String getCreationDate() {
+    return creationDate;
   }
 }

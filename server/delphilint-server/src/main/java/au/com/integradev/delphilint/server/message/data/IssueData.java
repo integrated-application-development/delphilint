@@ -25,12 +25,15 @@ public class IssueData {
   @JsonProperty private String message;
   @JsonProperty private String file;
   @JsonProperty private TextRange range;
+  @JsonProperty private IssueMetadataData metadata;
 
-  public IssueData(String ruleKey, String message, String file, TextRange range) {
+  public IssueData(
+      String ruleKey, String message, String file, TextRange range, IssueMetadataData metadata) {
     this.ruleKey = ruleKey;
     this.message = message;
     this.file = file;
     this.range = range;
+    this.metadata = metadata;
   }
 
   public String getRuleKey() {

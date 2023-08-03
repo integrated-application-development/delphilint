@@ -34,6 +34,10 @@ type
     FRuleKey: string;
     FMessage: string;
     FFilePath: string;
+    FAssignee: string;
+    FCreationDate: string;
+    FStatus: TIssueStatus;
+    FHasMetadata: Boolean;
     FStartLine: Integer;
     FEndLine: Integer;
     FStartLineOffset: Integer;
@@ -46,7 +50,7 @@ type
     function GetEndLine: Integer;
     procedure PopulateLines(const FileLines: TArray<string>);
   public
-    constructor Create(Issue: TLintIssue; FileLines: TArray<string>);
+    constructor Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
     destructor Destroy; override;
 
     procedure NewLineMoveSession;
@@ -56,6 +60,11 @@ type
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
     property FilePath: string read FFilePath write FFilePath;
+    property Assignee: string read FAssignee;
+    property CreationDate: string read FCreationDate;
+    property Status: TIssueStatus read FStatus;
+    property HasMetadata: Boolean read FHasMetadata;
+
     property OriginalStartLine: Integer read FStartLine;
     property OriginalEndLine: Integer read FEndLine;
     property StartLine: Integer read GetStartLine;
@@ -105,7 +114,7 @@ type
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
     procedure OnServerTerminated(Sender: TObject);
-    procedure SaveIssues(Issues: TObjectList<TLintIssue>);
+    procedure SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
     procedure EnsureServerInited;
     function GetInitedServer: TLintServer;
     function TryRefreshRules: Boolean;
@@ -592,7 +601,21 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintContext.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
+var
+  HasMetadata: Boolean;
+  ProjectFile: string;
+  ProjectOptions: TLintProjectOptions;
 begin
+  HasMetadata := False;
+  if TryGetProjectFile(ProjectFile) then begin
+    try
+      ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+      HasMetadata := ProjectOptions.AnalysisConnectedMode;
+    finally
+      FreeAndNil(ProjectOptions);
+    end;
+  end;
+
   TThread.Queue(
     TThread.Current,
     procedure
@@ -600,7 +623,7 @@ begin
       Paths: TArray<string>;
     begin
       try
-        SaveIssues(Issues);
+        SaveIssues(Issues, HasMetadata);
       finally
         FreeAndNil(Issues);
       end;
@@ -638,7 +661,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.SaveIssues(Issues: TObjectList<TLintIssue>);
+procedure TLintContext.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
 var
   Issue: TLintIssue;
   LiveIssue: TLiveIssue;
@@ -662,7 +685,7 @@ begin
         FileContents.Add(SanitizedPath, TFile.ReadAllLines(Issue.FilePath, TEncoding.ANSI));
       end;
 
-      LiveIssue := TLiveIssue.Create(Issue, FileContents[SanitizedPath]);
+      LiveIssue := TLiveIssue.Create(Issue, FileContents[SanitizedPath], IssuesHaveMetadata);
       NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 
@@ -886,7 +909,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>);
+constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
 begin
   FRuleKey := Issue.RuleKey;
   FMessage := Issue.Message;
@@ -904,6 +927,14 @@ begin
     FStartLineOffset := 0;
     FEndLineOffset := 0;
   end;
+
+  FHasMetadata := HasMetadata;
+  if Assigned(Issue.Metadata) then begin
+    FAssignee := Issue.Metadata.Assignee;
+    FCreationDate := Issue.Metadata.CreationDate;
+    FStatus := Issue.Metadata.Status;
+  end;
+
   FLinesMoved := 0;
   FLines := TList<string>.Create;
   FTethered := True;

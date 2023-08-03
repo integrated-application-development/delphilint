@@ -13,6 +13,8 @@ public class SonarQubeHotspot {
   @JsonProperty private String resolution;
   @JsonProperty private TextRange textRange;
   @JsonProperty private int line;
+  @JsonProperty private String assignee;
+  @JsonProperty private String creationDate;
 
   public int getLine() {
     return line;
@@ -40,5 +42,13 @@ public class SonarQubeHotspot {
 
   public TextRange getTextRange() {
     return textRange;
+  }
+
+  public String getAssignee() {
+    return assignee;
+  }
+
+  public String getCreationDate() {
+    return creationDate;
   }
 }

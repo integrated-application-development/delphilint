@@ -21,6 +21,7 @@ interface
 uses
     ToolsAPI
   , System.SysUtils
+  , System.TimeSpan
   ;
 
 // Project utils
@@ -47,6 +48,7 @@ function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
 function GetDelphiVersion: string;
 
 // General utils
+function TimeSpanToAgoString(TimeSpan: TTimeSpan): string;
 type
   TArrayUtils = class(TObject)
     class function Map<X, Y>(Arr: TArray<X>; Mapper: TFunc<X, Y>): TArray<Y>; static;
@@ -62,6 +64,7 @@ uses
   , Winapi.ShLwApi
   , DelphiLint.Logger
   , System.Generics.Collections
+  , System.Math
   ;
 
 //______________________________________________________________________________________________________________________
@@ -324,6 +327,38 @@ begin
 
   for I := 0 to Length(Arr) - 1 do begin
     Result[I] := Mapper(Arr[I]);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TimeSpanToAgoString(TimeSpan: TTimeSpan): string;
+
+  function AgoInt(Num: Integer; TimeUnit: string): string;
+  begin
+    Result := Format(
+      '%d %s ago',
+      [Num, IfThen(Num = 1, TimeUnit, TimeUnit + 's')]
+    );
+  end;
+
+  function Ago(Num: Double; TimeUnit: string): string;
+  begin
+    Result := AgoInt(Floor(Num), TimeUnit);
+  end;
+
+begin
+  if TimeSpan.TotalHours < 1 then begin
+    Result := Ago(TimeSpan.TotalMinutes, 'minute');
+  end
+  else if TimeSpan.TotalDays < 1 then begin
+    Result := Ago(TimeSpan.TotalHours, 'hour');
+  end
+  else if TimeSpan.TotalDays < 365 then begin
+    Result := Ago(TimeSpan.TotalDays, 'day');
+  end
+  else begin
+    Result := Ago(TimeSpan.TotalDays / 365, 'year');
   end;
 end;
 

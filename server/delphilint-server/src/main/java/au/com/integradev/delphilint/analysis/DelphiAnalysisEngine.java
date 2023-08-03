@@ -17,18 +17,13 @@
  */
 package au.com.integradev.delphilint.analysis;
 
-import au.com.integradev.delphilint.analysis.TrackableWrappers.ClientTrackable;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
-import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarServerUtils;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
@@ -42,7 +37,6 @@ import org.sonarsource.sonarlint.core.analysis.container.module.ModuleContainer;
 import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.progress.ClientProgressMonitor;
 import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
-import org.sonarsource.sonarlint.core.issuetracking.Tracker;
 import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoadResult;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoader;
@@ -103,7 +97,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     return configBuilder.build();
   }
 
-  public Set<Issue> analyze(
+  public Set<DelphiIssue> analyze(
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,
@@ -132,39 +126,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         .iterator()
         .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
 
-    return postProcessIssues(fileRelativePaths, issues, host);
-  }
-
-  private Set<Issue> postProcessIssues(
-      Set<String> fileRelativePaths, Set<Issue> issues, SonarHost host) throws SonarHostException {
-    Queue<ClientTrackable> clientTrackables =
-        SonarServerUtils.populateIssueMessages(host, issues).stream()
-            .map(TrackableWrappers.ClientTrackable::new)
-            .collect(Collectors.toCollection(LinkedList::new));
-    Set<TrackableWrappers.ServerTrackable> serverTrackables = new HashSet<>();
-
-    Collection<RemoteIssue> resolvedIssues = host.getResolvedIssues(fileRelativePaths);
-    for (RemoteIssue resolvedIssue : resolvedIssues) {
-      serverTrackables.add(new TrackableWrappers.ServerTrackable(resolvedIssue));
-    }
-
-    Tracker<TrackableWrappers.ClientTrackable, TrackableWrappers.ServerTrackable> tracker =
-        new Tracker<>();
-    var tracking = tracker.track(() -> clientTrackables, () -> serverTrackables);
-
-    Set<Issue> returnIssues = new HashSet<>();
-    tracking
-        .getUnmatchedRaws()
-        .iterator()
-        .forEachRemaining(trackable -> returnIssues.add(trackable.getClientObject()));
-
-    LOG.info(
-        "{}/{} issues matched with {} resolved server issues and discarded",
-        issues.size() - returnIssues.size(),
-        issues.size(),
-        resolvedIssues.size());
-
-    return returnIssues;
+    return SonarServerUtils.postProcessIssues(fileRelativePaths, issues, host);
   }
 
   public LoadedPlugins getLoadedPlugins() {

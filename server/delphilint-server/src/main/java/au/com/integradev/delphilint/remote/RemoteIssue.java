@@ -20,15 +20,18 @@ package au.com.integradev.delphilint.remote;
 import au.com.integradev.delphilint.analysis.TextRange;
 
 public class RemoteIssue {
-  private String key;
-  private String rule;
-  private int line;
-
-  private String hash;
+  private final String key;
+  private final String rule;
+  private final int line;
+  private final String hash;
   private TextRange textRange;
-  private String message;
-  private RuleSeverity severity;
-  private RuleType type;
+  private final String message;
+  private final RuleSeverity severity;
+  private final RuleType type;
+  private final IssueStatus status;
+  private final boolean isSecurityHotspot;
+  private final String assignee;
+  private final String creationDate;
 
   public RemoteIssue(
       String key,
@@ -38,7 +41,11 @@ public class RemoteIssue {
       TextRange textRange,
       String message,
       RuleSeverity severity,
-      RuleType type) {
+      RuleType type,
+      IssueStatus status,
+      boolean isSecurityHotspot,
+      String assignee,
+      String creationDate) {
     this.key = key;
     this.rule = rule;
     this.line = line;
@@ -47,6 +54,10 @@ public class RemoteIssue {
     this.message = message;
     this.severity = severity;
     this.type = type;
+    this.status = status;
+    this.isSecurityHotspot = isSecurityHotspot;
+    this.assignee = assignee;
+    this.creationDate = creationDate;
   }
 
   public String getRuleKey() {
@@ -82,5 +93,21 @@ public class RemoteIssue {
 
   public String getServerIssueKey() {
     return key;
+  }
+
+  public IssueStatus getStatus() {
+    return status;
+  }
+
+  public boolean isSecurityHotspot() {
+    return isSecurityHotspot;
+  }
+
+  public String getAssignee() {
+    return assignee;
+  }
+
+  public String getCreationDate() {
+    return creationDate;
   }
 }

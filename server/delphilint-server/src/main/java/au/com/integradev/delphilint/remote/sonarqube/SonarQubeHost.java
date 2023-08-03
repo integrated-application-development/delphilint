@@ -17,6 +17,7 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
+import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemoteRule;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -164,7 +166,7 @@ public class SonarQubeHost implements SonarHost {
   }
 
   private List<String> joinStringsWithLimit(
-      Set<String> values, Function<String, String> mapper, int maxChars) {
+      Collection<String> values, Function<String, String> mapper, int maxChars) {
     List<String> strings = new ArrayList<>();
     var stringBuilder = new StringBuilder();
 
@@ -185,31 +187,43 @@ public class SonarQubeHost implements SonarHost {
     return strings;
   }
 
-  public Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths) {
+  private String buildUrlQueryString(Collection<String> params) {
+    if (!params.isEmpty()) {
+      return "?" + String.join("&", params);
+    } else {
+      return "";
+    }
+  }
+
+  private Set<RemoteIssue> getIssuesAndHotspots(
+      Collection<String> relativeFilePaths,
+      Collection<String> issueParams,
+      Collection<String> hotspotParams)
+      throws SonarHostException {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
 
+    Set<RemoteIssue> remoteIssues = new HashSet<>();
+
     List<String> componentKeyBatches =
         joinStringsWithLimit(relativeFilePaths, filePath -> projectKey + ":" + filePath, 1500);
 
-    Set<RemoteIssue> remoteIssues = new HashSet<>();
+    List<String> dynIssueParams = new ArrayList<>(issueParams);
+    dynIssueParams.add(0, "<component keys>");
 
     for (String componentKeyBatch : componentKeyBatches) {
-      LOG.info("Getting resolved issues for component keys: {}", componentKeyBatch);
+      LOG.info("Getting issues for component keys: {}", componentKeyBatch);
+      dynIssueParams.set(0, "componentKeys=" + componentKeyBatch);
 
-      ConnectedList<SonarQubeIssue> resolvedIssues =
+      ConnectedList<SonarQubeIssue> serverIssues =
           new ConnectedList<>(
               api,
-              "/api/issues/search"
-                  + "?resolved=true"
-                  + "&resolutions=FALSE-POSITIVE,WONTFIX,FIXED"
-                  + "&componentKeys="
-                  + componentKeyBatch,
+              "/api/issues/search" + buildUrlQueryString(dynIssueParams),
               "issues",
               SonarQubeIssue.class);
 
-      for (SonarQubeIssue sqIssue : resolvedIssues) {
+      for (SonarQubeIssue sqIssue : serverIssues) {
         remoteIssues.add(
             new RemoteIssue(
                 sqIssue.getServerIssueKey(),
@@ -219,33 +233,31 @@ public class SonarQubeHost implements SonarHost {
                 sqIssue.getTextRange(),
                 sqIssue.getMessage(),
                 RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
-                RuleType.fromSonarLintRuleType(sqIssue.getType())));
+                RuleType.fromSonarLintRuleType(sqIssue.getType()),
+                IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()),
+                false,
+                sqIssue.getAssignee(),
+                sqIssue.getCreationDate()));
       }
     }
 
     List<String> filePathBatches = joinStringsWithLimit(relativeFilePaths, s -> s, 1500);
+    List<String> dynHotspotParams = new ArrayList<>(hotspotParams);
+    dynHotspotParams.add(0, "<files>");
+    dynHotspotParams.add(1, "projectKey=" + projectKey);
 
     for (String filePathBatch : filePathBatches) {
-      LOG.info("Getting reviewed hotspots for files: {}", filePathBatch);
+      LOG.info("Getting hotspots for files: {}", filePathBatch);
+      dynHotspotParams.set(0, "files=" + filePathBatch);
 
       ConnectedList<SonarQubeHotspot> resolvedIssues =
           new ConnectedList<>(
               api,
-              "/api/hotspots/search"
-                  + "?projectKey="
-                  + projectKey
-                  + "&status=REVIEWED"
-                  + "&files="
-                  + filePathBatch,
+              "/api/hotspots/search" + buildUrlQueryString(dynHotspotParams),
               "hotspots",
               SonarQubeHotspot.class);
 
       for (SonarQubeHotspot sqHotspot : resolvedIssues) {
-        // Acknowledged hotspots should not suppress issues
-        if ("ACKNOWLEDGED".equals(sqHotspot.getResolution())) {
-          continue;
-        }
-
         remoteIssues.add(
             new RemoteIssue(
                 sqHotspot.getKey(),
@@ -255,11 +267,45 @@ public class SonarQubeHost implements SonarHost {
                 sqHotspot.getTextRange(),
                 sqHotspot.getMessage(),
                 RuleSeverity.MAJOR,
-                RuleType.SECURITY_HOTSPOT));
+                RuleType.SECURITY_HOTSPOT,
+                IssueStatus.fromSonarQubeIssueStatus(sqHotspot.getStatus()),
+                true,
+                sqHotspot.getAssignee(),
+                sqHotspot.getCreationDate()));
       }
     }
 
     return remoteIssues;
+  }
+
+  public Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths)
+      throws SonarHostException {
+    if (projectKey.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return getIssuesAndHotspots(
+            relativeFilePaths,
+            List.of("resolved=true", "resolutions=FALSE-POSITIVE,WONTFIX,FIXED"),
+            List.of("status=REVIEWED"))
+        .stream()
+        // Acknowledged hotspots should not suppress issues
+        .filter(issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getStatus()))
+        .collect(Collectors.toSet());
+  }
+
+  public Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths)
+      throws SonarHostException {
+    if (projectKey.isEmpty()) {
+      return Collections.emptySet();
+    }
+
+    return getIssuesAndHotspots(
+            relativeFilePaths, List.of("resolved=false"), Collections.emptyList())
+        .stream()
+        // Acknowledged hotspots should not suppress issues
+        .filter(issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getStatus()))
+        .collect(Collectors.toSet());
   }
 
   public Set<RemoteActiveRule> getActiveRules() throws SonarHostException {

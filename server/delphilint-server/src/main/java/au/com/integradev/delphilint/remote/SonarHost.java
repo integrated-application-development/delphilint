@@ -28,7 +28,11 @@ public interface SonarHost {
 
   Set<RemoteRule> getRules() throws SonarHostException;
 
-  Collection<RemoteIssue> getResolvedIssues(Set<String> relativeFilePaths);
+  Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths)
+      throws SonarHostException;
+
+  Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths)
+      throws SonarHostException;
 
   Set<RemoteActiveRule> getActiveRules() throws SonarHostException;
 

@@ -19,10 +19,23 @@ unit DelphiLint.ToolFrame;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.StdCtrls, DockForm, Vcl.Menus,
-  Vcl.ToolWin, DelphiLint.Data, DelphiLint.Context, DelphiLint.ToolsApiBase, Vcl.OleCtrls, SHDocVw,
-  System.Generics.Collections;
+    System.Classes
+  , System.Generics.Collections
+  , Vcl.Controls
+  , Vcl.Forms
+  , Vcl.ComCtrls
+  , Vcl.ExtCtrls
+  , Vcl.StdCtrls
+  , Vcl.Menus
+  , Vcl.ToolWin
+  , Vcl.OleCtrls
+  , Winapi.Windows
+  , SHDocVw
+  , DockForm
+  , DelphiLint.Data
+  , DelphiLint.Context
+  , DelphiLint.ToolsApiBase
+  ;
 
 type
   TCurrentFileStatus = (
@@ -95,6 +108,15 @@ type
       'Vulnerability',
       'Security hotspot'
     );
+    C_IssueStatusStrs: array[TIssueStatus] of string = (
+      'Open',
+      'Confirmed',
+      'Reopened',
+      'Resolved',
+      'Closed',
+      'To review',
+      'Reviewed (acknowledged)'
+    );
   private
     FResizing: Boolean;
     FDragStartX: Integer;
@@ -107,7 +129,12 @@ type
 
     procedure RefreshIssueView;
     procedure RepaintIssueView;
-    procedure GetIssueItemText(ListBox: TListBox; Issue: TLiveIssue; out LocationText: string; out MessageText: string);
+    procedure GetIssueItemText(
+      ListBox: TListBox;
+      Issue: TLiveIssue;
+      out LocationText: string;
+      out MessageText: string;
+      out MetadataText: string);
 
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
@@ -147,14 +174,19 @@ type
 implementation
 
 uses
-    ToolsAPI
-  , DelphiLint.Utils
+    System.SysUtils
+  , System.DateUtils
+  , System.TimeSpan
   , System.StrUtils
   , System.IOUtils
+  , Vcl.Themes
+  , Vcl.Graphics
+  , Winapi.ShellAPI
+  , Winapi.Messages
+  , ToolsAPI
+  , DelphiLint.Utils
   , DelphiLint.Logger
   , DelphiLint.Plugin
-  , Vcl.Themes
-  , Winapi.ShellAPI
   ;
 
 {$R *.dfm}
@@ -468,7 +500,11 @@ procedure TLintToolFrame.GetIssueItemText(
   ListBox: TListBox;
   Issue: TLiveIssue;
   out LocationText: string;
-  out MessageText: string);
+  out MessageText: string;
+  out MetadataText: string);
+var
+  CreationDateTime: TDateTime;
+  TimeSinceCreation: TTimeSpan;
 begin
   if Issue.Tethered then begin
     LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
@@ -478,6 +514,22 @@ begin
   end;
 
   MessageText := Issue.Message;
+
+  if Issue.HasMetadata then begin
+    if Issue.CreationDate <> '' then begin
+      CreationDateTime := ISO8601ToDate(Issue.CreationDate, False);
+      TimeSinceCreation := TTimeSpan.Subtract(Now, CreationDateTime);
+
+      MetadataText := Format('%s • %s%s', [
+        TimeSpanToAgoString(TimeSinceCreation),
+        C_IssueStatusStrs[Issue.Status],
+        IfThen(Issue.Assignee <> '', ' • Assigned to ' + Issue.Assignee, '')
+      ]);
+    end
+    else begin
+      MetadataText := 'New issue';
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -487,6 +539,7 @@ var
   ListBox: TListBox;
   LocationText: string;
   MessageText: string;
+  MetadataText: string;
   Issue: TLiveIssue;
   Rect: TRect;
 begin
@@ -495,7 +548,7 @@ begin
   // object is added. This means we have to maintain a separate list to be able to retrieve them by index here.
   Issue := FIssues[Index];
 
-  GetIssueItemText(ListBox, Issue, LocationText, MessageText);
+  GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
 
   Rect := TRect.Empty;
   Rect.Left := Rect.Left + ListBox.Canvas.TextWidth(LocationText) + 4;
@@ -510,7 +563,7 @@ begin
     Rect,
     DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
 
-  Height := Rect.Height + 8;
+  Height := Rect.Height + 8 + ListBox.Canvas.TextHeight(MetadataText);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -522,6 +575,7 @@ var
   ListBox: TListBox;
   LocationText: string;
   MessageText: string;
+  MetadataText: string;
   LocationWidth: Integer;
   MessageRect: TRect;
 begin
@@ -532,7 +586,7 @@ begin
   end;
 
   Issue := FIssues[Index];
-  GetIssueItemText(ListBox, Issue, LocationText, MessageText);
+  GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
 
   Canvas := ListBox.Canvas;
   Canvas.FillRect(Rect);
@@ -550,7 +604,7 @@ begin
   MessageRect.Left := Rect.Left + LocationWidth + 4;
   MessageRect.Right := Rect.Right - 4;
   MessageRect.Top := Rect.Top + 4;
-  MessageRect.Bottom := Rect.Bottom - 4;
+  MessageRect.Bottom := Rect.Bottom - 4 - Canvas.TextHeight(MetadataText);
 
   DrawText(
     ListBox.Canvas.Handle,
@@ -558,6 +612,10 @@ begin
     Length(MessageText),
     MessageRect,
     DT_LEFT or DT_WORDBREAK);
+
+  Canvas.Font.Style := [];
+
+  Canvas.TextOut(Rect.Left + 4, MessageRect.Bottom, MetadataText);
 end;
 
 //______________________________________________________________________________________________________________________
