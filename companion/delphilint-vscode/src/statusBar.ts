@@ -1,13 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import { ProjectChoice } from "./delphiProjectUtils";
 
 export class LintStatusItem {
   private statusItem: vscode.StatusBarItem;
-  private activeProject?: string;
+  private activeProject?: ProjectChoice;
   private action?: string;
   private progress: boolean;
 
-  constructor(activeProject?: string) {
+  constructor(activeProject?: ProjectChoice) {
     this.statusItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
       0
@@ -27,9 +28,14 @@ export class LintStatusItem {
   }
 
   update() {
-    let activeProjectText = this.activeProject
-      ? path.basename(this.activeProject).replace(".dproj", "")
-      : "No project selected";
+    let activeProjectText: string;
+    if (this.activeProject === undefined) {
+      activeProjectText = "No project selected";
+    } else {
+      activeProjectText = this.activeProject
+        ? path.basename(this.activeProject).replace(".dproj", "")
+        : "Standalone";
+    }
 
     let iconText = this.progress ? "$(loading~spin) " : "";
     let actionText = this.action ?? "Idle";
@@ -37,7 +43,7 @@ export class LintStatusItem {
     this.statusItem.text = `${iconText}DelphiLint: ${actionText} (${activeProjectText})`;
   }
 
-  setActiveProject(activeProject?: string) {
+  setActiveProject(activeProject?: ProjectChoice) {
     this.activeProject = activeProject;
     this.update();
   }
