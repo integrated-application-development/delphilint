@@ -49,12 +49,13 @@ Prerequisites:
 1. Clone the repository at the latest release.
 2. Build the server project by running `/server/build.ps1`.
 3. Build the client project by compiling `/client/source/DelphiLintClient.dproj` in Release with Delphi 11 or above.
-4. Run `/package.ps1` after compiling the two projects and follow the instructions to create a .zip containing
-   all the build artifacts and a setup script.
+4. (Optional) [Build the VS Code companion.](#building-the-vs-code-companion) If this step is skipped, pass
+   `-NoCompanion` to the package script in the next step.
+5. Run `/package.ps1` and follow the instructions to create a .zip containing all the build artifacts and a setup script.
 
 ### Building the VS Code companion
 
-Prerequisite:
+Prerequisites:
 
 * npm
 * VS Code
