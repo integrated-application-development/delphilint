@@ -137,13 +137,50 @@ $(PreBuildEvent)]]>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="DelphiLint.Version.pas"/>
+        <DCCReference Include="DelphiLint.Resources.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
-            <ResourceId>DELPHILINT_SPLASH</ResourceId>
+            <ResourceId>DL_SPLASH</ResourceId>
         </RcItem>
         <RcItem Include="..\assets\delphilint_icon_48x48.bmp">
             <ResourceType>BITMAP</ResourceType>
-            <ResourceId>DELPHILINT_ICON</ResourceId>
+            <ResourceId>DL_ICON</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\code_smell.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_CODESMELL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\blocker.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_BLOCKER</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\bug.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_BUG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\critical.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_CRITICAL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\hotspot.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_HOTSPOT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\info.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_INFO</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\major.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MAJOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\minor.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MINOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\vulnerability.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_VULNERABILITY</ResourceId>
         </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
