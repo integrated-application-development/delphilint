@@ -415,12 +415,14 @@ object LintPlugin: TLintPlugin
     object ActionShowToolWindow: TAction
       Category = 'DelphiLint'
       Caption = '&Show DelphiLint'
+      Hint = 'Show DelphiLint window'
       ImageIndex = 7
       OnExecute = ActionShowToolWindowExecute
     end
     object ActionAnalyzeActiveFile: TAction
       Category = 'DelphiLint'
       Caption = 'Analyze &This File'
+      Hint = 'Analyze active file'
       ImageIndex = 8
       ShortCut = 24652
       OnExecute = ActionAnalyzeActiveFileExecute
@@ -428,6 +430,7 @@ object LintPlugin: TLintPlugin
     object ActionAnalyzeOpenFiles: TAction
       Category = 'DelphiLint'
       Caption = 'Analyze &All Open Files'
+      Hint = 'Analyze all open files'
       ImageIndex = 9
       ShortCut = 57420
       OnExecute = ActionAnalyzeOpenFilesExecute
@@ -440,16 +443,19 @@ object LintPlugin: TLintPlugin
     object ActionOpenProjectOptions: TAction
       Category = 'DelphiLint'
       Caption = 'Project &Options...'
+      Hint = 'Open DelphiLint project options'
       OnExecute = ActionOpenProjectOptionsExecute
     end
     object ActionOpenSettings: TAction
       Category = 'DelphiLint'
       Caption = 'Se&ttings...'
+      Hint = 'Open DelphiLint settings'
       OnExecute = ActionOpenSettingsExecute
     end
     object ActionRestartServer: TAction
       Category = 'DelphiLint'
       Caption = '&Restart Server'
+      Hint = 'Restart DelphiLint server'
       OnExecute = ActionRestartServerExecute
     end
   end
