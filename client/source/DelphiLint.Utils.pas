@@ -32,11 +32,6 @@ function IsPasFile(const Path: string): Boolean;
 function IsMainFile(const Path: string): Boolean;
 function IsDelphiSource(const Path: string): Boolean;
 function IsProjectFile(const Path: string): Boolean;
-procedure ExtractFiles(
-  out AllFiles: TArray<string>;
-  out ProjectFile: string;
-  out MainFile: string;
-  out PasFiles: TArray<string>);
 function GetOpenSourceModules: TArray<IOTAModule>;
 function TryGetProjectFile(out ProjectFile: string): Boolean;
 function IsFileInProjectDirectory(const Path: string): Boolean;
@@ -183,24 +178,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetPasFiles(Files: TArray<string>): TArray<string>;
-var
-  PasFiles: TStringList;
-  FilePath: string;
-begin
-  PasFiles := TStringList.Create;
-
-  for FilePath in Files do begin
-    if IsPasFile(FilePath) then begin
-      PasFiles.Add(FilePath);
-    end;
-  end;
-
-  Result := PasFiles.ToStringArray;
-end;
-
-//______________________________________________________________________________________________________________________
-
 function IsMainFile(const Path: string): Boolean;
 begin
   Result := EndsText('.dpk', Path) or EndsText('.dpr', Path);
@@ -251,35 +228,6 @@ begin
   end;
 
   Result := FileList.ToStringArray;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure ExtractFiles(
-  out AllFiles: TArray<string>;
-  out ProjectFile: string;
-  out MainFile: string;
-  out PasFiles: TArray<string>);
-var
-  FilePath: string;
-  PasFilesList: TStringList;
-begin
-  AllFiles := GetAllFiles;
-  PasFilesList := TStringList.Create;
-
-  for FilePath in AllFiles do begin
-    if IsPasFile(FilePath) then begin
-      PasFilesList.Add(FilePath);
-    end
-    else if IsMainFile(FilePath) then begin
-      MainFile := FilePath;
-    end
-    else if IsProjectFile(FilePath) then begin
-     ProjectFile := FilePath;
-    end;
-  end;
-
-  PasFiles := PasFilesList.ToStringArray;
 end;
 
 //______________________________________________________________________________________________________________________

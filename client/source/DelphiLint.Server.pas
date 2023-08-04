@@ -191,6 +191,7 @@ uses
 
 constructor TLintMessage.Create(Category: Byte; Data: TJSONValue);
 begin
+  inherited Create;
   FCategory := Category;
   FData := Data;
 end;
@@ -199,6 +200,7 @@ end;
 
 constructor TLintMessage.Create(Category: Byte);
 begin
+  inherited Create;
   FCategory := Category;
   FData := nil;
 end;
@@ -505,7 +507,7 @@ procedure TLintServer.OnAnalyzeResponse(
   begin
     Result := TObjectList<TLintIssue>.Create;
     for Index := 0 to Json.Count - 1 do begin
-      Result.Add(TLintIssue.FromJson(Json[Index] as TJSONObject));
+      Result.Add(TLintIssue.CreateFromJson(Json[Index] as TJSONObject));
     end;
   end;
 
@@ -577,7 +579,7 @@ procedure TLintServer.OnRuleRetrieveResponse(
   begin
     Result := TObjectDictionary<string, TRule>.Create;
     for Pair in Json do begin
-      Result.Add(Pair.JsonString.Value, TRule.FromJson(TJSONObject(Pair.JsonValue)));
+      Result.Add(Pair.JsonString.Value, TRule.CreateFromJson(TJSONObject(Pair.JsonValue)));
     end;
   end;
 

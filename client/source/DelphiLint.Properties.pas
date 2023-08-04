@@ -112,8 +112,6 @@ type
 
     procedure Save;
     procedure Load;
-
-    property Path: string read FPath;
   end;
 
 implementation
@@ -126,6 +124,7 @@ uses
 
 constructor TPropFieldBase.Create(Section, Key: string);
 begin
+  inherited Create;
   FSection := Section;
   FKey := Key;
   FDefaultValue := Null;
@@ -135,6 +134,7 @@ end;
 
 constructor TPropFieldBase.Create(Section, Key: string; DefaultValue: Variant);
 begin
+  inherited Create;
   FSection := Section;
   FKey := Key;
   FDefaultValue := DefaultValue;
@@ -233,6 +233,7 @@ end;
 
 constructor TPropertiesFile.Create(Path: string);
 begin
+  inherited Create;
   FPath := Path;
   FFields := RegisterFields;
 end;

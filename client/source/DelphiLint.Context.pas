@@ -20,11 +20,9 @@ interface
 
 uses
     DelphiLint.Server
-  , System.Classes
   , DelphiLint.Data
   , System.Generics.Collections
   , DelphiLint.Events
-  , System.SysUtils
   , System.SyncObjs
   ;
 
@@ -164,15 +162,17 @@ function LintContextValid: Boolean;
 implementation
 
 uses
-    DelphiLint.ProjectOptions
-  , DelphiLint.Utils
+    System.SysUtils
+  , System.Classes
   , System.IOUtils
   , System.StrUtils
   , System.Generics.Defaults
-  , Vcl.Dialogs
   , System.Hash
-  , DelphiLint.Logger
+  , Vcl.Dialogs
   , ToolsAPI
+  , DelphiLint.Logger
+  , DelphiLint.ProjectOptions
+  , DelphiLint.Utils
   , DelphiLint.Settings
   ;
 
@@ -409,7 +409,6 @@ begin
   FServerLock := TMutex.Create;
   FServer := nil;
 
-  Log.Clear;
   Log.Info('DelphiLint context initialised');
 end;
 
@@ -911,6 +910,8 @@ end;
 
 constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
 begin
+  inherited Create;
+
   FRuleKey := Issue.RuleKey;
   FMessage := Issue.Message;
   FFilePath := Issue.FilePath;
@@ -1023,6 +1024,7 @@ end;
 
 constructor TCurrentAnalysis.Create(Paths: TArray<string>);
 begin
+  inherited Create;
   FPaths := Paths;
 end;
 

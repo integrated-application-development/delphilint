@@ -19,8 +19,19 @@ unit DelphiLint.Plugin;
 interface
 
 uses
-  System.Classes, System.ImageList, Vcl.ImgList, Vcl.Controls, System.Actions, Vcl.ActnList, Vcl.Menus, DelphiLint.IDE,
-  Vcl.Forms, DelphiLint.ToolFrame, DelphiLint.SettingsFrame, DelphiLint.OptionsForm;
+    System.Classes
+  , System.ImageList
+  , System.Actions
+  , Vcl.ImgList
+  , Vcl.Controls
+  , Vcl.ActnList
+  , Vcl.Menus
+  , Vcl.Forms
+  , DelphiLint.IDE
+  , DelphiLint.ToolFrame
+  , DelphiLint.SettingsFrame
+  , DelphiLint.OptionsForm
+  ;
 
 type
   TLintPlugin = class(TDataModule)
@@ -93,16 +104,15 @@ implementation
 {$R *.dfm}
 
 uses
-    ToolsAPI
+    System.SysUtils
+  , Vcl.ComCtrls
+  , Winapi.Windows
+  , ToolsAPI
   , DelphiLint.Context
   , DelphiLint.ToolsApiBase
-  , Winapi.Windows
-  , Vcl.Graphics
   , DelphiLint.Utils
   , DelphiLint.SetupForm
   , DelphiLint.Version
-  , System.SysUtils
-  , Vcl.ComCtrls
   , DelphiLint.Settings
   , DelphiLint.Resources
   ;

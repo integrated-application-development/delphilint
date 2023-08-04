@@ -33,7 +33,7 @@ type
     FEndLine: Integer;
     FEndLineOffset: Integer;
   public
-    constructor FromJson(Json: TJsonObject);
+    constructor CreateFromJson(Json: TJSONObject);
 
     property StartLine: Integer read FStartLine;
     property StartLineOffset: Integer read FStartLineOffset;
@@ -59,7 +59,7 @@ type
     FCreationDate: string;
     FStatus: TIssueStatus;
   public
-    constructor FromJson(Json: TJSONObject);
+    constructor CreateFromJson(Json: TJSONObject);
 
     property Assignee: string read FAssignee;
     property CreationDate: string read FCreationDate;
@@ -77,13 +77,14 @@ type
     FMetadata: TIssueMetadata;
 
   public
+    constructor CreateFromJson(Json: TJSONObject);
+    destructor Destroy; override;
+
     property RuleKey: string read FRuleKey;
     property Message: string read FMessage;
     property FilePath: string read FFilePath;
     property Range: TRange read FRange write FRange;
     property Metadata: TIssueMetadata read FMetadata write FMetadata;
-    constructor FromJson(Json: TJsonObject);
-    destructor Destroy; override;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -112,13 +113,13 @@ type
     FType: TRuleType;
 
   public
+    constructor CreateFromJson(Json: TJSONObject);
+
     property RuleKey: string read FRuleKey;
     property Name: string read FName;
     property Desc: string read FDesc;
     property Severity: TRuleSeverity read FSeverity;
     property RuleType: TRuleType read FType;
-
-    constructor FromJson(Json: TJSONObject);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -132,8 +133,9 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-constructor TRange.FromJson(Json: TJsonObject);
+constructor TRange.CreateFromJson(Json: TJSONObject);
 begin
+  inherited Create;
   FStartLine := Json.GetValue<Integer>('startLine', 0);
   FEndLine := Json.GetValue<Integer>('endLine', 0);
   FStartLineOffset := Json.GetValue<Integer>('startOffset', 0);
@@ -142,24 +144,25 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintIssue.FromJson(Json: TJsonObject);
+constructor TLintIssue.CreateFromJson(Json: TJSONObject);
 var
-  RangeJson: TJsonValue;
-  MetadataJson: TJsonValue;
+  RangeJson: TJSONValue;
+  MetadataJson: TJSONValue;
 begin
+  inherited Create;
   FRuleKey := Json.GetValue<string>('ruleKey');
   FMessage := Json.GetValue<string>('message', FRuleKey);
   FFilePath := Json.GetValue<string>('file');
   FRange := nil;
 
-  RangeJson := Json.GetValue<TJsonValue>('range', nil);
-  if Assigned(RangeJson) and (RangeJson is TJsonObject) then begin
-    FRange := TRange.FromJson(RangeJson as TJsonObject);
+  RangeJson := Json.GetValue<TJSONValue>('range', nil);
+  if Assigned(RangeJson) and (RangeJson is TJSONObject) then begin
+    FRange := TRange.CreateFromJson(RangeJson as TJSONObject);
   end;
 
   MetadataJson := Json.GetValue<TJSONValue>('metadata', nil);
   if Assigned(MetadataJson) and (MetadataJson is TJSONObject) then begin
-    FMetadata := TIssueMetadata.FromJson(MetadataJson as TJSONObject);
+    FMetadata := TIssueMetadata.CreateFromJson(MetadataJson as TJSONObject);
   end;
 end;
 
@@ -174,11 +177,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TRule.FromJson(Json: TJSONObject);
+constructor TRule.CreateFromJson(Json: TJSONObject);
 const
   C_Severities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
   C_RuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
 begin
+  inherited;
+
   FRuleKey := Json.GetValue<string>('key');
   FName := Json.GetValue<string>('name');
   FDesc := Json.GetValue<string>('desc');
@@ -188,11 +193,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TIssueMetadata.FromJson(Json: TJSONObject);
+constructor TIssueMetadata.CreateFromJson(Json: TJSONObject);
 const
   C_Statuses: array of string = ['OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED', 'CLOSED', 'TO_REVIEW', 'REVIEWED'];
 begin
   inherited;
+
   FAssignee := Json.GetValue<string>('assignee');
   FCreationDate := Json.GetValue<string>('creationDate');
   FStatus := TIssueStatus(IndexStr(Json.GetValue<string>('status'), C_Statuses));

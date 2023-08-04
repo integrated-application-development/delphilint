@@ -19,8 +19,7 @@ unit DelphiLint.Logger;
 interface
 
 uses
-    System.Classes
-  , System.SyncObjs
+    System.SyncObjs
   ;
 
 type
@@ -40,7 +39,6 @@ type
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
     procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
-    procedure Clear;
   end;
 
 function Log: TLintLogger;
@@ -70,6 +68,8 @@ constructor TLintLogger.Create(MessageGroupName: string; IncludeTime: Boolean = 
 var
   LogDir: string;
 begin
+  inherited Create;
+
   LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
   TDirectory.CreateDirectory(LogDir);
   FLogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
@@ -95,12 +95,6 @@ begin
   else begin
     Result := '';
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintLogger.Clear;
-begin
 end;
 
 //______________________________________________________________________________________________________________________

@@ -19,8 +19,15 @@ unit DelphiLint.OptionsForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, DelphiLint.ProjectOptions;
+    System.Classes
+  , Vcl.Controls
+  , Vcl.Forms
+  , Vcl.Dialogs
+  , Vcl.StdCtrls
+  , Vcl.Mask
+  , Vcl.ExtCtrls
+  , DelphiLint.ProjectOptions
+  ;
 
 type
   TLintOptionsForm = class(TForm)
@@ -78,13 +85,16 @@ implementation
 {$R *.dfm}
 
 uses
-    DelphiLint.Utils
-  , System.IOUtils
-  , Winapi.ShellAPI
+    System.SysUtils
   , System.StrUtils
-  , Vcl.Themes
-  , ToolsAPI
+  , System.IOUtils
   , System.Math
+  , Vcl.Themes
+  , Vcl.Graphics
+  , Winapi.ShellAPI
+  , Winapi.Windows
+  , ToolsAPI
+  , DelphiLint.Utils
   ;
 
 //______________________________________________________________________________________________________________________

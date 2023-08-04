@@ -24,7 +24,6 @@ uses
   , DockForm
   , Vcl.Graphics
   , Winapi.Windows
-  , System.SysUtils
   , DelphiLint.Events
   , Vcl.Forms
   , Vcl.ActnList
@@ -80,32 +79,6 @@ type
     procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer); virtual;
   end;
 
-  TMessageNotifierBase = class abstract(TNotifierBase, IOTAMessageNotifier)
-  public
-    procedure MessageGroupAdded(const Group: IOTAMessageGroup); virtual;
-    procedure MessageGroupDeleted(const Group: IOTAMessageGroup); virtual;
-  end;
-
-  TModuleNotifierBase = class abstract(TNotifierBase, IOTAModuleNotifier90, IOTAModuleNotifier)
-  public
-    // IOTAModuleNotifier
-    function CheckOverwrite: Boolean; virtual;
-    procedure ModuleRenamed(const NewName: string); virtual;
-
-    // IOTAModuleNotifier80
-    function AllowSave: Boolean; virtual;
-    function GetOverwriteFileNameCount: Integer; virtual;
-    function GetOverwriteFileName(Index: Integer): string; virtual;
-    procedure SetSaveFileName(const FileName: string); virtual;
-
-    property OverwriteFileNameCount: Integer read GetOverwriteFileNameCount;
-    property OverwriteFileNames[Index: Integer]: string read GetOverwriteFileName;
-
-    // IOTAModuleNotifier90
-    procedure BeforeRename(const OldFileName, NewFileName: string); virtual;
-    procedure AfterRename(const OldFileName, NewFileName: string); virtual;
-  end;
-
   TAddInOptionsBase = class abstract(TInterfacedObject, INTAAddInOptions)
     function GetArea: string; virtual;
     function GetCaption: string; virtual;
@@ -141,6 +114,8 @@ implementation
 
 constructor TNotifierBase.Create;
 begin
+  inherited;
+
   FOnOwnerFreed := TEventNotifier<TNotifierBase>.Create;
   FOnReleased := TEventNotifier<TNotifierBase>.Create;
 end;
@@ -240,64 +215,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TEditLineNotifierBase.LineChanged(OldLine, NewLine, Data: Integer);
-begin
-  // Empty default implementation
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TMessageNotifierBase.MessageGroupAdded(const Group: IOTAMessageGroup);
-begin
-  // Empty default implementation
-end;
-
-procedure TMessageNotifierBase.MessageGroupDeleted(const Group: IOTAMessageGroup);
-begin
-  // Empty default implementation
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TModuleNotifierBase.AfterRename(const OldFileName, NewFileName: string);
-begin
-  // Empty default implementation
-end;
-
-function TModuleNotifierBase.AllowSave: Boolean;
-begin
-  // Empty default implementation
-  Result := True;
-end;
-
-procedure TModuleNotifierBase.BeforeRename(const OldFileName, NewFileName: string);
-begin
-  // Empty default implementation
-end;
-
-function TModuleNotifierBase.CheckOverwrite: Boolean;
-begin
-  // Empty default implementation
-  Result := True;
-end;
-
-function TModuleNotifierBase.GetOverwriteFileName(Index: Integer): string;
-begin
-  // Empty default implementation
-  Result := '';
-end;
-
-function TModuleNotifierBase.GetOverwriteFileNameCount: Integer;
-begin
-  // Empty default implementation
-  Result := 0;
-end;
-
-procedure TModuleNotifierBase.ModuleRenamed(const NewName: string);
-begin
-  // Empty default implementation
-end;
-
-procedure TModuleNotifierBase.SetSaveFileName(const FileName: string);
 begin
   // Empty default implementation
 end;

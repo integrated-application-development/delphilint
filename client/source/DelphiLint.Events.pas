@@ -20,8 +20,6 @@ interface
 
 uses
     System.Generics.Collections
-  , System.SysUtils
-  , System.Classes
   ;
 
 type
@@ -54,10 +52,15 @@ type
 
 implementation
 
+uses
+    System.SysUtils
+  ;
+
 //______________________________________________________________________________________________________________________
 
 constructor TEventNotifier<T>.Create;
 begin
+  inherited;
   FListeners := TList<TEventListener<T>>.Create;
 end;
 
@@ -90,6 +93,7 @@ end;
 
 constructor TEventNotifier.Create;
 begin
+  inherited;
   FListeners := TList<TEventListener>.Create;
 end;
 

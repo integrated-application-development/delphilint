@@ -19,8 +19,12 @@ unit DelphiLint.SettingsFrame;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, DelphiLint.ToolsApiBase, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls;
+    System.Classes
+  , Vcl.Controls
+  , Vcl.Forms
+  , Vcl.StdCtrls
+  , DelphiLint.ToolsApiBase
+  ;
 
 type
   TLintSettingsFrame = class(TFrame)
@@ -49,7 +53,8 @@ type
 implementation
 
 uses
-    DelphiLint.Settings
+    System.SysUtils
+  , DelphiLint.Settings
   , DelphiLint.SetupForm
   ;
 

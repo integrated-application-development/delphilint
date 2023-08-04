@@ -19,7 +19,13 @@ unit DelphiLint.SetupForm;
 interface
 
 uses
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+    System.Classes
+  , Vcl.Controls
+  , Vcl.Forms
+  , Vcl.Dialogs
+  , Vcl.StdCtrls
+  , Vcl.ExtCtrls
+  ;
 
 type
   TLintSetupForm = class(TForm)
@@ -69,12 +75,13 @@ implementation
 {$R *.dfm}
 
 uses
-    DelphiLint.Settings
-  , DelphiLint.Plugin
-  , ToolsAPI
-  , Vcl.Themes
-  , System.StrUtils
+    System.StrUtils
   , System.SysUtils
+  , Vcl.Graphics
+  , Vcl.Themes
+  , ToolsAPI
+  , DelphiLint.Settings
+  , DelphiLint.Plugin
   ;
 
 //______________________________________________________________________________________________________________________

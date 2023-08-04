@@ -24,7 +24,6 @@ uses
   , Winapi.Windows
   , System.Classes
   , System.Generics.Collections
-  , DelphiLint.Data
   , DockForm
   , DelphiLint.Events
   , DelphiLint.ToolsApiBase
@@ -34,7 +33,6 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TIDERefreshEvent = procedure(Issues: TArray<TLintIssue>);
   TOnEditorLineChanged = reference to procedure(OldLine: Integer; NewLine: Integer; Data: Integer);
 
 //______________________________________________________________________________________________________________________
@@ -149,6 +147,8 @@ constructor TEditorLineTracker.Create(Tracker: IOTAEditLineTracker);
 var
   NotifierIndex: Integer;
 begin
+  inherited Create;
+
   FOnEditorClosed := TEventNotifier<TEditorLineTracker>.Create;
   FOnLineChanged := TEventNotifier<TChangedLine>.Create;
   FPath := Tracker.GetEditBuffer.FileName;
