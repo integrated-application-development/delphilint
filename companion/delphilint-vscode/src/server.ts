@@ -3,7 +3,6 @@ import { TextDecoder, TextEncoder } from "util";
 import { spawn, ChildProcess } from "child_process";
 import * as tmp from "tmp";
 import * as fs from "fs";
-import * as settings from "./settings";
 import {
   AnalyzeError,
   InitializeError,

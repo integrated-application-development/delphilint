@@ -7,12 +7,12 @@ type ProjectOptionsIni = {
     ProjectKey: string;
     Url: string;
     Token: string;
-    DownloadPlugin: 0 | 1;
+    DownloadPlugin: "0" | "1";
   };
   Analysis: {
     BaseDir: string;
-    ReadProperties: 0 | 1;
-    ConnectedMode: 0 | 1;
+    ReadProperties: "0" | "1";
+    ConnectedMode: "0" | "1";
   };
 };
 
@@ -39,7 +39,7 @@ export class ProjectOptions {
   }
 
   downloadPlugin(): boolean {
-    return this.optionsIni.SonarHost.DownloadPlugin !== 0;
+    return this.optionsIni.SonarHost.DownloadPlugin !== "0";
   }
 
   baseDir(): string {
@@ -50,7 +50,7 @@ export class ProjectOptions {
   }
 
   projectPropertiesPath(): string {
-    if (this.optionsIni.Analysis.ReadProperties !== 0) {
+    if (this.optionsIni.Analysis.ReadProperties !== "0") {
       return path.join(this.baseDir(), "sonar-project.properties");
     } else {
       return "";
@@ -58,6 +58,6 @@ export class ProjectOptions {
   }
 
   connectedMode(): boolean {
-    return this.optionsIni.Analysis.ConnectedMode !== 0;
+    return this.optionsIni.Analysis.ConnectedMode !== "0";
   }
 }

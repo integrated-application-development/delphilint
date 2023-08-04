@@ -13,9 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Issues now display server metadata such as creation date, status, and assignee when in Connected Mode
 * VS Code companion: Standalone mode for analysis
 
+### Changed
+
+* VS Code companion: The "DelphiLint Server" output log now disregards the Debug.ShowConsole ini setting and is
+  always created
+
 ### Fixed
 
 * VS Code companion: Improved error handling when the server responds unexpectedly
+* VS Code companion: Boolean values in project options or settings are now interpreted correctly
 
 ## [0.3.0] - 2023-08-01
 

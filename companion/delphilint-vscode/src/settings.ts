@@ -17,9 +17,6 @@ export function registerVersion(ver: string) {
 }
 
 type LintSettingsIni = {
-  Debug?: {
-    ShowConsole?: 0 | 1;
-  };
   Resources?: {
     JavaExeOverride?: string;
     ServerJarOverride?: string;
@@ -110,10 +107,6 @@ export function getJavaExe(): string {
   } else {
     return path.join(javaHome, "bin", "java.exe");
   }
-}
-
-export function getShowConsole(): boolean {
-  return getSettings(SETTINGS_FILE).Debug?.ShowConsole === 1;
 }
 
 export function getBdsPath(): string {
