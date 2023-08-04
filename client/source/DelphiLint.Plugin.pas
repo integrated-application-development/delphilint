@@ -114,6 +114,7 @@ uses
   , System.SysUtils
   , Vcl.ComCtrls
   , DelphiLint.Settings
+  , DelphiLint.Resources
   ;
 
 //______________________________________________________________________________________________________________________
@@ -341,39 +342,22 @@ end;
 
 procedure TLintPlugin.InitPluginInfo;
 var
-  Icon: TBitmap;
-  Handle: HBITMAP;
   VersionStr: string;
 begin
   VersionStr := DelphiLintVersion;
-  Icon := TBitmap.Create(24, 24);
-  try
-    Icon.LoadFromResourceName(HInstance, 'DELPHILINT_SPLASH');
-    Handle := Icon.Handle;
 
-    SplashScreenServices.AddPluginBitmap(
-      'DelphiLint',
-      Handle,
-      False,
-      'Code analyzer powered by SonarDelphi',
-      VersionStr);
-  finally
-    FreeAndNil(Icon);
-  end;
+  SplashScreenServices.AddPluginBitmap(
+    'DelphiLint',
+    LintResources.DelphiLintSplash.Handle,
+    False,
+    'Code analyzer powered by SonarDelphi',
+    VersionStr);
 
-  try
-    Icon := TBitmap.Create(48, 48);
-    Icon.LoadFromResourceName(HInstance, 'DELPHILINT_ICON');
-    Handle := Icon.Handle;
-
-    FInfoIndex := (BorlandIDEServices as IOTAAboutBoxServices).AddPluginInfo(
-      'DelphiLint ' + VersionStr,
-      'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
-      + #13#10#13#10'Copyright © 2023 Integrated Application Development',
-      Handle);
-  finally
-    FreeAndNil(Icon);
-  end;
+  FInfoIndex := (BorlandIDEServices as IOTAAboutBoxServices).AddPluginInfo(
+    'DelphiLint ' + VersionStr,
+    'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
+    + #13#10#13#10'Copyright © 2023 Integrated Application Development',
+    LintResources.DelphiLintIcon.Handle);
 end;
 
 //______________________________________________________________________________________________________________________

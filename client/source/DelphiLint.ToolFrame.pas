@@ -117,6 +117,8 @@ type
       'To review',
       'Reviewed (acknowledged)'
     );
+    C_IssueIconWidth = 16;
+    C_IssuePadding = 4;
   private
     FResizing: Boolean;
     FDragStartX: Integer;
@@ -181,12 +183,14 @@ uses
   , System.IOUtils
   , Vcl.Themes
   , Vcl.Graphics
+  , Vcl.Imaging.pngimage
   , Winapi.ShellAPI
   , Winapi.Messages
   , ToolsAPI
   , DelphiLint.Utils
   , DelphiLint.Logger
   , DelphiLint.Plugin
+  , DelphiLint.Resources
   ;
 
 {$R *.dfm}
@@ -551,9 +555,12 @@ begin
   GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
 
   Rect := TRect.Empty;
-  Rect.Left := Rect.Left + ListBox.Canvas.TextWidth(LocationText) + 4;
-  Rect.Right := ListBox.ClientRect.Right - 4;
-  Rect.Top := Rect.Top + 4;
+  Rect.Left := Rect.Left
+    + C_IssuePadding
+    + 2 * C_IssueIconWidth
+    + ListBox.Canvas.TextWidth(LocationText);
+  Rect.Right := ListBox.ClientRect.Right - C_IssuePadding;
+  Rect.Top := Rect.Top + C_IssuePadding;
   Rect.Height := 0;
 
   DrawText(
@@ -563,7 +570,7 @@ begin
     Rect,
     DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
 
-  Height := Rect.Height + 8 + ListBox.Canvas.TextHeight(MetadataText);
+  Height := Rect.Height + C_IssuePadding + ListBox.Canvas.TextHeight(MetadataText) + C_IssuePadding;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -578,6 +585,10 @@ var
   MetadataText: string;
   LocationWidth: Integer;
   MessageRect: TRect;
+  TextLeft: Integer;
+  Rule: TRule;
+  IssueType: TRuleType;
+  IssueSeverity: TRuleSeverity;
 begin
   ListBox := Control as TListBox;
 
@@ -591,20 +602,43 @@ begin
   Canvas := ListBox.Canvas;
   Canvas.FillRect(Rect);
 
+  Rule := LintContext.GetRule(Issue.RuleKey);
+  if Assigned(Rule) then begin
+    IssueType := Rule.RuleType;
+    IssueSeverity := Rule.Severity;
+  end
+  else begin
+    IssueType := rtCodeSmell;
+    IssueSeverity := rsMajor;
+  end;
+
+  Canvas.Draw(
+    Rect.Left + C_IssuePadding,
+    Rect.Top + C_IssuePadding + 1,
+    LintResources.RuleTypeIcon(IssueType));
+  Canvas.Draw(
+    Rect.Left + C_IssuePadding + C_IssueIconWidth,
+    Rect.Top + C_IssuePadding + 1,
+    LintResources.RuleSeverityIcon(IssueSeverity));
+  TextLeft := Rect.Left + C_IssuePadding + 2 * C_IssueIconWidth;
+
   if not Issue.Tethered then begin
     Canvas.Font.Color := clGrayText;
   end;
 
   LocationWidth := Canvas.TextWidth(LocationText);
-  Canvas.TextOut(Rect.Left + 4, Rect.Top + 4, LocationText);
+  Canvas.TextOut(
+    TextLeft,
+    Rect.Top + C_IssuePadding,
+    LocationText);
 
   Canvas.Font.Style := [fsBold];
 
   MessageRect := TRect.Empty;
-  MessageRect.Left := Rect.Left + LocationWidth + 4;
-  MessageRect.Right := Rect.Right - 4;
-  MessageRect.Top := Rect.Top + 4;
-  MessageRect.Bottom := Rect.Bottom - 4 - Canvas.TextHeight(MetadataText);
+  MessageRect.Left := TextLeft + LocationWidth;
+  MessageRect.Right := Rect.Right - C_IssuePadding;
+  MessageRect.Top := Rect.Top + C_IssuePadding;
+  MessageRect.Bottom := Rect.Bottom - C_IssuePadding - Canvas.TextHeight(MetadataText);
 
   DrawText(
     ListBox.Canvas.Handle,
@@ -615,7 +649,7 @@ begin
 
   Canvas.Font.Style := [];
 
-  Canvas.TextOut(Rect.Left + 4, MessageRect.Bottom, MetadataText);
+  Canvas.TextOut(Rect.Left + C_IssuePadding, MessageRect.Bottom, MetadataText);
 end;
 
 //______________________________________________________________________________________________________________________

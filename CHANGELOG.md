@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * New user setting to toggle autosaving files before analysis, defaulting to yes
 * Issues now display server metadata such as creation date, status, and assignee when in Connected Mode
 * Display hints for DelphiLint actions on hover when they are placed on an IDE toolbar
+* Icons in issue view representing issue severity and type
 * VS Code companion: Standalone mode for analysis
 
 ### Changed
