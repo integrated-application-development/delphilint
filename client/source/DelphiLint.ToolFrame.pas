@@ -496,7 +496,7 @@ begin
     LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
   end
   else begin
-    LocationText := '(removed) ';
+    LocationText := '';
   end;
 
   MessageText := Issue.Message;

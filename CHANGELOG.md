@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Updated lint status icons to match smooth issue icon design
+* Removed issues now display nothing before the issue message (previously displayed "(removed)")
 * VS Code companion: The "DelphiLint Server" output log now disregards the Debug.ShowConsole ini setting and is
   always created
 
