@@ -82,7 +82,6 @@ type
     property FilePath: string read FFilePath;
     property Range: TRange read FRange write FRange;
     property Metadata: TIssueMetadata read FMetadata write FMetadata;
-
     constructor FromJson(Json: TJsonObject);
     destructor Destroy; override;
   end;

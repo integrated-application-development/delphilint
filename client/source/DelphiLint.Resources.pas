@@ -23,6 +23,7 @@ uses
   , Vcl.Graphics
   , Vcl.Imaging.pngimage
   , DelphiLint.Data
+  , DelphiLint.ToolFrame
   ;
 
 type
@@ -37,6 +38,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
     function RuleTypeIcon(RuleType: TRuleType): TGraphic;
     function RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
     function DelphiLintIcon: TBitmap;
@@ -123,6 +125,24 @@ const
   );
 begin
   Result := LoadPng(C_RuleTypeResourceNames[RuleType]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintResources.LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
+const
+  C_FileStatusResourceNames: array[TCurrentFileStatus] of string = (
+    'DL_LINT_DISABLED',
+    'DL_LINT_DISABLED',
+    'DL_LINT_WORK',
+    'DL_LINT_FAIL',
+    'DL_LINT_SUCCESS',
+    'DL_LINT_SUCCESSOUT',
+    'DL_LINT_WARN',
+    'DL_LINT_WARNOUT'
+  );
+begin
+  Result := LoadPng(C_FileStatusResourceNames[FileStatus]);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -182,6 +182,34 @@ $(PreBuildEvent)]]>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>DL_RT_VULNERABILITY</ResourceId>
         </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARN</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_fail.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_FAIL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESS</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_work.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WORK</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_disabled.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_DISABLED</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESSOUT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARNOUT</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -145,7 +145,6 @@ type
     procedure RefreshRuleView;
     procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
 
-    function GetStatusImage(Status: TCurrentFileStatus): Integer;
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
@@ -445,26 +444,9 @@ begin
     UpdateFileNameLabel;
   end;
 
-  Plugin.LintImages.GetIcon(GetStatusImage(Status), ProgImage.Picture.Icon);
+  ProgImage.Picture.Graphic := LintResources.LintStatusIcon(Status);
   FileStatusLabel.Caption := GetStatusCaption(Status, NumIssues);
   RefreshIssueView;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintToolFrame.GetStatusImage(Status: TCurrentFileStatus): Integer;
-begin
-  case Status of
-    cfsNotAnalyzable, cfsNotAnalyzed: Result := C_ImgDefault;
-    cfsInAnalysis: Result := C_ImgWorking;
-    cfsFailed: Result := C_ImgError;
-    cfsNoIssues: Result := C_ImgSuccess;
-    cfsNoIssuesOutdated: Result := C_ImgSuccessWarn;
-    cfsIssues: Result := C_ImgIssues;
-    cfsIssuesOutdated: Result := C_ImgIssuesWarn;
-  else
-    Result := C_ImgDefault;
-  end;
 end;
 
 //______________________________________________________________________________________________________________________
