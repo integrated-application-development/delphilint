@@ -123,7 +123,7 @@ if(-not $NoCompanion) {
 
 Write-Host "Build artifacts validated.`n"
 
-$TargetDir = Resolve-Path (Join-Path $PSScriptRoot "../target")
+$TargetDir = Join-Path $PSScriptRoot "../target"
 New-Item -ItemType Directory $TargetDir -Force | Out-Null
 Get-ChildItem -Path $TargetDir -Recurse | Remove-Item -Force -Recurse
 
