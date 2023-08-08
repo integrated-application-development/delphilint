@@ -506,10 +506,10 @@ begin
       CreationDateTime := ISO8601ToDate(Issue.CreationDate, False);
       TimeSinceCreation := TTimeSpan.Subtract(Now, CreationDateTime);
 
-      MetadataText := Format('%s • %s%s', [
+      MetadataText := Format('%s • %s • %s', [
         TimeSpanToAgoString(TimeSinceCreation),
         C_IssueStatusStrs[Issue.Status],
-        IfThen(Issue.Assignee <> '', ' • Assigned to ' + Issue.Assignee, '')
+        IfThen(Issue.Assignee <> '', 'Assigned to ' + Issue.Assignee, 'Unassigned')
       ]);
     end
     else begin

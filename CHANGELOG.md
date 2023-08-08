@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Connected Mode issue metadata now shows "Unassigned" instead of nothing when an issue is unassigned
+
 ## [0.4.0] - 2023-08-04
 
 ### Added
