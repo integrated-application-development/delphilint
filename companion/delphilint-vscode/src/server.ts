@@ -164,6 +164,7 @@ export class LintServer {
   private workingDir: string;
   private processLog: (msg: string) => void;
   private _extServer?: ExtServer;
+  private _partialMessage?: Buffer;
 
   constructor(
     jar: string,
@@ -237,10 +238,21 @@ export class LintServer {
   }
 
   private onReceiveMessage(buffer: Buffer) {
+    if (this._partialMessage) {
+      buffer = Buffer.concat([this._partialMessage.valueOf(), buffer]);
+    }
+
     let category = buffer.readUint8(0);
     let id = buffer.readInt32BE(1);
 
     try {
+      let length = buffer.readInt32BE(1 + 4);
+      if (buffer.byteLength !== 1 + 4 + 4 + length) {
+        this._partialMessage = buffer;
+        return;
+      }
+      this._partialMessage = undefined;
+
       let dataStr = buffer.toString("utf8", 1 + 4 + 4);
       let dataObj = JSON.parse(dataStr);
 

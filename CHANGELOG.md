@@ -14,7 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Security hotspots are no longer suppressed when they match server hotspots marked as acknowledged
-* Error messages raised by SonarDelphi when parsing a file are now displayed correctly when they contain brackets
+* VS Code companion: Error messages raised by SonarDelphi when parsing a file are now displayed correctly when they
+  contain brackets
+* VS Code companion: Long messages from the DelphiLint server are no longer occasionally cut off, causing "End of JSON
+  input" errors
 
 ## [0.4.0] - 2023-08-04
 
