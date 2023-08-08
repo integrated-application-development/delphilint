@@ -9,7 +9,10 @@ public class SonarDelphiUtils {
     String sonarDelphiError = sonarDelphiException.split("\n", 2)[0];
 
     if (sonarDelphiError.contains("DelphiFileConstructionException")) {
-      String antlrError = sonarDelphiError.replaceFirst("^.*\\((.*?)\\)$", "$1").replace("\r", "");
+      String antlrError =
+          sonarDelphiError
+              .replaceFirst("^.*Failed to construct DelphiFile \\((.*?)\\)$", "$1")
+              .replace("\r", "");
       return "A Delphi file could not be parsed (" + antlrError + ")";
     } else if (sonarDelphiError.contains("NullPointerException")) {
       return "A null pointer exception was raised";
