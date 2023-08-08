@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Connected Mode issue metadata now shows "Unassigned" instead of nothing when an issue is unassigned
 
+### Fixed
+
+* Security hotspots are no longer suppressed when they match server hotspots marked as acknowledged
+
 ## [0.4.0] - 2023-08-04
 
 ### Added

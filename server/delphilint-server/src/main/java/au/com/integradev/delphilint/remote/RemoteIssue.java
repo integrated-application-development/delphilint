@@ -32,6 +32,7 @@ public class RemoteIssue {
   private final boolean isSecurityHotspot;
   private final String assignee;
   private final String creationDate;
+  private final String resolution;
 
   public RemoteIssue(
       String key,
@@ -45,7 +46,8 @@ public class RemoteIssue {
       IssueStatus status,
       boolean isSecurityHotspot,
       String assignee,
-      String creationDate) {
+      String creationDate,
+      String resolution) {
     this.key = key;
     this.rule = rule;
     this.line = line;
@@ -58,6 +60,7 @@ public class RemoteIssue {
     this.isSecurityHotspot = isSecurityHotspot;
     this.assignee = assignee;
     this.creationDate = creationDate;
+    this.resolution = resolution;
   }
 
   public String getRuleKey() {
@@ -109,5 +112,9 @@ public class RemoteIssue {
 
   public String getCreationDate() {
     return creationDate;
+  }
+
+  public String getResolution() {
+    return resolution;
   }
 }

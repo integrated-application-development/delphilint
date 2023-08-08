@@ -198,8 +198,7 @@ public class SonarQubeHost implements SonarHost {
   private Set<RemoteIssue> getIssuesAndHotspots(
       Collection<String> relativeFilePaths,
       Collection<String> issueParams,
-      Collection<String> hotspotParams)
-      throws SonarHostException {
+      Collection<String> hotspotParams) {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
@@ -237,7 +236,8 @@ public class SonarQubeHost implements SonarHost {
                 IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()),
                 false,
                 sqIssue.getAssignee(),
-                sqIssue.getCreationDate()));
+                sqIssue.getCreationDate(),
+                sqIssue.getResolution()));
       }
     }
 
@@ -271,15 +271,15 @@ public class SonarQubeHost implements SonarHost {
                 IssueStatus.fromSonarQubeIssueStatus(sqHotspot.getStatus()),
                 true,
                 sqHotspot.getAssignee(),
-                sqHotspot.getCreationDate()));
+                sqHotspot.getCreationDate(),
+                sqHotspot.getResolution()));
       }
     }
 
     return remoteIssues;
   }
 
-  public Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths)
-      throws SonarHostException {
+  public Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths) {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
@@ -294,8 +294,7 @@ public class SonarQubeHost implements SonarHost {
         .collect(Collectors.toSet());
   }
 
-  public Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths)
-      throws SonarHostException {
+  public Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths) {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
@@ -304,7 +303,8 @@ public class SonarQubeHost implements SonarHost {
             relativeFilePaths, List.of("resolved=false"), Collections.emptyList())
         .stream()
         // Acknowledged hotspots should not suppress issues
-        .filter(issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getStatus()))
+        .filter(
+            issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getResolution()))
         .collect(Collectors.toSet());
   }
 
