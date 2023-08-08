@@ -142,9 +142,6 @@ async function analyzeFiles(
 
     statusItem.setAction("Starting server...");
     let server = await serverSupplier();
-    if (!server.ready()) {
-      display.showError("Unable to connect to the DelphiLint server.");
-    }
 
     statusItem.setAction("Initializing server...");
     await server.initialize({

@@ -26,20 +26,21 @@ async function getServer() {
 }
 
 async function createServer(): Promise<LintServer> {
-  if (serverOutputChannel) {
-    serverOutputChannel.dispose();
+  if (!serverOutputChannel) {
+    serverOutputChannel =
+      vscode.window.createOutputChannel("DelphiLint Server");
   }
-  serverOutputChannel = vscode.window.createOutputChannel("DelphiLint Server");
 
-  let s = new LintServer();
-  await s.startExternalServer(
+  let s = new LintServer(
     settings.getServerJar(),
     settings.getJavaExe(),
     settings.SETTINGS_DIR,
     (msg) => serverOutputChannel?.append(msg)
   );
+  await s.startExternalServer();
   server = s;
-  return s;
+
+  return server;
 }
 
 export function activate(context: vscode.ExtensionContext) {
