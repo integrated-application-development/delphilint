@@ -201,7 +201,7 @@ public class TrackableWrappers {
 
     @Override
     public String getServerIssueKey() {
-      return issue.getServerIssueKey();
+      return "";
     }
 
     @Override

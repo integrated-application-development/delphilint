@@ -20,7 +20,6 @@ package au.com.integradev.delphilint.remote;
 import au.com.integradev.delphilint.analysis.TextRange;
 
 public class RemoteIssue {
-  private final String key;
   private final String rule;
   private final int line;
   private final String hash;
@@ -35,7 +34,6 @@ public class RemoteIssue {
   private final String resolution;
 
   public RemoteIssue(
-      String key,
       String rule,
       int line,
       String hash,
@@ -48,7 +46,6 @@ public class RemoteIssue {
       String assignee,
       String creationDate,
       String resolution) {
-    this.key = key;
     this.rule = rule;
     this.line = line;
     this.hash = hash;
@@ -94,16 +91,8 @@ public class RemoteIssue {
     return textRange;
   }
 
-  public String getServerIssueKey() {
-    return key;
-  }
-
   public IssueStatus getStatus() {
     return status;
-  }
-
-  public boolean isSecurityHotspot() {
-    return isSecurityHotspot;
   }
 
   public String getAssignee() {

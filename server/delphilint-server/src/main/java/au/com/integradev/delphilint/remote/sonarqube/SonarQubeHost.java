@@ -21,6 +21,7 @@ import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemotePlugin;
+import au.com.integradev.delphilint.remote.RemoteIssueBuilder;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
@@ -233,20 +234,15 @@ public class SonarQubeHost implements SonarHost {
 
       for (SonarQubeIssue sqIssue : serverIssues) {
         remoteIssues.add(
-            new RemoteIssue(
-                sqIssue.getServerIssueKey(),
-                sqIssue.getRuleKey(),
-                sqIssue.getLine(),
-                sqIssue.getLineHash(),
-                sqIssue.getTextRange(),
-                sqIssue.getMessage(),
-                RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()),
-                RuleType.fromSonarLintRuleType(sqIssue.getType()),
-                IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()),
-                false,
-                sqIssue.getAssignee(),
-                sqIssue.getCreationDate(),
-                sqIssue.getResolution()));
+            new RemoteIssueBuilder()
+                .withRuleKey(sqIssue.getRuleKey())
+                .withRange(sqIssue.getTextRange())
+                .withMessage(sqIssue.getMessage())
+                .withType(RuleType.fromSonarLintRuleType(sqIssue.getType()))
+                .withServerMetadata(sqIssue.getAssignee(), sqIssue.getCreationDate())
+                .withStatus(IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()))
+                .withResolution(sqIssue.getResolution())
+                .build());
       }
     }
 
@@ -268,20 +264,15 @@ public class SonarQubeHost implements SonarHost {
 
       for (SonarQubeHotspot sqHotspot : resolvedIssues) {
         remoteIssues.add(
-            new RemoteIssue(
-                sqHotspot.getKey(),
-                sqHotspot.getRuleKey(),
-                sqHotspot.getLine(),
-                null, // Security hotspots don't expose a hash
-                sqHotspot.getTextRange(),
-                sqHotspot.getMessage(),
-                RuleSeverity.MAJOR,
-                RuleType.SECURITY_HOTSPOT,
-                IssueStatus.fromSonarQubeIssueStatus(sqHotspot.getStatus()),
-                true,
-                sqHotspot.getAssignee(),
-                sqHotspot.getCreationDate(),
-                sqHotspot.getResolution()));
+            new RemoteIssueBuilder()
+                .withRuleKey(sqHotspot.getRuleKey())
+                .withRange(sqHotspot.getTextRange())
+                .withMessage(sqHotspot.getMessage())
+                .withType(RuleType.SECURITY_HOTSPOT)
+                .withServerMetadata(sqHotspot.getAssignee(), sqHotspot.getCreationDate())
+                .withStatus(IssueStatus.fromSonarQubeIssueStatus(sqHotspot.getStatus()))
+                .withResolution(sqHotspot.getResolution())
+                .build());
       }
     }
 
@@ -299,7 +290,10 @@ public class SonarQubeHost implements SonarHost {
             List.of("status=REVIEWED"))
         .stream()
         // Acknowledged hotspots should not suppress issues
-        .filter(issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getStatus()))
+        .filter(
+            issue ->
+                issue.getType() != RuleType.SECURITY_HOTSPOT
+                    || "ACKNOWLEDGED".equals(issue.getResolution()))
         .collect(Collectors.toSet());
   }
 
@@ -311,9 +305,10 @@ public class SonarQubeHost implements SonarHost {
     return getIssuesAndHotspots(
             relativeFilePaths, List.of("resolved=false"), Collections.emptyList())
         .stream()
-        // Acknowledged hotspots should not suppress issues
         .filter(
-            issue -> !issue.isSecurityHotspot() || !"ACKNOWLEDGED".equals(issue.getResolution()))
+            issue ->
+                issue.getType() != RuleType.SECURITY_HOTSPOT
+                    || !"ACKNOWLEDGED".equals(issue.getResolution()))
         .collect(Collectors.toSet());
   }
 
