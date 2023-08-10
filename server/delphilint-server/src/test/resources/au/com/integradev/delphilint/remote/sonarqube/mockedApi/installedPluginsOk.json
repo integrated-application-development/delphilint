@@ -1,0 +1,52 @@
+{
+  "plugins": [
+    {
+      "key": "communitydelphi",
+      "name": "Delphi",
+      "description": "Code Analyzer for Delphi",
+      "version": "0.0",
+      "license": "GNU LGPL 3",
+      "organizationName": "IntegraDev",
+      "organizationUrl": "https://example.com",
+      "editionBundled": false,
+      "homepageUrl": "https://example.com",
+      "filename": "filename1",
+      "hash": "5d95b71df73b7bf65c6f02bcbf93d103",
+      "sonarLintSupported": false,
+      "updatedAt": 1690244023032,
+      "type": "EXTERNAL"
+    },
+    {
+      "key": "mycustomdelphi",
+      "name": "My Custom Delphi Rules",
+      "description": "Custom SonarDelphi rules",
+      "version": "1.0.0",
+      "license": "",
+      "editionBundled": false,
+      "filename": "filename2",
+      "hash": "5d95b71df73b7bac5c6f02bcbf93d103",
+      "sonarLintSupported": false,
+      "updatedAt": 1692064115031,
+      "type": "EXTERNAL"
+    },
+    {
+      "key": "java",
+      "name": "Java Code Quality and Security",
+      "description": "Code Analyzer for Java",
+      "version": "7.20 (build 31692)",
+      "license": "GNU LGPL 3",
+      "organizationName": "SonarSource",
+      "organizationUrl": "http://www.sonarsource.com",
+      "editionBundled": false,
+      "homepageUrl": "http://redirect.sonarsource.com/plugins/java.html",
+      "issueTrackerUrl": "https://jira.sonarsource.com/browse/SONARJAVA",
+      "implementationBuild": "b40c64f1075774f7232608df6636586009ab8ab3",
+      "filename": "sonar-java-plugin-7.20.0.31692.jar",
+      "hash": "987cc5b525378ba82c7dbc66dd6b0d2b",
+      "sonarLintSupported": true,
+      "documentationPath": "static/documentation.md",
+      "updatedAt": 1687928886236,
+      "type": "BUNDLED"
+    }
+  ]
+}

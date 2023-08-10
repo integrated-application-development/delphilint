@@ -42,6 +42,10 @@ public class RemoteActiveRule {
     return languageKey;
   }
 
+  public Map<String, String> getParams() {
+    return params;
+  }
+
   public ActiveRule toSonarLintActiveRule() {
     var activeRule = new ActiveRule(ruleKey, languageKey);
 

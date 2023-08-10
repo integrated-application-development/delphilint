@@ -1,0 +1,77 @@
+{
+  "total": 3,
+  "p": 1,
+  "ps": 500,
+  "rules": [
+    {
+      "key": "community-delphi:DestructorWithoutInherited",
+      "type": "BUG"
+    },
+    {
+      "key": "community-delphi:TooManyParameters",
+      "type": "CODE_SMELL"
+    },
+    {
+      "key": "community-delphi:ClassName",
+      "type": "CODE_SMELL"
+    }
+  ],
+  "actives": {
+    "community-delphi:DestructorWithoutInherited": [
+      {
+        "qProfile": "AYmGl3ZO2-GgcVw1YiT1",
+        "inherit": "NONE",
+        "severity": "MAJOR",
+        "params": [],
+        "createdAt": "2023-07-24T06:30:20+0000",
+        "updatedAt": "2023-07-24T06:30:20+0000"
+      }
+    ],
+    "community-delphi:TooManyParameters": [
+      {
+        "qProfile": "AYmGl3ZO2-GgcVw1YiT1",
+        "inherit": "NONE",
+        "severity": "MAJOR",
+        "params": [
+          {
+            "key": "max",
+            "value": "5"
+          },
+          {
+            "key": "constructorMax",
+            "value": "7"
+          }
+        ],
+        "createdAt": "2023-07-24T06:30:20+0000",
+        "updatedAt": "2023-07-24T06:30:20+0000"
+      }
+    ],
+    "community-delphi:ClassName": [
+      {
+        "qProfile": "AYmGl3ZO2-GgcVw1YiT1",
+        "inherit": "NONE",
+        "severity": "MINOR",
+        "params": [
+          {
+            "key": "prefixes",
+            "value": "T,E"
+          }
+        ],
+        "createdAt": "2023-07-24T06:30:20+0000",
+        "updatedAt": "2023-07-24T06:30:20+0000"
+      }
+    ]
+  },
+  "qProfiles": {
+    "AYmGl3ZO2-GgcVw1YiT1": {
+      "name": "Sonar way",
+      "lang": "delphi",
+      "langName": "Delphi"
+    }
+  },
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 3
+  }
+}

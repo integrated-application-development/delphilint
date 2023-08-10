@@ -1,0 +1,27 @@
+{
+  "profiles": [
+    {
+      "key": "AYmGl3ZO2-GgcVw1YiT1",
+      "name": "Sonar way",
+      "language": "delphi",
+      "languageName": "Delphi",
+      "isInherited": false,
+      "isDefault": true,
+      "activeRuleCount": 89,
+      "activeDeprecatedRuleCount": 0,
+      "rulesUpdatedAt": "2023-07-24T06:30:20+0000",
+      "lastUsed": "2023-08-04T07:16:42+0000",
+      "isBuiltIn": true,
+      "actions": {
+        "edit": false,
+        "setAsDefault": false,
+        "copy": false,
+        "associateProjects": false,
+        "delete": false
+      }
+    }
+  ],
+  "actions": {
+    "create": false
+  }
+}

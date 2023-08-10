@@ -1,0 +1,136 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 100,
+    "total": 1
+  },
+  "hotspots": [
+    {
+      "key": "AWzdjP868oeNGeVNFTVp",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "REVIEWED",
+      "resolution": "FIXED",
+      "line": 80,
+      "message": "Custom security hotspot message",
+      "assignee": "user1",
+      "author": "",
+      "creationDate": "2010-08-27T02:25:53+1000",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 80,
+        "endLine": 80,
+        "startOffset": 36,
+        "endOffset": 48
+      },
+      "flows": [],
+      "ruleKey": "community-delphi:CustomSecurity",
+      "messageFormattings": []
+    },
+    {
+      "key": "AWzdjP868oeNGeVNFTVq",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "REVIEWED",
+      "resolution": "ACKNOWLEDGED",
+      "line": 81,
+      "message": "Custom security hotspot message",
+      "assignee": "user1",
+      "author": "",
+      "creationDate": "2015-10-29T11:11:33+1100",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 81,
+        "endLine": 81,
+        "startOffset": 25,
+        "endOffset": 37
+      },
+      "flows": [],
+      "ruleKey": "community-delphi:CustomSecurity",
+      "messageFormattings": []
+    },
+    {
+      "key": "AWzdjP868oeNGeVNFTVr",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "REVIEWED",
+      "resolution": "FIXED",
+      "line": 82,
+      "message": "Custom security hotspot message",
+      "assignee": "user1",
+      "author": "",
+      "creationDate": "2015-10-29T11:11:33+1100",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 82,
+        "endLine": 82,
+        "startOffset": 38,
+        "endOffset": 50
+      },
+      "flows": [],
+      "ruleKey": "community-delphi:CustomSecurity",
+      "messageFormattings": []
+    },
+    {
+      "key": "AYie3V329S90FUL8WhAS",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "TO_REVIEW",
+      "line": 83,
+      "message": "Custom security hotspot message",
+      "assignee": "user2",
+      "author": "",
+      "creationDate": "2023-06-09T16:21:44+1000",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 83,
+        "endLine": 83,
+        "startOffset": 29,
+        "endOffset": 41
+      },
+      "flows": [],
+      "ruleKey": "community-delphi:CustomSecurity",
+      "messageFormattings": []
+    },
+    {
+      "key": "AWzdjP868oeNGeVNFTVs",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "TO_REVIEW",
+      "line": 88,
+      "message": "Custom security hotspot message",
+      "assignee": "user1",
+      "author": "",
+      "creationDate": "2016-09-26T15:31:43+1000",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 88,
+        "endLine": 88,
+        "startOffset": 44,
+        "endOffset": 56
+      },
+      "flows": [],
+      "ruleKey": "community-delphi:CustomSecurity",
+      "messageFormattings": []
+    }
+  ],
+  "components": [
+    {
+      "key": "MyProject:UnitA.pas",
+      "qualifier": "FIL",
+      "name": "UnitA.pas",
+      "longName": "UnitA.pas",
+      "path": "UnitA.pas"
+    }
+  ]
+}

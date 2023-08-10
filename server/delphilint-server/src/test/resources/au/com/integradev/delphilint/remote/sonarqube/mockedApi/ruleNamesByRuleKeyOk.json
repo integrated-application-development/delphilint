@@ -1,0 +1,27 @@
+{
+  "total": 3,
+  "p": 1,
+  "ps": 500,
+  "rules": [
+    {
+      "key": "key1",
+      "name": "name1",
+      "type": "BUG"
+    },
+    {
+      "key": "key2",
+      "name": "name2",
+      "type": "CODE_SMELL"
+    },
+    {
+      "key": "key3",
+      "name": "name3",
+      "type": "CODE_SMELL"
+    }
+  ],
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 3
+  }
+}

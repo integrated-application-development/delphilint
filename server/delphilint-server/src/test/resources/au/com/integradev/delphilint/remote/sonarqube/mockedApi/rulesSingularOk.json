@@ -1,0 +1,19 @@
+{
+  "total": 1,
+  "p": 1,
+  "ps": 500,
+  "rules": [
+    {
+      "key": "key1",
+      "name": "name1",
+      "htmlDesc": "html1",
+      "severity": "MAJOR",
+      "type": "BUG"
+    }
+  ],
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 1
+  }
+}
