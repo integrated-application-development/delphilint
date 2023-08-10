@@ -24,11 +24,6 @@ import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
 import au.com.integradev.delphilint.remote.SonarHost;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,23 +40,6 @@ import org.sonarsource.sonarlint.core.rule.extractor.SonarLintRuleDefinition;
 public class StandaloneSonarHost implements SonarHost {
   private final Set<RemoteRule> rules;
   private final Set<RemoteActiveRule> activeRules;
-
-  private static class StandaloneRulesData {
-    @JsonProperty private List<String> actives;
-
-    public static StandaloneRulesData fromStream(InputStreamReader reader) {
-      var mapper = new ObjectMapper();
-      try {
-        return mapper.readValue(reader, StandaloneRulesData.class);
-      } catch (IOException e) {
-        throw new UncheckedIOException(e);
-      }
-    }
-
-    public List<String> getActives() {
-      return actives;
-    }
-  }
 
   public StandaloneSonarHost() {
     this.rules = Collections.emptySet();
