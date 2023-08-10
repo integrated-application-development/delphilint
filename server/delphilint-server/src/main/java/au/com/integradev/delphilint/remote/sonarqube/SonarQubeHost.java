@@ -20,8 +20,8 @@ package au.com.integradev.delphilint.remote.sonarqube;
 import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
-import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteIssueBuilder;
+import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
@@ -53,16 +53,15 @@ public class SonarQubeHost implements SonarHost {
   private final String pluginKey;
   private final String pluginKeyDiscriminator;
   private final ObjectMapper jsonMapper;
-  private final ApiConnection api;
+  private final SonarApi api;
 
   public SonarQubeHost(
-      String hostUrl,
+      SonarApi api,
       String projectKey,
       String languageKey,
       String pluginKey,
-      String apiToken,
       String pluginKeyDiscriminator) {
-    this.api = new ApiConnection(hostUrl, apiToken);
+    this.api = api;
     this.projectKey = projectKey;
     this.languageKey = languageKey;
     this.pluginKey = pluginKey;

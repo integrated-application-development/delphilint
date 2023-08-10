@@ -34,12 +34,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-public class ApiConnection {
+public class HttpSonarApi implements SonarApi {
   private final HttpClient http;
   private final String hostUrl;
   private final String token;
 
-  public ApiConnection(String hostUrl, String token) {
+  public HttpSonarApi(String hostUrl, String token) {
     http = HttpClient.newHttpClient();
     this.hostUrl = hostUrl;
     this.token = token;
@@ -47,6 +47,24 @@ public class ApiConnection {
 
   public String getHostUrl() {
     return hostUrl;
+  }
+
+  public JsonNode getJson(String url) throws SonarHostException {
+    Supplier<JsonNode> response = getResponse(hostUrl + url, new JsonHttpHandler());
+
+    if (response != null) {
+      return response.get();
+    }
+    return null;
+  }
+
+  public Path getFile(String url) throws SonarHostException {
+    try {
+      Path temp = Files.createTempFile("delphilint-server", ".tmp");
+      return getResponse(hostUrl + url, BodyHandlers.ofFile(temp));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private <T> T getResponse(String url, BodyHandler<T> handler) throws SonarHostException {
@@ -74,23 +92,5 @@ public class ApiConnection {
       Thread.currentThread().interrupt();
     }
     return null;
-  }
-
-  public JsonNode getJson(String url) throws SonarHostException {
-    Supplier<JsonNode> response = getResponse(hostUrl + url, new JsonHttpHandler());
-
-    if (response != null) {
-      return response.get();
-    }
-    return null;
-  }
-
-  public Path getFile(String url) throws SonarHostException {
-    try {
-      Path temp = Files.createTempFile("delphilint-server", ".tmp");
-      return getResponse(hostUrl + url, BodyHandlers.ofFile(temp));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
   }
 }

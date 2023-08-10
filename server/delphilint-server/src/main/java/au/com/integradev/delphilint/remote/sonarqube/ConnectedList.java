@@ -33,11 +33,11 @@ import java.util.Queue;
 public class ConnectedList<T> implements Iterable<T> {
   private final String arrayName;
   private final String url;
-  private final ApiConnection api;
+  private final SonarApi api;
   private final ObjectMapper jsonMapper;
   private final Class<T> clazz;
 
-  public ConnectedList(ApiConnection api, String url, String arrayName, Class<T> clazz) {
+  public ConnectedList(SonarApi api, String url, String arrayName, Class<T> clazz) {
     this.arrayName = arrayName;
     this.api = api;
     this.url = url;

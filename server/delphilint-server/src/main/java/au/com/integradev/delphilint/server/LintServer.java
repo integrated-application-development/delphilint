@@ -25,6 +25,7 @@ import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
 import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
+import au.com.integradev.delphilint.remote.sonarqube.HttpSonarApi;
 import au.com.integradev.delphilint.remote.sonarqube.SonarQubeHost;
 import au.com.integradev.delphilint.remote.standalone.StandaloneSonarHost;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
@@ -381,11 +382,10 @@ public class LintServer {
     } else {
       LOG.info("Using connected mode");
       return new SonarQubeHost(
-          url,
+          new HttpSonarApi(url, apiToken),
           projectKey,
           Language.DELPHI.getLanguageKey(),
           Language.DELPHI.getPluginKey(),
-          apiToken,
           Language.DELPHI.getLanguageKey());
     }
   }
