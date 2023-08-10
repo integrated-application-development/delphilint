@@ -73,7 +73,7 @@ public class SonarQubeHost implements SonarHost {
     return "SonarQube instance at " + api.getHostUrl();
   }
 
-  private SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
+  public SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
     String url = "/api/qualityprofiles/search?language=" + languageKey;
     if (projectKey.isEmpty()) {
       url += "&defaults=true";
@@ -135,16 +135,14 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public Set<RemoteRule> getRules() throws SonarHostException {
+    SonarQubeQualityProfile profile = getQualityProfile();
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
             + "&f=name,htmlDesc,severity"
-            + "&language="
-            + languageKey;
-
-    SonarQubeQualityProfile profile = getQualityProfile();
-    if (profile != null) {
-      apiPath += "&qprofile=" + profile.getKey();
-    }
+            + "&languages="
+            + languageKey
+            + "&qprofile="
+            + profile.getKey();
 
     var rootNode = api.getJson(apiPath);
     if (rootNode == null) {
