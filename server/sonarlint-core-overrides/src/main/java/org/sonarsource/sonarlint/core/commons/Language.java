@@ -27,32 +27,56 @@ import java.util.Optional;
 import java.util.Set;
 
 public enum Language {
-  DELPHI;
+  DELPHI(
+      "delphi",
+      "communitydelphi",
+      "Delphi",
+      new String[] {".pas", ".dpr", ".dpk"},
+      "sonar.delphi.file.suffixes"),
+  // Some SonarLint code relies on specific language values being present.
+  JS;
 
-  private static final String LANGUAGE_KEY = "delphi";
-  private static final String PLUGIN_KEY = "communitydelphi";
-  private static final String LABEL = "Delphi";
-  private static final String[] DEFAULT_FILE_SUFFIXES = new String[] {".pas", ".dpr", ".dpk"};
-  private static final String FILE_SUFFIXES_PROP_KEY = "sonar.delphi.file.suffixes";
+  private final String languageKey;
+  private final String pluginKey;
+  private final String label;
+  private final String[] defaultFileSuffixes;
+  private final String fileSuffixesPropKey;
+
+  Language() {
+    this("", "", "", new String[0], "");
+  }
+
+  Language(
+      String languageKey,
+      String pluginKey,
+      String label,
+      String[] defaultFileSuffixes,
+      String fileSuffixesPropKey) {
+    this.languageKey = languageKey;
+    this.pluginKey = pluginKey;
+    this.label = label;
+    this.defaultFileSuffixes = defaultFileSuffixes;
+    this.fileSuffixesPropKey = fileSuffixesPropKey;
+  }
 
   public String getLanguageKey() {
-    return LANGUAGE_KEY;
+    return languageKey;
   }
 
   public String getPluginKey() {
-    return PLUGIN_KEY;
+    return pluginKey;
   }
 
   public String getLabel() {
-    return LABEL;
+    return label;
   }
 
   public String[] getDefaultFileSuffixes() {
-    return DEFAULT_FILE_SUFFIXES;
+    return defaultFileSuffixes;
   }
 
   public String getFileSuffixesPropKey() {
-    return FILE_SUFFIXES_PROP_KEY;
+    return fileSuffixesPropKey;
   }
 
   public boolean shouldSyncInConnectedMode() {
@@ -60,7 +84,7 @@ public enum Language {
   }
 
   public static Set<Language> getLanguagesByPluginKey(String pluginKey) {
-    if (pluginKey.equals(PLUGIN_KEY)) {
+    if (pluginKey.equals(DELPHI.pluginKey)) {
       return Set.of(Language.DELPHI);
     } else {
       return Collections.emptySet();
@@ -68,11 +92,11 @@ public enum Language {
   }
 
   public static boolean containsPlugin(String pluginKey) {
-    return pluginKey.equals(PLUGIN_KEY);
+    return pluginKey.equals(DELPHI.pluginKey);
   }
 
   public static Optional<Language> forKey(String languageKey) {
-    if (languageKey.equals(LANGUAGE_KEY)) {
+    if (languageKey.equals(DELPHI.languageKey)) {
       return Optional.of(DELPHI);
     } else {
       return Optional.empty();
