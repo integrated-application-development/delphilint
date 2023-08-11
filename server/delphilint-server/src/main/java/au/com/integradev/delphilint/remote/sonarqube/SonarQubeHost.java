@@ -20,6 +20,7 @@ package au.com.integradev.delphilint.remote.sonarqube;
 import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
+import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
@@ -39,6 +40,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,15 +50,22 @@ public class SonarQubeHost implements SonarHost {
   private final String projectKey;
   private final String languageKey;
   private final String pluginKey;
+  private final String pluginKeyDiscriminator;
   private final ObjectMapper jsonMapper;
   private final ApiConnection api;
 
   public SonarQubeHost(
-      String hostUrl, String projectKey, String languageKey, String pluginKey, String apiToken) {
+      String hostUrl,
+      String projectKey,
+      String languageKey,
+      String pluginKey,
+      String apiToken,
+      String pluginKeyDiscriminator) {
     this.api = new ApiConnection(hostUrl, apiToken);
     this.projectKey = projectKey;
     this.languageKey = languageKey;
     this.pluginKey = pluginKey;
+    this.pluginKeyDiscriminator = pluginKeyDiscriminator;
     this.jsonMapper = new ObjectMapper();
   }
 
@@ -367,32 +376,31 @@ public class SonarQubeHost implements SonarHost {
     return activeRules;
   }
 
-  public Optional<Path> getPluginJar() throws SonarHostException {
+  public Optional<Path> getPluginJar(String pluginKey) throws SonarHostException {
     return Optional.ofNullable(api.getFile("/api/plugins/download?plugin=" + pluginKey));
   }
 
-  public Optional<String> getPluginJarName() throws SonarHostException {
+  public Set<RemotePlugin> getDelphiPlugins() throws SonarHostException {
     var rootNode = api.getJson("/api/plugins/installed");
     if (rootNode == null) {
       throw new SonarHostException("Could not retrieve installed plugins from SonarQube");
     }
 
-    String pluginJarName = "";
+    Set<RemotePlugin> plugins = new HashSet<>();
 
     var pluginsArray = rootNode.get("plugins");
     for (var plugin : pluginsArray) {
       var keyProp = plugin.get("key");
       var filenameProp = plugin.get("filename");
-      if (keyProp != null && filenameProp != null && pluginKey.equals(keyProp.asText())) {
-        pluginJarName = filenameProp.asText();
-        break;
+      if (keyProp != null
+          && filenameProp != null
+          && StringUtils.containsIgnoreCase(keyProp.asText(), pluginKeyDiscriminator)) {
+        plugins.add(
+            new RemotePlugin(
+                keyProp.asText(), filenameProp.asText(), pluginKey.equals(keyProp.asText())));
       }
     }
 
-    if (pluginJarName.isEmpty()) {
-      return Optional.empty();
-    } else {
-      return Optional.of(pluginJarName);
-    }
+    return plugins;
   }
 }

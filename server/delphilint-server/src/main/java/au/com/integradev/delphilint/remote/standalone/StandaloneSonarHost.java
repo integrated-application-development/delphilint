@@ -19,6 +19,7 @@ package au.com.integradev.delphilint.remote.standalone;
 
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteIssue;
+import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
@@ -127,11 +128,12 @@ public class StandaloneSonarHost implements SonarHost {
     return activeRules;
   }
 
-  public Optional<Path> getPluginJar() {
+  @Override
+  public Optional<Path> getPluginJar(String pluginKey) {
     return Optional.empty();
   }
 
-  public Optional<String> getPluginJarName() {
-    return Optional.empty();
+  public Set<RemotePlugin> getDelphiPlugins() {
+    return Collections.emptySet();
   }
 }

@@ -36,9 +36,9 @@ public interface SonarHost {
 
   Set<RemoteActiveRule> getActiveRules() throws SonarHostException;
 
-  Optional<Path> getPluginJar() throws SonarHostException;
+  Optional<Path> getPluginJar(String pluginKey) throws SonarHostException;
 
-  Optional<String> getPluginJarName() throws SonarHostException;
+  Set<RemotePlugin> getDelphiPlugins() throws SonarHostException;
 
   String getName();
 }

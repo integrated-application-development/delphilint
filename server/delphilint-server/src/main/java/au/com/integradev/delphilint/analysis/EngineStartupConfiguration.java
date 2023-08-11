@@ -19,21 +19,21 @@ package au.com.integradev.delphilint.analysis;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 
 public class EngineStartupConfiguration {
   private final String bdsPath;
   private final String compilerVersion;
-  private final Path sonarDelphiJarPath;
+  private final Set<Path> pluginPaths;
 
-  public EngineStartupConfiguration(
-      String bdsPath, String compilerVersion, Path sonarDelphiJarPath) {
+  public EngineStartupConfiguration(String bdsPath, String compilerVersion, Set<Path> pluginPaths) {
     this.bdsPath = bdsPath;
     this.compilerVersion = compilerVersion;
-    this.sonarDelphiJarPath = sonarDelphiJarPath;
+    this.pluginPaths = pluginPaths;
   }
 
-  public Path getSonarDelphiJarPath() {
-    return sonarDelphiJarPath;
+  public Set<Path> getPluginPaths() {
+    return pluginPaths;
   }
 
   public Map<String, String> getBaseProperties() {

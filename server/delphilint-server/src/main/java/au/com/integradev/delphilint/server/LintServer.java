@@ -50,6 +50,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
@@ -62,7 +63,7 @@ public class LintServer {
   private final ServerSocket serverSocket;
   private DelphiAnalysisEngine engine;
   private final CachingPluginDownloader pluginDownloader;
-  private DownloadedPlugin currentPlugin;
+  private Set<DownloadedPlugin> pluginGroup;
   private final ObjectMapper mapper;
   private boolean running;
 
@@ -76,7 +77,7 @@ public class LintServer {
     running = false;
     mapper = new ObjectMapper();
     pluginDownloader = new CachingPluginDownloader(pluginsPath);
-    currentPlugin = null;
+    pluginGroup = null;
 
     LOG.info("Server started on port {}", serverSocket.getLocalPort());
   }
@@ -295,19 +296,22 @@ public class LintServer {
     try {
       SonarHost host =
           getSonarHost(requestInitialize.getSonarHostUrl(), "", requestInitialize.getApiToken());
-      DownloadedPlugin pluginToUse = pluginDownloader.getRemotePluginJar(host).orElse(null);
+      Set<DownloadedPlugin> desiredPluginGroup =
+          pluginDownloader.getRemotePluginJars(host).orElse(null);
 
-      if (!Objects.equals(currentPlugin, pluginToUse) || engine == null) {
-        currentPlugin = pluginToUse;
-        LOG.info("Starting analysis engine with new plugin");
+      if (!Objects.equals(pluginGroup, desiredPluginGroup) || engine == null) {
+        pluginGroup = desiredPluginGroup;
+        LOG.info("Starting analysis engine with new plugins");
 
         var delphiConfig =
             new EngineStartupConfiguration(
                 requestInitialize.getBdsPath(),
                 requestInitialize.getCompilerVersion(),
-                currentPlugin == null
-                    ? Path.of(requestInitialize.getDefaultSonarDelphiJarPath())
-                    : currentPlugin.getPath());
+                pluginGroup == null
+                    ? Set.of(Path.of(requestInitialize.getDefaultSonarDelphiJarPath()))
+                    : pluginGroup.stream()
+                        .map(DownloadedPlugin::getPath)
+                        .collect(Collectors.toSet()));
 
         engine = new DelphiAnalysisEngine(delphiConfig);
       }
@@ -381,7 +385,8 @@ public class LintServer {
           projectKey,
           Language.DELPHI.getLanguageKey(),
           Language.DELPHI.getPluginKey(),
-          apiToken);
+          apiToken,
+          Language.DELPHI.getLanguageKey());
     }
   }
 }

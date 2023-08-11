@@ -54,8 +54,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
             .build();
 
     PluginsLoader.Configuration pluginsConfig =
-        new PluginsLoader.Configuration(
-            Set.of(startupConfig.getSonarDelphiJarPath()), Set.of(Language.DELPHI));
+        new PluginsLoader.Configuration(startupConfig.getPluginPaths(), Set.of(Language.DELPHI));
     PluginsLoadResult pluginsLoadResult = new PluginsLoader().load(pluginsConfig);
     loadedPlugins = pluginsLoadResult.getLoadedPlugins();
 
