@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Support for custom rules plugins - all server plugins whose keys contain the phrase "delphi" are now retrieved and used for analysis
+* Icons for rule type and severity in rule description view
 
 ## [0.4.1] - 2023-08-08
 

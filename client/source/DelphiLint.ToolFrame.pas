@@ -180,6 +180,7 @@ uses
   , System.TimeSpan
   , System.StrUtils
   , System.IOUtils
+  , System.NetEncoding
   , Vcl.Themes
   , Vcl.Graphics
   , Vcl.Imaging.pngimage
@@ -773,6 +774,19 @@ procedure TLintToolFrame.CreateRuleHtml(Name: string; RuleKey: string; RuleType:
     end;
   end;
 
+  function ImageToBase64(Image: TGraphic): string;
+  var
+    Stream: TMemoryStream;
+  begin
+    Stream := TMemoryStream.Create;
+    try
+      Image.SaveToStream(Stream);
+      Result := Format('data:image/png;base64,%s', [TNetEncoding.Base64.EncodeBytesToString(Stream.Memory, Stream.Size)]);
+    finally
+      FreeAndNil(Stream);
+    end;
+  end;
+
 var
   TextColor: string;
   BgColor: string;
@@ -804,7 +818,14 @@ begin
     '      font-size: 12px;' +
     '    }' +
     '    h1 { margin-top: 0px; font-size: 18px; }' +
-    '    h2 { margin-top: -12px; margin-bottom: -4px; font-size: 14px; }' +
+    '    h2 {' +
+    '      margin-top: -10px;' +
+    '      margin-bottom: -10px;' +
+    '      font-size: 12px;' +
+    '      font-weight: normal;' +
+    '    }' +
+    '    h2 span { display: inline-block; width: 10px; }' +
+    '    h2 img { display: inline; vertical-align: middle; margin-right: 2px; }' +
     '    pre {' +
     '      background-color: %s;' +
     '      padding: 0.3em 0.5em;' +
@@ -816,7 +837,7 @@ begin
     '</head>' +
     '<body>' +
     '  <h1>%s</h1>' +
-    '  <h2>%s - %s</h2>' +
+    '  <h2><img src="%s"/>%s<span></span><img src="%s"/>%s</h2>' +
     '  %s' +
     '</body>' +
     '</html>',
@@ -826,7 +847,9 @@ begin
       CodeBgColor,
       LinkColor,
       Name,
+      ImageToBase64(LintResources.RuleTypeIcon(RuleType)),
       C_RuleTypeStrs[RuleType],
+      ImageToBase64(LintResources.RuleSeverityIcon(Severity)),
       C_RuleSeverityStrs[Severity],
       Process(Desc)
     ]);
