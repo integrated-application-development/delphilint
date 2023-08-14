@@ -125,6 +125,7 @@ type
     FCurrentPath: string;
     FIssues: TArray<TLiveIssue>;
     FRuleHtmls: TDictionary<string, string>;
+    FVisibleRule: string;
     FNavigationAllowed: Boolean;
 
     procedure UpdateFileNameLabel(NewText: string = '');
@@ -875,7 +876,10 @@ begin
 
   try
     FNavigationAllowed := True;
-    RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+    if FVisibleRule <> RuleKey then begin
+      RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+      FVisibleRule := RuleKey;
+    end;
   finally
     FNavigationAllowed := False;
   end;
