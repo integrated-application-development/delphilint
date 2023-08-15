@@ -18,18 +18,14 @@
 package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.remote.RemoteIssue;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.regex.Matcher;
+import au.com.integradev.delphilint.remote.SonarHasher;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.commons.HotspotReviewStatus;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
-import org.sonarsource.sonarlint.core.commons.TextRange;
 import org.sonarsource.sonarlint.core.commons.TextRangeWithHash;
 import org.sonarsource.sonarlint.core.issuetracking.Trackable;
 
@@ -79,40 +75,11 @@ public class TrackableWrappers {
 
     @Override
     public String getLineHash() {
-      if (issue.getTextRange() == null) return null;
-
-      try (BufferedReader reader =
-          new BufferedReader(new InputStreamReader(issue.getInputFile().inputStream()))) {
-
-        StringBuilder codeSnippetBuilder = new StringBuilder();
-
-        String line = reader.readLine();
-        if (line == null) {
-          return null;
-        }
-        int i = 1;
-
-        do {
-          processLine(codeSnippetBuilder, i, line);
-
-          line = reader.readLine();
-          i++;
-        } while (line != null);
-
-        Matcher matchAllWhitespaces = MATCH_ALL_WHITESPACES.matcher(codeSnippetBuilder.toString());
-        return DigestUtils.md5Hex(matchAllWhitespaces.replaceAll(""));
-      } catch (IOException e) {
+      if (issue.getTextRange() != null && issue.getInputFile() != null) {
+        return SonarHasher.hashFileRange(
+            Path.of(issue.getInputFile().uri()), new TextRange(issue.getTextRange()));
+      } else {
         return null;
-      }
-    }
-
-    private void processLine(StringBuilder codeSnippet, int lineNumber, String line) {
-      // The SonarQube source code suggests that it hashes only the characters in
-      // the text range. Experimental results have shown this not to be the case -
-      // the server provides MD5 hashes of the entire start line.
-      TextRange textRange = issue.getTextRange();
-      if (textRange != null && textRange.getStartLine() == lineNumber) {
-        codeSnippet.append(line);
       }
     }
 

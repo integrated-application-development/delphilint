@@ -32,6 +32,14 @@ public class TextRange {
     this.endOffset = 0;
   }
 
+  public TextRange(org.sonarsource.sonarlint.core.commons.TextRange textRange) {
+    this(
+        textRange.getStartLine(),
+        textRange.getStartLineOffset(),
+        textRange.getEndLine(),
+        textRange.getEndLineOffset());
+  }
+
   public TextRange(int startLine, int startLineOffset, int endLine, int endLineOffset) {
     this.startLine = startLine;
     this.startOffset = startLineOffset;
