@@ -290,7 +290,7 @@ public class SonarQubeHost implements SonarHost {
         .filter(
             issue ->
                 issue.getType() != RuleType.SECURITY_HOTSPOT
-                    || "ACKNOWLEDGED".equals(issue.getResolution()))
+                    || !"ACKNOWLEDGED".equals(issue.getResolution()))
         .collect(Collectors.toSet());
   }
 
@@ -305,7 +305,8 @@ public class SonarQubeHost implements SonarHost {
         .filter(
             issue ->
                 issue.getType() != RuleType.SECURITY_HOTSPOT
-                    || !"ACKNOWLEDGED".equals(issue.getResolution()))
+                    || (issue.getStatus() == IssueStatus.TO_REVIEW
+                        || "ACKNOWLEDGED".equals(issue.getResolution())))
         .collect(Collectors.toSet());
   }
 
