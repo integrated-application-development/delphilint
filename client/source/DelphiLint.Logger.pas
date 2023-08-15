@@ -25,7 +25,6 @@ uses
 type
   TLintLogger = class(TObject)
   private
-    FIncludeTime: Boolean;
     FLogPath: string;
     FLock: TMutex;
 
@@ -33,7 +32,7 @@ type
 
     procedure WriteLogFile(Msg: string);
   public
-    constructor Create(MessageGroupName: string; IncludeTime: Boolean = True);
+    constructor Create(LogPath: string);
     destructor Destroy; override;
 
     procedure Info(const Msg: string); overload;
@@ -53,10 +52,18 @@ uses
 var
   G_Log: TLintLogger;
 
+//______________________________________________________________________________________________________________________
+
 function Log: TLintLogger;
+var
+  LogDir: string;
+  LogPath: string;
 begin
   if not Assigned(G_Log) then begin
-    G_Log := TLintLogger.Create('Log');
+    LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
+    TDirectory.CreateDirectory(LogDir);
+    LogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
+    G_Log := TLintLogger.Create(LogPath);
   end;
 
   Result := G_Log;
@@ -64,16 +71,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintLogger.Create(MessageGroupName: string; IncludeTime: Boolean = True);
-var
-  LogDir: string;
+constructor TLintLogger.Create(LogPath: string);
 begin
   inherited Create;
 
-  LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
-  TDirectory.CreateDirectory(LogDir);
-  FLogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
-  FIncludeTime := IncludeTime;
+  FLogPath := LogPath;
   FLock := TMutex.Create;
 end;
 
@@ -89,12 +91,7 @@ end;
 
 function TLintLogger.GetMessagePrefix: string;
 begin
-  if FIncludeTime then begin
-    Result := FormatDateTime('hh:nn:ss.zzz', Now);
-  end
-  else begin
-    Result := '';
-  end;
+  Result := FormatDateTime('hh:nn:ss.zzz', Now);
 end;
 
 //______________________________________________________________________________________________________________________
