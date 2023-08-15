@@ -108,7 +108,7 @@ uses
   , Vcl.ComCtrls
   , Winapi.Windows
   , ToolsAPI
-  , DelphiLint.Analyzer
+  , DelphiLint.Context
   , DelphiLint.ToolsApiBase
   , DelphiLint.Utils
   , DelphiLint.SetupForm
@@ -269,7 +269,7 @@ end;
 
 destructor TLintPlugin.Destroy;
 begin
-  if AnalyzerValid then begin
+  if ContextValid then begin
     Analyzer.OnAnalysisStarted.RemoveListener(OnAnalysisStarted);
     Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisEnded);
     Analyzer.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);

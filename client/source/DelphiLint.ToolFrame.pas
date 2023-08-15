@@ -33,7 +33,6 @@ uses
   , SHDocVw
   , DockForm
   , DelphiLint.Data
-  , DelphiLint.Analyzer
   , DelphiLint.ToolsApiBase
   ;
 
@@ -190,9 +189,9 @@ uses
   , Winapi.Messages
   , ToolsAPI
   , DelphiLint.Utils
-  , DelphiLint.Logger
   , DelphiLint.Plugin
   , DelphiLint.Resources
+  , DelphiLint.Context
   ;
 
 {$R *.dfm}

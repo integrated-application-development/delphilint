@@ -57,7 +57,6 @@ uses
   , System.StrUtils
   , DelphiLint.ProjectOptions
   , Winapi.ShLwApi
-  , DelphiLint.Logger
   , System.Generics.Collections
   , System.Math
   ;
@@ -107,7 +106,6 @@ var
   ProductVersion: string;
 begin
   ProductVersion := (BorlandIDEServices as IOTAServices).ExpandRootMacro('$(ProductVersion)');
-  Log.Info(ProductVersion);
 
   if ProductVersion = '21.0' then begin
     Result := 'VER340';

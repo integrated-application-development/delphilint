@@ -24,79 +24,11 @@ uses
   , System.Generics.Collections
   , DelphiLint.Events
   , System.SyncObjs
+  , DelphiLint.ContextTypes
   ;
 
 type
-  TLiveIssue = class(TObject)
-  private
-    FRuleKey: string;
-    FMessage: string;
-    FFilePath: string;
-    FAssignee: string;
-    FCreationDate: string;
-    FStatus: TIssueStatus;
-    FHasMetadata: Boolean;
-    FStartLine: Integer;
-    FEndLine: Integer;
-    FStartLineOffset: Integer;
-    FEndLineOffset: Integer;
-    FLinesMoved: Integer;
-    FTethered: Boolean;
-    FLines: TList<string>;
-
-    function GetStartLine: Integer;
-    function GetEndLine: Integer;
-    procedure PopulateLines(const FileLines: TArray<string>);
-  public
-    constructor Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
-    destructor Destroy; override;
-
-    procedure NewLineMoveSession;
-    procedure UpdateTether(LineNum: Integer; LineText: string);
-    procedure Untether;
-
-    property RuleKey: string read FRuleKey;
-    property Message: string read FMessage;
-    property FilePath: string read FFilePath write FFilePath;
-    property Assignee: string read FAssignee;
-    property CreationDate: string read FCreationDate;
-    property Status: TIssueStatus read FStatus;
-    property HasMetadata: Boolean read FHasMetadata;
-
-    property OriginalStartLine: Integer read FStartLine;
-    property OriginalEndLine: Integer read FEndLine;
-    property StartLine: Integer read GetStartLine;
-    property EndLine: Integer read GetEndLine;
-    property StartLineOffset: Integer read FStartLineOffset;
-    property EndLineOffset: Integer read FEndLineOffset;
-    property LinesMoved: Integer read FLinesMoved write FLinesMoved;
-    property Tethered: Boolean read FTethered;
-  end;
-
-  TFileAnalysisHistory = record
-    AnalysisTime: TDateTime;
-    Success: Boolean;
-    IssuesFound: Integer;
-    FileHash: string;
-  end;
-
-  TCurrentAnalysis = class(TObject)
-  private
-    FPaths: TArray<string>;
-  public
-    constructor Create(Paths: TArray<string>);
-    function IncludesFile(const Path: string): Boolean;
-
-    property Paths: TArray<string> read FPaths;
-  end;
-
-  TFileAnalysisStatus = (
-    fasNeverAnalyzed,
-    fasOutdatedAnalysis,
-    fasUpToDateAnalysis
-  );
-
-  TAnalyzer = class(TObject)
+  TAnalyzerImpl = class(TAnalyzer)
   private
     FServer: TLintServer;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -117,7 +49,6 @@ type
     function GetInitedServer: TLintServer;
     function TryRefreshRules: Boolean;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
-    function GetInAnalysis: Boolean;
 
     function FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 
@@ -130,34 +61,31 @@ type
       const ProjectPropertiesPath: string = '';
       const DownloadPlugin: Boolean = True);
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+
+  protected
+    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>; override;
+    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>; override;
+    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>; override;
+    function GetCurrentAnalysis: TCurrentAnalysis; override;
+    function GetInAnalysis: Boolean; override;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>; overload;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>; overload; override;
 
-    procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
+    procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer); override;
 
-    procedure AnalyzeActiveFile;
-    procedure AnalyzeOpenFiles;
+    procedure AnalyzeActiveFile; override;
+    procedure AnalyzeOpenFiles; override;
 
-    procedure RestartServer;
+    procedure RestartServer; override;
 
-    function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
-    function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+    function GetAnalysisStatus(Path: string): TFileAnalysisStatus; override;
+    function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean; override;
 
-    function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
-
-    property OnAnalysisStarted: TEventNotifier<TArray<string>> read FOnAnalysisStarted;
-    property OnAnalysisComplete: TEventNotifier<TArray<string>> read FOnAnalysisComplete;
-    property OnAnalysisFailed: TEventNotifier<TArray<string>> read FOnAnalysisFailed;
-
-    property CurrentAnalysis: TCurrentAnalysis read FCurrentAnalysis;
-    property InAnalysis: Boolean read GetInAnalysis;
+    function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule; override;
   end;
-
-function Analyzer: TAnalyzer;
-function AnalyzerValid: Boolean;
 
 implementation
 
@@ -170,36 +98,15 @@ uses
   , System.Hash
   , Vcl.Dialogs
   , ToolsAPI
-  , DelphiLint.Logger
   , DelphiLint.ProjectOptions
   , DelphiLint.Utils
   , DelphiLint.Settings
+  , DelphiLint.Context
   ;
 
-var
-  GAnalyzer: TAnalyzer;
-  GContextInvalid: Boolean;
-
 //______________________________________________________________________________________________________________________
 
-function Analyzer: TAnalyzer;
-begin
-  if AnalyzerValid and not Assigned(GAnalyzer) then begin
-    GAnalyzer := TAnalyzer.Create;
-  end;
-  Result := GAnalyzer;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function AnalyzerValid: Boolean;
-begin
-  Result := not GContextInvalid;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TAnalyzer.AnalyzeActiveFile;
+procedure TAnalyzerImpl.AnalyzeActiveFile;
 var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
@@ -231,7 +138,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.AnalyzeOpenFiles;
+procedure TAnalyzerImpl.AnalyzeOpenFiles;
 var
   ProjectFile: string;
   Modules: TArray<IOTAModule>;
@@ -286,7 +193,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+procedure TAnalyzerImpl.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 var
   ProjectOptions: TLintProjectOptions;
   SonarHostUrl: string;
@@ -320,7 +227,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.AnalyzeFiles(
+procedure TAnalyzerImpl.AnalyzeFiles(
   const Files: TArray<string>;
   const BaseDir: string;
   const SonarHostUrl: string = '';
@@ -368,7 +275,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
+function TAnalyzerImpl.FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 var
   NormalizedBaseDir: string;
   FileName: string;
@@ -396,7 +303,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TAnalyzer.Create;
+constructor TAnalyzerImpl.Create;
 begin
   inherited;
   FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
@@ -414,7 +321,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TAnalyzer.Destroy;
+destructor TAnalyzerImpl.Destroy;
 var
   WaitForTerminate: Boolean;
 begin
@@ -470,14 +377,42 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.GetInAnalysis: Boolean;
+function TAnalyzerImpl.GetInAnalysis: Boolean;
 begin
   Result := Assigned(FCurrentAnalysis);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+function TAnalyzerImpl.GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
+begin
+  Result := FOnAnalysisComplete;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
+begin
+  Result := FOnAnalysisFailed;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
+begin
+  Result := FOnAnalysisStarted;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.GetCurrentAnalysis: TCurrentAnalysis;
+begin
+  Result := FCurrentAnalysis;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
 var
   SanitizedName: string;
   Issue: TLiveIssue;
@@ -509,7 +444,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.EnsureServerInited;
+procedure TAnalyzerImpl.EnsureServerInited;
 begin
   FServerLock.Acquire;
   try
@@ -525,7 +460,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.OnServerTerminated(Sender: TObject);
+procedure TAnalyzerImpl.OnServerTerminated(Sender: TObject);
 begin
   FServerLock.Acquire;
   try
@@ -545,7 +480,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.GetInitedServer: TLintServer;
+function TAnalyzerImpl.GetInitedServer: TLintServer;
 begin
   EnsureServerInited;
   Result := FServer;
@@ -553,7 +488,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
+function TAnalyzerImpl.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
 var
   NormalizedPath: string;
   History: TFileAnalysisHistory;
@@ -576,7 +511,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.OnAnalyzeError(Message: string);
+procedure TAnalyzerImpl.OnAnalyzeError(Message: string);
 begin
   TThread.Queue(
     TThread.Current,
@@ -599,7 +534,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
+procedure TAnalyzerImpl.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
 var
   HasMetadata: Boolean;
   ProjectFile: string;
@@ -635,7 +570,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
+procedure TAnalyzerImpl.RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
 var
   SanitizedPath: string;
   History: TFileAnalysisHistory;
@@ -660,7 +595,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
+procedure TAnalyzerImpl.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
 var
   Issue: TLintIssue;
   LiveIssue: TLiveIssue;
@@ -715,14 +650,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+function TAnalyzerImpl.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 begin
   Result := FFileAnalyses.TryGetValue(NormalizePath(Path), History);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
+procedure TAnalyzerImpl.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 var
   SanitizedPath: string;
   Issue: TLiveIssue;
@@ -750,7 +685,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.TryRefreshRules: Boolean;
+function TAnalyzerImpl.TryRefreshRules: Boolean;
 var
   Server: TLintServer;
   ProjectFile: string;
@@ -841,7 +776,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzer.RestartServer;
+procedure TAnalyzerImpl.RestartServer;
 var
   WaitForTerminate: Boolean;
 begin
@@ -891,7 +826,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzer.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+function TAnalyzerImpl.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 begin
   Result := nil;
 
@@ -905,148 +840,5 @@ begin
     end;
   end;
 end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
-begin
-  inherited Create;
-
-  FRuleKey := Issue.RuleKey;
-  FMessage := Issue.Message;
-  FFilePath := Issue.FilePath;
-
-  if Assigned(Issue.Range) then begin
-    FStartLine := Issue.Range.StartLine;
-    FEndLine := Issue.Range.EndLine;
-    FStartLineOffset := Issue.Range.StartLineOffset;
-    FEndLineOffset := Issue.Range.EndLineOffset;
-  end
-  else begin
-    FStartLine := 1;
-    FEndLine := 2;
-    FStartLineOffset := 0;
-    FEndLineOffset := 0;
-  end;
-
-  FHasMetadata := HasMetadata;
-  if Assigned(Issue.Metadata) then begin
-    FAssignee := Issue.Metadata.Assignee;
-    FCreationDate := Issue.Metadata.CreationDate;
-    FStatus := Issue.Metadata.Status;
-  end;
-
-  FLinesMoved := 0;
-  FLines := TList<string>.Create;
-  FTethered := True;
-
-  PopulateLines(FileLines);
-end;
-
-//______________________________________________________________________________________________________________________
-
-destructor TLiveIssue.Destroy;
-begin
-  FreeAndNil(FLines);
-  inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLiveIssue.PopulateLines(const FileLines: TArray<string>);
-var
-  LineNum: Integer;
-begin
-  if FileExists(FFilePath) and (Length(FileLines) > StartLine) then begin
-    LineNum := StartLine;
-
-    while (LineNum <= EndLine) and (LineNum < Length(FileLines)) do begin
-      FLines.Add(FileLines[LineNum - 1]);
-      Inc(LineNum);
-    end;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLiveIssue.Untether;
-begin
-  FTethered := False;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLiveIssue.UpdateTether(LineNum: Integer; LineText: string);
-var
-  Delta: Integer;
-begin
-  if not Tethered then begin
-    Exit;
-  end;
-
-  Delta := LineNum - StartLine;
-  if (Delta >= 0) and (Delta < FLines.Count) then begin
-    if (FLines[Delta] <> LineText) then begin
-      Untether;
-    end;
-  end
-  else begin
-    Log.Info(
-      'Attempted to tether by providing line %d for issue at issue on lines %d-%d',
-      [LineNum, StartLine, EndLine]);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLiveIssue.GetStartLine: Integer;
-begin
-  Result := FStartLine + LinesMoved;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLiveIssue.GetEndLine: Integer;
-begin
-  Result := FEndLine + LinesMoved;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLiveIssue.NewLineMoveSession;
-begin
-  FStartLine := StartLine;
-  FEndLine := EndLine;
-  FLinesMoved := 0;
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TCurrentAnalysis.Create(Paths: TArray<string>);
-begin
-  inherited Create;
-  FPaths := Paths;
-end;
-
-function TCurrentAnalysis.IncludesFile(const Path: string): Boolean;
-var
-  PathEl: string;
-begin
-  Result := False;
-
-  for PathEl in FPaths do begin
-    if NormalizePath(PathEl) = NormalizePath(Path) then begin
-      Result := True;
-      Exit;
-    end;
-  end;
-end;
-
-initialization
-  GContextInvalid := False;
-
-finalization
-  FreeAndNil(GAnalyzer);
-  GContextInvalid := True;
 
 end.

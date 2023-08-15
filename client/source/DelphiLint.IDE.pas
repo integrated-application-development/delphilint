@@ -123,11 +123,11 @@ implementation
 
 uses
     System.Math
-  , DelphiLint.Analyzer
-  , DelphiLint.Logger
   , DelphiLint.Utils
   , Vcl.Themes
   , System.SysUtils
+  , DelphiLint.Context
+  , DelphiLint.Data
   ;
 
 //______________________________________________________________________________________________________________________
@@ -241,7 +241,7 @@ begin
     Notifier.Release;
   end;
 
-  if AnalyzerValid then begin
+  if ContextValid then begin
     Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   end;
 
@@ -383,7 +383,7 @@ end;
 
 destructor TLintView.Destroy;
 begin
-  if AnalyzerValid then begin
+  if ContextValid then begin
     Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   end;
   inherited;

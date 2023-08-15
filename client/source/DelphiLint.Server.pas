@@ -177,7 +177,6 @@ implementation
 
 uses
     IdGlobal
-  , DelphiLint.Logger
   , ToolsAPI
   , Winapi.Windows
   , DelphiLint.Settings
@@ -185,6 +184,7 @@ uses
   , System.IOUtils
   , DelphiLint.SetupForm
   , DelphiLint.Utils
+  , DelphiLint.Context
   ;
 
 //______________________________________________________________________________________________________________________

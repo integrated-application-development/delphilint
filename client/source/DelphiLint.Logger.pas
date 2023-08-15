@@ -20,10 +20,11 @@ interface
 
 uses
     System.SyncObjs
+  , DelphiLint.ContextTypes
   ;
 
 type
-  TLintLogger = class(TObject)
+  TFileLogger = class(TLogger)
   private
     FLogPath: string;
     FLock: TMutex;
@@ -35,12 +36,10 @@ type
     constructor Create(LogPath: string);
     destructor Destroy; override;
 
-    procedure Info(const Msg: string); overload;
-    procedure Info(const Msg: string; const Args: array of const); overload;
+    procedure Info(const Msg: string); overload; override;
+    procedure Info(const Msg: string; const Args: array of const); overload; override;
     procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
   end;
-
-function Log: TLintLogger;
 
 implementation
 
@@ -49,29 +48,9 @@ uses
   , System.IOUtils
   ;
 
-var
-  G_Log: TLintLogger;
-
 //______________________________________________________________________________________________________________________
 
-function Log: TLintLogger;
-var
-  LogDir: string;
-  LogPath: string;
-begin
-  if not Assigned(G_Log) then begin
-    LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
-    TDirectory.CreateDirectory(LogDir);
-    LogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
-    G_Log := TLintLogger.Create(LogPath);
-  end;
-
-  Result := G_Log;
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLintLogger.Create(LogPath: string);
+constructor TFileLogger.Create(LogPath: string);
 begin
   inherited Create;
 
@@ -81,7 +60,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TLintLogger.Destroy;
+destructor TFileLogger.Destroy;
 begin
   FreeAndNil(FLock);
   inherited;
@@ -89,21 +68,21 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintLogger.GetMessagePrefix: string;
+function TFileLogger.GetMessagePrefix: string;
 begin
   Result := FormatDateTime('hh:nn:ss.zzz', Now);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintLogger.Info(const Msg: string);
+procedure TFileLogger.Info(const Msg: string);
 begin
   Info(Msg, '', 0, 0);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintLogger.Info(Msg, FileName: string; Line, Column: Integer);
+procedure TFileLogger.Info(Msg, FileName: string; Line, Column: Integer);
 var
   Prefix: string;
 begin
@@ -114,7 +93,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintLogger.WriteLogFile(Msg: string);
+procedure TFileLogger.WriteLogFile(Msg: string);
 begin
   FLock.Acquire;
   try
@@ -126,16 +105,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintLogger.Info(const Msg: string; const Args: array of const);
+procedure TFileLogger.Info(const Msg: string; const Args: array of const);
 begin
   Info(Format(Msg, Args));
 end;
-
-//______________________________________________________________________________________________________________________
-
-initialization
-
-finalization
-  FreeAndNil(G_Log);
 
 end.
