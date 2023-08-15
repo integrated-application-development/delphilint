@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * "Unspecified error" exception when docking the DelphiLint panel or changing layout while the rule view is open
+* "Unspecified error" exception when debugging a program and changing between analyzed files
 
 ## [0.4.1] - 2023-08-08
 

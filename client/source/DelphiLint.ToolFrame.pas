@@ -182,6 +182,7 @@ uses
   , System.StrUtils
   , System.IOUtils
   , System.NetEncoding
+  , System.Win.ComObj
   , Vcl.Themes
   , Vcl.Graphics
   , Vcl.Imaging.pngimage
@@ -877,7 +878,16 @@ begin
   try
     FNavigationAllowed := True;
     if FVisibleRule <> RuleKey then begin
-      RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+      try
+        RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+      except
+        on E: EOleException do begin
+          Log.Info('OLE exception occurred during navigation: %s', [E.Message]);
+          if E.Message <> 'Unspecified error' then begin
+            raise;
+          end;
+        end;
+      end;
       FVisibleRule := RuleKey;
     end;
   finally
