@@ -123,7 +123,7 @@ implementation
 
 uses
     System.Math
-  , DelphiLint.Context
+  , DelphiLint.Analyzer
   , DelphiLint.Logger
   , DelphiLint.Utils
   , Vcl.Themes
@@ -226,7 +226,7 @@ begin
   FInitedViews := TList<IOTAEditView>.Create;
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
-  LintContext.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 
   Log.Info('Editor notifier created');
 end;
@@ -241,8 +241,8 @@ begin
     Notifier.Release;
   end;
 
-  if LintContextValid then begin
-    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  if AnalyzerValid then begin
+    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   end;
 
   FreeAndNil(FTrackers);
@@ -290,7 +290,7 @@ procedure TLintEditor.InitView(const View: IOTAEditView);
         FTrackers.Remove(Trckr);
       end);
 
-    FileIssues := LintContext.GetIssues(Tracker.FilePath);
+    FileIssues := Analyzer.GetIssues(Tracker.FilePath);
     for Issue in FileIssues do begin
       Tracker.TrackLine(Issue.StartLine);
       Issue.NewLineMoveSession;
@@ -342,7 +342,7 @@ begin
   for Tracker in FTrackers do begin
     Tracker.ClearTracking;
 
-    FileIssues := LintContext.GetIssues(Tracker.FilePath);
+    FileIssues := Analyzer.GetIssues(Tracker.FilePath);
     for Issue in FileIssues do begin
       Tracker.TrackLine(Issue.StartLine);
       Issue.NewLineMoveSession;
@@ -362,7 +362,7 @@ end;
 
 procedure TLintEditor.OnTrackedLineChanged(const ChangedLine: TChangedLine);
 begin
-  LintContext.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
+  Analyzer.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -376,15 +376,15 @@ begin
   inherited;
 
   FRepaint := False;
-  LintContext.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TLintView.Destroy;
 begin
-  if LintContextValid then begin
-    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+  if AnalyzerValid then begin
+    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   end;
   inherited;
 end;
@@ -463,7 +463,7 @@ var
   TetheredIssues: Boolean;
   TextColor: TColor;
 begin
-  Issues := LintContext.GetIssues(View.Buffer.FileName, LineNumber);
+  Issues := Analyzer.GetIssues(View.Buffer.FileName, LineNumber);
 
   if Length(Issues) > 0 then begin
     if InDarkMode then begin

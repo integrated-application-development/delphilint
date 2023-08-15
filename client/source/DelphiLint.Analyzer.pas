@@ -14,7 +14,7 @@ PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 }
-unit DelphiLint.Context;
+unit DelphiLint.Analyzer;
 
 interface
 
@@ -96,7 +96,7 @@ type
     fasUpToDateAnalysis
   );
 
-  TLintContext = class(TObject)
+  TAnalyzer = class(TObject)
   private
     FServer: TLintServer;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -156,8 +156,8 @@ type
     property InAnalysis: Boolean read GetInAnalysis;
   end;
 
-function LintContext: TLintContext;
-function LintContextValid: Boolean;
+function Analyzer: TAnalyzer;
+function AnalyzerValid: Boolean;
 
 implementation
 
@@ -177,29 +177,29 @@ uses
   ;
 
 var
-  GLintContext: TLintContext;
+  GAnalyzer: TAnalyzer;
   GContextInvalid: Boolean;
 
 //______________________________________________________________________________________________________________________
 
-function LintContext: TLintContext;
+function Analyzer: TAnalyzer;
 begin
-  if LintContextValid and not Assigned(GLintContext) then begin
-    GLintContext := TLintContext.Create;
+  if AnalyzerValid and not Assigned(GAnalyzer) then begin
+    GAnalyzer := TAnalyzer.Create;
   end;
-  Result := GLintContext;
+  Result := GAnalyzer;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function LintContextValid: Boolean;
+function AnalyzerValid: Boolean;
 begin
   Result := not GContextInvalid;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.AnalyzeActiveFile;
+procedure TAnalyzer.AnalyzeActiveFile;
 var
   ProjectFile: string;
   SourceEditor: IOTASourceEditor;
@@ -231,7 +231,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.AnalyzeOpenFiles;
+procedure TAnalyzer.AnalyzeOpenFiles;
 var
   ProjectFile: string;
   Modules: TArray<IOTAModule>;
@@ -286,7 +286,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+procedure TAnalyzer.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 var
   ProjectOptions: TLintProjectOptions;
   SonarHostUrl: string;
@@ -320,7 +320,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.AnalyzeFiles(
+procedure TAnalyzer.AnalyzeFiles(
   const Files: TArray<string>;
   const BaseDir: string;
   const SonarHostUrl: string = '';
@@ -368,7 +368,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
+function TAnalyzer.FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 var
   NormalizedBaseDir: string;
   FileName: string;
@@ -396,7 +396,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintContext.Create;
+constructor TAnalyzer.Create;
 begin
   inherited;
   FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
@@ -414,7 +414,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TLintContext.Destroy;
+destructor TAnalyzer.Destroy;
 var
   WaitForTerminate: Boolean;
 begin
@@ -470,14 +470,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetInAnalysis: Boolean;
+function TAnalyzer.GetInAnalysis: Boolean;
 begin
   Result := Assigned(FCurrentAnalysis);
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+function TAnalyzer.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
 var
   SanitizedName: string;
   Issue: TLiveIssue;
@@ -509,7 +509,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.EnsureServerInited;
+procedure TAnalyzer.EnsureServerInited;
 begin
   FServerLock.Acquire;
   try
@@ -525,7 +525,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.OnServerTerminated(Sender: TObject);
+procedure TAnalyzer.OnServerTerminated(Sender: TObject);
 begin
   FServerLock.Acquire;
   try
@@ -545,7 +545,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetInitedServer: TLintServer;
+function TAnalyzer.GetInitedServer: TLintServer;
 begin
   EnsureServerInited;
   Result := FServer;
@@ -553,7 +553,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
+function TAnalyzer.GetAnalysisStatus(Path: string): TFileAnalysisStatus;
 var
   NormalizedPath: string;
   History: TFileAnalysisHistory;
@@ -576,7 +576,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.OnAnalyzeError(Message: string);
+procedure TAnalyzer.OnAnalyzeError(Message: string);
 begin
   TThread.Queue(
     TThread.Current,
@@ -599,7 +599,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
+procedure TAnalyzer.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
 var
   HasMetadata: Boolean;
   ProjectFile: string;
@@ -635,7 +635,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
+procedure TAnalyzer.RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
 var
   SanitizedPath: string;
   History: TFileAnalysisHistory;
@@ -660,7 +660,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
+procedure TAnalyzer.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
 var
   Issue: TLintIssue;
   LiveIssue: TLiveIssue;
@@ -715,14 +715,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
+function TAnalyzer.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 begin
   Result := FFileAnalyses.TryGetValue(NormalizePath(Path), History);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
+procedure TAnalyzer.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 var
   SanitizedPath: string;
   Issue: TLiveIssue;
@@ -750,7 +750,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.TryRefreshRules: Boolean;
+function TAnalyzer.TryRefreshRules: Boolean;
 var
   Server: TLintServer;
   ProjectFile: string;
@@ -841,7 +841,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintContext.RestartServer;
+procedure TAnalyzer.RestartServer;
 var
   WaitForTerminate: Boolean;
 begin
@@ -891,7 +891,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintContext.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+function TAnalyzer.GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 begin
   Result := nil;
 
@@ -1046,7 +1046,7 @@ initialization
   GContextInvalid := False;
 
 finalization
-  FreeAndNil(GLintContext);
+  FreeAndNil(GAnalyzer);
   GContextInvalid := True;
 
 end.

@@ -110,7 +110,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Events.pas"/>
         <DCCReference Include="DelphiLint.Settings.pas"/>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
-        <DCCReference Include="DelphiLint.Context.pas"/>
+        <DCCReference Include="DelphiLint.Analyzer.pas"/>
         <DCCReference Include="DelphiLint.Plugin.pas">
             <Form>LintPlugin</Form>
             <FormType>dfm</FormType>

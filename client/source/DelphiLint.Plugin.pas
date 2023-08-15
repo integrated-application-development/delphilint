@@ -108,7 +108,7 @@ uses
   , Vcl.ComCtrls
   , Winapi.Windows
   , ToolsAPI
-  , DelphiLint.Context
+  , DelphiLint.Analyzer
   , DelphiLint.ToolsApiBase
   , DelphiLint.Utils
   , DelphiLint.SetupForm
@@ -124,7 +124,7 @@ begin
   if LintSettings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
-  LintContext.AnalyzeActiveFile;
+  Analyzer.AnalyzeActiveFile;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -134,7 +134,7 @@ begin
   if LintSettings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
-  LintContext.AnalyzeOpenFiles;
+  Analyzer.AnalyzeOpenFiles;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -160,7 +160,7 @@ end;
 
 procedure TLintPlugin.ActionRestartServerExecute(Sender: TObject);
 begin
-  LintContext.RestartServer;
+  Analyzer.RestartServer;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -226,9 +226,9 @@ begin
   CreateMainMenu;
 
   // Analysis callbacks
-  LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
-  LintContext.OnAnalysisComplete.AddListener(OnAnalysisEnded);
-  LintContext.OnAnalysisFailed.AddListener(OnAnalysisEnded);
+  Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
+  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisEnded);
+  Analyzer.OnAnalysisFailed.AddListener(OnAnalysisEnded);
 
   // Enable actions
   AnalysisActionsEnabled := True;
@@ -269,10 +269,10 @@ end;
 
 destructor TLintPlugin.Destroy;
 begin
-  if LintContextValid then begin
-    LintContext.OnAnalysisStarted.RemoveListener(OnAnalysisStarted);
-    LintContext.OnAnalysisComplete.RemoveListener(OnAnalysisEnded);
-    LintContext.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
+  if AnalyzerValid then begin
+    Analyzer.OnAnalysisStarted.RemoveListener(OnAnalysisStarted);
+    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisEnded);
+    Analyzer.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
   end;
 
   (BorlandIDEServices as INTAIDEInsightService).RemoveActionList(FActionListIndex);
@@ -387,7 +387,7 @@ begin
   end;
 
 
-  if FAnalysisActionsEnabled and (not LintContext.InAnalysis) and PluginEnabled then begin
+  if FAnalysisActionsEnabled and (not Analyzer.InAnalysis) and PluginEnabled then begin
     ActionAnalyzeActiveFile.Enabled := True;
     ActionAnalyzeShort.Enabled := True;
     ActionAnalyzeOpenFiles.Enabled := True;

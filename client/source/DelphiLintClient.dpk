@@ -47,7 +47,7 @@ contains
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
-  DelphiLint.Context in 'DelphiLint.Context.pas',
+  DelphiLint.Analyzer in 'DelphiLint.Analyzer.pas',
   DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
   DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: T},
   DelphiLint.Utils in 'DelphiLint.Utils.pas',

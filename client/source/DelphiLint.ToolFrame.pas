@@ -33,7 +33,7 @@ uses
   , SHDocVw
   , DockForm
   , DelphiLint.Data
-  , DelphiLint.Context
+  , DelphiLint.Analyzer
   , DelphiLint.ToolsApiBase
   ;
 
@@ -207,14 +207,14 @@ begin
   FNavigationAllowed := False;
   FRuleHtmls := TDictionary<string, string>.Create;
 
-  LintContext.OnAnalysisStarted.AddListener(OnAnalysisStarted);
+  Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
-  LintContext.OnAnalysisComplete.AddListener(
+  Analyzer.OnAnalysisComplete.AddListener(
     procedure(const Paths: TArray<string>) begin
       OnAnalysisFinished(Paths, True);
     end);
 
-  LintContext.OnAnalysisFailed.AddListener(
+  Analyzer.OnAnalysisFailed.AddListener(
     procedure(const Paths: TArray<string>) begin
       OnAnalysisFinished(Paths, False);
     end);
@@ -226,8 +226,8 @@ begin
     ChangeActiveFile('');
   end;
 
-  if LintContext.InAnalysis then begin
-    OnAnalysisStarted(LintContext.CurrentAnalysis.Paths);
+  if Analyzer.InAnalysis then begin
+    OnAnalysisStarted(Analyzer.CurrentAnalysis.Paths);
   end
   else begin
     UpdateAnalysisStatus('Idle');
@@ -385,16 +385,16 @@ begin
   FCurrentPath := IfThen(FileScannable, Path, '');
 
   if FileScannable then begin
-    if LintContext.InAnalysis and LintContext.CurrentAnalysis.IncludesFile(Path) then begin
+    if Analyzer.InAnalysis and Analyzer.CurrentAnalysis.IncludesFile(Path) then begin
       UpdateFileStatus(cfsInAnalysis);
       Exit;
     end;
 
-    case LintContext.GetAnalysisStatus(Path) of
+    case Analyzer.GetAnalysisStatus(Path) of
       fasNeverAnalyzed:
           UpdateFileStatus(cfsNotAnalyzed);
       fasOutdatedAnalysis:
-        if LintContext.TryGetAnalysisHistory(Path, History) then begin
+        if Analyzer.TryGetAnalysisHistory(Path, History) then begin
           if History.Success then begin
             if History.IssuesFound = 0 then begin
               UpdateFileStatus(cfsNoIssuesOutdated);
@@ -412,7 +412,7 @@ begin
           UpdateFileStatus(cfsNotAnalyzed);
         end;
       fasUpToDateAnalysis:
-        if LintContext.TryGetAnalysisHistory(Path, History) then begin
+        if Analyzer.TryGetAnalysisHistory(Path, History) then begin
           if History.Success then begin
             if History.IssuesFound = 0 then begin
               UpdateFileStatus(cfsNoIssues);
@@ -587,7 +587,7 @@ begin
   Canvas := ListBox.Canvas;
   Canvas.FillRect(Rect);
 
-  Rule := LintContext.GetRule(Issue.RuleKey);
+  Rule := Analyzer.GetRule(Issue.RuleKey);
   if Assigned(Rule) then begin
     IssueType := Rule.RuleType;
     IssueSeverity := Rule.Severity;
@@ -687,7 +687,7 @@ end;
 procedure TLintToolFrame.RefreshIssueView;
 begin
   if FCurrentPath <> '' then begin
-    FIssues := LintContext.GetIssues(FCurrentPath);
+    FIssues := Analyzer.GetIssues(FCurrentPath);
   end;
 
   RepaintIssueView;
@@ -729,7 +729,7 @@ begin
 
   if SelectedIndex <> -1 then begin
     SelectedIssue := TLiveIssue(IssueListBox.Items.Objects[SelectedIndex]);
-    Rule := LintContext.GetRule(SelectedIssue.RuleKey);
+    Rule := Analyzer.GetRule(SelectedIssue.RuleKey);
     RulePanel.Visible := True;
     SplitPanel.Visible := True;
     if Assigned(Rule) then begin
