@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E13F5E64-5BEF-4919-9E81-0DFCBA69E1B4}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="source\DelphiLintClient.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="test\DelphiLintClientTest.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="DelphiLintClient">
+        <MSBuild Projects="source\DelphiLintClient.dproj"/>
+    </Target>
+    <Target Name="DelphiLintClient:Clean">
+        <MSBuild Projects="source\DelphiLintClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DelphiLintClient:Make">
+        <MSBuild Projects="source\DelphiLintClient.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DelphiLintClientTest">
+        <MSBuild Projects="test\DelphiLintClientTest.dproj"/>
+    </Target>
+    <Target Name="DelphiLintClientTest:Clean">
+        <MSBuild Projects="test\DelphiLintClientTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DelphiLintClientTest:Make">
+        <MSBuild Projects="test\DelphiLintClientTest.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="DelphiLintClient;DelphiLintClientTest"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="DelphiLintClient:Clean;DelphiLintClientTest:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="DelphiLintClient:Make;DelphiLintClientTest:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
