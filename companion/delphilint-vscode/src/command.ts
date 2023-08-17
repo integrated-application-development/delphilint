@@ -155,7 +155,7 @@ async function analyzeFiles(
     statusItem.setAction("Analyzing...");
     await doAnalyze(server, issueCollection, statusItem.setAction, {
       baseDir: baseDir,
-      inputFiles: projectFile ? [...files, projectFile] : files,
+      inputFiles: projectFile ? [...inputFiles, projectFile] : inputFiles,
       projectKey: projectKey,
       projectPropertiesPath: projectPropertiesPath,
       sonarHostUrl: sonarHostUrl,
