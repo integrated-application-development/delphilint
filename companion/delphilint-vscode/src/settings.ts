@@ -67,7 +67,8 @@ export function getServerJar(): string {
       .map((file) => file.toLowerCase())
       .filter(
         (file) => file.startsWith(serverNameStart) && file.endsWith(".jar")
-      );
+      )
+      .map((file) => path.join(SETTINGS_DIR, file));
 
     if (validServers.length === 1) {
       return validServers[0];

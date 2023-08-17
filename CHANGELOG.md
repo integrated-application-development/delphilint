@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * VS Code companion: Non-Delphi source files are now correctly excluded from "Analyze All Open Files" analyses
+* VS Code companion: Development versions of the DelphiLint server are now correctly retrieved
 
 ## [0.5.0] - 2023-08-15
 
