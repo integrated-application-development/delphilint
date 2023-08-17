@@ -107,9 +107,8 @@ uses
     System.SysUtils
   , Vcl.ComCtrls
   , Winapi.Windows
-  , ToolsAPI
   , DelphiLint.Context
-  , DelphiLint.ToolsApiBase
+  , DelphiLint.IDEBaseTypes
   , DelphiLint.Utils
   , DelphiLint.SetupForm
   , DelphiLint.Version
@@ -153,7 +152,7 @@ end;
 
 procedure TLintPlugin.ActionOpenSettingsExecute(Sender: TObject);
 begin
-  (BorlandIDEServices as IOTAServices).GetEnvironmentOptions.EditOptions('', 'DelphiLint');
+  LintContext.IDEServices.EditOptions('', 'DelphiLint');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -176,8 +175,8 @@ end;
 procedure TLintPlugin.ShowToolWindow;
 begin
   if not Assigned(FToolForm) then begin
-    FToolForm := (BorlandIDEServices as INTAServices).CreateDockableForm(FToolFormInfo);
-    (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(FToolForm);
+    FToolForm := LintContext.IDEServices.CreateDockableForm(FToolFormInfo);
+    LintContext.IDEServices.ApplyTheme(FToolForm);
   end;
 
   FToolForm.Show;
@@ -219,10 +218,10 @@ begin
         FEditor := nil;
       end;
     end);
-  FEditorNotifier := (BorlandIDEServices as IOTAEditorServices).AddNotifier(FEditor);
+  FEditorNotifier := LintContext.IDEServices.AddEditorNotifier(FEditor);
 
   // Main menu
-  FActionListIndex := (BorlandIDEServices as INTAIDEInsightService).AddActionList(LintActions);
+  FActionListIndex := LintContext.IDEServices.AddActionListToIDEInsight(LintActions);
   CreateMainMenu;
 
   // Analysis callbacks
@@ -235,17 +234,17 @@ begin
 
   // Initialise tool form
   FToolFormInfo := TLintToolFormInfo.Create;
-  (BorlandIDEServices as INTAServices).RegisterDockableForm(FToolFormInfo);
+  LintContext.IDEServices.RegisterDockableForm(FToolFormInfo);
 
   // Settings form
   FAddInOptions := TLintAddInOptions.Create;
-  (BorlandIDEServices as INTAEnvironmentOptionsServices).RegisterAddInOptions(FAddInOptions);
+  LintContext.IDEServices.RegisterAddInOptions(FAddInOptions);
 
   // Project options form
-  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintOptionsForm);
+  LintContext.IDEServices.RegisterFormClass(TLintOptionsForm);
 
   // Setup form
-  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(TLintSetupForm);
+  LintContext.IDEServices.RegisterFormClass(TLintSetupForm);
   FEnabled := TLintSetupForm.TryFixSetup(False);
 
   RefreshAnalysisActions;
@@ -275,13 +274,13 @@ begin
     Analyzer.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
   end;
 
-  (BorlandIDEServices as INTAIDEInsightService).RemoveActionList(FActionListIndex);
+  LintContext.IDEServices.RemoveActionListFromIDEInsight(FActionListIndex);
   RemoveToolbarActions;
   DestroyMainMenu;
-  (BorlandIDEServices as IOTAEditorServices).RemoveNotifier(FEditorNotifier);
-  (BorlandIDEServices as INTAServices).UnregisterDockableForm(FToolFormInfo);
-  (BorlandIDEServices as IOTAAboutBoxServices).RemovePluginInfo(FInfoIndex);
-  (BorlandIDEServices as INTAEnvironmentOptionsServices).UnregisterAddInOptions(FAddInOptions);
+  LintContext.IDEServices.RemoveEditorNotifier(FEditorNotifier);
+  LintContext.IDEServices.UnregisterDockableForm(FToolFormInfo);
+  LintContext.IDEServices.RemovePluginInfo(FInfoIndex);
+  LintContext.IDEServices.UnregisterAddInOptions(FAddInOptions);
 
   FreeAndNil(FOptionsForm);
   inherited;
@@ -290,8 +289,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintPlugin.CreateMainMenu;
-var
-  NTAServices: INTAServices;
 
   procedure AddItem(Action: TAction);
   var
@@ -300,7 +297,7 @@ var
     MenuItem := TMenuItem.Create(FMainMenu);
     MenuItem.Action := Action;
     FMainMenu.Add(MenuItem);
-    NTAServices.AddActionMenu('', Action, nil);
+    LintContext.IDEServices.AddAction(Action);
   end;
 
   procedure AddSeparator;
@@ -313,10 +310,9 @@ var
   end;
 
 begin
-  NTAServices := (BorlandIDEServices as INTAServices);
-  NTAServices.AddImages(LintImages);
+  LintContext.IDEServices.AddImages(LintImages);
 
-  FMainMenu := TMenuItem.Create(NTAServices.MainMenu);
+  FMainMenu := TMenuItem.Create(LintContext.IDEServices.GetMainMenu);
   FMainMenu.Caption := 'Delphi&Lint';
 
   AddItem(ActionShowToolWindow);
@@ -328,7 +324,7 @@ begin
   AddItem(ActionOpenSettings);
   AddItem(ActionRestartServer);
 
-  NTAServices.AddActionMenu('ToolsMenu', nil, FMainMenu);
+  LintContext.IDEServices.AddMenu('ToolsMenu', FMainMenu);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -346,18 +342,18 @@ var
 begin
   VersionStr := DelphiLintVersion;
 
-  SplashScreenServices.AddPluginBitmap(
+  LintContext.IDEServices.AddPluginBitmap(
     'DelphiLint',
-    LintResources.DelphiLintSplash.Handle,
+    LintResources.DelphiLintSplash,
     False,
     'Code analyzer powered by SonarDelphi',
     VersionStr);
 
-  FInfoIndex := (BorlandIDEServices as IOTAAboutBoxServices).AddPluginInfo(
+  FInfoIndex := LintContext.IDEServices.AddPluginInfo(
     'DelphiLint ' + VersionStr,
     'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
     + #13#10#13#10'Copyright © 2023 Integrated Application Development',
-    LintResources.DelphiLintIcon.Handle);
+    LintResources.DelphiLintIcon);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -428,23 +424,20 @@ procedure TLintPlugin.RemoveToolbarActions;
 
 const
   CToolBars: array of string = [
-    sCustomToolBar, sStandardToolBar, sDebugToolBar, sViewToolBar, sDesktopToolBar,
-    sAlignToolbar, sBrowserToolbar, sHTMLDesignToolbar, sHTMLFormatToolbar, sHTMLTableToolbar, sPersonalityToolBar,
-    sPositionToolbar, sSpacingToolbar, sIDEInsightToolbar, sPlatformDeviceToolbar
+    'CustomToolBar', 'StandardToolBar', 'DebugToolBar', 'ViewToolBar', 'DesktopToolBar',
+    'AlignToolbar', 'BrowserToolbar', 'HTMLDesignToolbar', 'HTMLFormatToolbar', 'HTMLTableToolbar', 'PersonalityToolBar',
+    'PositionToolbar', 'SpacingToolbar', 'IDEInsightToolbar', 'PlatformDeviceToolbar'
   ];
 var
-  NTAServices: INTAServices;
   ToolBar: string;
 begin
-  NTAServices := (BorlandIDEServices as INTAServices);
-
   for ToolBar in CToolBars do begin
-    RemoveAction(ActionAnalyzeActiveFile, NTAServices.ToolBar[ToolBar]);
-    RemoveAction(ActionAnalyzeOpenFiles, NTAServices.ToolBar[ToolBar]);
-    RemoveAction(ActionShowToolWindow, NTAServices.ToolBar[ToolBar]);
-    RemoveAction(ActionOpenProjectOptions, NTAServices.ToolBar[ToolBar]);
-    RemoveAction(ActionOpenSettings, NTAServices.ToolBar[ToolBar]);
-    RemoveAction(ActionRestartServer, NTAServices.ToolBar[ToolBar]);
+    RemoveAction(ActionAnalyzeActiveFile, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionAnalyzeOpenFiles, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionShowToolWindow, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionOpenProjectOptions, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionOpenSettings, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionRestartServer, LintContext.IDEServices.GetToolBar(ToolBar));
   end;
 end;
 

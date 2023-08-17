@@ -93,8 +93,8 @@ uses
   , Vcl.Graphics
   , Winapi.ShellAPI
   , Winapi.Windows
-  , ToolsAPI
   , DelphiLint.Utils
+  , DelphiLint.Context
   ;
 
 //______________________________________________________________________________________________________________________
@@ -194,7 +194,7 @@ procedure TLintOptionsForm.RefreshTheme;
 var
   WindowColor: TColor;
 begin
-  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(Self);
+  LintContext.IDEServices.ApplyTheme(Self);
   WindowColor := StyleServices(Self).GetSystemColor(clWindow);
   ContentPanel.Color := WindowColor;
 end;

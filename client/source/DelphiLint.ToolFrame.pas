@@ -31,9 +31,8 @@ uses
   , Vcl.OleCtrls
   , Winapi.Windows
   , SHDocVw
-  , DockForm
   , DelphiLint.Data
-  , DelphiLint.ToolsApiBase
+  , DelphiLint.IDEBaseTypes
   ;
 
 type
@@ -187,7 +186,6 @@ uses
   , Vcl.Imaging.pngimage
   , Winapi.ShellAPI
   , Winapi.Messages
-  , ToolsAPI
   , DelphiLint.Utils
   , DelphiLint.Plugin
   , DelphiLint.Resources
@@ -198,7 +196,7 @@ uses
 
 constructor TLintToolFrame.Create(Owner: TComponent);
 var
-  Editor: IOTASourceEditor;
+  Editor: IIDESourceEditor;
 begin
   inherited Create(Owner);
   FResizing := False;
@@ -642,8 +640,7 @@ procedure TLintToolFrame.OnIssueDoubleClicked(Sender: TObject);
 var
   SelectedIndex: Integer;
   SelectedIssue: TLiveIssue;
-  Editor: IOTASourceEditor;
-  Buffer: IOTAEditBuffer;
+  Editor: IIDESourceEditor;
 begin
   SelectedIndex := IssueListBox.ItemIndex;
 
@@ -660,10 +657,8 @@ begin
   end;
 
   if TryGetCurrentSourceEditor(Editor) and (Editor.EditViewCount <> 0) then begin
-    Buffer := Editor.EditViews[0].Buffer;
-    Buffer.EditPosition.GotoLine(SelectedIssue.StartLine);
-    Buffer.EditPosition.Move(0, SelectedIssue.StartLineOffset);
-    Buffer.TopView.Paint;
+    Editor.EditViews[0].GoToPosition(SelectedIssue.StartLine, SelectedIssue.StartLineOffset);
+    Editor.EditViews[0].Paint;
   end;
 end;
 
@@ -793,15 +788,13 @@ var
   BgColor: string;
   CodeBgColor: string;
   LinkColor: string;
-  Theme: TCustomStyleServices;
   HtmlStr: string;
   FileName: string;
 begin
-  Theme := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices;
-  TextColor := ColorToHex(Theme.GetSystemColor(clBtnText));
-  BgColor := ColorToHex(Theme.GetSystemColor(clWindow));
-  CodeBgColor := ColorToHex(Theme.GetSystemColor(clBtnFace));
-  LinkColor := ColorToHex(Theme.GetSystemColor(clHotLight));
+  TextColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnText));
+  BgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clWindow));
+  CodeBgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnFace));
+  LinkColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clHotLight));
 
   HtmlStr := Format(
     '<!DOCTYPE html>' +
@@ -945,7 +938,7 @@ end;
 
 procedure TLintToolFormInfo.FrameCreated(AFrame: TCustomFrame);
 begin
-  (BorlandIDEServices as IOTAIDEThemingServices).ApplyTheme(AFrame);
+  LintContext.IDEServices.ApplyTheme(AFrame);
 end;
 
 //______________________________________________________________________________________________________________________

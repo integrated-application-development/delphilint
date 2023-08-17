@@ -23,7 +23,7 @@ uses
   , Vcl.Controls
   , Vcl.Forms
   , Vcl.StdCtrls
-  , DelphiLint.ToolsApiBase
+  , DelphiLint.IDEBaseTypes
   ;
 
 type

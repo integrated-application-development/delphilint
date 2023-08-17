@@ -106,7 +106,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
         <DCCReference Include="DelphiLint.Logger.pas"/>
-        <DCCReference Include="DelphiLint.ToolsApiBase.pas"/>
+        <DCCReference Include="DelphiLint.IDEBaseTypes.pas"/>
         <DCCReference Include="DelphiLint.Events.pas"/>
         <DCCReference Include="DelphiLint.Settings.pas"/>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
@@ -140,7 +140,6 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Resources.pas"/>
         <DCCReference Include="DelphiLint.Context.pas"/>
         <DCCReference Include="DelphiLint.IDEContext.pas"/>
-        <DCCReference Include="DelphiLint.ContextTypes.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>

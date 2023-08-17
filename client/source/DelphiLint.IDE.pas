@@ -26,7 +26,7 @@ uses
   , System.Generics.Collections
   , DockForm
   , DelphiLint.Events
-  , DelphiLint.ToolsApiBase
+  , DelphiLint.IDEBaseTypes
   ;
 
 type
@@ -337,7 +337,7 @@ var
   Tracker: TEditorLineTracker;
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
-  SourceEditor: IOTASourceEditor;
+  SourceEditor: IIDESourceEditor;
 begin
   for Tracker in FTrackers do begin
     Tracker.ClearTracking;
@@ -417,7 +417,7 @@ procedure TLintView.PaintLine(const View: IOTAEditView; LineNumber: Integer; con
     BgColor: TColor;
     Color: LongInt;
   begin
-    BgColor := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetStyleColor(scGenericBackground);
+    BgColor := LintContext.IDEServices.GetStyleColor(scGenericBackground);
     Color := ColorToRGB(BgColor);
 
     Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);

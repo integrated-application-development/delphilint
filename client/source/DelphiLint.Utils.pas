@@ -19,9 +19,9 @@ unit DelphiLint.Utils;
 interface
 
 uses
-    ToolsAPI
-  , System.SysUtils
+    System.SysUtils
   , System.TimeSpan
+  , DelphiLint.Context
   ;
 
 // Project utils
@@ -32,14 +32,14 @@ function IsPasFile(const Path: string): Boolean;
 function IsMainFile(const Path: string): Boolean;
 function IsDelphiSource(const Path: string): Boolean;
 function IsProjectFile(const Path: string): Boolean;
-function GetOpenSourceModules: TArray<IOTAModule>;
+function GetOpenSourceModules: TArray<IIDEModule>;
 function TryGetProjectFile(out ProjectFile: string): Boolean;
 function IsFileInProjectDirectory(const Path: string): Boolean;
 function IsFileInProject(const Path: string): Boolean;
 function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = True): Boolean; overload;
 
 // ToolsAPI utils
-function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
+function TryGetCurrentSourceEditor(out Editor: IIDESourceEditor): Boolean;
 function GetDelphiVersion: string;
 
 // General utils
@@ -82,20 +82,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TryGetCurrentSourceEditor(out Editor: IOTASourceEditor): Boolean;
+function TryGetCurrentSourceEditor(out Editor: IIDESourceEditor): Boolean;
 var
-  Module: IOTAModule;
-  I: Integer;
+  Module: IIDEModule;
 begin
   Result := False;
-  Module := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
+  Module := LintContext.IDEServices.GetCurrentModule;
   if Assigned(Module) then begin
-    for I := 0 to Module.ModuleFileCount - 1 do begin
-      if Module.ModuleFileEditors[I].QueryInterface(IOTASourceEditor, Editor) = S_OK then begin
-        Result := True;
-        Break;
-      end;
-    end;
+    Editor := Module.GetSourceEditor;
+    Result := Assigned(Editor);
   end;
 end;
 
@@ -105,7 +100,7 @@ function GetDelphiVersion: string;
 var
   ProductVersion: string;
 begin
-  ProductVersion := (BorlandIDEServices as IOTAServices).ExpandRootMacro('$(ProductVersion)');
+  ProductVersion := LintContext.IDEServices.ExpandRootMacro('$(ProductVersion)');
 
   if ProductVersion = '21.0' then begin
     Result := 'VER340';
@@ -126,19 +121,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function GetOpenSourceModules: TArray<IOTAModule>;
+function GetOpenSourceModules: TArray<IIDEModule>;
 var
   Index: Integer;
-  Module: IOTAModule;
-  ModuleServices: IOTAModuleServices;
-  Files: TList<IOTAModule>;
+  Module: IIDEModule;
+  Files: TList<IIDEModule>;
 begin
-  ModuleServices := (BorlandIDEServices as IOTAModuleServices);
-
-  Files := TList<IOTAModule>.Create;
+  Files := TList<IIDEModule>.Create;
   try
-    for Index := 0 to ModuleServices.ModuleCount - 1 do begin
-      Module := ModuleServices.Modules[Index];
+    for Index := 0 to LintContext.IDEServices.GetModuleCount - 1 do begin
+      Module := LintContext.IDEServices.GetModule(Index);
 
       if IsPasFile(Module.FileName) then begin
         Files.Add(Module);
@@ -206,11 +198,11 @@ end;
 
 function GetAllFiles: TArray<string>;
 var
-  Project: IOTAProject;
+  Project: IIDEProject;
   FileList: TStringList;
   I: Integer;
 begin
-  Project := (BorlandIDEServices as IOTAModuleServices).GetActiveProject;
+  Project := LintContext.IDEServices.GetActiveProject;
 
   if not Assigned(Project) then begin
     Exit;

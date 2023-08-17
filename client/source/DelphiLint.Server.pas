@@ -177,7 +177,6 @@ implementation
 
 uses
     IdGlobal
-  , ToolsAPI
   , Winapi.Windows
   , DelphiLint.Settings
   , IdStack
@@ -410,7 +409,7 @@ begin
     end;
 
     InitializeMsg := TLintMessage.Initialize(
-      (BorlandIDEServices as IOTAServices).GetRootDirectory,
+      LintContext.IDEServices.GetRootDirectory,
       GetDelphiVersion,
       LintSettings.SonarDelphiJar,
       DownloadUrl,

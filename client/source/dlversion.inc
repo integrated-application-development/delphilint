@@ -3,4 +3,4 @@ const
   C_DlMinorVersion: Integer = {MINOR}5{/MINOR};
   C_DlPatchVersion: Integer = {PATCH}0{/PATCH};
   C_DlIsDevVersion: Boolean = {DEV}True{/DEV};
-  C_DlCommit: string = {COMMIT}'unversioned'{/COMMIT};
+  C_DlCommit: string = 'unversioned';

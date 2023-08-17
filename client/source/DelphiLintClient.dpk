@@ -43,7 +43,7 @@ contains
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
-  DelphiLint.ToolsApiBase in 'DelphiLint.ToolsApiBase.pas',
+  DelphiLint.IDEBaseTypes in 'DelphiLint.IDEBaseTypes.pas',
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
@@ -58,7 +58,6 @@ contains
   DelphiLint.Version in 'DelphiLint.Version.pas',
   DelphiLint.Resources in 'DelphiLint.Resources.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
-  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
-  DelphiLint.ContextTypes in 'DelphiLint.ContextTypes.pas';
+  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas';
 
 end.

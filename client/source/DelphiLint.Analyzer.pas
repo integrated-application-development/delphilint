@@ -24,11 +24,11 @@ uses
   , System.Generics.Collections
   , DelphiLint.Events
   , System.SyncObjs
-  , DelphiLint.ContextTypes
+  , DelphiLint.Context
   ;
 
 type
-  TAnalyzerImpl = class(TAnalyzer)
+  TAnalyzerImpl = class(TInterfacedObject, IAnalyzer)
   private
     FServer: TLintServer;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -63,28 +63,28 @@ type
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 
   protected
-    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>; override;
-    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>; override;
-    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>; override;
-    function GetCurrentAnalysis: TCurrentAnalysis; override;
-    function GetInAnalysis: Boolean; override;
+    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
+    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
+    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    function GetCurrentAnalysis: TCurrentAnalysis;
+    function GetInAnalysis: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
 
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>; overload; override;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
 
-    procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer); override;
+    procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
-    procedure AnalyzeActiveFile; override;
-    procedure AnalyzeOpenFiles; override;
+    procedure AnalyzeActiveFile;
+    procedure AnalyzeOpenFiles;
 
-    procedure RestartServer; override;
+    procedure RestartServer;
 
-    function GetAnalysisStatus(Path: string): TFileAnalysisStatus; override;
-    function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean; override;
+    function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
+    function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 
-    function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule; override;
+    function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
   end;
 
 implementation
@@ -97,11 +97,9 @@ uses
   , System.Generics.Defaults
   , System.Hash
   , Vcl.Dialogs
-  , ToolsAPI
   , DelphiLint.ProjectOptions
   , DelphiLint.Utils
   , DelphiLint.Settings
-  , DelphiLint.Context
   ;
 
 //______________________________________________________________________________________________________________________
@@ -109,7 +107,7 @@ uses
 procedure TAnalyzerImpl.AnalyzeActiveFile;
 var
   ProjectFile: string;
-  SourceEditor: IOTASourceEditor;
+  SourceEditor: IIDESourceEditor;
 begin
   if not TryGetProjectFile(ProjectFile) then begin
     TaskMessageDlg(
@@ -129,7 +127,7 @@ begin
   end
   else begin
     if LintSettings.ClientSaveBeforeAnalysis then begin
-      SourceEditor.Module.Save(False, True);
+      SourceEditor.Module.Save(True);
     end;
     AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
     Exit;
@@ -141,9 +139,9 @@ end;
 procedure TAnalyzerImpl.AnalyzeOpenFiles;
 var
   ProjectFile: string;
-  Modules: TArray<IOTAModule>;
+  Modules: TArray<IIDEModule>;
   Files: TArray<string>;
-  Module: IOTAModule;
+  Module: IIDEModule;
 begin
   if TryGetProjectFile(ProjectFile) then begin
     Modules := DelphiLint.Utils.GetOpenSourceModules;
@@ -151,7 +149,7 @@ begin
     if LintSettings.ClientSaveBeforeAnalysis then begin
       for Module in Modules do begin
         try
-          Module.Save(False, True);
+          Module.Save(True);
         except
           on E: Exception do begin
             Log.Info('Module %s could not be saved', [Module.FileName]);
@@ -160,9 +158,9 @@ begin
       end;
     end;
 
-    Files := TArrayUtils.Map<IOTAModule, string>(
+    Files := TArrayUtils.Map<IIDEModule, string>(
       Modules,
-      function(Module: IOTAModule): string
+      function(Module: IIDEModule): string
       begin
         Result := Module.FileName;
       end);
@@ -239,7 +237,7 @@ var
   Server: TLintServer;
   IncludedFiles: TArray<string>;
 begin
-  if InAnalysis then begin
+  if GetInAnalysis then begin
     Log.Info('Analysis requested, but we are currently in analysis - ignoring');
     Exit;
   end;
@@ -469,7 +467,7 @@ begin
     FServerLock.Release;
   end;
 
-  if InAnalysis then begin
+  if GetInAnalysis then begin
     OnAnalyzeError('Analysis failed as the server was terminated');
   end;
 
@@ -805,7 +803,7 @@ begin
     FreeAndNil(FServerTerminateEvent);
   end;
 
-  if InAnalysis then begin
+  if GetInAnalysis then begin
     OnAnalyzeError('Analysis failed because the server was restarted');
   end;
 

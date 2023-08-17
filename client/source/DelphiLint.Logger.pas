@@ -20,11 +20,11 @@ interface
 
 uses
     System.SyncObjs
-  , DelphiLint.ContextTypes
+  , DelphiLint.Context
   ;
 
 type
-  TFileLogger = class(TLogger)
+  TFileLogger = class(TInterfacedObject, ILogger)
   private
     FLogPath: string;
     FLock: TMutex;
@@ -36,8 +36,8 @@ type
     constructor Create(LogPath: string);
     destructor Destroy; override;
 
-    procedure Info(const Msg: string); overload; override;
-    procedure Info(const Msg: string; const Args: array of const); overload; override;
+    procedure Info(const Msg: string); overload;
+    procedure Info(const Msg: string; const Args: array of const); overload;
     procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
   end;
 
