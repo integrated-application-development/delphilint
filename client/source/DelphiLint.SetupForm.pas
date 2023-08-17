@@ -80,7 +80,6 @@ uses
   , Vcl.Graphics
   , Vcl.Themes
   , DelphiLint.Settings
-  , DelphiLint.Plugin
   , DelphiLint.Context
   ;
 
@@ -113,7 +112,12 @@ begin
   end;
 
   if SetPluginEnabled then begin
-    Plugin.PluginEnabled := Result;
+    if Result then begin
+      LintContext.Plugin.EnablePlugin;
+    end
+    else begin
+      LintContext.Plugin.DisablePlugin;
+    end;
   end;
 end;
 
@@ -148,7 +152,7 @@ begin
   LintSettings.Save;
 
   FSaved := True;
-  Plugin.PluginEnabled := True;
+  LintContext.Plugin.EnablePlugin;
   Close;
 end;
 

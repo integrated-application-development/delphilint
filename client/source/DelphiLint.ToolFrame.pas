@@ -181,13 +181,11 @@ uses
   , System.IOUtils
   , System.NetEncoding
   , System.Win.ComObj
-  , Vcl.Themes
   , Vcl.Graphics
   , Vcl.Imaging.pngimage
   , Winapi.ShellAPI
   , Winapi.Messages
   , DelphiLint.Utils
-  , DelphiLint.Plugin
   , DelphiLint.Resources
   , DelphiLint.Context
   ;
@@ -230,7 +228,7 @@ begin
     UpdateAnalysisStatus('Idle');
   end;
 
-  Plugin.RegisterToolFrame(Self);
+  LintContext.Plugin.OnActiveFileChanged.AddListener(ChangeActiveFile);
 end;
 
 //______________________________________________________________________________________________________________________

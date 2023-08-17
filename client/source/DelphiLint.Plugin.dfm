@@ -1,4 +1,4 @@
-object LintPlugin: TLintPlugin
+object PluginCore: TPluginCore
   Height = 480
   Width = 640
   object LintImages: TImageList

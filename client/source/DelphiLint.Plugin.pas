@@ -31,10 +31,12 @@ uses
   , DelphiLint.ToolFrame
   , DelphiLint.SettingsFrame
   , DelphiLint.OptionsForm
+  , DelphiLint.Context
+  , DelphiLint.Events
   ;
 
 type
-  TLintPlugin = class(TDataModule)
+  TPluginCore = class(TDataModule)
     LintImages: TImageList;
     LintActions: TActionList;
     ActionAnalyzeActiveFile: TAction;
@@ -66,9 +68,7 @@ type
     procedure ShowToolWindow;
 
     procedure CreateMainMenu;
-    procedure DestroyMainMenu;
-
-    procedure InitPluginInfo;
+    procedure InitPluginInfo(IDEServices: IIDEServices);
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisEnded(const Paths: TArray<string>);
@@ -81,21 +81,31 @@ type
 
     procedure RemoveToolbarActions;
   public
-    constructor Create(Owner: TComponent); override;
-    destructor Destroy; override;
+    constructor Create(Owner: TComponent); overload; override;
+    constructor Create(Owner: TComponent; IDEServices: IIDEServices); reintroduce; overload;
 
-    procedure RegisterToolFrame(Frame: TLintToolFrame);
     procedure OnRegister;
+    procedure OnDeregister(IDEServices: IIDEServices);
 
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
     property PluginEnabled: Boolean read FEnabled write SetPluginEnabled;
+    property Editor: TLintEditor read FEditor;
   end;
 
-procedure Register;
+  TIDEPlugin = class(TInterfacedObject, IPlugin)
+  private
+    FCore: TPluginCore;
+  public
+    procedure EnablePlugin;
+    procedure DisablePlugin;
+    function GetPluginEnabled: Boolean;
+    function GetOnActiveFileChanged: TEventNotifier<string>;
+    procedure Init;
+    procedure Deinit(IDEServices: IIDEServices);
 
-function Plugin: TLintPlugin;
-var
-  GPlugin: TLintPlugin;
+    constructor Create(IDEServices: IIDEServices);
+    destructor Destroy; override;
+  end;
 
 implementation
 
@@ -107,7 +117,6 @@ uses
     System.SysUtils
   , Vcl.ComCtrls
   , Winapi.Windows
-  , DelphiLint.Context
   , DelphiLint.IDEBaseTypes
   , DelphiLint.Utils
   , DelphiLint.SetupForm
@@ -118,7 +127,7 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionAnalyzeActiveFileExecute(Sender: TObject);
+procedure TPluginCore.ActionAnalyzeActiveFileExecute(Sender: TObject);
 begin
   if LintSettings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
@@ -128,7 +137,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionAnalyzeOpenFilesExecute(Sender: TObject);
+procedure TPluginCore.ActionAnalyzeOpenFilesExecute(Sender: TObject);
 begin
   if LintSettings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
@@ -138,7 +147,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionOpenProjectOptionsExecute(Sender: TObject);
+procedure TPluginCore.ActionOpenProjectOptionsExecute(Sender: TObject);
 begin
   if not Assigned(FOptionsForm) then begin
     FOptionsForm := TLintOptionsForm.Create(nil);
@@ -150,21 +159,21 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionOpenSettingsExecute(Sender: TObject);
+procedure TPluginCore.ActionOpenSettingsExecute(Sender: TObject);
 begin
   LintContext.IDEServices.EditOptions('', 'DelphiLint');
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionRestartServerExecute(Sender: TObject);
+procedure TPluginCore.ActionRestartServerExecute(Sender: TObject);
 begin
   Analyzer.RestartServer;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ActionShowToolWindowExecute(Sender: TObject);
+procedure TPluginCore.ActionShowToolWindowExecute(Sender: TObject);
 begin
   ShowToolWindow;
   FToolForm.SetFocus;
@@ -172,7 +181,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.ShowToolWindow;
+procedure TPluginCore.ShowToolWindow;
 begin
   if not Assigned(FToolForm) then begin
     FToolForm := LintContext.IDEServices.CreateDockableForm(FToolFormInfo);
@@ -184,31 +193,27 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function Plugin: TLintPlugin;
-begin
-  Result := GPlugin;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure Register;
-begin
-  GPlugin.OnRegister;
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLintPlugin.Create(Owner: TComponent);
+constructor TPluginCore.Create(Owner: TComponent);
 begin
   inherited Create(Owner);
 
   // Set plugin info
-  InitPluginInfo;
+  InitPluginInfo(LintContext.IDEServices);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.OnRegister;
+constructor TPluginCore.Create(Owner: TComponent; IDEServices: IIDEServices);
+begin
+  inherited Create(Owner);
+
+  // Set plugin info
+  InitPluginInfo(IDEServices);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TPluginCore.OnRegister;
 begin
   // Editor notifier
   FEditor := TLintEditor.Create;
@@ -219,6 +224,7 @@ begin
       end;
     end);
   FEditorNotifier := LintContext.IDEServices.AddEditorNotifier(FEditor);
+  FEditor.OnActiveFileChanged.AddListener(OnActiveFileChanged);
 
   // Main menu
   FActionListIndex := LintContext.IDEServices.AddActionListToIDEInsight(LintActions);
@@ -252,43 +258,35 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.OnAnalysisStarted(const Paths: TArray<string>);
+procedure TPluginCore.OnDeregister(IDEServices: IIDEServices);
 begin
-  RefreshAnalysisActions;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintPlugin.OnAnalysisEnded(const Paths: TArray<string>);
-begin
-  RefreshAnalysisActions;
-end;
-
-//______________________________________________________________________________________________________________________
-
-destructor TLintPlugin.Destroy;
-begin
-  if ContextValid then begin
-    Analyzer.OnAnalysisStarted.RemoveListener(OnAnalysisStarted);
-    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisEnded);
-    Analyzer.OnAnalysisFailed.RemoveListener(OnAnalysisEnded);
-  end;
-
   LintContext.IDEServices.RemoveActionListFromIDEInsight(FActionListIndex);
   RemoveToolbarActions;
-  DestroyMainMenu;
+  FreeAndNil(FMainMenu);
   LintContext.IDEServices.RemoveEditorNotifier(FEditorNotifier);
   LintContext.IDEServices.UnregisterDockableForm(FToolFormInfo);
   LintContext.IDEServices.RemovePluginInfo(FInfoIndex);
   LintContext.IDEServices.UnregisterAddInOptions(FAddInOptions);
-
   FreeAndNil(FOptionsForm);
-  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.CreateMainMenu;
+procedure TPluginCore.OnAnalysisStarted(const Paths: TArray<string>);
+begin
+  RefreshAnalysisActions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TPluginCore.OnAnalysisEnded(const Paths: TArray<string>);
+begin
+  RefreshAnalysisActions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TPluginCore.CreateMainMenu;
 
   procedure AddItem(Action: TAction);
   var
@@ -329,27 +327,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.DestroyMainMenu;
-begin
-  FreeAndNil(FMainMenu);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintPlugin.InitPluginInfo;
+procedure TPluginCore.InitPluginInfo(IDEServices: IIDEServices);
 var
   VersionStr: string;
 begin
   VersionStr := DelphiLintVersion;
 
-  LintContext.IDEServices.AddPluginBitmap(
+  IDEServices.AddPluginBitmap(
     'DelphiLint',
     LintResources.DelphiLintSplash,
     False,
     'Code analyzer powered by SonarDelphi',
     VersionStr);
 
-  FInfoIndex := LintContext.IDEServices.AddPluginInfo(
+  IDEServices.AddPluginInfo(
     'DelphiLint ' + VersionStr,
     'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
     + #13#10#13#10'Copyright © 2023 Integrated Application Development',
@@ -358,7 +349,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.SetAnalysisActionsEnabled(Value: Boolean);
+procedure TPluginCore.SetAnalysisActionsEnabled(Value: Boolean);
 begin
   FAnalysisActionsEnabled := Value;
   RefreshAnalysisActions;
@@ -366,7 +357,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.SetPluginEnabled(Value: Boolean);
+procedure TPluginCore.SetPluginEnabled(Value: Boolean);
 begin
   FEnabled := Value;
   RefreshAnalysisActions;
@@ -374,7 +365,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.RefreshAnalysisActions;
+procedure TPluginCore.RefreshAnalysisActions;
 var
   Index: Integer;
 begin
@@ -397,15 +388,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.RegisterToolFrame(Frame: TLintToolFrame);
-begin
-  FEditor.OnActiveFileChanged.AddListener(Frame.ChangeActiveFile);
-  FEditor.OnActiveFileChanged.AddListener(OnActiveFileChanged);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintPlugin.RemoveToolbarActions;
+procedure TPluginCore.RemoveToolbarActions;
 
   procedure RemoveAction(Action: TAction; ToolBar: TToolBar);
   var
@@ -443,17 +426,68 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintPlugin.OnActiveFileChanged(const Path: string);
+procedure TPluginCore.OnActiveFileChanged(const Path: string);
 begin
   AnalysisActionsEnabled := IsFileInProject(Path);
 end;
 
 //______________________________________________________________________________________________________________________
 
-initialization
- GPlugin := TLintPlugin.Create(nil);
+constructor TIDEPlugin.Create(IDEServices: IIDEServices);
+begin
+  FCore := TPluginCore.Create(nil, IDEServices);
+end;
 
-finalization
-  FreeAndNil(GPlugin);
+//______________________________________________________________________________________________________________________
+
+destructor TIDEPlugin.Destroy;
+begin
+  FreeAndNil(FCore);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TIDEPlugin.EnablePlugin;
+begin
+  FCore.PluginEnabled := True;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TIDEPlugin.DisablePlugin;
+begin
+  FCore.PluginEnabled := False;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDEPlugin.GetOnActiveFileChanged: TEventNotifier<string>;
+begin
+  Result := FCore.Editor.OnActiveFileChanged;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDEPlugin.GetPluginEnabled: Boolean;
+begin
+  Result := FCore.PluginEnabled;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TIDEPlugin.Init;
+begin
+  FCore.OnRegister;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TIDEPlugin.Deinit(IDEServices: IIDEServices);
+begin
+  FCore.OnDeregister(IDEServices);
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.

@@ -3,8 +3,8 @@ object LintSetupForm: TLintSetupForm
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'DelphiLint External Resources Setup'
-  ClientHeight = 334
-  ClientWidth = 868
+  ClientHeight = 333
+  ClientWidth = 864
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,7 +18,7 @@ object LintSetupForm: TLintSetupForm
     Left = 0
     Top = 0
     Width = 345
-    Height = 334
+    Height = 333
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'LeftPanel'
@@ -59,8 +59,8 @@ object LintSetupForm: TLintSetupForm
   object RightPanel: TPanel
     Left = 345
     Top = 0
-    Width = 523
-    Height = 334
+    Width = 519
+    Height = 333
     Align = alClient
     BevelOuter = bvNone
     Caption = 'RightPanel'
@@ -70,8 +70,8 @@ object LintSetupForm: TLintSetupForm
     TabOrder = 1
     StyleElements = [seFont, seBorder]
     DesignSize = (
-      523
-      334)
+      519
+      333)
     object SonarDelphiJarLabel: TLabel
       Left = 32
       Top = 187
@@ -129,7 +129,7 @@ object LintSetupForm: TLintSetupForm
     object OkButton: TButton
       Left = 32
       Top = 283
-      Width = 461
+      Width = 453
       Height = 35
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Apply this configuration'
@@ -139,7 +139,7 @@ object LintSetupForm: TLintSetupForm
     object RefreshButton: TButton
       Left = 32
       Top = 253
-      Width = 461
+      Width = 453
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Refresh'
@@ -158,7 +158,7 @@ object LintSetupForm: TLintSetupForm
     object ServerJarIndicator: TPanel
       Left = 32
       Top = 145
-      Width = 461
+      Width = 453
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -173,7 +173,7 @@ object LintSetupForm: TLintSetupForm
     object SonarDelphiJarIndicator: TPanel
       Left = 32
       Top = 205
-      Width = 461
+      Width = 453
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -188,7 +188,7 @@ object LintSetupForm: TLintSetupForm
     object JavaExeIndicator: TPanel
       Left = 32
       Top = 54
-      Width = 461
+      Width = 453
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]

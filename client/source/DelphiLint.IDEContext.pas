@@ -12,8 +12,6 @@ uses
   , Vcl.Menus
   , Vcl.Graphics
   , Vcl.ComCtrls
-  , DelphiLint.Events
-  , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
   , DelphiLint.Context
   ;
@@ -88,11 +86,18 @@ type
     FAnalyzer: IAnalyzer;
     FLogger: ILogger;
     FIDEServices: IIDEServices;
+    FPlugin: IPlugin;
   protected
     function GetAnalyzer: IAnalyzer;
     function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
+    function GetPlugin: IPlugin;
+  public
+    constructor Create;
+    destructor Destroy; override;
   end;
+
+procedure Register;
 
 implementation
 
@@ -101,6 +106,7 @@ uses
   , System.IOUtils
   , DelphiLint.Analyzer
   , DelphiLint.Logger
+  , DelphiLint.Plugin
   , ToolsAPI
   ;
 
@@ -141,6 +147,25 @@ type
 
 //______________________________________________________________________________________________________________________
 
+constructor TIDELintContext.Create;
+begin
+  inherited;
+  FPlugin := TIDEPlugin.Create(GetIDEServices);
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TIDELintContext.Destroy;
+begin
+  FAnalyzer := nil;
+  FPlugin := nil;
+  FLogger := nil;
+  FIDEServices := nil;
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TIDELintContext.GetAnalyzer: IAnalyzer;
 begin
   if not Assigned(FAnalyzer) then begin
@@ -176,6 +201,13 @@ begin
   end;
 
   Result := FLogger;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDELintContext.GetPlugin: IPlugin;
+begin
+  Result := FPlugin;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -398,7 +430,7 @@ end;
 procedure TToolsApiEditView.GoToPosition(const Line, Column: Integer);
 begin
   FRaw.Buffer.EditPosition.GotoLine(Line);
-  FRaw.Buffer.EditPosition.Column
+  FRaw.Buffer.EditPosition.Column;
 end;
 
 procedure TToolsApiEditView.Paint;
@@ -410,6 +442,7 @@ end;
 
 constructor TToolsApiWrapper<T>.Create(Raw: T);
 begin
+  inherited Create;
   FRaw := Raw;
 end;
 
@@ -485,6 +518,11 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
+
+procedure Register;
+begin
+  LintContext.Plugin.Init;
+end;
 
 initialization
   SetLintContext(TIDELintContext.Create);

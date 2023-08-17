@@ -142,14 +142,28 @@ type
     procedure UnregisterAddInOptions(const Options: TAddInOptionsBase);
   end;
 
+  IPlugin = interface
+    procedure EnablePlugin;
+    procedure DisablePlugin;
+    function GetPluginEnabled: Boolean;
+    function GetOnActiveFileChanged: TEventNotifier<string>;
+    procedure Init;
+    procedure Deinit(IDEServices: IIDEServices);
+
+    property OnActiveFileChanged: TEventNotifier<string> read GetOnActiveFileChanged;
+    property PluginEnabled: Boolean read GetPluginEnabled;
+  end;
+
   ILintContext = interface
     function GetAnalyzer: IAnalyzer;
     function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
+    function GetPlugin: IPlugin;
 
     property Analyzer: IAnalyzer read GetAnalyzer;
     property Log: ILogger read GetLogger;
     property IDEServices: IIDEServices read GetIDEServices;
+    property Plugin: IPlugin read GetPlugin;
   end;
 
 function LintContext: ILintContext;
@@ -161,16 +175,12 @@ procedure SetLintContext(Context: ILintContext);
 
 implementation
 
-uses
-    System.SysUtils
-  ;
-
 var
   GLintContext: ILintContext;
   GFinalized: Boolean = False;
 
 type
-  TSingleUseLogger = class(TInterfacedObject, ILogger)
+  TNoOpLogger = class(TInterfacedObject, ILogger)
   public
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
@@ -201,7 +211,7 @@ begin
     Result := Context.Log;
   end
   else begin
-    Result := TSingleUseLogger.Create;
+    Result := TNoOpLogger.Create;
   end;
 end;
 
@@ -221,16 +231,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TSingleUseLogger.Info(const Msg: string; const Args: array of const);
+procedure TNoOpLogger.Info(const Msg: string; const Args: array of const);
 begin
-  Free;
+  // No-op
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TSingleUseLogger.Info(const Msg: string);
+procedure TNoOpLogger.Info(const Msg: string);
 begin
-  Free;
+  // No-op
 end;
 
 //______________________________________________________________________________________________________________________
@@ -238,6 +248,9 @@ end;
 initialization
 
 finalization
+  if Assigned(GLintContext) then begin
+    GLintContext.Plugin.Deinit(GLintContext.IDEServices);
+  end;
   GFinalized := True;
   GLintContext := nil;
 

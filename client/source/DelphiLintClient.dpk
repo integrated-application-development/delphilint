@@ -49,7 +49,7 @@ contains
   DelphiLint.Settings in 'DelphiLint.Settings.pas',
   DelphiLint.ProjectOptions in 'DelphiLint.ProjectOptions.pas',
   DelphiLint.Analyzer in 'DelphiLint.Analyzer.pas',
-  DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {LintPlugin: TDataModule},
+  DelphiLint.Plugin in 'DelphiLint.Plugin.pas' {PluginCore: TDataModule},
   DelphiLint.ToolFrame in 'DelphiLint.ToolFrame.pas' {LintToolFrame: T},
   DelphiLint.Utils in 'DelphiLint.Utils.pas',
   DelphiLint.SettingsFrame in 'DelphiLint.SettingsFrame.pas' {LintSettingsFrame: TFrame},

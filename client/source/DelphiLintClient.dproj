@@ -114,7 +114,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
         <DCCReference Include="DelphiLint.Analyzer.pas"/>
         <DCCReference Include="DelphiLint.Plugin.pas">
-            <Form>LintPlugin</Form>
+            <Form>PluginCore</Form>
             <FormType>dfm</FormType>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
