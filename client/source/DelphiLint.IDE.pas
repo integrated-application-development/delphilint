@@ -19,14 +19,16 @@ unit DelphiLint.IDE;
 interface
 
 uses
-    ToolsAPI
+    System.Classes
+  , System.Generics.Collections
   , Vcl.Graphics
   , Winapi.Windows
-  , System.Classes
-  , System.Generics.Collections
-  , DockForm
   , DelphiLint.Events
   , DelphiLint.IDEBaseTypes
+{$IFDEF TOOLSAPI}
+  , ToolsAPI
+  , DockForm
+{$ENDIF}
   ;
 
 type
@@ -59,15 +61,19 @@ type
 
   TEditorLineTracker = class(TObject)
   private
+{$IFDEF TOOLSAPI}
     FTracker: IOTAEditLineTracker;
     FNotifier: TEditorLineNotifier;
+{$ENDIF}
     FPath: string;
     FOnEditorClosed: TEventNotifier<TEditorLineTracker>;
     FOnLineChanged: TEventNotifier<TChangedLine>;
 
     procedure OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
   public
+{$IFDEF TOOLSAPI}
     constructor Create(Tracker: IOTAEditLineTracker);
+{$ENDIF}
     destructor Destroy; override;
 
     procedure TrackLine(Line: Integer);
@@ -84,20 +90,26 @@ type
   private
     FNotifiers: TList<TNotifierBase>;
     FTrackers: TObjectList<TEditorLineTracker>;
+{$IFDEF TOOLSAPI}
     FInitedViews: TList<IOTAEditView>;
+{$ENDIF}
 
     FOnActiveFileChanged: TEventNotifier<string>;
 
     procedure OnTrackedLineChanged(const ChangedLine: TChangedLine);
 
+{$IFDEF TOOLSAPI}
     procedure InitView(const View: IOTAEditView);
     function IsViewInited(const View: IOTAEditView): Boolean;
+{$ENDIF}
     procedure OnAnalysisComplete(const Paths: TArray<string>);
   public
     constructor Create;
     destructor Destroy; override;
+{$IFDEF TOOLSAPI}
     procedure ViewNotification(const View: IOTAEditView; Operation: TOperation); override;
     procedure EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView); override;
+{$ENDIF}
 
     property OnActiveFileChanged: TEventNotifier<string> read FOnActiveFileChanged;
   end;
@@ -111,10 +123,12 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+{$IFDEF TOOLSAPI}
     procedure BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean); override;
     procedure PaintLine(const View: IOTAEditView; LineNumber: Integer;
       const LineText: PAnsiChar; const TextWidth: Word; const LineAttributes: TOTAAttributeArray;
       const Canvas: TCanvas; const TextRect: TRect; const LineRect: TRect; const CellSize: TSize); override;
+{$ENDIF}
   end;
 
 //______________________________________________________________________________________________________________________
@@ -133,6 +147,7 @@ uses
 //______________________________________________________________________________________________________________________
 
 procedure TEditorLineTracker.ClearTracking;
+{$IFDEF TOOLSAPI}
 var
   Index: Integer;
 begin
@@ -140,9 +155,14 @@ begin
     FTracker.Delete(Index);
   end;
 end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
 
 //______________________________________________________________________________________________________________________
 
+{$IFDEF TOOLSAPI}
 constructor TEditorLineTracker.Create(Tracker: IOTAEditLineTracker);
 var
   NotifierIndex: Integer;
@@ -166,14 +186,17 @@ begin
       FTracker.RemoveNotifier(NotifierIndex);
     end);
 end;
+{$ENDIF}
 
 //______________________________________________________________________________________________________________________
 
 destructor TEditorLineTracker.Destroy;
 begin
+{$IFDEF TOOLSAPI}
   if Assigned(FNotifier) then begin
     FNotifier.Release;
   end;
+{$ENDIF}
 
   FreeAndNil(FOnLineChanged);
   FreeAndNil(FOnEditorClosed);
@@ -196,7 +219,9 @@ end;
 
 procedure TEditorLineTracker.TrackLine(Line: Integer);
 begin
+{$IFDEF TOOLSAPI}
   FTracker.AddLine(Line, Line);
+{$ENDIF}
 end;
 
 //______________________________________________________________________________________________________________________
@@ -223,7 +248,9 @@ begin
   // Once registered with the IDE, notifiers are reference counted
   FNotifiers := TList<TNotifierBase>.Create;
   FTrackers := TObjectList<TEditorLineTracker>.Create;
+{$IFDEF TOOLSAPI}
   FInitedViews := TList<IOTAEditView>.Create;
+{$ENDIF}
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
   Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
@@ -247,13 +274,16 @@ begin
 
   FreeAndNil(FTrackers);
   FreeAndNil(FNotifiers);
+{$IFDEF TOOLSAPI}
   FreeAndNil(FInitedViews);
+{$ENDIF}
   FreeAndNil(FOnActiveFileChanged);
   inherited;
 end;
 
 //______________________________________________________________________________________________________________________
 
+{$IFDEF TOOLSAPI}
 procedure TLintEditor.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
 begin
   FOnActiveFileChanged.Notify(EditView.Buffer.FileName);
@@ -329,6 +359,7 @@ function TLintEditor.IsViewInited(const View: IOTAEditView): Boolean;
 begin
   Result := FInitedViews.Contains(View);
 end;
+{$ENDIF}
 
 //______________________________________________________________________________________________________________________
 
@@ -398,6 +429,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+{$IFDEF TOOLSAPI}
 procedure TLintView.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
 begin
   if FRepaint then begin
@@ -506,5 +538,6 @@ begin
     end;
   end;
 end;
+{$ENDIF}
 
 end.

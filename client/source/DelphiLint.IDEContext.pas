@@ -18,6 +18,10 @@ uses
   , DelphiLint.Context
   ;
 
+{$IFNDEF TOOLSAPI}
+  {$MESSAGE FATAL 'This unit requires the ToolsAPI.'}
+{$ENDIF}
+
 type
   TToolsApiServices = class(TInterfacedObject, IIDEServices)
   public

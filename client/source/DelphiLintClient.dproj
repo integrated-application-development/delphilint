@@ -46,6 +46,7 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
         <DCC_DcuOutput>.\target\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_Define>TOOLSAPI;$(DCC_Define)</DCC_Define>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <GenDll>true</GenDll>
@@ -65,6 +66,7 @@ $(PreBuildEvent)]]>
         <DCC_Description>DelphiLint</DCC_Description>
         <DCC_UsePackage>vcl;rtl;IndyProtocols;vclie;vcledge;$(DCC_UsePackage)</DCC_UsePackage>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
+        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
         <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
