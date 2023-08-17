@@ -14,6 +14,8 @@ uses
   , Vcl.ComCtrls
   , DelphiLint.IDEBaseTypes
   , DelphiLint.Context
+  , DelphiLint.Settings
+  , DelphiLint.ProjectOptions
   ;
 
 {$IFNDEF TOOLSAPI}
@@ -87,6 +89,8 @@ type
     FLogger: ILogger;
     FIDEServices: IIDEServices;
     FPlugin: IPlugin;
+    FSettings: TLintSettings;
+    FSettingsDir: string;
   protected
     function GetAnalyzer: IAnalyzer;
     function GetLogger: ILogger;
@@ -95,6 +99,9 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    function GetSettings: TLintSettings;
+    function GetProjectOptions(ProjectFile: string): TLintProjectOptions;
   end;
 
 procedure Register;
@@ -151,6 +158,9 @@ constructor TIDELintContext.Create;
 begin
   inherited;
   FPlugin := TIDEPlugin.Create(GetIDEServices);
+
+  FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
+  FSettings := TLintSettings.Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -159,6 +169,7 @@ destructor TIDELintContext.Destroy;
 begin
   FAnalyzer := nil;
   FPlugin := nil;
+  FreeAndNil(FSettings);
   FLogger := nil;
   FIDEServices := nil;
   inherited;
@@ -208,6 +219,20 @@ end;
 function TIDELintContext.GetPlugin: IPlugin;
 begin
   Result := FPlugin;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDELintContext.GetProjectOptions(ProjectFile: string): TLintProjectOptions;
+begin
+  Result := TLintProjectOptions.Create(TPath.ChangeExtension(ProjectFile, '.delphilint'));
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDELintContext.GetSettings: TLintSettings;
+begin
+  Result := FSettings;
 end;
 
 //______________________________________________________________________________________________________________________

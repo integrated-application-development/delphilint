@@ -15,6 +15,8 @@ uses
   , DelphiLint.Events
   , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
+  , DelphiLint.Settings
+  , DelphiLint.ProjectOptions
   ;
 
 type
@@ -159,11 +161,14 @@ type
     function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
     function GetPlugin: IPlugin;
+    function GetSettings: TLintSettings;
+    function GetProjectOptions(ProjectFile: string): TLintProjectOptions;
 
     property Analyzer: IAnalyzer read GetAnalyzer;
     property Log: ILogger read GetLogger;
     property IDEServices: IIDEServices read GetIDEServices;
     property Plugin: IPlugin read GetPlugin;
+    property Settings: TLintSettings read GetSettings;
   end;
 
 function LintContext: ILintContext;

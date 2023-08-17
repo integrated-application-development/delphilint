@@ -148,6 +148,7 @@ end;
 function TryGetProjectDirectory(out ProjectDir: string; ReadOptions: Boolean = True): Boolean;
 var
   ProjectFile: string;
+  ProjectOptions: TLintProjectOptions;
 begin
   Result := False;
 
@@ -155,7 +156,12 @@ begin
     Result := True;
 
     if ReadOptions then begin
-      ProjectDir := TLintProjectOptions.Create(ProjectFile).AnalysisBaseDirAbsolute;
+      try
+        ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
+        ProjectDir := ProjectOptions.AnalysisBaseDirAbsolute;
+      finally
+        FreeAndNil(ProjectOptions);
+      end;
 
       if ProjectDir <> '' then begin
         Exit;

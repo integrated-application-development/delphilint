@@ -126,7 +126,7 @@ begin
       0);
   end
   else begin
-    if LintSettings.ClientSaveBeforeAnalysis then begin
+    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
       SourceEditor.Module.Save(True);
     end;
     AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
@@ -146,7 +146,7 @@ begin
   if TryGetProjectFile(ProjectFile) then begin
     Modules := DelphiLint.Utils.GetOpenSourceModules;
 
-    if LintSettings.ClientSaveBeforeAnalysis then begin
+    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
       for Module in Modules do begin
         try
           Module.Save(True);
@@ -198,7 +198,7 @@ var
   ProjectKey: string;
   SonarHostToken: string;
 begin
-  ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+  ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
   try
     if ProjectOptions.AnalysisConnectedMode then begin
       SonarHostUrl := ProjectOptions.SonarHostUrl;
@@ -541,7 +541,7 @@ begin
   HasMetadata := False;
   if TryGetProjectFile(ProjectFile) then begin
     try
-      ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+      ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
       HasMetadata := ProjectOptions.AnalysisConnectedMode;
     finally
       FreeAndNil(ProjectOptions);
@@ -705,7 +705,7 @@ begin
 
   try
     RulesRetrieved := TEvent.Create;
-    ProjectOptions := TLintProjectOptions.Create(ProjectFile);
+    ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
     TimedOut := False;
 
     DownloadPlugin := False;

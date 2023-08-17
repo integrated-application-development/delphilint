@@ -87,10 +87,10 @@ uses
 
 class function TLintSetupForm.IsSetupValid: Boolean;
 begin
-  LintSettings.Load;
-  Result := IsValidValue(LintSettings.JavaExe)
-    and IsValidValue(LintSettings.ServerJar)
-    and IsValidValue(LintSettings.SonarDelphiJar);
+  LintContext.Settings.Load;
+  Result := IsValidValue(LintContext.Settings.JavaExe)
+    and IsValidValue(LintContext.Settings.ServerJar)
+    and IsValidValue(LintContext.Settings.SonarDelphiJar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -126,7 +126,7 @@ end;
 procedure TLintSetupForm.FormCreate(Sender: TObject);
 begin
   FSaved := False;
-  LintSettings.Load;
+  LintContext.Settings.Load;
   UpdateControls;
 end;
 
@@ -134,22 +134,22 @@ end;
 
 function TLintSetupForm.GetEffectiveJavaExe: string;
 begin
-  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintSettings.DefaultJavaExe);
+  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintContext.Settings.DefaultJavaExe);
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintSetupForm.GetJavaExeCaption: string;
 begin
-  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, 'JAVA_HOME (' + LintSettings.DefaultJavaExe + ')');
+  Result := IfThen(FJavaExeOverride <> '', FJavaExeOverride, 'JAVA_HOME (' + LintContext.Settings.DefaultJavaExe + ')');
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintSetupForm.OkButtonClick(Sender: TObject);
 begin
-  LintSettings.ServerJavaExeOverride := FJavaExeOverride;
-  LintSettings.Save;
+  LintContext.Settings.ServerJavaExeOverride := FJavaExeOverride;
+  LintContext.Settings.Save;
 
   FSaved := True;
   LintContext.Plugin.EnablePlugin;
@@ -160,7 +160,7 @@ end;
 
 procedure TLintSetupForm.RefreshButtonClick(Sender: TObject);
 begin
-  LintSettings.Load;
+  LintContext.Settings.Load;
   UpdateControls;
   UpdateOkButton;
 end;
@@ -197,8 +197,8 @@ end;
 function TLintSetupForm.IsAllValid: Boolean;
 begin
   Result := IsValidValue(GetEffectiveJavaExe)
-    and IsValidValue(LintSettings.ServerJar)
-    and IsValidValue(LintSettings.SonarDelphiJar);
+    and IsValidValue(LintContext.Settings.ServerJar)
+    and IsValidValue(LintContext.Settings.SonarDelphiJar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -213,7 +213,7 @@ end;
 procedure TLintSetupForm.JavaExeBrowseButtonClick(Sender: TObject);
 begin
   ExeOpenDialog.InitialDir := ExtractFilePath(
-    IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintSettings.DefaultJavaExe));
+    IfThen(FJavaExeOverride <> '', FJavaExeOverride, LintContext.Settings.DefaultJavaExe));
   ExeOpenDialog.FileName := '';
 
   if ExeOpenDialog.Execute then begin
@@ -238,15 +238,15 @@ end;
 
 procedure TLintSetupForm.UpdateControls;
 begin
-  FJavaExeOverride := LintSettings.ServerJavaExeOverride;
+  FJavaExeOverride := LintContext.Settings.ServerJavaExeOverride;
   JavaExeClearButton.Enabled := (FJavaExeOverride <> '');
 
   JavaExeIndicator.Caption := GetJavaExeCaption;
-  ServerJarIndicator.Caption := LintSettings.ServerJar;
-  SonarDelphiJarIndicator.Caption := LintSettings.SonarDelphiJar;
+  ServerJarIndicator.Caption := LintContext.Settings.ServerJar;
+  SonarDelphiJarIndicator.Caption := LintContext.Settings.SonarDelphiJar;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
-  UpdateValidState(ServerJarIndicator, IsValidValue(LintSettings.ServerJar));
-  UpdateValidState(SonarDelphiJarIndicator, IsValidValue(LintSettings.SonarDelphiJar));
+  UpdateValidState(ServerJarIndicator, IsValidValue(LintContext.Settings.ServerJar));
+  UpdateValidState(SonarDelphiJarIndicator, IsValidValue(LintContext.Settings.SonarDelphiJar));
 end;
 
 //______________________________________________________________________________________________________________________

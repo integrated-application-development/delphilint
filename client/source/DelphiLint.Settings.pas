@@ -26,9 +26,6 @@ type
   TLintSettings = class(TPropertiesFile)
   private
     FSettingsDir: string;
-
-    constructor Create;
-
     function GetServerJar(Index: Integer): string;
     function GetSonarDelphiJar(Index: Integer): string;
     function GetJavaExe(Index: Integer): string;
@@ -49,9 +46,9 @@ type
     property JavaExe: string index 2 read GetJavaExe;
     property DefaultJavaExe: string read GetDefaultJavaExe;
     property SettingsDirectory: string read FSettingsDir;
-  end;
 
-function LintSettings: TLintSettings;
+    constructor Create(Path: string);
+  end;
 
 implementation
 
@@ -61,25 +58,12 @@ uses
   , DelphiLint.Version
   ;
 
-var
-  GLintSettings: TLintSettings;
-
 //______________________________________________________________________________________________________________________
 
-function LintSettings: TLintSettings;
+constructor TLintSettings.Create(Path: string);
 begin
-  if not Assigned(GLintSettings) then begin
-    GLintSettings := TLintSettings.Create;
-  end;
-  Result := GLintSettings;
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TLintSettings.Create;
-begin
-  FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
-  inherited Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
+  FSettingsDir := TPath.GetDirectoryName(Path);
+  inherited Create(Path);
 
   Load;
   Save;
@@ -150,10 +134,5 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
-
-initialization
-
-finalization
-  FreeAndNil(GLintSettings);
 
 end.

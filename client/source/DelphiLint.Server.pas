@@ -311,15 +311,15 @@ begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 
-  if LintSettings.DebugExternalServer then begin
+  if LintContext.Settings.DebugExternalServer then begin
     FTcpClient.Port := 14000;
   end
   else begin
     FTcpClient.Port := StartExtServer(
-      LintSettings.ServerJar,
-      LintSettings.JavaExe,
-      LintSettings.SettingsDirectory,
-      LintSettings.DebugShowConsole);
+      LintContext.Settings.ServerJar,
+      LintContext.Settings.JavaExe,
+      LintContext.Settings.SettingsDirectory,
+      LintContext.Settings.DebugShowConsole);
   end;
 
   try
@@ -411,7 +411,7 @@ begin
     InitializeMsg := TLintMessage.Initialize(
       LintContext.IDEServices.GetRootDirectory,
       GetDelphiVersion,
-      LintSettings.SonarDelphiJar,
+      LintContext.Settings.SonarDelphiJar,
       DownloadUrl,
       ApiToken);
     InitializeCompletedEvent := TEvent.Create;

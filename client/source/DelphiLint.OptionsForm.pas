@@ -175,7 +175,7 @@ begin
   if TryGetProjectFile(ProjectFile) then begin
     if not Assigned(FProjectOptions) or (FProjectFile <> ProjectFile) then begin
       FreeAndNil(FProjectOptions);
-      FProjectOptions := TLintProjectOptions.Create(ProjectFile);
+      FProjectOptions := LintContext.GetProjectOptions(ProjectFile);
       FProjectFile := ProjectFile;
     end;
     FProjectOptions.Load;

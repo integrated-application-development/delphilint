@@ -56,6 +56,7 @@ uses
     System.SysUtils
   , DelphiLint.Settings
   , DelphiLint.SetupForm
+  , DelphiLint.Context
   ;
 
 {$R *.dfm}
@@ -97,19 +98,19 @@ end;
 
 procedure TLintSettingsFrame.Init;
 begin
-  LintSettings.Load;
+  LintContext.Settings.Load;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
-  ClientAutoShowToolWindowCheckBox.Checked := LintSettings.ClientAutoShowToolWindow;
-  ClientSaveBeforeAnalysisCheckBox.Checked := LintSettings.ClientSaveBeforeAnalysis;
+  ClientAutoShowToolWindowCheckBox.Checked := LintContext.Settings.ClientAutoShowToolWindow;
+  ClientSaveBeforeAnalysisCheckBox.Checked := LintContext.Settings.ClientSaveBeforeAnalysis;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintSettingsFrame.Save;
 begin
-  LintSettings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
-  LintSettings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
-  LintSettings.Save;
+  LintContext.Settings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
+  LintContext.Settings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
+  LintContext.Settings.Save;
 end;
 
 //______________________________________________________________________________________________________________________

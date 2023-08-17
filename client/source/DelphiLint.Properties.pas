@@ -87,7 +87,7 @@ type
     constructor Create(Section: string; Key: string; GetDefault: TFunc<Boolean>);
   end;
 
-  TPropertiesFile = class(TObject)
+  TPropertiesFile = class(TInterfacedObject)
   private
     FPath: string;
     FFields: TArray<TPropFieldBase>;

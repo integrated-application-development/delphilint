@@ -121,7 +121,6 @@ uses
   , DelphiLint.Utils
   , DelphiLint.SetupForm
   , DelphiLint.Version
-  , DelphiLint.Settings
   , DelphiLint.Resources
   ;
 
@@ -129,7 +128,7 @@ uses
 
 procedure TPluginCore.ActionAnalyzeActiveFileExecute(Sender: TObject);
 begin
-  if LintSettings.ClientAutoShowToolWindow then begin
+  if LintContext.Settings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
   Analyzer.AnalyzeActiveFile;
@@ -139,7 +138,7 @@ end;
 
 procedure TPluginCore.ActionAnalyzeOpenFilesExecute(Sender: TObject);
 begin
-  if LintSettings.ClientAutoShowToolWindow then begin
+  if LintContext.Settings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
   Analyzer.AnalyzeOpenFiles;

@@ -56,7 +56,6 @@ uses
 
 constructor TLintProjectOptions.Create(Path: string);
 begin
-  Path := TPath.ChangeExtension(Path, '.delphilint');
   FDir := TPath.GetDirectoryName(Path);
   inherited Create(Path);
   Load;
