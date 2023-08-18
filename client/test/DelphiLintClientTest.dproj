@@ -91,6 +91,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="DelphiLintTest.Events.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -121,6 +122,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="target\Win32\GUI - Debug\DelphiLintClientTest.exe" Configuration="GUI - Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>DelphiLintClientTest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="target\Win32\GUI\DelphiLintClientTest.exe" Configuration="GUI" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>

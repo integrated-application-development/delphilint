@@ -15,7 +15,8 @@ uses
   DUnitX.Loggers.Console,
   {$ENDIF }
   DUnitX.Loggers.Xml.NUnit,
-  DUnitX.TestFramework;
+  DUnitX.TestFramework,
+  DelphiLintTest.Events in 'DelphiLintTest.Events.pas';
 
 {$IFDEF TESTGUI}
 
