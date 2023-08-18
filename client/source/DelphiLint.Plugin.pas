@@ -217,7 +217,7 @@ begin
   // Editor notifier
   FEditor := TLintEditor.Create;
   FEditor.OnOwnerFreed.AddListener(
-    procedure(const Notf: TNotifierBase) begin
+    procedure(const Notf: IIDENotifier) begin
       if Assigned(Self) then begin
         FEditor := nil;
       end;

@@ -75,7 +75,7 @@ type
     function GetActiveProject: IIDEProject;
 
     // From IOTAEditorServices
-    function AddEditorNotifier(Notifier: TEditorNotifierBase): Integer;
+    function AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
 
     // From INTAEnvironmentOptionsServices
@@ -111,10 +111,12 @@ implementation
 uses
     System.SysUtils
   , System.IOUtils
+  , Winapi.Windows
   , DelphiLint.Analyzer
   , DelphiLint.Logger
   , DelphiLint.Plugin
   , ToolsAPI
+  , DockForm
   ;
 
 type
@@ -130,6 +132,11 @@ type
   public
     procedure Paint;
     procedure GoToPosition(const Line: Integer; const Column: Integer);
+    function GetFileName: string;
+    function GetLineTracker: IIDEEditLineTracker;
+    function AddNotifier(Notifier: IIDEViewNotifier): Integer;
+    procedure RemoveNotifier(Index: Integer);
+    function GetLeftColumn: Integer;
   end;
 
   TToolsApiSourceEditor = class(TToolsApiWrapper<IOTASourceEditor>, IIDESourceEditor)
@@ -151,6 +158,59 @@ type
     procedure Save(const ForceSave: Boolean);
     function GetFileName: string;
   end;
+
+  TToolsApiEditLineTracker = class(TToolsApiWrapper<IOTAEditLineTracker>, IIDEEditLineTracker)
+    function GetFileName: string;
+    procedure Clear;
+    function AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+    procedure RemoveNotifier(Index: Integer);
+    procedure AddLine(const Line: Integer; const Value: Integer);
+  end;
+
+  TToolsApiNotifier<T: IIDENotifier> = class(TInterfacedObject, IOTANotifier)
+  protected
+    FHandler: T;
+  public
+    constructor Create(Handler: T);
+    procedure Destroyed; virtual;
+    procedure BeforeSave; virtual;
+    procedure AfterSave; virtual;
+    procedure Modified; virtual;
+  end;
+
+  TToolsApiEditorNotifier = class(TToolsApiNotifier<IIDEEditorNotifier>, IOTAEditorNotifier, INTAEditServicesNotifier)
+    procedure ViewActivated(const View: IOTAEditView);
+    procedure ViewNotification(const View: IOTAEditView; Operation: TOperation);
+    procedure WindowShow(const EditWindow: INTAEditWindow; Show, LoadedFromDesktop: Boolean);
+    procedure WindowNotification(const EditWindow: INTAEditWindow; Operation: TOperation);
+    procedure WindowActivated(const EditWindow: INTAEditWindow);
+    procedure WindowCommand(const EditWindow: INTAEditWindow; Command, Param: Integer; var Handled: Boolean);
+    procedure EditorViewModified(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+    procedure EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+    procedure DockFormVisibleChanged(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+    procedure DockFormUpdated(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+    procedure DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+  end;
+
+  TToolsApiViewNotifier = class(TToolsApiNotifier<IIDEViewNotifier>, INTAEditViewNotifier)
+    procedure EditorIdle(const View: IOTAEditView);
+    procedure BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
+    procedure PaintLine(const View: IOTAEditView; LineNumber: Integer;
+      const LineText: PAnsiChar; const TextWidth: Word; const LineAttributes: TOTAAttributeArray;
+      const Canvas: TCanvas; const TextRect: TRect; const LineRect: TRect; const CellSize: TSize);
+    procedure EndPaint(const View: IOTAEditView);
+  end;
+
+  TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineNotifier>, IOTAEditLineNotifier)
+    procedure LineChanged(OldLine, NewLine: Integer; Data: Integer);
+  end;
+
+//______________________________________________________________________________________________________________________
+
+procedure Register;
+begin
+  LintContext.Plugin.Init;
+end;
 
 //______________________________________________________________________________________________________________________
 
@@ -356,7 +416,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TToolsApiServices.AddPluginInfo(const Title, Description: string; Image: TBitmap): Integer;
+function TToolsApiServices.AddPluginInfo(const Title, Description: string; Image: Vcl.Graphics.TBitmap): Integer;
 begin
   Result := (BorlandIDEServices as IOTAAboutBoxServices).AddPluginInfo(Title, Description, Image.Handle);
 end;
@@ -370,7 +430,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TToolsApiServices.AddPluginBitmap(const Caption: string; Image: TBitmap; IsUnregistered: Boolean;
+procedure TToolsApiServices.AddPluginBitmap(const Caption: string; Image: Vcl.Graphics.TBitmap; IsUnregistered: Boolean;
   const LicenseStatus, Version: string);
 begin
   SplashScreenServices.AddPluginBitmap(Caption, Image.Handle, IsUnregistered, LicenseStatus, Version);
@@ -424,9 +484,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TToolsApiServices.AddEditorNotifier(Notifier: TEditorNotifierBase): Integer;
+function TToolsApiServices.AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
 begin
-  Result := (BorlandIDEServices as IOTAEditorServices).AddNotifier(Notifier);
+  Result := (BorlandIDEServices as IOTAEditorServices).AddNotifier(TToolsApiEditorNotifier.Create(Notifier));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -452,6 +512,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TToolsApiEditView.GetLeftColumn: Integer;
+begin
+  Result := FRaw.LeftColumn;
+end;
+
+function TToolsApiEditView.GetLineTracker: IIDEEditLineTracker;
+begin
+  Result := TToolsApiEditLineTracker.Create(FRaw.Buffer.GetEditLineTracker);
+end;
+
 procedure TToolsApiEditView.GoToPosition(const Line, Column: Integer);
 begin
   FRaw.Buffer.EditPosition.GotoLine(Line);
@@ -461,6 +531,21 @@ end;
 procedure TToolsApiEditView.Paint;
 begin
   FRaw.Paint;
+end;
+
+function TToolsApiEditView.AddNotifier(Notifier: IIDEViewNotifier): Integer;
+begin
+  Result := FRaw.AddNotifier(TToolsApiViewNotifier.Create(Notifier));
+end;
+
+procedure TToolsApiEditView.RemoveNotifier(Index: Integer);
+begin
+  FRaw.RemoveNotifier(Index);
+end;
+
+function TToolsApiEditView.GetFileName: string;
+begin
+  Result := FRaw.Buffer.FileName;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -544,9 +629,153 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure Register;
+constructor TToolsApiNotifier<T>.Create(Handler: T);
 begin
-  LintContext.Plugin.Init;
+  inherited Create;
+  FHandler := Handler;
+end;
+
+procedure TToolsApiNotifier<T>.AfterSave;
+begin
+  // Empty default implementation
+end;
+
+procedure TToolsApiNotifier<T>.BeforeSave;
+begin
+  // Empty default implementation
+end;
+
+
+procedure TToolsApiNotifier<T>.Destroyed;
+begin
+  FHandler.OnOwnerFreed.Notify(FHandler);
+end;
+
+procedure TToolsApiNotifier<T>.Modified;
+begin
+  // Empty default implementation
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiEditorNotifier.DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.DockFormUpdated(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.DockFormVisibleChanged(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.EditorViewActivated(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+begin
+  FHandler.OnViewActivated(TToolsApiEditView.Create(EditView));
+end;
+
+procedure TToolsApiEditorNotifier.EditorViewModified(const EditWindow: INTAEditWindow; const EditView: IOTAEditView);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.ViewActivated(const View: IOTAEditView);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.ViewNotification(const View: IOTAEditView; Operation: TOperation);
+begin
+  if Operation = opInsert then begin
+    FHandler.OnViewAdded(TToolsApiEditView.Create(View));
+  end;
+end;
+
+procedure TToolsApiEditorNotifier.WindowActivated(const EditWindow: INTAEditWindow);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.WindowCommand(const EditWindow: INTAEditWindow; Command, Param: Integer;
+  var Handled: Boolean);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.WindowNotification(const EditWindow: INTAEditWindow; Operation: TOperation);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiEditorNotifier.WindowShow(const EditWindow: INTAEditWindow; Show, LoadedFromDesktop: Boolean);
+begin
+  // Empty implementation
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiViewNotifier.BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
+begin
+  FHandler.OnBeginPaint(TToolsApiEditView.Create(View), FullRepaint);
+end;
+
+procedure TToolsApiViewNotifier.EditorIdle(const View: IOTAEditView);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiViewNotifier.EndPaint(const View: IOTAEditView);
+begin
+  // Empty implementation
+end;
+
+procedure TToolsApiViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: Integer; const LineText: PAnsiChar;
+  const TextWidth: Word; const LineAttributes: TOTAAttributeArray; const Canvas: TCanvas; const TextRect,
+  LineRect: TRect; const CellSize: TSize);
+begin
+  FHandler.OnPaintLine(TToolsApiEditView.Create(View), LineNumber, string(LineText), TextWidth, Canvas, TextRect, LineRect, CellSize);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiEditLineTracker.AddLine(const Line, Value: Integer);
+begin
+  FRaw.AddLine(Line, Value);
+end;
+
+function TToolsApiEditLineTracker.AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+begin
+  Result := FRaw.AddNotifier(TToolsApiEditLineNotifier.Create(Notifier));
+end;
+
+procedure TToolsApiEditLineTracker.Clear;
+var
+  Index: Integer;
+begin
+  for Index := FRaw.Count - 1 downto 0 do begin
+    FRaw.Delete(Index);
+  end;
+end;
+
+function TToolsApiEditLineTracker.GetFileName: string;
+begin
+  Result := FRaw.GetEditBuffer.FileName;
+end;
+
+procedure TToolsApiEditLineTracker.RemoveNotifier(Index: Integer);
+begin
+  FRaw.RemoveNotifier(Index);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiEditLineNotifier.LineChanged(OldLine, NewLine, Data: Integer);
+begin
+  FHandler.OnLineChanged(OldLine, NewLine, Data);
 end;
 
 initialization

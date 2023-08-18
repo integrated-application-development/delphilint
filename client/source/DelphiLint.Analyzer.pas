@@ -99,7 +99,6 @@ uses
   , Vcl.Dialogs
   , DelphiLint.ProjectOptions
   , DelphiLint.Utils
-  , DelphiLint.Settings
   ;
 
 //______________________________________________________________________________________________________________________

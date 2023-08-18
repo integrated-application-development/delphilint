@@ -5,6 +5,7 @@ interface
 uses
     System.UITypes
   , System.Classes
+  , Winapi.Windows
   , Vcl.Themes
   , Vcl.Forms
   , Vcl.ActnList
@@ -14,9 +15,9 @@ uses
   , Vcl.ComCtrls
   , DelphiLint.Events
   , DelphiLint.Data
-  , DelphiLint.IDEBaseTypes
   , DelphiLint.Settings
   , DelphiLint.ProjectOptions
+  , DelphiLint.IDEBaseTypes
   ;
 
 type
@@ -56,11 +57,21 @@ type
   end;
 
   IIDEModule = interface;
+  IIDEEditLineTracker = interface;
+  IIDEViewNotifier = interface;
 
   IIDEEditView = interface
     procedure Paint;
     procedure GoToPosition(const Line: Integer; const Column: Integer);
+    function GetFileName: string;
+    function GetLineTracker: IIDEEditLineTracker;
+    function AddNotifier(Notifier: IIDEViewNotifier): Integer;
+    procedure RemoveNotifier(Index: Integer);
+    function GetLeftColumn: Integer;
     function Raw: IInterface; // IOTAEditView
+
+    property FileName: string read GetFileName;
+    property LeftColumn: Integer read GetLeftColumn;
   end;
 
   IIDESourceEditor = interface
@@ -84,6 +95,49 @@ type
 
     property FileName: string read GetFileName;
     property SourceEditor: IIDESourceEditor read GetSourceEditor;
+  end;
+
+
+  IIDENotifier = interface
+    function GetOnReleased: TEventNotifier<IIDENotifier>;
+    function GetOnOwnerFreed: TEventNotifier<IIDENotifier>;
+    procedure Release;
+
+    property OnReleased: TEventNotifier<IIDENotifier> read GetOnReleased;
+    property OnOwnerFreed: TEventNotifier<IIDENotifier> read GetOnOwnerFreed;
+  end;
+
+  IIDEEditorNotifier = interface(IIDENotifier)
+    procedure OnViewAdded(const View: IIDEEditView);
+    procedure OnViewActivated(const View: IIDEEditView);
+  end;
+
+  IIDEViewNotifier = interface(IIDENotifier)
+    procedure OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
+    procedure OnPaintLine(
+      const View: IIDEEditView;
+      LineNumber: Integer;
+      LineText: string;
+      const TextWidth: Integer;
+      const Canvas: TCanvas;
+      const TextRect: TRect;
+      const LineRect: TRect;
+      const CellSize: TSize
+    );
+  end;
+
+  IIDEEditLineNotifier = interface(IIDENotifier)
+    procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+  end;
+
+  IIDEEditLineTracker = interface
+    function GetFileName: string;
+    procedure Clear;
+    function AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+    procedure RemoveNotifier(Index: Integer);
+    procedure AddLine(const Line: Integer; const Value: Integer);
+
+    property FileName: string read GetFileName;
   end;
 
   IIDEServices = interface
@@ -136,7 +190,7 @@ type
     function GetActiveProject: IIDEProject;
 
     // From IOTAEditorServices
-    function AddEditorNotifier(Notifier: TEditorNotifierBase): Integer;
+    function AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
 
     // From INTAEnvironmentOptionsServices
