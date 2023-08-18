@@ -75,7 +75,7 @@ type
     function GetActiveProject: IIDEProject;
 
     // From IOTAEditorServices
-    function AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
+    function AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
 
     // From INTAEnvironmentOptionsServices
@@ -134,7 +134,7 @@ type
     procedure GoToPosition(const Line: Integer; const Column: Integer);
     function GetFileName: string;
     function GetLineTracker: IIDEEditLineTracker;
-    function AddNotifier(Notifier: IIDEViewNotifier): Integer;
+    function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     function GetLeftColumn: Integer;
   end;
@@ -162,12 +162,12 @@ type
   TToolsApiEditLineTracker = class(TToolsApiWrapper<IOTAEditLineTracker>, IIDEEditLineTracker)
     function GetFileName: string;
     procedure Clear;
-    function AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+    function AddNotifier(Notifier: IIDEEditLineHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     procedure AddLine(const Line: Integer; const Value: Integer);
   end;
 
-  TToolsApiNotifier<T: IIDENotifier> = class(TInterfacedObject, IOTANotifier)
+  TToolsApiNotifier<T: IIDEHandler> = class(TInterfacedObject, IOTANotifier)
   protected
     FHandler: T;
   public
@@ -178,7 +178,7 @@ type
     procedure Modified; virtual;
   end;
 
-  TToolsApiEditorNotifier = class(TToolsApiNotifier<IIDEEditorNotifier>, IOTAEditorNotifier, INTAEditServicesNotifier)
+  TToolsApiEditorNotifier = class(TToolsApiNotifier<IIDEEditorHandler>, IOTAEditorNotifier, INTAEditServicesNotifier)
     procedure ViewActivated(const View: IOTAEditView);
     procedure ViewNotification(const View: IOTAEditView; Operation: TOperation);
     procedure WindowShow(const EditWindow: INTAEditWindow; Show, LoadedFromDesktop: Boolean);
@@ -192,7 +192,7 @@ type
     procedure DockFormRefresh(const EditWindow: INTAEditWindow; DockForm: TDockableForm);
   end;
 
-  TToolsApiViewNotifier = class(TToolsApiNotifier<IIDEViewNotifier>, INTAEditViewNotifier)
+  TToolsApiViewNotifier = class(TToolsApiNotifier<IIDEViewHandler>, INTAEditViewNotifier)
     procedure EditorIdle(const View: IOTAEditView);
     procedure BeginPaint(const View: IOTAEditView; var FullRepaint: Boolean);
     procedure PaintLine(const View: IOTAEditView; LineNumber: Integer;
@@ -201,7 +201,7 @@ type
     procedure EndPaint(const View: IOTAEditView);
   end;
 
-  TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineNotifier>, IOTAEditLineNotifier)
+  TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineHandler>, IOTAEditLineNotifier)
     procedure LineChanged(OldLine, NewLine: Integer; Data: Integer);
   end;
 
@@ -484,7 +484,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TToolsApiServices.AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
+function TToolsApiServices.AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
 begin
   Result := (BorlandIDEServices as IOTAEditorServices).AddNotifier(TToolsApiEditorNotifier.Create(Notifier));
 end;
@@ -533,7 +533,7 @@ begin
   FRaw.Paint;
 end;
 
-function TToolsApiEditView.AddNotifier(Notifier: IIDEViewNotifier): Integer;
+function TToolsApiEditView.AddNotifier(Notifier: IIDEViewHandler): Integer;
 begin
   Result := FRaw.AddNotifier(TToolsApiViewNotifier.Create(Notifier));
 end;
@@ -747,7 +747,7 @@ begin
   FRaw.AddLine(Line, Value);
 end;
 
-function TToolsApiEditLineTracker.AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+function TToolsApiEditLineTracker.AddNotifier(Notifier: IIDEEditLineHandler): Integer;
 begin
   Result := FRaw.AddNotifier(TToolsApiEditLineNotifier.Create(Notifier));
 end;

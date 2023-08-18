@@ -40,7 +40,7 @@ requires
   IndyProtocols;
 
 contains
-  DelphiLint.IDE in 'DelphiLint.IDE.pas',
+  DelphiLint.Handlers in 'DelphiLint.Handlers.pas',
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
   DelphiLint.Logger in 'DelphiLint.Logger.pas',
@@ -59,7 +59,6 @@ contains
   DelphiLint.Version in 'DelphiLint.Version.pas',
   DelphiLint.Resources in 'DelphiLint.Resources.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
-  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
-  DelphiLint.Notifiers in 'DelphiLint.Notifiers.pas';
+  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas';
 
 end.

@@ -58,14 +58,14 @@ type
 
   IIDEModule = interface;
   IIDEEditLineTracker = interface;
-  IIDEViewNotifier = interface;
+  IIDEViewHandler = interface;
 
   IIDEEditView = interface
     procedure Paint;
     procedure GoToPosition(const Line: Integer; const Column: Integer);
     function GetFileName: string;
     function GetLineTracker: IIDEEditLineTracker;
-    function AddNotifier(Notifier: IIDEViewNotifier): Integer;
+    function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     function GetLeftColumn: Integer;
     function Raw: IInterface; // IOTAEditView
@@ -98,21 +98,21 @@ type
   end;
 
 
-  IIDENotifier = interface
-    function GetOnReleased: TEventNotifier<IIDENotifier>;
-    function GetOnOwnerFreed: TEventNotifier<IIDENotifier>;
+  IIDEHandler = interface
+    function GetOnReleased: TEventNotifier<IIDEHandler>;
+    function GetOnOwnerFreed: TEventNotifier<IIDEHandler>;
     procedure Release;
 
-    property OnReleased: TEventNotifier<IIDENotifier> read GetOnReleased;
-    property OnOwnerFreed: TEventNotifier<IIDENotifier> read GetOnOwnerFreed;
+    property OnReleased: TEventNotifier<IIDEHandler> read GetOnReleased;
+    property OnOwnerFreed: TEventNotifier<IIDEHandler> read GetOnOwnerFreed;
   end;
 
-  IIDEEditorNotifier = interface(IIDENotifier)
+  IIDEEditorHandler = interface(IIDEHandler)
     procedure OnViewAdded(const View: IIDEEditView);
     procedure OnViewActivated(const View: IIDEEditView);
   end;
 
-  IIDEViewNotifier = interface(IIDENotifier)
+  IIDEViewHandler = interface(IIDEHandler)
     procedure OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
     procedure OnPaintLine(
       const View: IIDEEditView;
@@ -126,14 +126,14 @@ type
     );
   end;
 
-  IIDEEditLineNotifier = interface(IIDENotifier)
+  IIDEEditLineHandler = interface(IIDEHandler)
     procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
   end;
 
   IIDEEditLineTracker = interface
     function GetFileName: string;
     procedure Clear;
-    function AddNotifier(Notifier: IIDEEditLineNotifier): Integer;
+    function AddNotifier(Notifier: IIDEEditLineHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     procedure AddLine(const Line: Integer; const Value: Integer);
 
@@ -190,7 +190,7 @@ type
     function GetActiveProject: IIDEProject;
 
     // From IOTAEditorServices
-    function AddEditorNotifier(Notifier: IIDEEditorNotifier): Integer;
+    function AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
 
     // From INTAEnvironmentOptionsServices

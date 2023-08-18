@@ -14,7 +14,7 @@ PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 this program. If not, see <https://www.gnu.org/licenses/>.
 }
-unit DelphiLint.IDE;
+unit DelphiLint.Handlers;
 
 interface
 
@@ -24,11 +24,25 @@ uses
   , Winapi.Windows
   , Vcl.Graphics
   , DelphiLint.Events
-  , DelphiLint.Notifiers
   , DelphiLint.Context
   ;
 
 type
+
+  THandler = class abstract(TInterfacedObject, IIDEHandler)
+  private
+    FOnOwnerFreed: TEventNotifier<IIDEHandler>;
+    FOnReleased: TEventNotifier<IIDEHandler>;
+  protected
+    function GetOnOwnerFreed: TEventNotifier<IIDEHandler>;
+    function GetOnReleased: TEventNotifier<IIDEHandler>;
+  public
+    constructor Create;
+    procedure Release;
+
+    property OnOwnerFreed: TEventNotifier<IIDEHandler> read GetOnOwnerFreed;
+    property OnReleased: TEventNotifier<IIDEHandler> read GetOnReleased;
+  end;
 
 //______________________________________________________________________________________________________________________
 
@@ -36,7 +50,7 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TEditorLineNotifier = class(TNotifierBase, IIDEEditLineNotifier)
+  TEditLineHandler = class(THandler, IIDEEditLineHandler)
   private
     FOnLineChanged: TOnEditorLineChanged;
   public
@@ -46,22 +60,22 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TEditorLineTracker = class;
+  TLineTracker = class;
 
   TChangedLine = record
     FromLine: Integer;
     ToLine: Integer;
-    Tracker: TEditorLineTracker;
+    Tracker: TLineTracker;
   end;
 
 //______________________________________________________________________________________________________________________
 
-  TEditorLineTracker = class(TObject)
+  TLineTracker = class(TObject)
   private
     FTracker: IIDEEditLineTracker;
-    FNotifier: TEditorLineNotifier;
+    FNotifier: TEditLineHandler;
     FPath: string;
-    FOnEditorClosed: TEventNotifier<TEditorLineTracker>;
+    FOnEditorClosed: TEventNotifier<TLineTracker>;
     FOnLineChanged: TEventNotifier<TChangedLine>;
 
     procedure OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
@@ -73,16 +87,16 @@ type
     procedure ClearTracking;
 
     property OnLineChanged: TEventNotifier<TChangedLine> read FOnLineChanged;
-    property OnEditorClosed: TEventNotifier<TEditorLineTracker> read FOnEditorClosed;
+    property OnEditorClosed: TEventNotifier<TLineTracker> read FOnEditorClosed;
     property FilePath: string read FPath;
   end;
 
 //______________________________________________________________________________________________________________________
 
-  TLintEditor = class(TNotifierBase, IIDEEditorNotifier)
+  TEditorHandler = class(THandler, IIDEEditorHandler)
   private
-    FNotifiers: TList<IIDENotifier>;
-    FTrackers: TObjectList<TEditorLineTracker>;
+    FNotifiers: TList<IIDEHandler>;
+    FTrackers: TObjectList<TLineTracker>;
     FInitedViews: TList<IInterface>;
 
     FOnActiveFileChanged: TEventNotifier<string>;
@@ -103,7 +117,7 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TLintView = class(TNotifierBase, IIDEViewNotifier)
+  TViewHandler = class(THandler, IIDEViewHandler)
   private
     FRepaint: Boolean;
     procedure OnAnalysisComplete(const Paths: TArray<string>);
@@ -138,40 +152,71 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorLineTracker.ClearTracking;
+constructor THandler.Create;
+begin
+  inherited;
+
+  FOnOwnerFreed := TEventNotifier<IIDEHandler>.Create;
+  FOnReleased := TEventNotifier<IIDEHandler>.Create;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function THandler.GetOnOwnerFreed: TEventNotifier<IIDEHandler>;
+begin
+  Result := FOnOwnerFreed;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function THandler.GetOnReleased: TEventNotifier<IIDEHandler>;
+begin
+  Result := FOnReleased;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure THandler.Release;
+begin
+  FOnReleased.Notify(Self);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLineTracker.ClearTracking;
 begin
   FTracker.Clear;
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TEditorLineTracker.Create(Tracker: IIDEEditLineTracker);
+constructor TLineTracker.Create(Tracker: IIDEEditLineTracker);
 var
   NotifierIndex: Integer;
 begin
   inherited Create;
 
-  FOnEditorClosed := TEventNotifier<TEditorLineTracker>.Create;
+  FOnEditorClosed := TEventNotifier<TLineTracker>.Create;
   FOnLineChanged := TEventNotifier<TChangedLine>.Create;
   FPath := Tracker.FileName;
   FTracker := Tracker;
 
-  FNotifier := TEditorLineNotifier.Create(OnNotifierTriggered);
+  FNotifier := TEditLineHandler.Create(OnNotifierTriggered);
   NotifierIndex := Tracker.AddNotifier(FNotifier);
   FNotifier.OnOwnerFreed.AddListener(
-    procedure (const Notf: IIDENotifier) begin
+    procedure (const Notf: IIDEHandler) begin
       FNotifier := nil;
       OnEditorClosed.Notify(Self);
     end);
   FNotifier.OnReleased.AddListener(
-    procedure (const Notf: IIDENotifier) begin
+    procedure (const Notf: IIDEHandler) begin
       FTracker.RemoveNotifier(NotifierIndex);
     end);
 end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TEditorLineTracker.Destroy;
+destructor TLineTracker.Destroy;
 begin
   if Assigned(FNotifier) then begin
     FNotifier.Release;
@@ -184,7 +229,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorLineTracker.OnNotifierTriggered(OldLine, NewLine, Data: Integer);
+procedure TLineTracker.OnNotifierTriggered(OldLine, NewLine, Data: Integer);
 var
   ChangedLine: TChangedLine;
 begin
@@ -196,14 +241,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorLineTracker.TrackLine(Line: Integer);
+procedure TLineTracker.TrackLine(Line: Integer);
 begin
   FTracker.AddLine(Line, Line);
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TEditorLineNotifier.Create(OnLineChanged: TOnEditorLineChanged);
+constructor TEditLineHandler.Create(OnLineChanged: TOnEditorLineChanged);
 begin
   inherited Create;
   FOnLineChanged := OnLineChanged;
@@ -211,20 +256,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorLineNotifier.OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TEditLineHandler.OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
 begin
   FOnLineChanged(OldLine, NewLine, Data);
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintEditor.Create;
+constructor TEditorHandler.Create;
 begin
   inherited;
 
   // Once registered with the IDE, notifiers are reference counted
-  FNotifiers := TList<IIDENotifier>.Create;
-  FTrackers := TObjectList<TEditorLineTracker>.Create;
+  FNotifiers := TList<IIDEHandler>.Create;
+  FTrackers := TObjectList<TLineTracker>.Create;
   FInitedViews := TList<IInterface>.Create;
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
@@ -235,9 +280,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TLintEditor.Destroy;
+destructor TEditorHandler.Destroy;
 var
-  Notifier: IIDENotifier;
+  Notifier: IIDEHandler;
 begin
   for Notifier in FNotifiers do begin
     Notifier.Release;
@@ -256,7 +301,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnViewActivated(const View: IIDEEditView);
+procedure TEditorHandler.OnViewActivated(const View: IIDEEditView);
 begin
   FOnActiveFileChanged.Notify(View.FileName);
 
@@ -267,26 +312,26 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnViewAdded(const View: IIDEEditView);
+procedure TEditorHandler.OnViewAdded(const View: IIDEEditView);
 begin
   InitView(View);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.InitView(const View: IIDEEditView);
+procedure TEditorHandler.InitView(const View: IIDEEditView);
 
   procedure InitTracker;
   var
-    Tracker: TEditorLineTracker;
+    Tracker: TLineTracker;
     FileIssues: TArray<TLiveIssue>;
     Issue: TLiveIssue;
   begin
-    Tracker := TEditorLineTracker.Create(View.GetLineTracker);
+    Tracker := TLineTracker.Create(View.GetLineTracker);
     FTrackers.Add(Tracker);
     Tracker.OnLineChanged.AddListener(OnTrackedLineChanged);
     Tracker.OnEditorClosed.AddListener(
-      procedure (const Trckr: TEditorLineTracker) begin
+      procedure (const Trckr: TLineTracker) begin
         FTrackers.Remove(Trckr);
       end);
 
@@ -299,18 +344,18 @@ procedure TLintEditor.InitView(const View: IIDEEditView);
 
   procedure InitNotifier;
   var
-    Notifier: TLintView;
+    Notifier: TViewHandler;
     NotifierIndex: Integer;
   begin
-    Notifier := TLintView.Create;
+    Notifier := TViewHandler.Create;
     FNotifiers.Add(Notifier);
     NotifierIndex := View.AddNotifier(Notifier);
     Notifier.OnReleased.AddListener(
-      procedure(const Notf: IIDENotifier) begin
+      procedure(const Notf: IIDEHandler) begin
         View.RemoveNotifier(NotifierIndex);
       end);
     Notifier.OnOwnerFreed.AddListener(
-      procedure(const Notf: IIDENotifier) begin
+      procedure(const Notf: IIDEHandler) begin
         // Only one notifier per view so this is OK
         FNotifiers.Remove(Notf);
         FInitedViews.Remove(View);
@@ -325,16 +370,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintEditor.IsViewInited(const View: IIDEEditView): Boolean;
+function TEditorHandler.IsViewInited(const View: IIDEEditView): Boolean;
 begin
   Result := FInitedViews.Contains(View.Raw);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnAnalysisComplete(const Paths: TArray<string>);
+procedure TEditorHandler.OnAnalysisComplete(const Paths: TArray<string>);
 var
-  Tracker: TEditorLineTracker;
+  Tracker: TLineTracker;
   FileIssues: TArray<TLiveIssue>;
   Issue: TLiveIssue;
   SourceEditor: IIDESourceEditor;
@@ -360,18 +405,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintEditor.OnTrackedLineChanged(const ChangedLine: TChangedLine);
+procedure TEditorHandler.OnTrackedLineChanged(const ChangedLine: TChangedLine);
 begin
   Analyzer.UpdateIssueLine(ChangedLine.Tracker.FilePath, ChangedLine.FromLine, ChangedLine.ToLine);
 end;
 
 //______________________________________________________________________________________________________________________
 //
-// TLintView
+// TViewHandler
 //
 //______________________________________________________________________________________________________________________
 
-constructor TLintView.Create;
+constructor TViewHandler.Create;
 begin
   inherited;
 
@@ -381,7 +426,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-destructor TLintView.Destroy;
+destructor TViewHandler.Destroy;
 begin
   if ContextValid then begin
     Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
@@ -391,14 +436,14 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintView.OnAnalysisComplete(const Paths: TArray<string>);
+procedure TViewHandler.OnAnalysisComplete(const Paths: TArray<string>);
 begin
   FRepaint := True;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintView.OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
+procedure TViewHandler.OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
 begin
   if FRepaint then begin
     FullRepaint := True;
@@ -408,7 +453,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintView.OnPaintLine(const View: IIDEEditView; LineNumber: Integer; LineText: string;
+procedure TViewHandler.OnPaintLine(const View: IIDEEditView; LineNumber: Integer; LineText: string;
   const TextWidth: Integer; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 

@@ -27,7 +27,7 @@ uses
   , Vcl.ActnList
   , Vcl.Menus
   , Vcl.Forms
-  , DelphiLint.IDE
+  , DelphiLint.Handlers
   , DelphiLint.ToolFrame
   , DelphiLint.SettingsFrame
   , DelphiLint.OptionsForm
@@ -53,7 +53,7 @@ type
     procedure ActionOpenSettingsExecute(Sender: TObject);
     procedure ActionOpenProjectOptionsExecute(Sender: TObject);
   private
-    FEditor: TLintEditor;
+    FEditor: TEditorHandler;
     FEditorNotifier: Integer;
     FActionListIndex: Integer;
     FMainMenu: TMenuItem;
@@ -89,7 +89,7 @@ type
 
     property AnalysisActionsEnabled: Boolean read FAnalysisActionsEnabled write SetAnalysisActionsEnabled;
     property PluginEnabled: Boolean read FEnabled write SetPluginEnabled;
-    property Editor: TLintEditor read FEditor;
+    property Editor: TEditorHandler read FEditor;
   end;
 
   TIDEPlugin = class(TInterfacedObject, IPlugin)
@@ -214,9 +214,9 @@ end;
 procedure TPluginCore.OnRegister;
 begin
   // Editor notifier
-  FEditor := TLintEditor.Create;
+  FEditor := TEditorHandler.Create;
   FEditor.OnOwnerFreed.AddListener(
-    procedure(const Notf: IIDENotifier) begin
+    procedure(const Notf: IIDEHandler) begin
       if Assigned(Self) then begin
         FEditor := nil;
       end;

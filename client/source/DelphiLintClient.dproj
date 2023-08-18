@@ -104,7 +104,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="vcledge.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="DelphiLint.IDE.pas"/>
+        <DCCReference Include="DelphiLint.Handlers.pas"/>
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
         <DCCReference Include="DelphiLint.Logger.pas"/>
@@ -142,7 +142,6 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Resources.pas"/>
         <DCCReference Include="DelphiLint.Context.pas"/>
         <DCCReference Include="DelphiLint.IDEContext.pas"/>
-        <DCCReference Include="DelphiLint.Notifiers.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
@@ -241,6 +240,12 @@ $(PreBuildEvent)]]>
                 <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClient.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win32">
+                        <RemoteName>DelphiLintClient.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
