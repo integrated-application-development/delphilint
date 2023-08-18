@@ -178,7 +178,6 @@ implementation
 uses
     IdGlobal
   , Winapi.Windows
-  , DelphiLint.Settings
   , IdStack
   , System.IOUtils
   , DelphiLint.SetupForm

@@ -54,7 +54,6 @@ implementation
 
 uses
     System.SysUtils
-  , DelphiLint.Settings
   , DelphiLint.SetupForm
   , DelphiLint.Context
   ;

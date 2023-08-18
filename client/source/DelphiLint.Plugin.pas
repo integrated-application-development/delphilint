@@ -117,7 +117,6 @@ uses
     System.SysUtils
   , Vcl.ComCtrls
   , Winapi.Windows
-  , DelphiLint.IDEBaseTypes
   , DelphiLint.Utils
   , DelphiLint.SetupForm
   , DelphiLint.Version

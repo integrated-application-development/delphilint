@@ -79,7 +79,6 @@ uses
   , System.SysUtils
   , Vcl.Graphics
   , Vcl.Themes
-  , DelphiLint.Settings
   , DelphiLint.Context
   ;
 

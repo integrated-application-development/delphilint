@@ -33,6 +33,8 @@ type
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
+    constructor Create(Path: string);
+
     property ServerJarOverride: string index 0 read GetValueStr write SetValueStr;
     property ServerSonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
     property ServerJavaExeOverride: string index 2 read GetValueStr write SetValueStr;
@@ -46,8 +48,6 @@ type
     property JavaExe: string index 2 read GetJavaExe;
     property DefaultJavaExe: string read GetDefaultJavaExe;
     property SettingsDirectory: string read FSettingsDir;
-
-    constructor Create(Path: string);
   end;
 
 implementation

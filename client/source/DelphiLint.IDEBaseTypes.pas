@@ -19,16 +19,12 @@ unit DelphiLint.IDEBaseTypes;
 interface
 
 uses
-    System.Classes
-  , System.IniFiles
-  , Vcl.Graphics
+    System.IniFiles
   , Vcl.Menus
   , Vcl.Forms
   , Vcl.ActnList
   , Vcl.ImgList
   , Vcl.ComCtrls
-  , Winapi.Windows
-  , DelphiLint.Events
 {$IFDEF TOOLSAPI}
   , ToolsAPI
   , DockForm
