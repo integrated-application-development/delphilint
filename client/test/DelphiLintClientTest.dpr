@@ -16,7 +16,8 @@ uses
   {$ENDIF }
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
-  DelphiLintTest.Events in 'DelphiLintTest.Events.pas';
+  DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
+  DelphiLintTest.Data in 'DelphiLintTest.Data.pas';
 
 {$IFDEF TESTGUI}
 

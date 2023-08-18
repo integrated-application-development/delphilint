@@ -92,6 +92,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="DelphiLintTest.Events.pas"/>
+        <DCCReference Include="DelphiLintTest.Data.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
