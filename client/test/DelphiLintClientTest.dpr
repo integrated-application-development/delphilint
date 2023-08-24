@@ -17,7 +17,9 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
   DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
-  DelphiLintTest.Data in 'DelphiLintTest.Data.pas';
+  DelphiLintTest.Data in 'DelphiLintTest.Data.pas',
+  DelphiLintTest.MockUtils in 'DelphiLintTest.MockUtils.pas',
+  DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas';
 
 {$IFDEF TESTGUI}
 
