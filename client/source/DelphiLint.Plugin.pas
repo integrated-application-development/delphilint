@@ -79,7 +79,7 @@ type
     procedure RefreshAnalysisActions;
     procedure SetPluginEnabled(Value: Boolean);
 
-    procedure RemoveToolbarActions;
+    procedure RemoveToolbarActions(IDEServices: IIDEServices);
   public
     constructor Create(Owner: TComponent); overload; override;
     constructor Create(Owner: TComponent; IDEServices: IIDEServices); reintroduce; overload;
@@ -258,13 +258,13 @@ end;
 
 procedure TPluginCore.OnDeregister(IDEServices: IIDEServices);
 begin
-  LintContext.IDEServices.RemoveActionListFromIDEInsight(FActionListIndex);
-  RemoveToolbarActions;
+  IDEServices.RemoveActionListFromIDEInsight(FActionListIndex);
+  RemoveToolbarActions(IDEServices);
   FreeAndNil(FMainMenu);
-  LintContext.IDEServices.RemoveEditorNotifier(FEditorNotifier);
-  LintContext.IDEServices.UnregisterDockableForm(FToolFormInfo);
-  LintContext.IDEServices.RemovePluginInfo(FInfoIndex);
-  LintContext.IDEServices.UnregisterAddInOptions(FAddInOptions);
+  IDEServices.RemoveEditorNotifier(FEditorNotifier);
+  IDEServices.UnregisterDockableForm(FToolFormInfo);
+  IDEServices.RemovePluginInfo(FInfoIndex);
+  IDEServices.UnregisterAddInOptions(FAddInOptions);
   FreeAndNil(FOptionsForm);
 end;
 
@@ -386,7 +386,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TPluginCore.RemoveToolbarActions;
+procedure TPluginCore.RemoveToolbarActions(IDEServices: IIDEServices);
 
   procedure RemoveAction(Action: TAction; ToolBar: TToolBar);
   var
@@ -405,20 +405,20 @@ procedure TPluginCore.RemoveToolbarActions;
 
 const
   CToolBars: array of string = [
-    'CustomToolBar', 'StandardToolBar', 'DebugToolBar', 'ViewToolBar', 'DesktopToolBar',
-    'AlignToolbar', 'BrowserToolbar', 'HTMLDesignToolbar', 'HTMLFormatToolbar', 'HTMLTableToolbar', 'PersonalityToolBar',
+    'CustomToolBar', 'StandardToolBar', 'DebugToolBar', 'ViewToolBar', 'DesktopToolBar', 'AlignToolbar',
+    'BrowserToolbar', 'HTMLDesignToolbar', 'HTMLFormatToolbar', 'HTMLTableToolbar', 'PersonalityToolBar',
     'PositionToolbar', 'SpacingToolbar', 'IDEInsightToolbar', 'PlatformDeviceToolbar'
   ];
 var
   ToolBar: string;
 begin
   for ToolBar in CToolBars do begin
-    RemoveAction(ActionAnalyzeActiveFile, LintContext.IDEServices.GetToolBar(ToolBar));
-    RemoveAction(ActionAnalyzeOpenFiles, LintContext.IDEServices.GetToolBar(ToolBar));
-    RemoveAction(ActionShowToolWindow, LintContext.IDEServices.GetToolBar(ToolBar));
-    RemoveAction(ActionOpenProjectOptions, LintContext.IDEServices.GetToolBar(ToolBar));
-    RemoveAction(ActionOpenSettings, LintContext.IDEServices.GetToolBar(ToolBar));
-    RemoveAction(ActionRestartServer, LintContext.IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionAnalyzeActiveFile, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionAnalyzeOpenFiles, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionShowToolWindow, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionOpenProjectOptions, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionOpenSettings, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionRestartServer, IDEServices.GetToolBar(ToolBar));
   end;
 end;
 

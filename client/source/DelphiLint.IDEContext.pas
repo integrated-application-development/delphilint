@@ -227,6 +227,8 @@ end;
 
 destructor TIDELintContext.Destroy;
 begin
+  FPlugin.Deinit(FIDEServices);
+
   FAnalyzer := nil;
   FPlugin := nil;
   FreeAndNil(FSettings);

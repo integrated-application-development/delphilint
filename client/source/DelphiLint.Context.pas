@@ -307,9 +307,6 @@ end;
 initialization
 
 finalization
-  if Assigned(GLintContext) then begin
-    GLintContext.Plugin.Deinit(GLintContext.IDEServices);
-  end;
   GFinalized := True;
   GLintContext := nil;
 
