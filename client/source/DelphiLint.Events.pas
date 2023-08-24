@@ -38,18 +38,6 @@ type
     procedure Notify(const Arg: T);
   end;
 
-  TEventNotifier = class(TObject)
-  private
-    FListeners: TList<TEventListener>;
-  public
-    constructor Create;
-    destructor Destroy; override;
-
-    procedure AddListener(Listener: TEventListener);
-    procedure RemoveListener(Listener: TEventListener);
-    procedure Notify;
-  end;
-
 implementation
 
 uses
@@ -86,39 +74,6 @@ var
 begin
   for Listener in FListeners do begin
     Listener(Arg);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TEventNotifier.Create;
-begin
-  inherited;
-  FListeners := TList<TEventListener>.Create;
-end;
-
-destructor TEventNotifier.Destroy;
-begin
-  FreeAndNil(FListeners);
-  inherited;
-end;
-
-procedure TEventNotifier.AddListener(Listener: TEventListener);
-begin
-  FListeners.Add(Listener);
-end;
-
-procedure TEventNotifier.RemoveListener(Listener: TEventListener);
-begin
-  FListeners.Remove(Listener);
-end;
-
-procedure TEventNotifier.Notify;
-var
-  Listener: TEventListener;
-begin
-  for Listener in FListeners do begin
-    Listener;
   end;
 end;
 
