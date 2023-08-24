@@ -95,6 +95,7 @@
         <DCCReference Include="DelphiLintTest.Data.pas"/>
         <DCCReference Include="DelphiLintTest.MockUtils.pas"/>
         <DCCReference Include="DelphiLintTest.Handlers.pas"/>
+        <DCCReference Include="DelphiLintTest.MockContext.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

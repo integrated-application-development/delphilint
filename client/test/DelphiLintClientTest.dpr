@@ -19,7 +19,8 @@ uses
   DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
   DelphiLintTest.Data in 'DelphiLintTest.Data.pas',
   DelphiLintTest.MockUtils in 'DelphiLintTest.MockUtils.pas',
-  DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas';
+  DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas',
+  DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas';
 
 {$IFDEF TESTGUI}
 
