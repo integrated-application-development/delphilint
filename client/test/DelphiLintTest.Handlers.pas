@@ -202,7 +202,7 @@ var
   Notified: Boolean;
 begin
   Notified := False;
-  
+
   TMock.Construct<IIDEEditLineTracker, TMockedEditLineTracker>(Mock);
   LineTracker := TLineTracker.Create(Mock);
   try
@@ -210,7 +210,7 @@ begin
       procedure (const Hndlr: TLineTracker) begin
         Notified := True;
       end);
-    
+
     Mock.Notifier.OnOwnerFreed.Notify(Mock.Notifier);
     Assert.IsTrue(Notified);
   finally
@@ -227,18 +227,18 @@ var
   Notified: Boolean;
 begin
   Notified := False;
-  
+
   TMock.Construct<IIDEEditLineTracker, TMockedEditLineTracker>(Mock);
   LineTracker := TLineTracker.Create(Mock);
   try
     LineTracker.OnLineChanged.AddListener(
       procedure (const ChangedLine: TChangedLine) begin
         Notified := True;
-        Assert.AreEqual(3, ChangedLine.FromLine);  
+        Assert.AreEqual(3, ChangedLine.FromLine);
         Assert.AreEqual(2, ChangedLine.ToLine);
         Assert.AreEqual(LineTracker, ChangedLine.Tracker);
       end);
-    
+
     Mock.Notifier.OnLineChanged(1, 2, 3);
     Assert.IsTrue(Notified);
   finally
@@ -332,7 +332,7 @@ end;
 initialization
   Randomize;
   TDUnitX.RegisterTestFixture(THandlerTest);
-  TDUnitX.RegisterTestFixture(TEditLineHandlerTest);   
+  TDUnitX.RegisterTestFixture(TEditLineHandlerTest);
   TDUnitX.RegisterTestFixture(TLineTrackerTest);
 
 end.
