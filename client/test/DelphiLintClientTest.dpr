@@ -1,5 +1,7 @@
 program DelphiLintClientTest;
 
+{$R *.res}
+{$R *.dres}
 {$IFDEF TESTGUI}
 {$APPTYPE GUI}
 {$ELSE}
@@ -8,32 +10,29 @@ program DelphiLintClientTest;
 {$STRONGLINKTYPES ON}
 uses
   System.SysUtils,
-{$IFDEF TESTINSIGHT}
+  {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
-{$ELSE}
-{$IFDEF TESTGUI}
+  {$ELSE}
+  {$IFDEF TESTGUI}
   DUnitX.Loggers.GUI.VCL,
-  Vcl.Forms,
-{$ELSE}
+  {$ELSE}
   DUnitX.Loggers.Console,
-{$ENDIF}
-{$ENDIF}
+  {$ENDIF }
+  {$ENDIF }
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
   DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
   DelphiLintTest.Data in 'DelphiLintTest.Data.pas',
   DelphiLintTest.MockUtils in 'DelphiLintTest.MockUtils.pas',
   DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas',
-  DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas';
+  DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas',
+  DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas';
 
 {$IFDEF TESTINSIGHT}
 begin
   TestInsight.DUnitX.RunRegisteredTests;
 {$ELSE}
 {$IFDEF TESTGUI}
-
-{$R *.res}
-
 begin
   DUnitX.Loggers.GUI.VCL.Run;
 {$ELSE}

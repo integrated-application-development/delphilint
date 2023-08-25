@@ -109,6 +109,9 @@
         <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_OutputDRCFile>true</DCC_OutputDRCFile>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_3)'!=''">
@@ -132,6 +135,79 @@
         <DCCReference Include="DelphiLintTest.MockUtils.pas"/>
         <DCCReference Include="DelphiLintTest.Handlers.pas"/>
         <DCCReference Include="DelphiLintTest.MockContext.pas"/>
+        <DCCReference Include="DelphiLintTest.Plugin.pas"/>
+        <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DL_SPLASH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\delphilint_icon_48x48.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DL_ICON</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\code_smell.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_CODESMELL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\blocker.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_BLOCKER</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\bug.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_BUG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\critical.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_CRITICAL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\hotspot.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_HOTSPOT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\info.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_INFO</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\major.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MAJOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\minor.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MINOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\vulnerability.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_VULNERABILITY</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARN</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_fail.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_FAIL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESS</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_work.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WORK</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_disabled.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_DISABLED</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESSOUT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARNOUT</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -176,6 +252,12 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="target\Win32\GUI\DelphiLintClientTest.exe" Configuration="GUI" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>DelphiLintClientTest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.exe" Configuration="TestInsight" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
