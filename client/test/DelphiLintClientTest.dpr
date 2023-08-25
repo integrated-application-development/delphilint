@@ -8,12 +8,16 @@ program DelphiLintClientTest;
 {$STRONGLINKTYPES ON}
 uses
   System.SysUtils,
-  {$IFDEF TESTGUI}
+{$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX,
+{$ELSE}
+{$IFDEF TESTGUI}
   DUnitX.Loggers.GUI.VCL,
   Vcl.Forms,
-  {$ELSE}
+{$ELSE}
   DUnitX.Loggers.Console,
-  {$ENDIF }
+{$ENDIF}
+{$ENDIF}
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
   DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
@@ -22,6 +26,10 @@ uses
   DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas',
   DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas';
 
+{$IFDEF TESTINSIGHT}
+begin
+  TestInsight.DUnitX.RunRegisteredTests;
+{$ELSE}
 {$IFDEF TESTGUI}
 
 {$R *.res}
@@ -73,5 +81,6 @@ begin
     on E: Exception do
       System.Writeln(E.ClassName, ': ', E.Message);
   end;
+{$ENDIF}
 {$ENDIF}
 end.
