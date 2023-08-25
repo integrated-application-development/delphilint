@@ -66,7 +66,7 @@ type
   public
     procedure RefreshTheme;
 
-    class function TryFixSetup(SetPluginEnabled: Boolean = True): Boolean;
+    class function TryFixSetup: Boolean;
     class function IsSetupValid: Boolean;
   end;
 
@@ -94,7 +94,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-class function TLintSetupForm.TryFixSetup(SetPluginEnabled: Boolean = True): Boolean;
+class function TLintSetupForm.TryFixSetup: Boolean;
 var
   Form: TLintSetupForm;
 begin
@@ -110,14 +110,6 @@ begin
     end;
   end;
 
-  if SetPluginEnabled then begin
-    if Result then begin
-      LintContext.Plugin.EnablePlugin;
-    end
-    else begin
-      LintContext.Plugin.DisablePlugin;
-    end;
-  end;
 end;
 
 //______________________________________________________________________________________________________________________

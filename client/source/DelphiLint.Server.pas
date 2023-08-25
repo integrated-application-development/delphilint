@@ -306,7 +306,7 @@ begin
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := '127.0.0.1';
 
-  if not TLintSetupForm.TryFixSetup then begin
+  if not LintContext.ValidateSetup then begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 
@@ -395,7 +395,7 @@ var
 begin
   Log.Info('Requesting initialization...');
 
-  if not TLintSetupForm.TryFixSetup then begin
+  if not LintContext.ValidateSetup then begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 

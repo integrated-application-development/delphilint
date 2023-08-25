@@ -100,6 +100,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    function ValidateSetup: Boolean;
     function GetSettings: TLintSettings;
     function GetProjectOptions(ProjectFile: string): TLintProjectOptions;
   end;
@@ -115,6 +116,7 @@ uses
   , DelphiLint.Analyzer
   , DelphiLint.Logger
   , DelphiLint.Plugin
+  , DelphiLint.SetupForm
   , ToolsAPI
   , DockForm
   ;
@@ -295,6 +297,20 @@ end;
 function TIDELintContext.GetSettings: TLintSettings;
 begin
   Result := FSettings;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TIDELintContext.ValidateSetup: Boolean;
+begin
+  Result := TLintSetupForm.TryFixSetup;
+
+  if Result then begin
+    FPlugin.EnablePlugin;
+  end
+  else begin
+    FPlugin.DisablePlugin;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

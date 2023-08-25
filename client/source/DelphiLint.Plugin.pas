@@ -249,7 +249,7 @@ begin
 
   // Setup form
   LintContext.IDEServices.RegisterFormClass(TLintSetupForm);
-  FEnabled := TLintSetupForm.TryFixSetup(False);
+  FEnabled := LintContext.ValidateSetup;
 
   RefreshAnalysisActions;
 end;

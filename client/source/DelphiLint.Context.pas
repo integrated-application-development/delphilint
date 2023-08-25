@@ -218,6 +218,8 @@ type
     function GetSettings: TLintSettings;
     function GetProjectOptions(ProjectFile: string): TLintProjectOptions;
 
+    function ValidateSetup: Boolean;
+
     property Analyzer: IAnalyzer read GetAnalyzer;
     property Log: ILogger read GetLogger;
     property IDEServices: IIDEServices read GetIDEServices;
