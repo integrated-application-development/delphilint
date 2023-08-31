@@ -26,7 +26,8 @@ uses
   DelphiLintTest.MockUtils in 'DelphiLintTest.MockUtils.pas',
   DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas',
   DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas',
-  DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas';
+  DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas',
+  DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas';
 
 {$IFDEF TESTINSIGHT}
 begin
