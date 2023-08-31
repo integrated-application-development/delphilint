@@ -31,7 +31,7 @@ type
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
-    constructor Create(Path: string);
+    constructor Create(Path: string; LoadOnCreate: Boolean = True);
 
     property SonarHostProjectKey: string index 0 read GetValueStr write SetValueStr;
     property SonarHostUrl: string index 1 read GetValueStr write SetValueStr;
@@ -54,11 +54,14 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintProjectOptions.Create(Path: string);
+constructor TLintProjectOptions.Create(Path: string; LoadOnCreate: Boolean = True);
 begin
   FDir := TPath.GetDirectoryName(Path);
   inherited Create(Path);
-  Load;
+
+  if LoadOnCreate then begin
+    Load;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
