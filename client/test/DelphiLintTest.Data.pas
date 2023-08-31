@@ -12,7 +12,7 @@ type
   [TestFixture]
   TDataJsonParseTest = class(TObject)
   private
-    function Parse<T: TJsonValue>(Text: string): T;
+    function Parse<T: TJSONValue>(Text: string): T;
     procedure TestParseRuleType(Str: string; Value: TRuleType);
     procedure TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
   public
@@ -34,14 +34,15 @@ uses
 
 function TDataJsonParseTest.Parse<T>(Text: string): T;
 begin
-  Result := TJsonObject.ParseJSONValue(Text) as T;
+  Result := TJSONObject.ParseJSONValue(Text) as T;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TDataJsonParseTest.TestCreateRule;
 const
-  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule","severity":"MAJOR","type":"CODE_SMELL"}';
+  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule",'
+    + '"severity":"MAJOR","type":"CODE_SMELL"}';
 var
   JsonObject: TJSONObject;
   Rule: TRule;

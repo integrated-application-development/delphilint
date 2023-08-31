@@ -50,20 +50,15 @@ implementation
 
 uses
     System.SysUtils
-  , System.IOUtils
   , System.Generics.Collections
-  , System.Classes
   , Vcl.ComCtrls
   , Vcl.Menus
   , DelphiLint.Context
   , DelphiLint.Plugin
-  , DelphiLint.Resources
   , DelphiLint.Version
-  , DelphiLint.Settings
   , DelphiLintTest.MockUtils
   , DelphiLint.SetupForm
   , DelphiLint.OptionsForm
-  , DelphiLint.ToolFrame
   ;
 
 //______________________________________________________________________________________________________________________
@@ -273,7 +268,7 @@ begin
     Assert.IsTrue(IDEServices.IDE.Menus.ContainsKey('ToolsMenu'), 'DelphiLint menu should be after ''Tools''');
     Root := IDEServices.IDE.Menus['ToolsMenu'];
     Assert.IsTrue(Root.Count > ExpectedIndex);
-    Assert.AreEqual(ExpectedCaption, Root.Items[ExpectedIndex].Caption);
+    Assert.AreEqual(ExpectedCaption, Root[ExpectedIndex].Caption);
   finally
     Plugin.Deinit(IDEServices);
   end;
