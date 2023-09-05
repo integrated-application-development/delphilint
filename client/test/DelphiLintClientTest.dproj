@@ -51,6 +51,19 @@
         <Cfg_3>true</Cfg_3>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='CI' or '$(Cfg_4)'!=''">
+        <Cfg_4>true</Cfg_4>
+        <CfgParent>Cfg_3</CfgParent>
+        <Cfg_3>true</Cfg_3>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_4)'=='true') or '$(Cfg_4_Win32)'!=''">
+        <Cfg_4_Win32>true</Cfg_4_Win32>
+        <CfgParent>Cfg_4</CfgParent>
+        <Cfg_4>true</Cfg_4>
+        <Cfg_3>true</Cfg_3>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>DelphiLintClientTest</SanitizedProjectName>
         <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
@@ -104,6 +117,12 @@
     <PropertyGroup Condition="'$(Cfg_3_Win32)'!=''">
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4)'!=''">
+        <DCC_Define>CI;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
@@ -127,6 +146,10 @@
         <BuildConfiguration Include="Console">
             <Key>Cfg_3</Key>
             <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="CI">
+            <Key>Cfg_4</Key>
+            <CfgParent>Cfg_3</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
