@@ -4,6 +4,7 @@ interface
 
 uses
     DUnitX.TestFramework
+  , DelphiLint.Data
   ;
 
 type
@@ -40,12 +41,32 @@ type
     procedure TestFilePath;
   end;
 
+  [TestFixture]
+  TEditorHandlerTest = class(TObject)
+  private
+    function BuildLiveIssue(
+      FilePath: string;
+      Range: TRange;
+      IssueLines: TArray<string>;
+      LinesMoved: Integer = 0
+    ): TLiveIssue;
+  public
+    [TestCase]
+    procedure TestIssueLineUpdatedWhenTrackedLineChanged;
+    [TestCase]
+    procedure TestActivatedViewDoesNotDoubleInitTracker;
+    [TestCase('OnViewActivated', 'activated')]
+    [TestCase('OnViewAdded', 'added')]
+    procedure TestNewViewInitsTracker(NewType: string);
+  end;
+
 implementation
 
 uses
     System.SysUtils
   , DelphiLint.Handlers
   , DelphiLint.Context
+  , DelphiLintTest.MockContext
   , DelphiLintTest.MockUtils
   ;
 
@@ -329,10 +350,160 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TEditorHandlerTest.BuildLiveIssue(
+  FilePath: string;
+  Range: TRange;
+  IssueLines: TArray<string>;
+  LinesMoved: Integer = 0
+): TLiveIssue;
+var
+  IssueData: TLintIssue;
+begin
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', Range);
+  try
+  Result := TLiveIssue.Create(IssueData, IssueLines);
+  Result.LinesMoved := LinesMoved;
+  finally
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TEditorHandlerTest.TestActivatedViewDoesNotDoubleInitTracker;
+const
+  CFileName = 'abc.pas';
+var
+  MockAnalyzer: TMockAnalyzer;
+  MockView: TMockEditView;
+  MockLineTracker: TMockEditLineTracker;
+  Handler: TEditorHandler;
+begin
+  MockContext.MockAnalyzer(TMock.Construct<IAnalyzer, TMockAnalyzer>(MockAnalyzer));
+  MockAnalyzer.MockFileIssues(CFileName, [
+    BuildLiveIssue(CFileName, TRange.Create(5,1,5,16), ['abcdef']),
+    BuildLiveIssue(CFileName, TRange.Create(7,1,9,16), ['abcdef', 'abcdef', 'abcdef'], 3)
+  ]);
+
+  TMock.Construct<IIDEEditView, TMockEditView>(MockView);
+  MockView.MockedFileName := CFileName;
+  TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
+  MockLineTracker.MockedFileName := CFileName;
+  MockView.MockedLineTracker := MockLineTracker;
+
+  Handler := TEditorHandler.Create;
+  try
+    Handler.OnViewActivated(MockView);
+
+    Assert.AreEqual(2, MockLineTracker.MockedLines.Count);
+    Assert.AreEqual(5, MockLineTracker.MockedLines[5]);
+    Assert.AreEqual(10, MockLineTracker.MockedLines[10]);
+
+    MockLineTracker.Clear;
+    Assert.AreEqual(0, MockLineTracker.MockedLines.Count);
+
+    Handler.OnViewActivated(MockView);
+    Assert.AreEqual(0, MockLineTracker.MockedLines.Count);
+  finally
+    FreeAndNil(Handler);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TEditorHandlerTest.TestNewViewInitsTracker(NewType: string);
+const
+  CFileName = 'abc.pas';
+var
+  MockAnalyzer: TMockAnalyzer;
+  MockView: TMockEditView;
+  MockLineTracker: TMockEditLineTracker;
+  Handler: TEditorHandler;
+begin
+  MockContext.MockAnalyzer(TMock.Construct<IAnalyzer, TMockAnalyzer>(MockAnalyzer));
+  MockAnalyzer.MockFileIssues(CFileName, [
+    BuildLiveIssue(CFileName, TRange.Create(5,1,5,16), ['abcdef']),
+    BuildLiveIssue(CFileName, TRange.Create(7,1,9,16), ['abcdef', 'abcdef', 'abcdef'], 3)
+  ]);
+
+  TMock.Construct<IIDEEditView, TMockEditView>(MockView);
+  MockView.MockedFileName := CFileName;
+  TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
+  MockLineTracker.MockedFileName := CFileName;
+  MockView.MockedLineTracker := MockLineTracker;
+
+  Handler := TEditorHandler.Create;
+  try
+    if NewType = 'activated' then begin
+      Handler.OnViewActivated(MockView);
+    end
+    else if NewType = 'added' then begin
+      Handler.OnViewAdded(MockView);
+    end
+    else begin
+      Assert.Fail('Unknown view adding type');
+    end;
+
+    Assert.AreEqual(2, MockLineTracker.MockedLines.Count);
+    Assert.AreEqual(5, MockLineTracker.MockedLines[5]);
+    Assert.AreEqual(10, MockLineTracker.MockedLines[10]);
+  finally
+    FreeAndNil(Handler);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TEditorHandlerTest.TestIssueLineUpdatedWhenTrackedLineChanged;
+var
+  MockAnalyzer: TMockAnalyzer;
+  MockView: TMockEditView;
+  MockLineTracker: TMockEditLineTracker;
+  Handler: TEditorHandler;
+  Updated: Boolean;
+  LineHandler: IIDEEditLineHandler;
+begin
+  Updated := False;
+
+  MockContext.MockAnalyzer(TMock.Construct<IAnalyzer, TMockAnalyzer>(MockAnalyzer));
+  MockAnalyzer.OnCalled.AddListener(
+    procedure (const EventInfo: THookedEventInfo<TAnalyzerCallType>) begin
+      if EventInfo.Method = azcUpdateIssueLine then begin
+        Updated := True;
+        Assert.AreEqual('abc.pas', string(EventInfo.Args[0].VUnicodeString));
+        Assert.AreEqual(20, EventInfo.Args[1].VInteger);
+        Assert.AreEqual(25, EventInfo.Args[2].VInteger);
+      end;
+    end);
+
+  TMock.Construct<IIDEEditView, TMockEditView>(MockView);
+  MockView.MockedFileName := 'abc.pas';
+  TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
+  MockLineTracker.MockedFileName := 'abc.pas';
+  MockView.MockedLineTracker := MockLineTracker;
+
+  Handler := TEditorHandler.Create;
+  try
+    Handler.OnViewAdded(MockView);
+
+    Assert.AreEqual(1, MockLineTracker.MockedNotifiers.Count);
+    LineHandler := MockLineTracker.MockedNotifiers[0];
+
+    LineHandler.OnLineChanged(24, 25, 20);
+
+    Assert.IsTrue(Updated);
+  finally
+    FreeAndNil(Handler);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 initialization
   Randomize;
   TDUnitX.RegisterTestFixture(THandlerTest);
   TDUnitX.RegisterTestFixture(TEditLineHandlerTest);
   TDUnitX.RegisterTestFixture(TLineTrackerTest);
+  TDUnitX.RegisterTestFixture(TEditorHandlerTest);
 
 end.

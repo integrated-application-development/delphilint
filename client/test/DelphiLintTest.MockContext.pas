@@ -46,7 +46,7 @@ type
     destructor Destroy; override;
 
     procedure MockFileHistory(Path: string; History: TFileAnalysisHistory);
-    procedure MockFileIssues(Path: string; Issues: TObjectList<TLiveIssue>); overload;
+    procedure MockFileIssues(Path: string; Issues: TArray<TLiveIssue>); overload;
     procedure MockFileIssues(Path: string; Issues: TObjectDictionary<Integer, TLiveIssue>); overload;
     procedure MockFileIssue(Path: string; Line: Integer; Issue: TLiveIssue); overload;
     procedure MockFileStatus(Path: string; Status: TFileAnalysisStatus);
@@ -536,19 +536,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TObjectList<TLiveIssue>);
+procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TArray<TLiveIssue>);
 var
   I: Integer;
 begin
-  try
-    Path := NormalizePath(Path);
-    FIssues.AddOrSetValue(Path, TObjectDictionary<Integer, TLiveIssue>.Create);
+  Path := NormalizePath(Path);
+  FIssues.AddOrSetValue(Path, TObjectDictionary<Integer, TLiveIssue>.Create);
 
-    for I := 0 to Issues.Count - 1 do begin
-      FIssues[Path].AddOrSetValue(Issues[I].StartLine, Issues.ExtractAt(I));
-    end;
-  finally
-    FreeAndNil(Issues);
+  for I := 0 to Length(Issues) - 1 do begin
+    FIssues[Path].AddOrSetValue(Issues[I].StartLine, Issues[I]);
   end;
 end;
 
