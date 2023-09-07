@@ -599,6 +599,7 @@ var
   SanitizedPath: string;
   NewIssues: TDictionary<string, TObjectList<TLiveIssue>>;
   FileContents: TDictionary<string, TArray<string>>;
+  RelevantLines: TArray<string>;
   Path: string;
   NewIssuesForFile: TObjectList<TLiveIssue>;
   IssueCount: Integer;
@@ -616,7 +617,17 @@ begin
         FileContents.Add(SanitizedPath, TFile.ReadAllLines(Issue.FilePath, TEncoding.ANSI));
       end;
 
-      LiveIssue := TLiveIssue.Create(Issue, FileContents[SanitizedPath], IssuesHaveMetadata);
+      if Assigned(Issue.Range) then begin
+        RelevantLines := Copy(
+          FileContents[SanitizedPath],
+          Issue.Range.StartLine - 1,
+          Issue.Range.EndLine - Issue.Range.StartLine + 1);
+      end
+      else begin
+        SetLength(RelevantLines, 0);
+      end;
+
+      LiveIssue := TLiveIssue.Create(Issue, RelevantLines, IssuesHaveMetadata);
       NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 

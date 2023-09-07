@@ -20,7 +20,6 @@ interface
 
 uses
     System.JSON
-  , System.Generics.Collections
   ;
 
 type
@@ -34,6 +33,7 @@ type
     FEndLine: Integer;
     FEndLineOffset: Integer;
   public
+    constructor Create(StartLine: Integer; StartOffset: Integer; EndLine: Integer; EndOffset: Integer);
     constructor CreateFromJson(Json: TJSONObject);
 
     property StartLine: Integer read FStartLine;
@@ -60,6 +60,7 @@ type
     FCreationDate: string;
     FStatus: TIssueStatus;
   public
+    constructor Create(Assignee: string; Status: TIssueStatus; CreationDate: string);
     constructor CreateFromJson(Json: TJSONObject);
 
     property Assignee: string read FAssignee;
@@ -78,6 +79,12 @@ type
     FMetadata: TIssueMetadata;
 
   public
+    constructor Create(
+      RuleKey: string;
+      Message: string;
+      FilePath: string;
+      Range: TRange;
+      Metadata: TIssueMetadata = nil);
     constructor CreateFromJson(Json: TJSONObject);
     destructor Destroy; override;
 
@@ -141,14 +148,12 @@ type
     FEndLineOffset: Integer;
     FLinesMoved: Integer;
     FTethered: Boolean;
-    FLines: TList<string>;
+    FLines: TArray<string>;
 
     function GetStartLine: Integer;
     function GetEndLine: Integer;
-    procedure PopulateLines(const FileLines: TArray<string>);
   public
-    constructor Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
-    destructor Destroy; override;
+    constructor Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
 
     procedure NewLineMoveSession;
     procedure UpdateTether(LineNum: Integer; LineText: string);
@@ -213,6 +218,17 @@ uses
 
 //______________________________________________________________________________________________________________________
 
+constructor TRange.Create(StartLine: Integer; StartOffset: Integer; EndLine: Integer; EndOffset: Integer);
+begin
+  inherited Create;
+  FStartLine := StartLine;
+  FEndLine := EndLine;
+  FStartLineOffset := StartOffset;
+  FEndLineOffset := EndOffset;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TRange.CreateFromJson(Json: TJSONObject);
 begin
   inherited Create;
@@ -220,6 +236,18 @@ begin
   FEndLine := Json.GetValue<Integer>('endLine', 0);
   FStartLineOffset := Json.GetValue<Integer>('startOffset', 0);
   FEndLineOffset := Json.GetValue<Integer>('endOffset', 0);
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TLintIssue.Create(RuleKey, Message, FilePath: string; Range: TRange; Metadata: TIssueMetadata);
+begin
+  inherited Create;
+  FRuleKey := RuleKey;
+  FMessage := Message;
+  FFilePath := FilePath;
+  FRange := Range;
+  FMetadata := Metadata;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -273,6 +301,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+constructor TIssueMetadata.Create(Assignee: string; Status: TIssueStatus; CreationDate: string);
+begin
+  inherited Create;
+  FAssignee := Assignee;
+  FCreationDate := CreationDate;
+  FStatus := Status;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TIssueMetadata.CreateFromJson(Json: TJSONObject);
 const
   C_Statuses: array of string = ['OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED', 'CLOSED', 'TO_REVIEW', 'REVIEWED'];
@@ -286,7 +324,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLiveIssue.Create(Issue: TLintIssue; FileLines: TArray<string>; HasMetadata: Boolean = False);
+constructor TLiveIssue.Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
 begin
   inherited Create;
 
@@ -302,9 +340,20 @@ begin
   end
   else begin
     FStartLine := 1;
-    FEndLine := 2;
+    FEndLine := 1;
     FStartLineOffset := 0;
     FEndLineOffset := 0;
+  end;
+
+  if Length(IssueLines) <> (FEndLine - FStartLine + 1) then begin
+    raise ERangeError.CreateFmt(
+      'Issue spans %d lines (line %d to line %d), but %d lines were associated',
+      [
+        FEndLine - FStartLine + 1,
+        FStartLine,
+        FEndLine,
+        Length(IssueLines)
+      ]);
   end;
 
   FHasMetadata := HasMetadata;
@@ -315,34 +364,8 @@ begin
   end;
 
   FLinesMoved := 0;
-  FLines := TList<string>.Create;
+  FLines := IssueLines;
   FTethered := True;
-
-  PopulateLines(FileLines);
-end;
-
-//______________________________________________________________________________________________________________________
-
-destructor TLiveIssue.Destroy;
-begin
-  FreeAndNil(FLines);
-  inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLiveIssue.PopulateLines(const FileLines: TArray<string>);
-var
-  LineNum: Integer;
-begin
-  if FileExists(FFilePath) and (Length(FileLines) > StartLine) then begin
-    LineNum := StartLine;
-
-    while (LineNum <= EndLine) and (LineNum < Length(FileLines)) do begin
-      FLines.Add(FileLines[LineNum - 1]);
-      Inc(LineNum);
-    end;
-  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -363,7 +386,7 @@ begin
   end;
 
   Delta := LineNum - StartLine;
-  if (Delta >= 0) and (Delta < FLines.Count) then begin
+  if (Delta >= 0) and (Delta < Length(FLines)) then begin
     if (FLines[Delta] <> LineText) then begin
       Untether;
     end;
