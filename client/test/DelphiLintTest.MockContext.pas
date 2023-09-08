@@ -320,7 +320,6 @@ type
   TMockLintContext = class(TInterfacedObject, ILintContext)
   private
     FAnalyzer: IAnalyzer;
-    FLogger: ILogger;
     FIDEServices: IIDEServices;
     FPlugin: IPlugin;
     FSettings: TLintSettings;
@@ -332,7 +331,6 @@ type
     procedure Deinit;
   protected
     function GetAnalyzer: IAnalyzer;
-    function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
     function GetPlugin: IPlugin;
   public
@@ -624,7 +622,6 @@ begin
   FAnalyzer := nil;
   FPlugin := nil;
   FreeAndNil(FSettings);
-  FLogger := nil;
   FIDEServices := nil;
   FreeAndNil(FProjectOptionsList);
 
@@ -654,13 +651,6 @@ begin
   end;
 
   Result := FIDEServices;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TMockLintContext.GetLogger: ILogger;
-begin
-  Result := TNoOpLogger.Create;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -1310,6 +1300,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 initialization
+  SetLogger(TNoOpLogger.Create);
   SetLintContext(TMockLintContext.Create);
 
 end.

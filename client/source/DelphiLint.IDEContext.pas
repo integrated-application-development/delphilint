@@ -86,14 +86,12 @@ type
   TIDELintContext = class(TInterfacedObject, ILintContext)
   private
     FAnalyzer: IAnalyzer;
-    FLogger: ILogger;
     FIDEServices: IIDEServices;
     FPlugin: IPlugin;
     FSettings: TLintSettings;
     FSettingsDir: string;
   protected
     function GetAnalyzer: IAnalyzer;
-    function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
     function GetPlugin: IPlugin;
   public
@@ -112,6 +110,7 @@ implementation
 uses
     System.SysUtils
   , System.IOUtils
+  , System.DateUtils
   , Winapi.Windows
   , DelphiLint.Analyzer
   , DelphiLint.Logger
@@ -216,6 +215,19 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function BuildDelphiLintFileLogger: ILogger;
+var
+  LogDir: string;
+  LogPath: string;
+begin
+  LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
+  TDirectory.CreateDirectory(LogDir);
+  LogPath := TPath.Combine(LogDir, 'delphilint-client.log');
+  Result := TFileLogger.Create(LogPath);
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TIDELintContext.Create;
 begin
   inherited;
@@ -223,6 +235,9 @@ begin
 
   FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
   FSettings := TLintSettings.Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
+
+  Log.Info('-------------------------------------------------');
+  Log.Info('DelphiLint started at %s', [DateToISO8601(Now)]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -234,7 +249,6 @@ begin
   FAnalyzer := nil;
   FPlugin := nil;
   FreeAndNil(FSettings);
-  FLogger := nil;
   FIDEServices := nil;
   inherited;
 end;
@@ -259,23 +273,6 @@ begin
   end;
 
   Result := FIDEServices;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TIDELintContext.GetLogger: ILogger;
-var
-  LogDir: string;
-  LogPath: string;
-begin
-  if not Assigned(FLogger) then begin
-    LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
-    TDirectory.CreateDirectory(LogDir);
-    LogPath := TPath.Combine(LogDir, Format('delphilint-client_%s.log', [FormatDateTime('yyyymmdd_hhnnss', Now)]));
-    FLogger := TFileLogger.Create(LogPath);
-  end;
-
-  Result := FLogger;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -797,6 +794,7 @@ begin
 end;
 
 initialization
+  SetLogger(BuildDelphiLintFileLogger);
   SetLintContext(TIDELintContext.Create);
 
 end.

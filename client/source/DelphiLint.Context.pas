@@ -212,7 +212,6 @@ type
 
   ILintContext = interface
     function GetAnalyzer: IAnalyzer;
-    function GetLogger: ILogger;
     function GetIDEServices: IIDEServices;
     function GetPlugin: IPlugin;
     function GetSettings: TLintSettings;
@@ -221,7 +220,6 @@ type
     function ValidateSetup: Boolean;
 
     property Analyzer: IAnalyzer read GetAnalyzer;
-    property Log: ILogger read GetLogger;
     property IDEServices: IIDEServices read GetIDEServices;
     property Plugin: IPlugin read GetPlugin;
     property Settings: TLintSettings read GetSettings;
@@ -233,11 +231,13 @@ function ContextValid: Boolean;
 function Log: ILogger;
 
 procedure SetLintContext(Context: ILintContext);
+procedure SetLogger(Logger: ILogger);
 
 implementation
 
 var
   GLintContext: ILintContext;
+  GLogger: ILogger;
   GFinalized: Boolean = False;
 
 type
@@ -264,12 +264,9 @@ end;
 //______________________________________________________________________________________________________________________
 
 function Log: ILogger;
-var
-  Context: ILintContext;
 begin
-  Context := LintContext;
-  if Assigned(Context) then begin
-    Result := Context.Log;
+  if Assigned(GLogger) then begin
+    Result := GLogger;
   end
   else begin
     Result := TNoOpLogger.Create;
@@ -281,6 +278,13 @@ end;
 procedure SetLintContext(Context: ILintContext);
 begin
   GLintContext := Context;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure SetLogger(Logger: ILogger);
+begin
+  GLogger := Logger;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -311,5 +315,6 @@ initialization
 finalization
   GFinalized := True;
   GLintContext := nil;
+  GLogger := nil;
 
 end.

@@ -45,6 +45,7 @@ implementation
 
 uses
     System.SysUtils
+  , System.Classes
   , System.IOUtils
   ;
 
@@ -56,6 +57,10 @@ begin
 
   FLogPath := LogPath;
   FLock := TMutex.Create;
+
+  if not TFile.Exists(FLogPath) then begin
+    FreeAndNil(TFile.Create(FLogPath));
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -94,11 +99,18 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TFileLogger.WriteLogFile(Msg: string);
+var
+  Stream: TFileStream;
+  MsgBytes: TBytes;
 begin
   FLock.Acquire;
   try
-    TFile.AppendAllText(FLogPath, Msg + #13#10);
+    MsgBytes := TEncoding.UTF8.GetBytes(Msg + #13#10);
+    Stream := TFileStream.Create(FLogPath, fmOpenWrite or fmShareDenyNone);
+    Stream.Seek(0, soFromEnd);
+    Stream.Write(MsgBytes, Length(MsgBytes));
   finally
+    FreeAndNil(Stream);
     FLock.Release;
   end;
 end;
