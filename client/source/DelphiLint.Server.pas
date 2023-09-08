@@ -105,12 +105,11 @@ type
   ELintPortRefused = class(ELintServerError)
   end;
 
-  TLintServer = class(TThread)
+  TLintServer = class(TObject)
   private
     FTcpClient: TIdTCPClient;
     FResponseActions: TDictionary<Integer, TResponseAction>;
     FNextId: Integer;
-    FTcpLock: TMutex;
     FExtProcessHandle: THandle;
 
     procedure SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil); overload;
@@ -125,11 +124,6 @@ type
       ShowConsole: Boolean): Integer;
     procedure StopExtServer;
 
-    procedure OnInitializeResponse(
-      const Response: TLintMessage;
-      InitializeEvent: TEvent;
-      var ErrorMsg: string
-    );
     procedure OnAnalyzeResponse(
       Response: TLintMessage;
       OnResult: TAnalyzeResultAction;
@@ -142,14 +136,11 @@ type
       OnError: TErrorAction
     );
 
-  protected
-    procedure DoTerminate; override;
-
   public
     constructor Create;
     destructor Destroy; override;
 
-    procedure Execute; override;
+    function Process: Boolean;
 
     procedure Initialize(SonarHostUrl: string; ApiToken: string; DownloadPlugin: Boolean);
     procedure Analyze(
@@ -171,6 +162,27 @@ type
       DownloadPlugin: Boolean = True);
   end;
 
+  TLintServerThread = class(TThread)
+  private
+    FLock: TMutex;
+    FServer: TLintServer;
+    FServerDone: Boolean;
+
+    function AcquireServerPossibleUninit: TLintServer;
+  protected
+    procedure DoTerminate; override;
+
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure Execute; override;
+
+    function AcquireServer: TLintServer;
+    procedure RefreshServer;
+    procedure ReleaseServer;
+  end;
+
 //______________________________________________________________________________________________________________________
 
 implementation
@@ -180,7 +192,7 @@ uses
   , Winapi.Windows
   , IdStack
   , System.IOUtils
-  , DelphiLint.SetupForm
+  , System.TimeSpan
   , DelphiLint.Utils
   , DelphiLint.Context
   ;
@@ -296,11 +308,9 @@ end;
 
 constructor TLintServer.Create;
 begin
-  inherited Create(False);
+  inherited;
 
   FNextId := 1;
-  FTcpLock := TMutex.Create;
-
   FResponseActions := TDictionary<Integer, TResponseAction>.Create;
 
   FTcpClient := TIdTCPClient.Create;
@@ -336,50 +346,33 @@ end;
 
 destructor TLintServer.Destroy;
 begin
+  StopExtServer;
   FreeAndNil(FTcpClient);
   FreeAndNil(FResponseActions);
-  FreeAndNil(FTcpLock);
   inherited;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.DoTerminate;
+function TLintServer.Process: Boolean;
 begin
-  Log.Info('Terminating server thread');
-  StopExtServer;
+  Result := True;
+  try
+    if FTcpClient.IOHandler.CheckForDataOnSource(50) then begin
+      ReceiveMessage;
+    end;
+  except
+    on E: EIdSocketError do begin
+      Log.Info('Socket error in server thread: ' + E.Message);
 
-  // TThread.DoTerminate calls OnTerminate on the main thread using Synchronize.
-  // This is a bizarre choice that has the potential for thread cycles.
-  if Assigned(OnTerminate) then begin
-    OnTerminate(Self);
-  end;
-
-  Log.Info('Lint server thread terminated');
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintServer.Execute;
-begin
-  while not Terminated do begin
-    try
-      if FTcpClient.IOHandler.CheckForDataOnSource(50) then begin
-        ReceiveMessage;
+      FTcpClient.CheckForGracefulDisconnect(False);
+      if not FTcpClient.Connected then begin
+        Log.Info('TCP connection was unexpectedly terminated');
+        Result := False;
       end;
-    except
-      on E: EIdSocketError do begin
-        Log.Info('Socket error in server thread: ' + E.Message);
-
-        FTcpClient.CheckForGracefulDisconnect(False);
-        if not FTcpClient.Connected then begin
-          Log.Info('TCP connection was unexpectedly terminated, terminating server thread');
-          Break;
-        end;
-      end;
-      on E: Exception do begin
-        Log.Info('Error occurred in server thread: ' + E.Message);
-      end;
+    end;
+    on E: Exception do begin
+      Log.Info('Error occurred in server thread: ' + E.Message);
     end;
   end;
 end;
@@ -389,9 +382,10 @@ end;
 procedure TLintServer.Initialize(SonarHostUrl: string; ApiToken: string; DownloadPlugin: Boolean);
 var
   InitializeMsg: TLintMessage;
-  InitializeCompletedEvent: TEvent;
+  InitializeCompleted: Boolean;
   DownloadUrl: string;
   ErrorMsg: string;
+  TimeWaitStarted: TDateTime;
 begin
   Log.Info('Requesting initialization...');
 
@@ -399,58 +393,56 @@ begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 
-  try
-    if DownloadPlugin then begin
-      DownloadUrl := SonarHostUrl;
-    end
-    else begin
-      DownloadUrl := '';
-    end;
+  if DownloadPlugin then begin
+    DownloadUrl := SonarHostUrl;
+  end
+  else begin
+    DownloadUrl := '';
+  end;
 
+  try
     InitializeMsg := TLintMessage.Initialize(
       LintContext.IDEServices.GetRootDirectory,
       GetDelphiVersion,
       LintContext.Settings.SonarDelphiJar,
       DownloadUrl,
       ApiToken);
-    InitializeCompletedEvent := TEvent.Create;
+    InitializeCompleted := False;
 
     SendMessage(
       InitializeMsg,
       procedure(const Response: TLintMessage) begin
-        OnInitializeResponse(Response, InitializeCompletedEvent, ErrorMsg);
+        if Response.Category = C_Initialized then begin
+          InitializeCompleted := True;
+        end
+        else begin
+          ErrorMsg := Response.Data.Value;
+          Log.Info('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
+        end;
       end);
-
-    if InitializeCompletedEvent.WaitFor(C_Timeout) <> wrSignaled then begin
-      raise ELintServerTimedOut.Create('Initialize timed out');
-    end
-    else if (ErrorMsg <> '') then begin
-      Log.Info('Error during initialization');
-      raise ELintServerFailed.Create(ErrorMsg);
-    end;
-
-    Log.Info('...initialized');
   finally
     FreeAndNil(InitializeMsg);
-    FreeAndNil(InitializeCompletedEvent);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintServer.OnInitializeResponse(const Response: TLintMessage; InitializeEvent: TEvent; var ErrorMsg: string);
-begin
-  if Assigned(InitializeEvent) then begin
-    InitializeEvent.SetEvent;
   end;
 
-  if Response.Category <> C_Initialized then begin
-    ErrorMsg := Response.Data.Value;
-    Log.Info('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
-  end
-  else begin
-    ErrorMsg := '';
+  TimeWaitStarted := Now;
+  while TTimeSpan.Subtract(Now, TimeWaitStarted).TotalSeconds < 3 do begin
+    Process;
+
+    if InitializeCompleted or (ErrorMsg <> '') then begin
+      Break;
+    end;
   end;
+
+  if not InitializeCompleted then begin
+    if (ErrorMsg <> '') then begin
+      raise ELintServerFailed.Create(ErrorMsg);
+    end
+    else begin
+      raise ELintServerTimedOut.Create('Initialize timed out');
+    end;
+  end;
+
+  Log.Info('...initialized');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -615,24 +607,19 @@ var
   DataBytes: TArray<Byte>;
   DataByte: Byte;
 begin
-  FTcpLock.Acquire;
-  try
-    FTcpClient.IOHandler.Write(Req.Category);
-    FTcpClient.IOHandler.Write(Id);
+  FTcpClient.IOHandler.Write(Req.Category);
+  FTcpClient.IOHandler.Write(Id);
 
-    if Assigned(Req.Data) then begin
-      DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
+  if Assigned(Req.Data) then begin
+    DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
 
-      FTcpClient.IOHandler.Write(Length(DataBytes));
-      for DataByte in DataBytes do begin
-        FTcpClient.IOHandler.Write(DataByte);
-      end;
-    end
-    else begin
-      FTcpClient.IOHandler.Write(Integer(0));
+    FTcpClient.IOHandler.Write(Length(DataBytes));
+    for DataByte in DataBytes do begin
+      FTcpClient.IOHandler.Write(DataByte);
     end;
-  finally
-    FTcpLock.Release;
+  end
+  else begin
+    FTcpClient.IOHandler.Write(Integer(0));
   end;
 end;
 
@@ -751,20 +738,15 @@ procedure TLintServer.StopExtServer;
 var
   QuitMsg: TLintMessage;
 begin
-  FTcpLock.Acquire;
-  try
-    FTcpClient.CheckForGracefulDisconnect(False);
-    if FTcpClient.Connected then begin
-      QuitMsg := TLintMessage.Quit;
-      try
-        SendMessage(QuitMsg);
-      finally
-        FreeAndNil(QuitMsg);
-      end;
-      FTcpClient.Disconnect;
+  FTcpClient.CheckForGracefulDisconnect(False);
+  if FTcpClient.Connected then begin
+    QuitMsg := TLintMessage.Quit;
+    try
+      SendMessage(QuitMsg);
+    finally
+      FreeAndNil(QuitMsg);
     end;
-  finally
-    FTcpLock.Release;
+    FTcpClient.Disconnect;
   end;
 
   if FExtProcessHandle <> 0 then begin
@@ -784,15 +766,10 @@ procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TResponseAction
 var
   Id: Integer;
 begin
-  FTcpLock.Acquire;
-  try
-    Id := FNextId;
-    Inc(FNextId);
-    if Assigned(OnResponse) then begin
-      FResponseActions.Add(Id, OnResponse);
-    end;
-  finally
-    FTcpLock.Release;
+  Id := FNextId;
+  Inc(FNextId);
+  if Assigned(OnResponse) then begin
+    FResponseActions.Add(Id, OnResponse);
   end;
 
   SendMessage(Req, Id);
@@ -810,15 +787,10 @@ var
   DataJsonValue: TJSONValue;
   Message: TLintMessage;
 begin
-  FTcpLock.Acquire;
-  try
-    Category := FTcpClient.IOHandler.ReadByte;
-    Id := FTcpClient.IOHandler.ReadInt32;
-    Length := FTcpClient.IOHandler.ReadInt32;
-    FTcpClient.IOHandler.ReadBytes(IdDataBuffer, Length);
-  finally
-    FTcpLock.Release;
-  end;
+  Category := FTcpClient.IOHandler.ReadByte;
+  Id := FTcpClient.IOHandler.ReadInt32;
+  Length := FTcpClient.IOHandler.ReadInt32;
+  FTcpClient.IOHandler.ReadBytes(IdDataBuffer, Length);
 
   DataBuffer := TBytes(IdDataBuffer);
 
@@ -842,6 +814,122 @@ begin
   finally
     FreeAndNil(Message);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerThread.AcquireServerPossibleUninit: TLintServer;
+begin
+  FLock.Acquire;
+  Result := FServer;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerThread.AcquireServer: TLintServer;
+begin
+  if FServerDone then begin
+    raise ELintServerError.Create('Server acquisition attempted from terminated thread');
+  end;
+
+  FLock.Acquire;
+  try
+    if not Assigned(FServer) then begin
+      FServer := TLintServer.Create;
+    end;
+  except
+    on E: Exception do begin
+      FLock.Release;
+      raise;
+    end;
+  end;
+
+  Result := FServer;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerThread.RefreshServer;
+begin
+  try
+    FreeAndNil(FServer);
+  except
+    on E: Exception do begin
+      Log.Info('Free of old server failed with error: %s', [E.Message]);
+    end;
+  end;
+
+  FServer := TLintServer.Create;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerThread.ReleaseServer;
+begin
+  FLock.Release;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TLintServerThread.Create;
+begin
+  inherited;
+  FLock := TMutex.Create;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLintServerThread.Destroy;
+begin
+  FreeAndNil(FServer);
+  FreeAndNil(FLock);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerThread.DoTerminate;
+begin
+  // TThread.DoTerminate calls OnTerminate on the main thread using Synchronize.
+  // This is a bizarre choice that has the potential for thread cycles.
+  if Assigned(OnTerminate) then begin
+    OnTerminate(Self);
+  end;
+
+  Log.Info('Server thread: Terminated');
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerThread.Execute;
+begin
+  inherited;
+  Log.Info('Server thread: Started');
+
+  while not Terminated do begin
+    AcquireServerPossibleUninit;
+    try
+      if not Terminated then begin
+        if Assigned(FServer) and not FServer.Process then begin
+          RefreshServer;
+        end;
+      end;
+    finally
+      ReleaseServer;
+    end;
+  end;
+
+  Log.Info('Server thread: Terminating');
+
+  AcquireServerPossibleUninit;
+  try
+    FreeAndNil(FServer);
+    FServerDone := True;
+  finally
+    ReleaseServer;
+  end;
+
+  Log.Info('Server thread: Server freed');
 end;
 
 //______________________________________________________________________________________________________________________

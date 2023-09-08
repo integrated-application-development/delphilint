@@ -30,7 +30,7 @@ uses
 type
   TAnalyzerImpl = class(TInterfacedObject, IAnalyzer)
   private
-    FServer: TLintServer;
+    FServerThread: TLintServerThread;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FRules: TObjectDictionary<string, TRule>;
@@ -39,16 +39,14 @@ type
     FOnAnalysisComplete: TEventNotifier<TArray<string>>;
     FOnAnalysisFailed: TEventNotifier<TArray<string>>;
     FServerTerminateEvent: TEvent;
-    FServerLock: TMutex;
 
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
     procedure OnAnalyzeError(Message: string);
-    procedure OnServerTerminated(Sender: TObject);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
-    procedure EnsureServerInited;
-    function GetInitedServer: TLintServer;
     function TryRefreshRules: Boolean;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
+
+    procedure TriggerServerTerminateEvent(Sender: TObject);
 
     function FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 
@@ -245,10 +243,9 @@ begin
   FCurrentAnalysis := TCurrentAnalysis.Create(IncludedFiles);
   FOnAnalysisStarted.Notify(IncludedFiles);
 
-  FServerLock.Acquire;
+  Server := FServerThread.AcquireServer;
   try
     try
-      Server := GetInitedServer;
       Server.Analyze(
         BaseDir,
         IncludedFiles,
@@ -266,7 +263,7 @@ begin
       end;
     end;
   finally
-    FServerLock.Release;
+    FServerThread.ReleaseServer;
   end;
 end;
 
@@ -310,38 +307,33 @@ begin
   FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
   FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
   FRules := TObjectDictionary<string, TRule>.Create;
-  FServerLock := TMutex.Create;
-  FServer := nil;
-
-  Log.Info('DelphiLint context initialised');
+  FServerThread := TLintServerThread.Create;
+  FServerThread.FreeOnTerminate := False;
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TAnalyzerImpl.Destroy;
 var
-  WaitForTerminate: Boolean;
+  ServerWaitResult: TWaitResult;
 begin
-  WaitForTerminate := False;
-
   FServerTerminateEvent := TEvent.Create;
   try
-    FServerLock.Acquire;
-    try
-      if Assigned(FServer) then begin
-        WaitForTerminate := True;
-        FServer.OnTerminate := nil;
-        FServer.Terminate;
-      end;
-    finally
-      FServerLock.Release;
-    end;
-
-    if WaitForTerminate then begin
-      FServerTerminateEvent.WaitFor(1200);
-    end;
+    FServerThread.OnTerminate := TriggerServerTerminateEvent;
+    FServerThread.Terminate;
+    Log.Info('Server told to terminate, waiting...');
+    ServerWaitResult := FServerTerminateEvent.WaitFor(1500);
   finally
     FreeAndNil(FServerTerminateEvent);
+  end;
+
+  if ServerWaitResult = wrSignaled then begin
+    Log.Info('Received OnTerminate signal from server thread, freeing');
+    FreeAndNil(FServerThread);
+  end
+  else begin
+    FServerThread.FreeOnTerminate := True;
+    Log.Info('Wait for server thread to terminate timed out. This may leak memory');
   end;
 
   FreeAndNil(FRules);
@@ -351,8 +343,6 @@ begin
   FreeAndNil(FOnAnalysisComplete);
   FreeAndNil(FOnAnalysisFailed);
   FreeAndNil(FCurrentAnalysis);
-  FreeAndNil(FServerLock);
-
   inherited;
 end;
 
@@ -437,50 +427,6 @@ begin
       end;
     end;
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TAnalyzerImpl.EnsureServerInited;
-begin
-  FServerLock.Acquire;
-  try
-    if not Assigned(FServer) then begin
-      FServer := TLintServer.Create;
-      FServer.OnTerminate := OnServerTerminated;
-      FServer.FreeOnTerminate := True;
-    end;
-  finally
-    FServerLock.Release;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TAnalyzerImpl.OnServerTerminated(Sender: TObject);
-begin
-  FServerLock.Acquire;
-  try
-    FServer := nil;
-  finally
-    FServerLock.Release;
-  end;
-
-  if GetInAnalysis then begin
-    OnAnalyzeError('Analysis failed as the server was terminated');
-  end;
-
-  if Assigned(FServerTerminateEvent) then begin
-    FServerTerminateEvent.SetEvent;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TAnalyzerImpl.GetInitedServer: TLintServer;
-begin
-  EnsureServerInited;
-  Result := FServer;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -658,6 +604,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TAnalyzerImpl.TriggerServerTerminateEvent(Sender: TObject);
+begin
+  if Assigned(FServerTerminateEvent) then begin
+    FServerTerminateEvent.SetEvent;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TAnalyzerImpl.TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 begin
   Result := FFileAnalyses.TryGetValue(NormalizePath(Path), History);
@@ -726,17 +681,8 @@ begin
       DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;
     end;
 
-    FServerLock.Acquire;
+    Server := FServerThread.AcquireServer;
     try
-      try
-        Server := GetInitedServer;
-      except
-        on E: ELintServerError do begin
-          TaskMessageDlg('The DelphiLint server encountered an error.', Format('%s.', [E.Message]), mtError, [mbOK], 0);
-          Exit;
-        end;
-      end;
-
       Server.RetrieveRules(
         SonarHostUrl,
         ProjectKey,
@@ -766,7 +712,7 @@ begin
         SonarHostToken,
         DownloadPlugin);
     finally
-      FServerLock.Release;
+      FServerThread.ReleaseServer;
     end;
 
     if RulesRetrieved.WaitFor(3000) = TWaitResult.wrSignaled then begin
@@ -785,41 +731,14 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TAnalyzerImpl.RestartServer;
-var
-  WaitForTerminate: Boolean;
 begin
-  WaitForTerminate := False;
-  FServerTerminateEvent := TEvent.Create;
   try
-    FServerLock.Acquire;
+    FServerThread.AcquireServer;
     try
-      if Assigned(FServer) then begin
-        WaitForTerminate := True;
-        FServer.Terminate;
-      end;
+      FServerThread.RefreshServer;
     finally
-      FServerLock.Release;
+      FServerThread.ReleaseServer;
     end;
-
-    if WaitForTerminate and (FServerTerminateEvent.WaitFor(3000) <> wrSignaled) then begin
-      TaskMessageDlg(
-        'The DelphiLint server could not be terminated gracefully.',
-        'The DelphiLint server was unresponsive to a termination request, so it was forcibly terminated.',
-        mtWarning,
-        [mbOK],
-        0);
-    end;
-  finally
-    FreeAndNil(FServerTerminateEvent);
-  end;
-
-  if GetInAnalysis then begin
-    OnAnalyzeError('Analysis failed because the server was restarted');
-  end;
-
-  try
-    EnsureServerInited;
-    MessageDlg('The DelphiLint server has been restarted.', mtInformation, [mbOK], 0);
   except
     on E: ELintServerError do begin
       TaskMessageDlg(
@@ -830,6 +749,12 @@ begin
         0);
     end;
   end;
+
+  if GetInAnalysis then begin
+    OnAnalyzeError('Analysis failed because the server was restarted');
+  end;
+
+  MessageDlg('The DelphiLint server has been restarted.', mtInformation, [mbOK], 0);
 end;
 
 //______________________________________________________________________________________________________________________
