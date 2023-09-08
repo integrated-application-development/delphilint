@@ -403,7 +403,7 @@ begin
           end;
         end
         else begin
-          Log.Info('Could not get analysis history for file %s with apparently outdated analysis', [Path]);
+          Log.Warn('Could not get analysis history for file %s with apparently outdated analysis', [Path]);
           UpdateFileStatus(cfsNotAnalyzed);
         end;
       fasUpToDateAnalysis:
@@ -421,7 +421,7 @@ begin
           end;
         end
         else begin
-          Log.Info('Could not get analysis history for file %s with apparently up-to-date analysis', [Path]);
+          Log.Warn('Could not get analysis history for file %s with apparently up-to-date analysis', [Path]);
           UpdateFileStatus(cfsNotAnalyzed);
         end;
     end;
@@ -872,7 +872,7 @@ begin
         RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
       except
         on E: EOleException do begin
-          Log.Info('OLE exception occurred during navigation: %s', [E.Message]);
+          Log.Warn('OLE exception occurred during navigation: %s', [E.Message]);
           if E.Message <> 'Unspecified error' then begin
             raise;
           end;
@@ -901,7 +901,7 @@ var
 begin
   Cancel := not FRuleHtmls.ContainsValue(URL);
   if Cancel then begin
-    Log.Info('External navigation requested, intercepting and showing externally');
+    Log.Info('New URL requested in rule webview, intercepting and showing externally');
     UrlStr := URL;
     ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
   end;
@@ -919,7 +919,7 @@ procedure TLintToolFrame.RuleBrowserNewWindow3(
 var
   UrlStr: string;
 begin
-  Log.Info('New window requested, intercepting and showing externally');
+  Log.Info('New window requested in rule webview, intercepting and showing externally');
   Cancel := True;
   UrlStr := Url;
   ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);

@@ -22,8 +22,12 @@ uses
 
 type
   ILogger = interface
+    procedure Debug(const Msg: string); overload;
+    procedure Debug(const Msg: string; const Args: array of const); overload;
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
+    procedure Warn(const Msg: string); overload;
+    procedure Warn(const Msg: string; const Args: array of const); overload;
   end;
 
   IAnalyzer = interface
@@ -243,8 +247,12 @@ var
 type
   TNoOpLogger = class(TInterfacedObject, ILogger)
   public
+    procedure Debug(const Msg: string); overload;
+    procedure Debug(const Msg: string; const Args: array of const); overload;
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
+    procedure Warn(const Msg: string); overload;
+    procedure Warn(const Msg: string; const Args: array of const); overload;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -296,14 +304,32 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TNoOpLogger.Debug(const Msg: string);
+begin
+  // No-op
+end;
+
+procedure TNoOpLogger.Debug(const Msg: string; const Args: array of const);
+begin
+  // No-op
+end;
+
 procedure TNoOpLogger.Info(const Msg: string; const Args: array of const);
 begin
   // No-op
 end;
 
-//______________________________________________________________________________________________________________________
-
 procedure TNoOpLogger.Info(const Msg: string);
+begin
+  // No-op
+end;
+
+procedure TNoOpLogger.Warn(const Msg: string);
+begin
+  // No-op
+end;
+
+procedure TNoOpLogger.Warn(const Msg: string; const Args: array of const);
 begin
   // No-op
 end;

@@ -250,6 +250,9 @@ begin
   FPlugin := nil;
   FreeAndNil(FSettings);
   FIDEServices := nil;
+
+  Log.Info('DelphiLint stopped at %s', [DateToISO8601(Now)]);
+
   inherited;
 end;
 

@@ -274,8 +274,6 @@ begin
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
   Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
-
-  Log.Info('Editor notifier created');
 end;
 
 //______________________________________________________________________________________________________________________

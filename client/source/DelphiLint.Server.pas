@@ -322,6 +322,8 @@ begin
 
   if LintContext.Settings.DebugExternalServer then begin
     FTcpClient.Port := 14000;
+    Log.Info('Attempting to connect to DelphiLint server on port %d', [FTcpClient.Port]);
+    Log.Info('If there is no server on the given port, the application may crash');
   end
   else begin
     FTcpClient.Port := StartExtServer(
@@ -339,7 +341,7 @@ begin
     end;
   end;
 
-  Log.Info('DelphiLint server connected');
+  Log.Info('Connection initialised to DelphiLint server on port %d', [FTcpClient.Port]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -363,16 +365,16 @@ begin
     end;
   except
     on E: EIdSocketError do begin
-      Log.Info('Socket error in server thread: ' + E.Message);
+      Log.Warn('Socket error in server thread: ' + E.Message);
 
       FTcpClient.CheckForGracefulDisconnect(False);
       if not FTcpClient.Connected then begin
-        Log.Info('TCP connection was unexpectedly terminated');
+        Log.Warn('TCP connection was unexpectedly terminated');
         Result := False;
       end;
     end;
     on E: Exception do begin
-      Log.Info('Error occurred in server thread: ' + E.Message);
+      Log.Warn('Error occurred in server thread: ' + E.Message);
     end;
   end;
 end;
@@ -387,7 +389,7 @@ var
   ErrorMsg: string;
   TimeWaitStarted: TDateTime;
 begin
-  Log.Info('Requesting initialization...');
+  Log.Debug('Requesting initialization');
 
   if not LintContext.ValidateSetup then begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
@@ -417,7 +419,7 @@ begin
         end
         else begin
           ErrorMsg := Response.Data.Value;
-          Log.Info('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
+          Log.Warn('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
         end;
       end);
   finally
@@ -434,6 +436,8 @@ begin
   end;
 
   if not InitializeCompleted then begin
+    Log.Warn('Initialize was not successful');
+
     if (ErrorMsg <> '') then begin
       raise ELintServerFailed.Create(ErrorMsg);
     end
@@ -442,7 +446,7 @@ begin
     end;
   end;
 
-  Log.Info('...initialized');
+  Log.Debug('Initialized successfully');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -460,7 +464,6 @@ procedure TLintServer.Analyze(
 var
   AnalyzeMsg: TLintMessage;
 begin
-  Log.Info('Requesting analysis - checking initialization status');
   try
     Initialize(SonarHostUrl, ApiToken, DownloadPlugin);
   except
@@ -470,7 +473,7 @@ begin
     end;
   end;
 
-  Log.Info('Requesting analysis - sending request');
+  Log.Debug('Sending analysis request to server');
   AnalyzeMsg := TLintMessage.Analyze(BaseDir, DelphiFiles, SonarHostUrl, ProjectKey, ApiToken, ProjectPropertiesPath);
   try
     SendMessage(
@@ -510,7 +513,7 @@ begin
     ErrorMsg := Response.Data.Value;
     ErrorCat := Response.Category;
 
-    Log.Info('Analysis returned error (%d): %s', [ErrorCat, ErrorMsg]);
+    Log.Warn('Analysis returned error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
@@ -582,7 +585,7 @@ begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 
-    Log.Info('Rule retrieve returned error (%d): %s', [ErrorCat, ErrorMsg]);
+    Log.Warn('Rule retrieve returned error (%d): %s', [ErrorCat, ErrorMsg]);
     OnError(ErrorMsg);
   end
   else begin
@@ -597,7 +600,7 @@ end;
 
 procedure TLintServer.OnUnhandledMessage(Message: TLintMessage);
 begin
-  Log.Info('Unhandled message (%d) received: <%s>', [Message.Category, Message.Data]);
+  Log.Warn('Unhandled message (%d) received: <%s>', [Message.Category, Message.Data]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -749,15 +752,17 @@ begin
     FTcpClient.Disconnect;
   end;
 
+  Log.Debug('Quit message sent to the server. Waiting for termination');
+
   if FExtProcessHandle <> 0 then begin
     if WaitForSingleObject(FExtProcessHandle, 1000) <> WAIT_OBJECT_0 then begin
-      Log.Info('Force terminating external process');
+      Log.Warn('External server did not terminate gracefully. Force terminating');
       TerminateProcess(FExtProcessHandle, 1);
     end;
     CloseHandle(FExtProcessHandle);
-  end;
 
-  Log.Info('External server terminated');
+    Log.Info('External server terminated');
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -802,7 +807,7 @@ begin
         FResponseActions[Id](Message);
       except
         on E: Exception do begin
-          Log.Info(
+          Log.Warn(
             'Registered handler for incoming message (type %d) failed with exception %s %s',
             [Category, E.ClassName, E.Message]);
         end;
@@ -855,7 +860,7 @@ begin
     FreeAndNil(FServer);
   except
     on E: Exception do begin
-      Log.Info('Free of old server failed with error: %s', [E.Message]);
+      Log.Warn('Refreshing server failed as an error was raised when freeing the old server: %s', [E.Message]);
     end;
   end;
 
@@ -896,7 +901,7 @@ begin
     OnTerminate(Self);
   end;
 
-  Log.Info('Server thread: Terminated');
+  Log.Debug('Server thread terminated');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -904,7 +909,7 @@ end;
 procedure TLintServerThread.Execute;
 begin
   inherited;
-  Log.Info('Server thread: Started');
+  Log.Debug('Server thread started');
 
   while not Terminated do begin
     AcquireServerPossibleUninit;
@@ -919,7 +924,7 @@ begin
     end;
   end;
 
-  Log.Info('Server thread: Terminating');
+  Log.Debug('Server thread terminating');
 
   AcquireServerPossibleUninit;
   try
@@ -928,8 +933,6 @@ begin
   finally
     ReleaseServer;
   end;
-
-  Log.Info('Server thread: Server freed');
 end;
 
 //______________________________________________________________________________________________________________________

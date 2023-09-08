@@ -29,16 +29,22 @@ type
     FLogPath: string;
     FLock: TMutex;
 
-    function GetMessagePrefix: string;
+    function GetTimeStr: string;
 
     procedure WriteLogFile(Msg: string);
+    procedure DoLog(Level: string; Msg: string);
   public
     constructor Create(LogPath: string);
     destructor Destroy; override;
 
+    procedure Debug(const Msg: string); overload;
+    procedure Debug(const Msg: string; const Args: array of const); overload;
+
     procedure Info(const Msg: string); overload;
     procedure Info(const Msg: string; const Args: array of const); overload;
-    procedure Info(Msg: string; FileName: string; Line: Integer; Column: Integer); overload;
+
+    procedure Warn(const Msg: string); overload;
+    procedure Warn(const Msg: string; const Args: array of const); overload;
   end;
 
 implementation
@@ -73,27 +79,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TFileLogger.GetMessagePrefix: string;
+procedure TFileLogger.DoLog(Level: string; Msg: string);
+begin
+  WriteLogFile(Format('%s [%s] %s', [GetTimeStr, Level, Msg]));
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TFileLogger.GetTimeStr: string;
 begin
   Result := FormatDateTime('hh:nn:ss.zzz', Now);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TFileLogger.Info(const Msg: string);
-begin
-  Info(Msg, '', 0, 0);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TFileLogger.Info(Msg, FileName: string; Line, Column: Integer);
-var
-  Prefix: string;
-begin
-  Prefix := GetMessagePrefix;
-
-  WriteLogFile(Format('[%s] %s', [Prefix, Msg]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -117,9 +112,40 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TFileLogger.Info(const Msg: string);
+begin
+  DoLog('INFO', Msg);
+end;
+
 procedure TFileLogger.Info(const Msg: string; const Args: array of const);
 begin
   Info(Format(Msg, Args));
 end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TFileLogger.Debug(const Msg: string);
+begin
+  DoLog('DBUG', Msg);
+end;
+
+procedure TFileLogger.Debug(const Msg: string; const Args: array of const);
+begin
+  Debug(Format(Msg, Args));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TFileLogger.Warn(const Msg: string);
+begin
+  DoLog('WARN', Msg);
+end;
+
+procedure TFileLogger.Warn(const Msg: string; const Args: array of const);
+begin
+  Warn(Format(Msg, Args));
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.

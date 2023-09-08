@@ -124,6 +124,7 @@ begin
   end
   else begin
     if LintContext.Settings.ClientSaveBeforeAnalysis then begin
+      Log.Debug('Saving file before analysis');
       SourceEditor.Module.Save(True);
     end;
     AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
@@ -149,7 +150,7 @@ begin
           Module.Save(True);
         except
           on E: Exception do begin
-            Log.Info('Module %s could not be saved', [Module.FileName]);
+            Log.Warn('Module %s could not be saved', [Module.FileName]);
           end;
         end;
       end;
@@ -235,7 +236,7 @@ var
   IncludedFiles: TArray<string>;
 begin
   if GetInAnalysis then begin
-    Log.Info('Analysis requested, but we are currently in analysis - ignoring');
+    Log.Info('An analysis has been requested, but it will be ignored as there is another in progress');
     Exit;
   end;
 
@@ -321,19 +322,19 @@ begin
   try
     FServerThread.OnTerminate := TriggerServerTerminateEvent;
     FServerThread.Terminate;
-    Log.Info('Server told to terminate, waiting...');
+    Log.Debug('Server told to terminate, waiting...');
     ServerWaitResult := FServerTerminateEvent.WaitFor(1500);
   finally
     FreeAndNil(FServerTerminateEvent);
   end;
 
   if ServerWaitResult = wrSignaled then begin
-    Log.Info('Received OnTerminate signal from server thread, freeing');
+    Log.Debug('Received OnTerminate signal from server thread, freeing');
     FreeAndNil(FServerThread);
   end
   else begin
     FServerThread.FreeOnTerminate := True;
-    Log.Info('Wait for server thread to terminate timed out. This may leak memory');
+    Log.Warn('Wait for server thread to terminate timed out. This may leak memory');
   end;
 
   FreeAndNil(FRules);
@@ -526,7 +527,7 @@ begin
   SanitizedPath := NormalizePath(Path);
   FFileAnalyses.AddOrSetValue(SanitizedPath, History);
 
-  Log.Info(
+  Log.Debug(
     'Analysis recorded for %s at %s, (%s, %d issues found)',
     [
       Path,
@@ -660,11 +661,11 @@ var
   SonarHostToken: string;
   DownloadPlugin: Boolean;
 begin
-  Log.Info('Refreshing ruleset');
+  Log.Debug('Refreshing ruleset');
   Result := False;
 
   if not TryGetProjectFile(ProjectFile) then begin
-    Log.Info('Not in a project, aborting refresh');
+    Log.Warn('Not in a project, aborting refresh');
     Exit;
   end;
 
@@ -694,19 +695,18 @@ begin
             FreeAndNil(FRules);
             FRules := Rules;
             RulesRetrieved.SetEvent;
-            Log.Info('Retrieved %d rules', [FRules.Count]);
           end
           else begin
-            Log.Info('Server retrieved rules after timeout had expired');
+            Log.Warn('Server retrieved rules after timeout had expired');
           end;
         end,
         procedure(ErrorMsg: string) begin
           if not TimedOut then begin
             RulesRetrieved.SetEvent;
-            Log.Info('Error retrieving latest rules: ' + ErrorMsg);
+            Log.Warn('Error retrieving latest rules: ' + ErrorMsg);
           end
           else begin
-            Log.Info('Server rule retrieval returned error after timeout had expired');
+            Log.Warn('Server rule retrieval returned error after timeout had expired');
           end;
         end,
         SonarHostToken,
@@ -720,7 +720,7 @@ begin
     end else begin
       TimedOut := True;
       Result := False;
-      Log.Info('Rule retrieval timed out');
+      Log.Warn('Rule retrieval timed out');
     end;
   finally
     FreeAndNil(ProjectOptions);
