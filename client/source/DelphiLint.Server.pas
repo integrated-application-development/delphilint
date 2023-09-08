@@ -961,6 +961,7 @@ begin
   FTcpClient := TIdTCPClient.Create;
   FTcpClient.Host := Host;
   FTcpClient.Port := Port;
+  FTcpClient.ConnectTimeout := 2000;
 
   try
     FTcpClient.Connect;

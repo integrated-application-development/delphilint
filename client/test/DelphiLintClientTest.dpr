@@ -27,7 +27,8 @@ uses
   DelphiLintTest.Handlers in 'DelphiLintTest.Handlers.pas',
   DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas',
   DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas',
-  DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas';
+  DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas',
+  DelphiLintTest.Server in 'DelphiLintTest.Server.pas';
 
 {$IFDEF TESTINSIGHT}
 begin
