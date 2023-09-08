@@ -105,17 +105,57 @@ type
   ELintPortRefused = class(ELintServerError)
   end;
 
-  TLintServer = class(TObject)
+  TTaggedMessage = class(TObject)
+  private
+    FMessage: TLintMessage;
+    FId: Integer;
+  public
+    constructor Create(Message: TLintMessage; Id: Integer);
+    destructor Destroy; override;
+
+    function Extract: TLintMessage;
+
+    property Message: TLintMessage read FMessage;
+    property Id: Integer read FId;
+  end;
+
+  ILintServerConnection = interface
+    function GetConnected: Boolean;
+    procedure SendMessage(Msg: TTaggedMessage);
+    function ReceiveMessage: TTaggedMessage;
+    function ReceiveMessageWithTimeout(Timeout: Integer): TTaggedMessage;
+    property Connected: Boolean read GetConnected;
+  end;
+
+  TLintServerTcpConnection = class(TInterfacedObject, ILintServerConnection)
   private
     FTcpClient: TIdTCPClient;
+
+    function DoReceiveMessage: TTaggedMessage;
+    procedure DoSendMessage(Msg: TTaggedMessage);
+
+    function GetConnected: Boolean;
+  public
+    constructor Create(Host: string; Port: Integer);
+    destructor Destroy; override;
+
+    procedure SendMessage(Msg: TTaggedMessage);
+    function ReceiveMessage: TTaggedMessage;
+    function ReceiveMessageWithTimeout(Timeout: Integer): TTaggedMessage;
+
+    property Connected: Boolean read GetConnected;
+  end;
+
+  TLintServer = class(TObject)
+  private
+    FConnection: ILintServerConnection;
     FResponseActions: TDictionary<Integer, TResponseAction>;
     FNextId: Integer;
     FExtProcessHandle: THandle;
 
     procedure SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil); overload;
-    procedure SendMessage(Req: TLintMessage; Id: Integer); overload;
+    procedure OnReceivedMessage(Message: TLintMessage; Id: Integer);
     procedure OnUnhandledMessage(Message: TLintMessage);
-    procedure ReceiveMessage;
 
     function StartExtServer(
       Jar: string;
@@ -136,6 +176,8 @@ type
       OnError: TErrorAction
     );
 
+  protected
+    function BuildServerConnection(Host: string; Port: Integer): ILintServerConnection; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -306,27 +348,33 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintServer.BuildServerConnection(Host: string; Port: Integer): ILintServerConnection;
+begin
+  Result := TLintServerTcpConnection.Create(Host, Port);
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TLintServer.Create;
+var
+  Port: Integer;
 begin
   inherited;
 
   FNextId := 1;
   FResponseActions := TDictionary<Integer, TResponseAction>.Create;
 
-  FTcpClient := TIdTCPClient.Create;
-  FTcpClient.Host := '127.0.0.1';
-
   if not LintContext.ValidateSetup then begin
     raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
   end;
 
   if LintContext.Settings.DebugExternalServer then begin
-    FTcpClient.Port := 14000;
-    Log.Info('Attempting to connect to DelphiLint server on port %d', [FTcpClient.Port]);
+    Port := 14000;
+    Log.Info('Attempting to connect to DelphiLint server on port %d', [Port]);
     Log.Info('If there is no server on the given port, the application may crash');
   end
   else begin
-    FTcpClient.Port := StartExtServer(
+    Port := StartExtServer(
       LintContext.Settings.ServerJar,
       LintContext.Settings.JavaExe,
       LintContext.Settings.SettingsDirectory,
@@ -334,14 +382,14 @@ begin
   end;
 
   try
-    FTcpClient.Connect;
+    FConnection := BuildServerConnection('127.0.0.1', Port);
   except
     on EIdSocketError do begin
       raise ELintPortRefused.Create('Connection refused for TCP client');
     end;
   end;
 
-  Log.Info('Connection initialised to DelphiLint server on port %d', [FTcpClient.Port]);
+  Log.Info('Connection initialised to DelphiLint server on port %d', [Port]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -349,7 +397,7 @@ end;
 destructor TLintServer.Destroy;
 begin
   StopExtServer;
-  FreeAndNil(FTcpClient);
+  FConnection := nil;
   FreeAndNil(FResponseActions);
   inherited;
 end;
@@ -357,21 +405,24 @@ end;
 //______________________________________________________________________________________________________________________
 
 function TLintServer.Process: Boolean;
+var
+  TaggedMsg: TTaggedMessage;
+  Msg: TLintMessage;
 begin
   Result := True;
   try
-    if FTcpClient.IOHandler.CheckForDataOnSource(50) then begin
-      ReceiveMessage;
+    TaggedMsg := FConnection.ReceiveMessageWithTimeout(50);
+    try
+      if Assigned(TaggedMsg) then begin
+        Msg := TaggedMsg.Extract;
+        OnReceivedMessage(Msg, TaggedMsg.Id);
+      end;
+    finally
+      FreeAndNil(TaggedMsg);
     end;
   except
-    on E: EIdSocketError do begin
-      Log.Warn('Socket error in server thread: ' + E.Message);
-
-      FTcpClient.CheckForGracefulDisconnect(False);
-      if not FTcpClient.Connected then begin
-        Log.Warn('TCP connection was unexpectedly terminated');
-        Result := False;
-      end;
+    on E: ELintServerFailed do begin
+      Result := False;
     end;
     on E: Exception do begin
       Log.Warn('Error occurred in server thread: ' + E.Message);
@@ -605,29 +656,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.SendMessage(Req: TLintMessage; Id: Integer);
-var
-  DataBytes: TArray<Byte>;
-  DataByte: Byte;
-begin
-  FTcpClient.IOHandler.Write(Req.Category);
-  FTcpClient.IOHandler.Write(Id);
-
-  if Assigned(Req.Data) then begin
-    DataBytes := TEncoding.UTF8.GetBytes(Req.Data.ToString);
-
-    FTcpClient.IOHandler.Write(Length(DataBytes));
-    for DataByte in DataBytes do begin
-      FTcpClient.IOHandler.Write(DataByte);
-    end;
-  end
-  else begin
-    FTcpClient.IOHandler.Write(Integer(0));
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
 function TLintServer.StartExtServer(
   Jar: string;
   JavaExe: string;
@@ -741,18 +769,18 @@ procedure TLintServer.StopExtServer;
 var
   QuitMsg: TLintMessage;
 begin
-  FTcpClient.CheckForGracefulDisconnect(False);
-  if FTcpClient.Connected then begin
+  if FConnection.Connected then begin
     QuitMsg := TLintMessage.Quit;
     try
       SendMessage(QuitMsg);
     finally
       FreeAndNil(QuitMsg);
     end;
-    FTcpClient.Disconnect;
+
+    Log.Debug('Quit message sent to the server. Waiting for termination');
   end;
 
-  Log.Debug('Quit message sent to the server. Waiting for termination');
+  FConnection := nil;
 
   if FExtProcessHandle <> 0 then begin
     if WaitForSingleObject(FExtProcessHandle, 1000) <> WAIT_OBJECT_0 then begin
@@ -770,6 +798,7 @@ end;
 procedure TLintServer.SendMessage(Req: TLintMessage; OnResponse: TResponseAction = nil);
 var
   Id: Integer;
+  TaggedMsg: TTaggedMessage;
 begin
   Id := FNextId;
   Inc(FNextId);
@@ -777,30 +806,18 @@ begin
     FResponseActions.Add(Id, OnResponse);
   end;
 
-  SendMessage(Req, Id);
+  TaggedMsg := TTaggedMessage.Create(Req, Id);
+  try
+    FConnection.SendMessage(TaggedMsg);
+  finally
+    FreeAndNil(TaggedMsg);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.ReceiveMessage;
-var
-  Id: SmallInt;
-  Category: Byte;
-  Length: Integer;
-  DataBuffer: TBytes;
-  IdDataBuffer: TIdBytes;
-  DataJsonValue: TJSONValue;
-  Message: TLintMessage;
+procedure TLintServer.OnReceivedMessage(Message: TLintMessage; Id: Integer);
 begin
-  Category := FTcpClient.IOHandler.ReadByte;
-  Id := FTcpClient.IOHandler.ReadInt32;
-  Length := FTcpClient.IOHandler.ReadInt32;
-  FTcpClient.IOHandler.ReadBytes(IdDataBuffer, Length);
-
-  DataBuffer := TBytes(IdDataBuffer);
-
-  DataJsonValue := TJSONValue.ParseJSONValue(DataBuffer, 0, Length, True);
-  Message := TLintMessage.Create(Category, DataJsonValue);
   try
     if FResponseActions.ContainsKey(Id) then begin
       try
@@ -809,7 +826,7 @@ begin
         on E: Exception do begin
           Log.Warn(
             'Registered handler for incoming message (type %d) failed with exception %s %s',
-            [Category, E.ClassName, E.Message]);
+            [Message.Category, E.ClassName, E.Message]);
         end;
       end;
     end
@@ -936,5 +953,162 @@ begin
 end;
 
 //______________________________________________________________________________________________________________________
+
+constructor TLintServerTcpConnection.Create(Host: string; Port: Integer);
+begin
+  inherited Create;
+
+  FTcpClient := TIdTCPClient.Create;
+  FTcpClient.Host := Host;
+  FTcpClient.Port := Port;
+
+  try
+    FTcpClient.Connect;
+  except
+    on EIdSocketError do begin
+      raise ELintPortRefused.Create('Connection refused for TCP client');
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLintServerTcpConnection.Destroy;
+begin
+  FreeAndNil(FTcpClient);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerTcpConnection.DoReceiveMessage: TTaggedMessage;
+var
+  Id: SmallInt;
+  Category: Byte;
+  Length: Integer;
+  DataBuffer: TBytes;
+  IdDataBuffer: TIdBytes;
+  DataJsonValue: TJSONValue;
+begin
+  Category := FTcpClient.IOHandler.ReadByte;
+  Id := FTcpClient.IOHandler.ReadInt32;
+  Length := FTcpClient.IOHandler.ReadInt32;
+  FTcpClient.IOHandler.ReadBytes(IdDataBuffer, Length);
+
+  DataBuffer := TBytes(IdDataBuffer);
+
+  DataJsonValue := TJSONValue.ParseJSONValue(DataBuffer, 0, Length, True);
+  Result := TTaggedMessage.Create(TLintMessage.Create(Category, DataJsonValue), Id);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerTcpConnection.DoSendMessage(Msg: TTaggedMessage);
+var
+  DataBytes: TArray<Byte>;
+  DataByte: Byte;
+  Message: TLintMessage;
+begin
+  FTcpClient.IOHandler.Write(Msg.Message.Category);
+  FTcpClient.IOHandler.Write(Msg.Id);
+
+  Message := Msg.Extract;
+
+  if Assigned(Message.Data) then begin
+    DataBytes := TEncoding.UTF8.GetBytes(Message.Data.ToString);
+
+    FTcpClient.IOHandler.Write(Length(DataBytes));
+    for DataByte in DataBytes do begin
+      FTcpClient.IOHandler.Write(DataByte);
+    end;
+  end
+  else begin
+    FTcpClient.IOHandler.Write(Integer(0));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerTcpConnection.GetConnected: Boolean;
+begin
+  FTcpClient.CheckForGracefulDisconnect(False);
+  Result := FTcpClient.Connected;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerTcpConnection.ReceiveMessage: TTaggedMessage;
+begin
+  Result := ReceiveMessageWithTimeout(0);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintServerTcpConnection.SendMessage(Msg: TTaggedMessage);
+begin
+  try
+    DoSendMessage(Msg);
+  except
+    on E: EIdSocketError do begin
+      Log.Warn('Socket error when sending message: ' + E.Message);
+
+      FTcpClient.CheckForGracefulDisconnect(False);
+      if not FTcpClient.Connected then begin
+        Log.Warn('TCP connection was unexpectedly terminated');
+      end;
+
+      raise ELintServerFailed.Create('Server connection was unexpectedly terminated');
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintServerTcpConnection.ReceiveMessageWithTimeout(Timeout: Integer): TTaggedMessage;
+begin
+  Result := nil;
+
+  try
+    if (Timeout = 0) or FTcpClient.IOHandler.CheckForDataOnSource(Timeout) then begin
+      Result := DoReceiveMessage;
+    end;
+  except
+    on E: EIdSocketError do begin
+      Log.Warn('Socket error in server thread: ' + E.Message);
+
+      if not Connected then begin
+        Log.Warn('TCP connection was unexpectedly terminated');
+      end;
+
+      raise ELintServerFailed.Create('Server connection was unexpectedly terminated');
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TTaggedMessage.Create(Message: TLintMessage; Id: Integer);
+begin
+  inherited Create;
+
+  FMessage := Message;
+  FId := Id;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TTaggedMessage.Destroy;
+begin
+  FreeAndNil(FMessage);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TTaggedMessage.Extract: TLintMessage;
+begin
+  Result := FMessage;
+  FMessage := nil;
+end;
 
 end.
