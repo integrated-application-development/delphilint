@@ -23,14 +23,21 @@ public class RemoteRule {
   private final String htmlDesc;
   private final RuleSeverity severity;
   private final RuleType type;
+  private final RemoteCleanCode defaultCleanCode;
 
   public RemoteRule(
-      String key, String name, String htmlDesc, RuleSeverity severity, RuleType type) {
+      String key,
+      String name,
+      String htmlDesc,
+      RuleSeverity severity,
+      RuleType type,
+      RemoteCleanCode cleanCode) {
     this.key = key;
     this.name = name;
     this.htmlDesc = htmlDesc;
     this.severity = severity;
     this.type = type;
+    this.defaultCleanCode = cleanCode;
   }
 
   public String getKey() {
@@ -51,5 +58,9 @@ public class RemoteRule {
 
   public RuleType getType() {
     return type;
+  }
+
+  public RemoteCleanCode getCleanCode() {
+    return defaultCleanCode;
   }
 }

@@ -18,13 +18,16 @@
 package au.com.integradev.delphilint.remote.sonarqube;
 
 import au.com.integradev.delphilint.analysis.TextRange;
+import au.com.integradev.delphilint.remote.CleanCodeAttribute;
+import au.com.integradev.delphilint.remote.IssueLikeType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import org.sonarsource.sonarlint.core.commons.IssueSeverity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SonarQubeIssue {
+public class SonarQubeIssue implements SonarQubeIssueLike {
   @JsonProperty private String key;
   @JsonProperty private String rule;
   @JsonProperty private String project;
@@ -41,6 +44,8 @@ public class SonarQubeIssue {
   @JsonProperty private RuleType type;
   @JsonProperty private String assignee;
   @JsonProperty private String creationDate;
+  @JsonProperty private CleanCodeAttribute cleanCodeAttribute;
+  @JsonProperty private List<SonarQubeQualityImpact> impacts;
 
   public String getRuleKey() {
     return rule;
@@ -54,7 +59,7 @@ public class SonarQubeIssue {
     return message;
   }
 
-  public RuleType getType() {
+  public RuleType getIssueType() {
     return type;
   }
 
@@ -95,5 +100,17 @@ public class SonarQubeIssue {
 
   public String getCreationDate() {
     return creationDate;
+  }
+
+  public CleanCodeAttribute getCleanCodeAttribute() {
+    return cleanCodeAttribute;
+  }
+
+  public List<SonarQubeQualityImpact> getImpacts() {
+    return impacts;
+  }
+
+  public IssueLikeType getLikeType() {
+    return IssueLikeType.ISSUE;
   }
 }

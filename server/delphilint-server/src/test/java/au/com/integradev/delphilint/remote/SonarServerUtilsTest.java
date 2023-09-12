@@ -356,6 +356,11 @@ class SonarServerUtilsTest {
     }
 
     @Override
+    public SonarCharacteristics getCharacteristics() {
+      throw new NotImplementedException();
+    }
+
+    @Override
     public Map<String, String> getRuleNamesByRuleKey() {
       return _ruleNamesByRuleKey;
     }

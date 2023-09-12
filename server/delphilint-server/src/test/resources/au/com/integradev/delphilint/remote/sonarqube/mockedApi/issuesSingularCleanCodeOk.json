@@ -1,0 +1,61 @@
+{
+  "total": 1,
+  "p": 1,
+  "ps": 100,
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 100,
+    "total": 1
+  },
+  "effortTotal": 395,
+  "issues": [
+    {
+      "key": "AYmGmzjAcyjZN9gZ2AVY",
+      "rule": "key1",
+      "severity": "MINOR",
+      "component": "MyProject:UnitA.pas",
+      "project": "MyProject",
+      "hash": "e141e75692a375ca2a38daa5e01f38bd",
+      "textRange": {
+        "startLine": 27,
+        "endLine": 27,
+        "startOffset": 4,
+        "endOffset": 19
+      },
+      "flows": [],
+      "resolution": "FIXED",
+      "status": "CLOSED",
+      "message": "msg1",
+      "effort": "3min",
+      "debt": "3min",
+      "author": "",
+      "tags": [],
+      "creationDate": "2023-07-24T06:33:34+0000",
+      "updateDate": "2023-08-04T06:59:17+0000",
+      "closeDate": "2023-08-04T06:59:17+0000",
+      "type": "CODE_SMELL",
+      "scope": "MAIN",
+      "cleanCodeAttribute": "CLEAR",
+      "cleanCodeAttributeCategory": "INTENTIONAL",
+      "impacts": [
+        {
+          "softwareQuality": "MAINTAINABILITY",
+          "severity": "HIGH"
+        }
+      ],
+      "quickFixAvailable": false,
+      "messageFormattings": []
+    }
+  ],
+  "components": [
+    {
+      "key": "MyProject:UnitA.pas",
+      "enabled": true,
+      "qualifier": "FIL",
+      "name": "UnitA.pas",
+      "longName": "UnitA.pas",
+      "path": "UnitA.pas"
+    }
+  ],
+  "facets": []
+}

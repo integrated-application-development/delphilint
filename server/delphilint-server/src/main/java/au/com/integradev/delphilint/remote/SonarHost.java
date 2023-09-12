@@ -24,6 +24,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface SonarHost {
+  SonarCharacteristics getCharacteristics() throws SonarHostException;
+
   Map<String, String> getRuleNamesByRuleKey() throws SonarHostException;
 
   Set<RemoteRule> getRules() throws SonarHostException;

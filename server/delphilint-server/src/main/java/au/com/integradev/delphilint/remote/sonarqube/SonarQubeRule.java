@@ -17,16 +17,22 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
+import au.com.integradev.delphilint.remote.CleanCodeAttribute;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import org.sonar.api.batch.rule.Severity;
 import org.sonarsource.sonarlint.core.commons.RuleType;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SonarQubeRule {
   @JsonProperty private String key;
   @JsonProperty private String name;
   @JsonProperty private String htmlDesc;
   @JsonProperty private Severity severity;
   @JsonProperty private RuleType type;
+  @JsonProperty private CleanCodeAttribute cleanCodeAttribute;
+  @JsonProperty private List<SonarQubeQualityImpact> impacts;
 
   public String getKey() {
     return key;
@@ -46,5 +52,13 @@ public class SonarQubeRule {
 
   public RuleType getType() {
     return type;
+  }
+
+  public CleanCodeAttribute getCleanCodeAttribute() {
+    return cleanCodeAttribute;
+  }
+
+  public List<SonarQubeQualityImpact> getImpacts() {
+    return impacts;
   }
 }

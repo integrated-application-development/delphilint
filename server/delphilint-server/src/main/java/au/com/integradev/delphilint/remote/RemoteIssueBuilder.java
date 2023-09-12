@@ -2,6 +2,7 @@ package au.com.integradev.delphilint.remote;
 
 import au.com.integradev.delphilint.analysis.TextRange;
 import java.nio.file.Path;
+import java.util.Map;
 
 public class RemoteIssueBuilder {
   private String rule = "";
@@ -13,10 +14,11 @@ public class RemoteIssueBuilder {
   private RuleSeverity severity = RuleSeverity.MAJOR;
   private RuleType type = RuleType.CODE_SMELL;
   private IssueStatus status = IssueStatus.OPEN;
-  private boolean isSecurityHotspot = false;
+  private IssueLikeType likeType = IssueLikeType.ISSUE;
   private String assignee = "";
   private String creationDate = "";
   private String resolution = "";
+  private RemoteCleanCode cleanCode = null;
 
   public RemoteIssueBuilder() {}
 
@@ -64,6 +66,17 @@ public class RemoteIssueBuilder {
     return this;
   }
 
+  public RemoteIssueBuilder withCleanCode(
+      CleanCodeAttribute attribute, Map<SoftwareQuality, ImpactSeverity> impactedQualities) {
+    this.cleanCode = new RemoteCleanCode(attribute, impactedQualities);
+    return this;
+  }
+
+  public RemoteIssueBuilder withLikeType(IssueLikeType likeType) {
+    this.likeType = likeType;
+    return this;
+  }
+
   public RemoteIssueBuilder withStatus(IssueStatus status) {
     this.status = status;
     return this;
@@ -98,8 +111,9 @@ public class RemoteIssueBuilder {
         message,
         severity,
         type,
+        cleanCode,
         status,
-        type == RuleType.SECURITY_HOTSPOT,
+        likeType,
         assignee,
         creationDate,
         resolution);

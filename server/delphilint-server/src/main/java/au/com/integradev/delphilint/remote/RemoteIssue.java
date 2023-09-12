@@ -28,7 +28,8 @@ public class RemoteIssue {
   private final RuleSeverity severity;
   private final RuleType type;
   private final IssueStatus status;
-  private final boolean isSecurityHotspot;
+  private final IssueLikeType likeType;
+  private final RemoteCleanCode cleanCode;
   private final String assignee;
   private final String creationDate;
   private final String resolution;
@@ -41,8 +42,9 @@ public class RemoteIssue {
       String message,
       RuleSeverity severity,
       RuleType type,
+      RemoteCleanCode cleanCode,
       IssueStatus status,
-      boolean isSecurityHotspot,
+      IssueLikeType likeType,
       String assignee,
       String creationDate,
       String resolution) {
@@ -54,7 +56,8 @@ public class RemoteIssue {
     this.severity = severity;
     this.type = type;
     this.status = status;
-    this.isSecurityHotspot = isSecurityHotspot;
+    this.cleanCode = cleanCode;
+    this.likeType = likeType;
     this.assignee = assignee;
     this.creationDate = creationDate;
     this.resolution = resolution;
@@ -105,5 +108,13 @@ public class RemoteIssue {
 
   public String getResolution() {
     return resolution;
+  }
+
+  public IssueLikeType getLikeType() {
+    return likeType;
+  }
+
+  public RemoteCleanCode getCleanCode() {
+    return cleanCode;
   }
 }

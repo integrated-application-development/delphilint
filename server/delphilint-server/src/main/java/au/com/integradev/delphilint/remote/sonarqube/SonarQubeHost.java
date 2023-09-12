@@ -17,14 +17,19 @@
  */
 package au.com.integradev.delphilint.remote.sonarqube;
 
+import au.com.integradev.delphilint.remote.ImpactSeverity;
+import au.com.integradev.delphilint.remote.IssueLikeType;
 import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
+import au.com.integradev.delphilint.remote.RemoteCleanCode;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemoteIssueBuilder;
 import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
+import au.com.integradev.delphilint.remote.SoftwareQuality;
+import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,6 +52,8 @@ import org.apache.logging.log4j.Logger;
 
 public class SonarQubeHost implements SonarHost {
   private static final Logger LOG = LogManager.getLogger(SonarQubeHost.class);
+  private static final Version FIRST_SUPPORTED_VERSION = new Version("7.9");
+  private static final Version FIRST_CODE_ATTRIBUTES_VERSION = new Version("10.2");
 
   private final String projectKey;
   private final String languageKey;
@@ -54,6 +61,7 @@ public class SonarQubeHost implements SonarHost {
   private final String pluginKeyDiscriminator;
   private final ObjectMapper jsonMapper;
   private final SonarApi api;
+  private SonarCharacteristics characteristics;
 
   public SonarQubeHost(
       SonarApi api,
@@ -71,6 +79,25 @@ public class SonarQubeHost implements SonarHost {
 
   public String getName() {
     return "SonarQube instance at " + api.getHostUrl();
+  }
+
+  private SonarCharacteristics calculateCharacteristics() throws SonarHostException {
+    String versionStr = api.getText("/api/server/version");
+    var version = new Version(versionStr);
+
+    if (version.compareTo(FIRST_SUPPORTED_VERSION) < 0) {
+      return SonarCharacteristics.unsupported();
+    }
+
+    boolean codeAttributes = version.compareTo(FIRST_CODE_ATTRIBUTES_VERSION) >= 0;
+    return new SonarCharacteristics(codeAttributes);
+  }
+
+  public SonarCharacteristics getCharacteristics() throws SonarHostException {
+    if (this.characteristics == null) {
+      this.characteristics = calculateCharacteristics();
+    }
+    return this.characteristics;
   }
 
   public SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
@@ -156,13 +183,27 @@ public class SonarQubeHost implements SonarHost {
     for (var rule : rulesArray) {
       try {
         SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
+
+        RemoteCleanCode cleanCode = null;
+
+        if (sonarQubeRule.getCleanCodeAttribute() != null) {
+          Map<SoftwareQuality, ImpactSeverity> impacts =
+              sonarQubeRule.getImpacts().stream()
+                  .collect(
+                      Collectors.toMap(
+                          SonarQubeQualityImpact::getSoftwareQuality,
+                          SonarQubeQualityImpact::getSeverity));
+          cleanCode = new RemoteCleanCode(sonarQubeRule.getCleanCodeAttribute(), impacts);
+        }
+
         ruleSet.add(
             new RemoteRule(
                 sonarQubeRule.getKey(),
                 sonarQubeRule.getName(),
                 sonarQubeRule.getHtmlDesc(),
                 RuleSeverity.fromSonarLintSeverity(sonarQubeRule.getSeverity()),
-                RuleType.fromSonarLintRuleType(sonarQubeRule.getType())));
+                RuleType.fromSonarLintRuleType(sonarQubeRule.getType()),
+                cleanCode));
       } catch (JsonProcessingException e) {
         throw new SonarHostException(
             "Malformed rule info response from SonarQube: " + e.getMessage());
@@ -202,6 +243,33 @@ public class SonarQubeHost implements SonarHost {
     }
   }
 
+  private RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue) {
+    var issueBuilder =
+        new RemoteIssueBuilder()
+            .withRuleKey(sqIssue.getRuleKey())
+            .withRange(sqIssue.getTextRange())
+            .withMessage(sqIssue.getMessage())
+            .withType(RuleType.fromSonarLintRuleType(sqIssue.getIssueType()))
+            .withSeverity(RuleSeverity.fromSonarLintIssueSeverity(sqIssue.getSeverity()))
+            .withServerMetadata(sqIssue.getAssignee(), sqIssue.getCreationDate())
+            .withStatus(IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()))
+            .withLikeType(sqIssue.getLikeType())
+            .withResolution(sqIssue.getResolution());
+
+    if (sqIssue.getCleanCodeAttribute() != null) {
+      Map<SoftwareQuality, ImpactSeverity> impacts =
+          sqIssue.getImpacts().stream()
+              .collect(
+                  Collectors.toMap(
+                      SonarQubeQualityImpact::getSoftwareQuality,
+                      SonarQubeQualityImpact::getSeverity));
+
+      issueBuilder.withCleanCode(sqIssue.getCleanCodeAttribute(), impacts);
+    }
+
+    return issueBuilder.build();
+  }
+
   private Set<RemoteIssue> getIssuesAndHotspots(
       Collection<String> relativeFilePaths,
       Collection<String> issueParams,
@@ -230,16 +298,7 @@ public class SonarQubeHost implements SonarHost {
               SonarQubeIssue.class);
 
       for (SonarQubeIssue sqIssue : serverIssues) {
-        remoteIssues.add(
-            new RemoteIssueBuilder()
-                .withRuleKey(sqIssue.getRuleKey())
-                .withRange(sqIssue.getTextRange())
-                .withMessage(sqIssue.getMessage())
-                .withType(RuleType.fromSonarLintRuleType(sqIssue.getType()))
-                .withServerMetadata(sqIssue.getAssignee(), sqIssue.getCreationDate())
-                .withStatus(IssueStatus.fromSonarQubeIssueStatus(sqIssue.getStatus()))
-                .withResolution(sqIssue.getResolution())
-                .build());
+        remoteIssues.add(sqIssueToRemote(sqIssue));
       }
     }
 
@@ -260,16 +319,7 @@ public class SonarQubeHost implements SonarHost {
               SonarQubeHotspot.class);
 
       for (SonarQubeHotspot sqHotspot : resolvedIssues) {
-        remoteIssues.add(
-            new RemoteIssueBuilder()
-                .withRuleKey(sqHotspot.getRuleKey())
-                .withRange(sqHotspot.getTextRange())
-                .withMessage(sqHotspot.getMessage())
-                .withType(RuleType.SECURITY_HOTSPOT)
-                .withServerMetadata(sqHotspot.getAssignee(), sqHotspot.getCreationDate())
-                .withStatus(IssueStatus.fromSonarQubeIssueStatus(sqHotspot.getStatus()))
-                .withResolution(sqHotspot.getResolution())
-                .build());
+        remoteIssues.add(sqIssueToRemote(sqHotspot));
       }
     }
 
@@ -289,7 +339,7 @@ public class SonarQubeHost implements SonarHost {
         // Acknowledged hotspots should not suppress issues
         .filter(
             issue ->
-                issue.getType() != RuleType.SECURITY_HOTSPOT
+                issue.getLikeType() != IssueLikeType.SECURITY_HOTSPOT
                     || !"ACKNOWLEDGED".equals(issue.getResolution()))
         .collect(Collectors.toSet());
   }
@@ -304,7 +354,7 @@ public class SonarQubeHost implements SonarHost {
         .stream()
         .filter(
             issue ->
-                issue.getType() != RuleType.SECURITY_HOTSPOT
+                issue.getLikeType() != IssueLikeType.SECURITY_HOTSPOT
                     || (issue.getStatus() == IssueStatus.TO_REVIEW
                         || "ACKNOWLEDGED".equals(issue.getResolution())))
         .collect(Collectors.toSet());
@@ -337,7 +387,7 @@ public class SonarQubeHost implements SonarHost {
               var activeNode = activesArray.get(activeKey);
               var paramsArray = activeNode.get(0).get("params");
 
-              if (paramsArray != null && paramsArray.size() > 0) {
+              if (paramsArray != null && !paramsArray.isEmpty()) {
                 var thisParamsMap = new HashMap<String, String>();
 
                 for (var paramNode : paramsArray) {

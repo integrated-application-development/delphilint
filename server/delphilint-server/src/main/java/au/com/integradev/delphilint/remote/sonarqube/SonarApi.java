@@ -10,4 +10,6 @@ public interface SonarApi {
   public JsonNode getJson(String url) throws SonarHostException;
 
   public Path getFile(String url) throws SonarHostException;
+
+  public String getText(String url) throws SonarHostException;
 }

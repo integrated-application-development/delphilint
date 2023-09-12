@@ -1,11 +1,17 @@
 package au.com.integradev.delphilint.remote.sonarqube;
 
 import au.com.integradev.delphilint.analysis.TextRange;
+import au.com.integradev.delphilint.remote.CleanCodeAttribute;
+import au.com.integradev.delphilint.remote.IssueLikeType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
+import java.util.List;
+import org.sonarsource.sonarlint.core.commons.IssueSeverity;
+import org.sonarsource.sonarlint.core.commons.RuleType;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SonarQubeHotspot {
+public class SonarQubeHotspot implements SonarQubeIssueLike {
   @JsonProperty private String key;
   @JsonProperty private String ruleKey;
   @JsonProperty private String message;
@@ -50,5 +56,25 @@ public class SonarQubeHotspot {
 
   public String getCreationDate() {
     return creationDate;
+  }
+
+  public IssueSeverity getSeverity() {
+    return IssueSeverity.MAJOR;
+  }
+
+  public RuleType getIssueType() {
+    return RuleType.SECURITY_HOTSPOT;
+  }
+
+  public CleanCodeAttribute getCleanCodeAttribute() {
+    return null;
+  }
+
+  public List<SonarQubeQualityImpact> getImpacts() {
+    return Collections.emptyList();
+  }
+
+  public IssueLikeType getLikeType() {
+    return IssueLikeType.SECURITY_HOTSPOT;
   }
 }

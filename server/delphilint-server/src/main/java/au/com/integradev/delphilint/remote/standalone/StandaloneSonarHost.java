@@ -23,6 +23,7 @@ import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
+import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -46,6 +47,10 @@ public class StandaloneSonarHost implements SonarHost {
     this.activeRules = Collections.emptySet();
   }
 
+  public SonarCharacteristics getCharacteristics() {
+    return new SonarCharacteristics(false);
+  }
+
   public StandaloneSonarHost(LoadedPlugins loadedPlugins) {
     var rulesExtractor = new RulesDefinitionExtractor();
     List<SonarLintRuleDefinition> ruleDefs =
@@ -61,7 +66,8 @@ public class StandaloneSonarHost implements SonarHost {
                         ruleDef.getName(),
                         ruleDef.getHtmlDescription(),
                         RuleSeverity.fromSonarLintIssueSeverity(ruleDef.getDefaultSeverity()),
-                        RuleType.fromSonarLintRuleType(ruleDef.getType())))
+                        RuleType.fromSonarLintRuleType(ruleDef.getType()),
+                        null))
             .collect(Collectors.toSet());
 
     this.activeRules =
