@@ -20,6 +20,7 @@ interface
 
 uses
     System.JSON
+  , System.Generics.Collections
   ;
 
 type
@@ -112,6 +113,57 @@ type
     rsBlocker
   );
 
+  TCleanCodeAttribute = (
+    ccaFormatted,
+    ccaConventional,
+    ccaIdentifiable,
+    ccaClear,
+    ccaLogical,
+    ccaComplete,
+    ccaEfficient,
+    ccaFocused,
+    ccaDistinct,
+    ccaModular,
+    ccaTested,
+    ccaLawful,
+    ccaTrustworthy,
+    ccaRespectful
+  );
+
+  TCleanCodeAttributeCategory = (
+    cccConsistent,
+    cccIntentional,
+    cccAdaptable,
+    cccResponsible
+  );
+
+  TSoftwareQuality = (
+    sqaSecurity,
+    sqaReliability,
+    sqaMaintainability
+  );
+
+  TImpactSeverity = (
+    imsLow,
+    imsMedium,
+    imsHigh
+  );
+
+  TRuleCleanCode = class(TObject)
+  private
+    FAttribute: TCleanCodeAttribute;
+    FCategory: TCleanCodeAttributeCategory;
+    FImpacts: TDictionary<TSoftwareQuality, TImpactSeverity>;
+
+  public
+    constructor CreateFromJson(Json: TJSONObject);
+    destructor Destroy; override;
+
+    property Attribute: TCleanCodeAttribute read FAttribute;
+    property Category: TCleanCodeAttributeCategory read FCategory;
+    property Impacts: TDictionary<TSoftwareQuality, TImpactSeverity> read FImpacts;
+  end;
+
   TRule = class(TObject)
   private
     FRuleKey: string;
@@ -119,6 +171,7 @@ type
     FDesc: string;
     FSeverity: TRuleSeverity;
     FType: TRuleType;
+    FCleanCode: TRuleCleanCode;
 
   public
     constructor CreateFromJson(Json: TJSONObject);
@@ -128,10 +181,10 @@ type
     property Desc: string read FDesc;
     property Severity: TRuleSeverity read FSeverity;
     property RuleType: TRuleType read FType;
+    property CleanCode: TRuleCleanCode read FCleanCode;
   end;
 
 //______________________________________________________________________________________________________________________
-
 
   TLiveIssue = class(TObject)
   private
@@ -285,10 +338,47 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+constructor TRuleCleanCode.CreateFromJson(Json: TJSONObject);
+const
+  C_Attributes: array of string = ['FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
+    'COMPLETE', 'EFFICIENT', 'FOCUSED', 'DISTINCT', 'MODULAR', 'TESTED', 'LAWFUL', 'TRUSTWORTHY', 'RESPECTFUL'];
+  C_Categories: array of string = ['CONSISTENT', 'INTENTIONAL', 'ADAPTABLE', 'RESPONSIBLE'];
+  C_SoftwareQualities: array of string = ['SECURITY', 'RELIABILITY', 'MAINTAINABILITY'];
+  C_ImpactSeverities: array of string = ['LOW', 'MEDIUM', 'HIGH'];
+var
+  Impacts: TJSONObject;
+  Index: Integer;
+  Quality: TSoftwareQuality;
+  Severity: TImpactSeverity;
+begin
+  FAttribute := TCleanCodeAttribute(IndexStr(Json.GetValue<string>('attribute'), C_Attributes));
+  FCategory := TCleanCodeAttributeCategory(IndexStr(Json.GetValue<string>('category'), C_Categories));
+  FImpacts := TDictionary<TSoftwareQuality, TImpactSeverity>.Create;
+
+  Impacts := Json.GetValue<TJSONObject>('impacts');
+  for Index := 0 to Impacts.Count - 1 do begin
+    Quality := TSoftwareQuality(IndexStr(Impacts.Pairs[Index].JsonString.Value, C_SoftwareQualities));
+    Severity := TImpactSeverity(IndexStr(Impacts.Pairs[Index].JsonValue.Value, C_ImpactSeverities));
+    FImpacts.Add(Quality, Severity);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TRuleCleanCode.Destroy;
+begin
+  FreeAndNil(FImpacts);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TRule.CreateFromJson(Json: TJSONObject);
 const
   C_Severities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
   C_RuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
+var
+  CleanCodeJson: TJSONObject;
 begin
   inherited;
 
@@ -297,6 +387,11 @@ begin
   FDesc := Json.GetValue<string>('desc');
   FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), C_Severities));
   FType := TRuleType(IndexStr(Json.GetValue<string>('type'), C_RuleTypes));
+  FCleanCode := nil;
+
+  if Json.TryGetValue<TJSONObject>('cleanCode', CleanCodeJson) and Assigned(CleanCodeJson) then begin
+    FCleanCode := TRuleCleanCode.CreateFroMJson(CleanCodeJson);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

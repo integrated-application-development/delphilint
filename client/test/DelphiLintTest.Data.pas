@@ -17,7 +17,9 @@ type
     procedure TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
   public
     [TestCase]
-    procedure TestCreateRule;
+    procedure TestCreateRuleNoCleanCode;
+    [TestCase]
+    procedure TestCreateRuleCleanCode;
     [TestCase]
     procedure TestParseRuleTypes;
     [TestCase]
@@ -43,9 +45,9 @@ type
     procedure TestCannotRetether;
     [TestCase]
     procedure TestUpdateTetherOnChangedWhitespaceIsUntethered;
-    [TestCase('Down','3')]
-    [TestCase('Up','-5')]
-    [TestCase('Zero','0')]
+    [TestCase('Down', '3')]
+    [TestCase('Up', '-5')]
+    [TestCase('Zero', '0')]
     procedure TestMoveLine(Delta: Integer);
     [TestCase]
     procedure TestNewLineMoveSession;
@@ -66,7 +68,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TDataJsonParseTest.TestCreateRule;
+procedure TDataJsonParseTest.TestCreateRuleNoCleanCode;
 const
   CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule",'
     + '"severity":"MAJOR","type":"CODE_SMELL"}';
@@ -82,6 +84,7 @@ begin
     Assert.AreEqual('My description for the rule', Rule.Desc);
     Assert.AreEqual(rsMajor, Rule.Severity);
     Assert.AreEqual(rtCodeSmell, Rule.RuleType);
+    Assert.IsNull(Rule.CleanCode);
   finally
     FreeAndNil(Rule);
     FreeAndNil(JsonObject);
@@ -90,6 +93,34 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TDataJsonParseTest.TestCreateRuleCleanCode;
+const
+  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule",'
+    + '"severity":"MAJOR","type":"CODE_SMELL","cleanCode":{"attribute":"COMPLETE","category":"INTENTIONAL","impacts":{"SECURITY":"HIGH"}}}';
+var
+  JsonObject: TJSONObject;
+  Rule: TRule;
+begin
+  JsonObject := Parse<TJSONObject>(CRuleJsonStr);
+  try
+    Rule := TRule.CreateFromJson(JsonObject);
+    Assert.AreEqual('myrulekey', Rule.RuleKey);
+    Assert.AreEqual('My Rule', Rule.Name);
+    Assert.AreEqual('My description for the rule', Rule.Desc);
+    Assert.AreEqual(rsMajor, Rule.Severity);
+    Assert.AreEqual(rtCodeSmell, Rule.RuleType);
+    Assert.IsNotNull(Rule.CleanCode);
+    Assert.AreEqual(ccaComplete, Rule.CleanCode.Attribute);
+    Assert.AreEqual(cccIntentional, Rule.CleanCode.Category);
+    Assert.AreEqual(1, Rule.CleanCode.Impacts.Count);
+    Assert.AreEqual(imsHigh, Rule.CleanCode.Impacts[sqaSecurity]);
+  finally
+    FreeAndNil(Rule);
+    FreeAndNil(JsonObject);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TDataJsonParseTest.TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
 const
