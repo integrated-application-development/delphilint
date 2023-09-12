@@ -11,6 +11,7 @@ public class RuleData {
   @JsonProperty private String desc;
   @JsonProperty private RuleSeverity severity;
   @JsonProperty private RuleType type;
+  @JsonProperty private CleanCodeData cleanCode;
 
   public String getKey() {
     return key;
@@ -38,5 +39,9 @@ public class RuleData {
     desc = rule.getHtmlDesc();
     severity = rule.getSeverity();
     type = rule.getType();
+
+    if (rule.getCleanCode() != null) {
+      cleanCode = new CleanCodeData(rule.getCleanCode());
+    }
   }
 }
