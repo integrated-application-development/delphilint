@@ -29,17 +29,17 @@
       <dependency>
         <groupId>org.sonarsource.sonarlint.core</groupId>
         <artifactId>sonarlint-core</artifactId>
-        <version>8.19.0.72745</version>
+        <version>9.2.0.74516</version>
       </dependency>
       <dependency>
         <groupId>org.sonarsource.sonarlint.core</groupId>
         <artifactId>sonarlint-analysis-engine</artifactId>
-        <version>8.19.0.72745</version>
+        <version>9.2.0.74516</version>
       </dependency>
       <dependency>
         <groupId>org.sonarsource.sonarlint.core</groupId>
         <artifactId>sonarlint-issue-tracking</artifactId>
-        <version>8.19.0.72745</version>
+        <version>9.2.0.74516</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>

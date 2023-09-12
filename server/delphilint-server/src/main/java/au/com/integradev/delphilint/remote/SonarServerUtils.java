@@ -67,6 +67,7 @@ public class SonarServerUtils {
                 return new Issue(
                     oldIssue.getRuleKey(),
                     ruleNameMap.get(oldIssue.getRuleKey()),
+                    oldIssue.getOverriddenImpacts(),
                     oldIssue.getTextRange(),
                     oldIssue.getInputFile(),
                     oldIssue.flows(),

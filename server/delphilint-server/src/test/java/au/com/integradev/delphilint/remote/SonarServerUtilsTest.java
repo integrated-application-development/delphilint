@@ -32,6 +32,7 @@ class SonarServerUtilsTest {
     return new Issue(
         ruleKey,
         message,
+        Collections.emptyMap(),
         range,
         file,
         Collections.emptyList(),
