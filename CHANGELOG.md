@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Support for the new Clean Code taxonomy for rules and issues
+
 ### Fixed
 
 * VS Code companion: Non-Delphi source files are now correctly excluded from "Analyze All Open Files" analyses
