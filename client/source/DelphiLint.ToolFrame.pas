@@ -29,6 +29,7 @@ uses
   , Vcl.Menus
   , Vcl.ToolWin
   , Vcl.OleCtrls
+  , Vcl.Graphics
   , Winapi.Windows
   , SHDocVw
   , DelphiLint.Data
@@ -46,6 +47,37 @@ type
     cfsIssues,
     cfsIssuesOutdated
   );
+
+  TRuleHtmlGenerator = class(TObject)
+  private
+    FTextColor: string;
+    FBgColor: string;
+    FCodeBgColor: string;
+    FLinkColor: string;
+
+    function ColorToHex(Color: TColor): string;
+    function WrapHtml(Html: string; WrappingTag: string): string;
+    function ImageToBase64(Image: TGraphic): string;
+
+    function GetRuleTypeStr(RuleType: TRuleType): string;
+    function GetRuleSeverityStr(Severity: TRuleSeverity): string;
+    function GetCleanCodeAttributeStr(Attribute: TCleanCodeAttribute): string;
+    function GetCleanCodeCategoryStr(Category: TCleanCodeAttributeCategory): string;
+    function GetSoftwareQualityStr(Quality: TSoftwareQuality): string;
+    function GetImpactSeverityClassName(Severity: TImpactSeverity): string;
+    function GetImpactTooltip(Quality: TSoftwareQuality; Severity: TImpactSeverity): string;
+    function GetAttributeTooltip(Attribute: TCleanCodeAttribute): string;
+
+    function GenerateCss: string;
+    function BuildHtmlPage(BodyHtml: string; BodyClass: string = ''): string;
+    function BuildTooltip(Html: string; Text: string = ''): string;
+  public
+    constructor Create;
+    procedure UpdateColors;
+
+    function GenerateHtmlText(Rule: TRule): string;
+    function GenerateHtmlFile(Rule: TRule): string;
+  end;
 
   TLintToolFrame = class(TFrame)
     FileHeadingPanel: TPanel;
@@ -93,19 +125,6 @@ type
       const UrlContext: WideString;
       const Url: WideString);
   private const
-    C_RuleSeverityStrs: array[TRuleSeverity] of string = (
-      'Info',
-      'Minor',
-      'Major',
-      'Critical',
-      'Blocker'
-    );
-    C_RuleTypeStrs: array[TRuleType] of string = (
-      'Code smell',
-      'Bug',
-      'Vulnerability',
-      'Security hotspot'
-    );
     C_IssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
       'Confirmed',
@@ -125,6 +144,7 @@ type
     FRuleHtmls: TDictionary<string, string>;
     FVisibleRule: string;
     FNavigationAllowed: Boolean;
+    FRuleHtmlGenerator: TRuleHtmlGenerator;
 
     procedure UpdateFileNameLabel(NewText: string = '');
 
@@ -137,24 +157,16 @@ type
       out MessageText: string;
       out MetadataText: string);
 
+    procedure SetRuleView(Rule: TRule);
 
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
 
     procedure RefreshRuleView;
-    procedure SetRuleView(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity; Desc: string);
 
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
-
-    procedure CreateRuleHtml(
-      Name: string;
-      RuleKey: string;
-      RuleType: TRuleType;
-      Severity: TRuleSeverity;
-      Desc: string
-    );
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -181,7 +193,6 @@ uses
   , System.IOUtils
   , System.NetEncoding
   , System.Win.ComObj
-  , Vcl.Graphics
   , Vcl.Imaging.pngimage
   , Winapi.ShellAPI
   , Winapi.Messages
@@ -201,6 +212,7 @@ begin
   FCurrentPath := '';
   FNavigationAllowed := False;
   FRuleHtmls := TDictionary<string, string>.Create;
+  FRuleHtmlGenerator := TRuleHtmlGenerator.Create;
 
   Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
@@ -242,6 +254,7 @@ begin
   end;
 
   FreeAndNil(FRuleHtmls);
+  FreeAndNil(FRuleHtmlGenerator);
   inherited;
 end;
 
@@ -569,6 +582,8 @@ var
   Rule: TRule;
   IssueType: TRuleType;
   IssueSeverity: TRuleSeverity;
+  MaxImpactSeverity: TImpactSeverity;
+  HasCleanCode: Boolean;
 begin
   ListBox := Control as TListBox;
 
@@ -583,24 +598,32 @@ begin
   Canvas.FillRect(Rect);
 
   Rule := Analyzer.GetRule(Issue.RuleKey);
-  if Assigned(Rule) then begin
-    IssueType := Rule.RuleType;
-    IssueSeverity := Rule.Severity;
+  HasCleanCode := Assigned(Rule.CleanCode);
+  if HasCleanCode then begin
+    MaxImpactSeverity := TArrayUtils.Max<TImpactSeverity>(Rule.CleanCode.Impacts.Values.ToArray, imsMedium);
+
+    Canvas.Draw(
+      Rect.Left + C_IssuePadding,
+      Rect.Top + C_IssuePadding + 1,
+      LintResources.ImpactSeverityIcon(MaxImpactSeverity));
+
+    TextLeft := Rect.Left + C_IssuePadding + C_IssueIconWidth;
   end
   else begin
-    IssueType := rtCodeSmell;
-    IssueSeverity := rsMajor;
-  end;
+    IssueType := Rule.RuleType;
+    IssueSeverity := Rule.Severity;
 
-  Canvas.Draw(
-    Rect.Left + C_IssuePadding,
-    Rect.Top + C_IssuePadding + 1,
-    LintResources.RuleTypeIcon(IssueType));
-  Canvas.Draw(
-    Rect.Left + C_IssuePadding + C_IssueIconWidth,
-    Rect.Top + C_IssuePadding + 1,
-    LintResources.RuleSeverityIcon(IssueSeverity));
-  TextLeft := Rect.Left + C_IssuePadding + 2 * C_IssueIconWidth;
+    Canvas.Draw(
+      Rect.Left + C_IssuePadding,
+      Rect.Top + C_IssuePadding + 1,
+      LintResources.RuleTypeIcon(IssueType));
+    Canvas.Draw(
+      Rect.Left + C_IssuePadding + C_IssueIconWidth,
+      Rect.Top + C_IssuePadding + 1,
+      LintResources.RuleSeverityIcon(IssueSeverity));
+
+    TextLeft := Rect.Left + C_IssuePadding + 2 * C_IssueIconWidth;
+  end;
 
   if not Issue.Tethered then begin
     Canvas.Font.Color := clGrayText;
@@ -725,15 +748,7 @@ begin
     RulePanel.Visible := True;
     SplitPanel.Visible := True;
     if Assigned(Rule) then begin
-      SetRuleView(Rule.Name, Rule.RuleKey, Rule.RuleType, Rule.Severity, Rule.Desc);
-    end
-    else begin
-      SetRuleView(
-        SelectedIssue.RuleKey,
-        SelectedIssue.RuleKey,
-        TRuleType.rtCodeSmell,
-        TRuleSeverity.rsMinor,
-        'Metadata for this rule could not be retrieved.');
+      SetRuleView(Rule);
     end;
   end
   else begin
@@ -748,128 +763,17 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.CreateRuleHtml(Name: string; RuleKey: string; RuleType: TRuleType; Severity: TRuleSeverity;
-  Desc: string);
-
-  function ColorToHex(Color : TColor): string;
-  begin
-    Color := ColorToRGB(Color);
-    Result := '#' +
-      IntToHex(GetRValue(Color), 2) +
-      IntToHex(GetGValue(Color), 2) +
-      IntToHex(GetBValue(Color), 2);
-  end;
-
-  function Process(HtmlDesc: string): string;
-  begin
-    Result := Trim(HtmlDesc);
-    if not StartsText(Result, '<p>') then begin
-      Result := Format('<p>%s</p>', [Result]);
-    end;
-  end;
-
-  function ImageToBase64(Image: TGraphic): string;
-  var
-    Stream: TMemoryStream;
-  begin
-    Stream := TMemoryStream.Create;
-    try
-      Image.SaveToStream(Stream);
-      Result := Format('data:image/png;base64,%s', [TNetEncoding.Base64.EncodeBytesToString(Stream.Memory, Stream.Size)]);
-    finally
-      FreeAndNil(Stream);
-    end;
-  end;
-
-var
-  TextColor: string;
-  BgColor: string;
-  CodeBgColor: string;
-  LinkColor: string;
-  HtmlStr: string;
-  FileName: string;
+procedure TLintToolFrame.SetRuleView(Rule: TRule);
 begin
-  TextColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnText));
-  BgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clWindow));
-  CodeBgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnFace));
-  LinkColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clHotLight));
-
-  HtmlStr := Format(
-    '<!DOCTYPE html>' +
-    '<html>' +
-    '<head>' +
-    '  <style>' +
-    '    html {' +
-    '      overflow-x: hidden;' +
-    '      overflow-y: auto;' +
-    '    }' +
-    '    body {' +
-    '      font-family: ''Segoe UI'', ''Helvetica Neue'', ''Helvetica'', ''Arial'', sans-serif;' +
-    '      color: %s;' +
-    '      background-color: %s;' +
-    '      font-size: 12px;' +
-    '    }' +
-    '    h1 { margin-top: 0px; font-size: 18px; }' +
-    '    h2 {' +
-    '      margin-top: -10px;' +
-    '      margin-bottom: -10px;' +
-    '      font-size: 12px;' +
-    '      font-weight: normal;' +
-    '    }' +
-    '    h2 span { display: inline-block; width: 10px; }' +
-    '    h2 img { display: inline; vertical-align: middle; margin-right: 2px; }' +
-    '    pre {' +
-    '      background-color: %s;' +
-    '      padding: 0.3em 0.5em;' +
-    '      font-size: 1em;' +
-    '      font-family: ''Consolas'', monospace;' +
-    '    }' +
-    '    a { color: %s; }' +
-    '  </style>' +
-    '</head>' +
-    '<body>' +
-    '  <h1>%s</h1>' +
-    '  <h2><img src="%s"/>%s<span></span><img src="%s"/>%s</h2>' +
-    '  %s' +
-    '</body>' +
-    '</html>',
-    [
-      TextColor,
-      BgColor,
-      CodeBgColor,
-      LinkColor,
-      Name,
-      ImageToBase64(LintResources.RuleTypeIcon(RuleType)),
-      C_RuleTypeStrs[RuleType],
-      ImageToBase64(LintResources.RuleSeverityIcon(Severity)),
-      C_RuleSeverityStrs[Severity],
-      Process(Desc)
-    ]);
-
-  FileName := TPath.GetTempFileName;
-  TFile.WriteAllText(FileName, HtmlStr, TEncoding.UTF8);
-  FRuleHtmls.Add(RuleKey, ExpandUNCFileName(FileName));
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.SetRuleView(
-  Name: string;
-  RuleKey: string;
-  RuleType: TRuleType;
-  Severity: TRuleSeverity;
-  Desc: string
-);
-begin
-  if (not FRuleHtmls.ContainsKey(RuleKey)) or (not FileExists(FRuleHtmls[RuleKey])) then begin
-    CreateRuleHtml(Name, RuleKey, RuleType, Severity, Desc);
+  if (not FRuleHtmls.ContainsKey(Rule.RuleKey)) or (not FileExists(FRuleHtmls[Rule.RuleKey])) then begin
+    FRuleHtmls.AddOrSetValue(Rule.RuleKey, ExpandUNCFileName(FRuleHtmlGenerator.GenerateHtmlFile(Rule)));
   end;
 
   try
     FNavigationAllowed := True;
-    if FVisibleRule <> RuleKey then begin
+    if FVisibleRule <> Rule.RuleKey then begin
       try
-        RuleBrowser.Navigate2(FRuleHtmls[RuleKey]);
+        RuleBrowser.Navigate2(FRuleHtmls[Rule.RuleKey]);
       except
         on E: EOleException do begin
           Log.Warn('OLE exception occurred during navigation: %s', [E.Message]);
@@ -878,7 +782,7 @@ begin
           end;
         end;
       end;
-      FVisibleRule := RuleKey;
+      FVisibleRule := Rule.RuleKey;
     end;
   finally
     FNavigationAllowed := False;
@@ -951,6 +855,372 @@ end;
 function TLintToolFormInfo.GetFrameClass: TCustomFrameClass;
 begin
   Result := TLintToolFrame;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TRuleHtmlGenerator.Create;
+begin
+  UpdateColors;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TRuleHtmlGenerator.UpdateColors;
+begin
+  FTextColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnText));
+  FBgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clWindow));
+  FCodeBgColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnFace));
+  FLinkColor := ColorToHex(LintContext.IDEServices.GetSystemColor(clHotLight));
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GenerateHtmlFile(Rule: TRule): string;
+begin
+  Result := TPath.GetTempFileName;
+  TFile.WriteAllText(Result, GenerateHtmlText(Rule), TEncoding.UTF8);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GenerateHtmlText(Rule: TRule): string;
+var
+  ImpactsHtml: string;
+  BodyHtml: string;
+  Quality: TSoftwareQuality;
+  ImpactSeverity: TImpactSeverity;
+begin
+  if Assigned(Rule.CleanCode) then begin
+    for Quality in Rule.CleanCode.Impacts.Keys do begin
+      ImpactSeverity := Rule.CleanCode.Impacts[Quality];
+      ImpactsHtml := ImpactsHtml + BuildTooltip(
+        Format(
+          '<span class="impact %s">%s <img src="%s"/></span>',
+          [
+            GetImpactSeverityClassName(ImpactSeverity),
+            GetSoftwareQualityStr(Quality),
+            ImageToBase64(LintResources.ImpactSeverityIcon(ImpactSeverity))
+          ]),
+        GetImpactTooltip(Quality, ImpactSeverity)
+      );
+    end;
+
+    BodyHtml := Format(
+      BuildTooltip(
+        '<h2 class="cleancode">' +
+        '  <strong>%s rule</strong> | %s' +
+        '</h2>',
+        GetAttributeTooltip(Rule.CleanCode.Attribute)
+      ) +
+      '<h1>%s</h1>' +
+      '<hr/>' +
+      '<div class="impacts">%s</div>' +
+      '%s',
+      [
+        GetCleanCodeCategoryStr(Rule.CleanCode.Category),
+        GetCleanCodeAttributeStr(Rule.CleanCode.Attribute),
+        Rule.Name,
+        ImpactsHtml,
+        WrapHtml(Rule.Desc, 'p')
+      ]);
+
+    Result := BuildHtmlPage(BodyHtml, 'cleancode');
+  end
+  else begin
+    BodyHtml := Format(
+      '  <h1>%s</h1>' +
+      '  <hr/>' +
+      '  <h2><img src="%s"/>%s<span class="gap"></span><img src="%s"/>%s</h2>' +
+      '  %s',
+      [
+        Rule.Name,
+        ImageToBase64(LintResources.RuleTypeIcon(Rule.RuleType)),
+        GetRuleTypeStr(Rule.RuleType),
+        ImageToBase64(LintResources.RuleSeverityIcon(Rule.Severity)),
+        GetRuleSeverityStr(Rule.Severity),
+        WrapHtml(Rule.Desc, 'p')
+      ]);
+
+    Result := BuildHtmlPage(BodyHtml);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.BuildHtmlPage(BodyHtml: string; BodyClass: string = ''): string;
+begin
+  Result := Format(
+    '<!DOCTYPE html>' +
+    '<html>' +
+    '<head>' +
+    '  <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge"/>' +
+    '  <style>%s</style>' +
+    '</head>' +
+    '<body class="%s">%s</body>' +
+    '</html>',
+    [GenerateCss, BodyClass, BodyHtml]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GenerateCss: string;
+begin
+  Result := Format(
+    'html {' +
+    '  overflow-x: hidden;' +
+    '  overflow-y: auto;' +
+    '}' +
+    'body {' +
+    '  font-family: ''Segoe UI'', ''Helvetica Neue'', ''Helvetica'', ''Arial'', sans-serif;' +
+    '  color: %s;' +
+    '  background-color: %s;' +
+    '  font-size: 12px;' +
+    '  margin-top: 9px;' +
+    '}' +
+    'h1 { margin-top: 0px; font-size: 18px; margin-bottom: 0px; }' +
+    'h2 {' +
+    '  font-size: 12px;' +
+    '  font-weight: normal;' +
+    '  margin-top: -2px;' +
+    '  margin-bottom: 1px;' +
+    '}' +
+    '.cleancode h2 { margin-top: 0; }' +
+    'h2 .gap { display: inline-block; width: 10px; }' +
+    'h2 img { display: inline; vertical-align: middle; margin-right: 2px; }' +
+    'pre {' +
+    '  background-color: %s;' +
+    '  padding: 0.3em 0.5em;' +
+    '  font-size: 1em;' +
+    '  font-family: ''Consolas'', monospace;' +
+    '}' +
+    'a { color: %s; }' +
+    '.tooltip-hover {' +
+    '  position: relative;' +
+    '}' +
+    '.tooltip-content {' +
+    '  display: none;' +
+    '  position: absolute;' +
+    '  top: 20px;' +
+    '  left: 16px;' +
+    '  width: 70vw;' +
+    '  background-color: %s;' +
+    '  padding: 6px 6px;' +
+    '  z-index; 1;' +
+    '  font-size: 12px;' +
+    '}' +
+    '.tooltip-hover:hover .tooltip-content {' +
+    '  display: block;' +
+    '}' +
+    '.impacts {' +
+    '  font-size: 11px;' +
+    '  margin-bottom: 0;' +
+    '}' +
+    'p {' +
+    '  margin-top: 10px;' +
+    '}' +
+    '.impact {' +
+    '  display: inline-block;' +
+    '  margin-right: 5px;' +
+    '  padding: 3px 5px;' +
+    '  border-radius: 12px;' +
+    '}' +
+    '.impact img {' +
+    '  display: inline;' +
+    '  vertical-align: middle;' +
+    '}' +
+    '.impact.low { color: rgb(49, 108, 146); background-color: rgb(233, 244, 251); }' +
+    '.impact.medium { color: rgb(140, 94, 30); background-color: rgb(254, 245, 208); }' +
+    '.impact.high { color: rgb(128, 27, 20); background-color: rgb(254, 228, 226); }',
+    [FTextColor, FBgColor, FCodeBgColor, FLinkColor, FCodeBgColor]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetAttributeTooltip(Attribute: TCleanCodeAttribute): string;
+begin
+  case Attribute of
+    ccaFormatted:
+      Result := 'This rule ensures code is presented systematically and regularly.';
+    ccaConventional:
+      Result := 'This rule ensures code consistently adheres to a single choice.';
+    ccaIdentifiable:
+      Result := 'This rule ensures names follow a regular structure based on language conventions.';
+    ccaClear:
+      Result := 'This rule ensures code is self-explanatory, transparently communicating its functionality.';
+    ccaLogical:
+      Result := 'This rule ensures code has well-formed and sound instructions that work together.';
+    ccaComplete:
+      Result := 'This rule ensures code constructs are comprehensive and used adequately and thoroughly.';
+    ccaEfficient:
+      Result := 'This rule ensures code utilizes resources without needless waste.';
+    ccaFocused:
+      Result := 'This rule ensures each code unit has a single, narrow, and specific scope.';
+    ccaDistinct:
+      Result := 'This rule ensures code procedures and data do not have unnecessary duplication.';
+    ccaModular:
+      Result := 'This rule ensures code has been organized to emphasize the separation between its parts.';
+    ccaTested:
+      Result := 'This rule ensures code has automated checks that provide confidence in the functionality.';
+    ccaLawful:
+      Result := 'This rule ensures licensing and copyright regulation is respected.';
+    ccaTrustworthy:
+      Result := 'This rule ensures code abstains from revealing or hard-coding private information.';
+    ccaRespectful:
+      Result := 'This rule ensures code refrains from using discriminatory and offensive language.';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetCleanCodeAttributeStr(Attribute: TCleanCodeAttribute): string;
+begin
+  case Attribute of
+    ccaFormatted: Result := 'Formatted';
+    ccaConventional: Result := 'Conventional';
+    ccaIdentifiable: Result := 'Identifiable';
+    ccaClear: Result := 'Clear';
+    ccaLogical: Result := 'Logical';
+    ccaComplete: Result := 'Complete';
+    ccaEfficient: Result := 'Efficient';
+    ccaFocused: Result := 'Focused';
+    ccaDistinct: Result := 'Distinct';
+    ccaModular: Result := 'Modular';
+    ccaTested: Result := 'Tested';
+    ccaLawful: Result := 'Lawful';
+    ccaTrustworthy: Result := 'Trustworthy';
+    ccaRespectful: Result := 'Respectful';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetCleanCodeCategoryStr(Category: TCleanCodeAttributeCategory): string;
+begin
+  case Category of
+    cccConsistent: Result := 'Consistency';
+    cccIntentional: Result := 'Intentionality';
+    cccAdaptable: Result := 'Adaptability';
+    cccResponsible: Result := 'Responsibility';
+  end;
+end;
+
+function TRuleHtmlGenerator.GetImpactSeverityClassName(Severity: TImpactSeverity): string;
+begin
+  case Severity of
+    imsLow: Result := 'low';
+    imsMedium: Result := 'medium';
+    imsHigh: Result := 'high';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetImpactTooltip(Quality: TSoftwareQuality; Severity: TImpactSeverity): string;
+var
+  SeverityWord: string;
+  QualityWord: string;
+begin
+  case Severity of
+    imsLow: SeverityWord := 'low';
+    imsMedium: SeverityWord := 'medium';
+    imsHigh: SeverityWord := 'high';
+  end;
+
+  case Quality of
+    sqaSecurity: QualityWord := 'security';
+    sqaReliability: QualityWord := 'reliability';
+    sqaMaintainability: QualityWord := 'maintainability';
+  end;
+
+  Result := Format(
+    'This has a %s impact on the %s of your code.',
+    [SeverityWord, QualityWord]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetRuleSeverityStr(Severity: TRuleSeverity): string;
+begin
+  case Severity of
+    rsInfo: Result := 'Info';
+    rsMinor: Result := 'Minor';
+    rsMajor: Result := 'Major';
+    rsCritical: Result := 'Critical';
+    rsBlocker: Result := 'Blocker';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetRuleTypeStr(RuleType: TRuleType): string;
+begin
+  case RuleType of
+    rtCodeSmell: Result := 'Code smell';
+    rtBug: Result := 'Bug';
+    rtVulnerability: Result := 'Vulnerability';
+    rtSecurityHotspot: Result := 'Security hotspot';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GetSoftwareQualityStr(Quality: TSoftwareQuality): string;
+begin
+  case Quality of
+    sqaSecurity: Result := 'Security';
+    sqaReliability: Result := 'Reliability';
+    sqaMaintainability: Result := 'Maintainability';
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.BuildTooltip(Html: string; Text: string): string;
+begin
+  Result := Format('<span class="tooltip-hover"><span class="tooltip-content">%s</span>%s</span>', [Text, Html]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.ImageToBase64(Image: TGraphic): string;
+var
+  Stream: TMemoryStream;
+begin
+  Stream := TMemoryStream.Create;
+  try
+    Image.SaveToStream(Stream);
+    Result := Format('data:image/png;base64,%s', [TNetEncoding.Base64.EncodeBytesToString(Stream.Memory, Stream.Size)]);
+  finally
+    FreeAndNil(Stream);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.ColorToHex(Color: TColor): string;
+begin
+  Color := ColorToRGB(Color);
+  Result := '#' +
+    IntToHex(GetRValue(Color), 2) +
+    IntToHex(GetGValue(Color), 2) +
+    IntToHex(GetBValue(Color), 2);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.WrapHtml(Html: string; WrappingTag: string): string;
+var
+  OpeningTag: string;
+  ClosingTag: string;
+begin
+  OpeningTag := Format('<%s>', [WrappingTag]);
+  Result := Trim(Html);
+
+  if not StartsText(OpeningTag, Result) then begin
+    ClosingTag := Format('</%s>', [WrappingTag]);
+    Result := Format('%s%s%s', [OpeningTag, Result, ClosingTag]);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

@@ -171,14 +171,14 @@ object LintToolFrame: TLintToolFrame
         ButtonHeight = 30
         ButtonWidth = 74
         Caption = 'LintToolBar'
-        Images = LintPlugin.LintImages
+        Images = PluginCore.LintImages
         List = True
         ShowCaptions = True
         TabOrder = 1
         object AnalyzeShortButton: TToolButton
           Left = 0
           Top = 0
-          Action = LintPlugin.ActionAnalyzeShort
+          Action = PluginCore.ActionAnalyzeShort
           DropdownMenu = AnalyzePopupMenu
           Style = tbsDropDown
         end
@@ -215,14 +215,14 @@ object LintToolFrame: TLintToolFrame
     end
   end
   object AnalyzePopupMenu: TPopupMenu
-    Images = LintPlugin.LintImages
+    Images = PluginCore.LintImages
     Left = 635
     Top = 310
     object AnalyzeCurrentFile1: TMenuItem
-      Action = LintPlugin.ActionAnalyzeActiveFile
+      Action = PluginCore.ActionAnalyzeActiveFile
     end
     object AnalyzeOpenFiles1: TMenuItem
-      Action = LintPlugin.ActionAnalyzeOpenFiles
+      Action = PluginCore.ActionAnalyzeOpenFiles
     end
   end
 end
