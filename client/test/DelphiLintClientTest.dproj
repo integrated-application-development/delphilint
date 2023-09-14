@@ -210,6 +210,18 @@
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>DL_LINT_WARNOUT</ResourceId>
         </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\high.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_HIGH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\low.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_LOW</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\medium.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_MEDIUM</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -248,6 +260,24 @@
                     </Platform>
                 </DeployFile>
                 <DeployFile LocalName="..\assets\delphilint_icon_48x48.bmp" Configuration="TestInsight" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\assets\issueicons\impactseverity\high.png" Configuration="TestInsight" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\assets\issueicons\impactseverity\low.png" Configuration="TestInsight" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\assets\issueicons\impactseverity\medium.png" Configuration="TestInsight" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>

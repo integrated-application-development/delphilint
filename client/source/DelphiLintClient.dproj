@@ -214,6 +214,18 @@ $(PreBuildEvent)]]>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>DL_LINT_WARNOUT</ResourceId>
         </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\high.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_HIGH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\low.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_LOW</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\medium.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_MEDIUM</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -240,12 +252,6 @@ $(PreBuildEvent)]]>
                 <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClient.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win32">
-                        <RemoteName>DelphiLintClient.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

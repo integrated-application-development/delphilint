@@ -41,6 +41,7 @@ type
     function LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
     function RuleTypeIcon(RuleType: TRuleType): TGraphic;
     function RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
+    function ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
     function DelphiLintIcon: TBitmap;
     function DelphiLintSplash: TBitmap;
   end;
@@ -127,6 +128,19 @@ const
   );
 begin
   Result := LoadPng(C_RuleTypeResourceNames[RuleType]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintResources.ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
+const
+  C_ImpactSeverityResourceNames: array[TImpactSeverity] of string = (
+    'DL_IS_LOW',
+    'DL_IS_MEDIUM',
+    'DL_IS_HIGH'
+  );
+begin
+  Result := LoadPng(C_ImpactSeverityResourceNames[Severity]);
 end;
 
 //______________________________________________________________________________________________________________________
