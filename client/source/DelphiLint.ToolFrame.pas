@@ -617,12 +617,15 @@ begin
       Rect.Left + C_IssuePadding,
       Rect.Top + C_IssuePadding + 1,
       LintResources.RuleTypeIcon(IssueType));
-    Canvas.Draw(
-      Rect.Left + C_IssuePadding + C_IssueIconWidth,
-      Rect.Top + C_IssuePadding + 1,
-      LintResources.RuleSeverityIcon(IssueSeverity));
+    TextLeft := Rect.Left + C_IssuePadding + C_IssueIconWidth;
 
-    TextLeft := Rect.Left + C_IssuePadding + 2 * C_IssueIconWidth;
+    if IssueType <> rtSecurityHotspot then begin
+      Canvas.Draw(
+        Rect.Left + C_IssuePadding + C_IssueIconWidth,
+        Rect.Top + C_IssuePadding + 1,
+        LintResources.RuleSeverityIcon(IssueSeverity));
+      TextLeft := TextLeft + C_IssueIconWidth;
+    end;
   end;
 
   if not Issue.Tethered then begin
@@ -890,6 +893,7 @@ var
   BodyHtml: string;
   Quality: TSoftwareQuality;
   ImpactSeverity: TImpactSeverity;
+  RuleSeverityHtml: string;
 begin
   if Assigned(Rule.CleanCode) then begin
     for Quality in Rule.CleanCode.Impacts.Keys do begin
@@ -928,17 +932,25 @@ begin
     Result := BuildHtmlPage(BodyHtml, 'cleancode');
   end
   else begin
+    if Rule.RuleType <> rtSecurityHotspot then begin
+      RuleSeverityHtml := Format(
+        '<span class="gap"></span><img src="%s"/>%s',
+        [
+          ImageToBase64(LintResources.RuleSeverityIcon(Rule.Severity)),
+          GetRuleSeverityStr(Rule.Severity)
+        ]);
+    end;
+
     BodyHtml := Format(
       '  <h1>%s</h1>' +
       '  <hr/>' +
-      '  <h2><img src="%s"/>%s<span class="gap"></span><img src="%s"/>%s</h2>' +
+      '  <h2><img src="%s"/>%s%s</h2>' +
       '  %s',
       [
         Rule.Name,
         ImageToBase64(LintResources.RuleTypeIcon(Rule.RuleType)),
         GetRuleTypeStr(Rule.RuleType),
-        ImageToBase64(LintResources.RuleSeverityIcon(Rule.Severity)),
-        GetRuleSeverityStr(Rule.Severity),
+        RuleSeverityHtml,
         WrapHtml(Rule.Desc, 'p')
       ]);
 

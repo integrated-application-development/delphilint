@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Support for the new Clean Code taxonomy for rules and issues
 
+### Changed
+
+* Security hotspots no longer have an accompanying severity
+
 ### Fixed
 
 * VS Code companion: Non-Delphi source files are now correctly excluded from "Analyze All Open Files" analyses
