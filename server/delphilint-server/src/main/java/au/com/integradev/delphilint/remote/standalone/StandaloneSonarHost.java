@@ -17,12 +17,16 @@
  */
 package au.com.integradev.delphilint.remote.standalone;
 
+import au.com.integradev.delphilint.remote.CleanCodeAttribute;
+import au.com.integradev.delphilint.remote.ImpactSeverity;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
+import au.com.integradev.delphilint.remote.RemoteCleanCode;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
+import au.com.integradev.delphilint.remote.SoftwareQuality;
 import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import java.nio.file.Path;
@@ -67,7 +71,20 @@ public class StandaloneSonarHost implements SonarHost {
                         ruleDef.getHtmlDescription(),
                         RuleSeverity.fromSonarLintIssueSeverity(ruleDef.getDefaultSeverity()),
                         RuleType.fromSonarLintRuleType(ruleDef.getType()),
-                        null))
+                        ruleDef.getCleanCodeAttribute().isPresent()
+                            ? new RemoteCleanCode(
+                                CleanCodeAttribute.fromSonarLintCleanCodeAttribute(
+                                    ruleDef.getCleanCodeAttribute().get()),
+                                ruleDef.getDefaultImpacts().entrySet().stream()
+                                    .collect(
+                                        Collectors.toMap(
+                                            e ->
+                                                SoftwareQuality.fromSonarLintSoftwareQuality(
+                                                    e.getKey()),
+                                            e ->
+                                                ImpactSeverity.fromSonarLintImpactSeverity(
+                                                    e.getValue()))))
+                            : null))
             .collect(Collectors.toSet());
 
     this.activeRules =
