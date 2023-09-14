@@ -46,7 +46,12 @@ function GetDelphiVersion: string;
 function TimeSpanToAgoString(TimeSpan: TTimeSpan): string;
 type
   TArrayUtils = class(TObject)
+  public
     class function Map<X, Y>(Arr: TArray<X>; Mapper: TFunc<X, Y>): TArray<Y>; static;
+    class function Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>): Y; overload; static;
+    class function Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; DefaultValue: Y): Y; overload; static;
+    class function Max<X>(Arr: TArray<X>): X; overload; static;
+    class function Max<X>(Arr: TArray<X>; DefaultValue: X): X; overload; static;
   end;
 
 implementation
@@ -55,6 +60,7 @@ uses
     System.IOUtils
   , System.Classes
   , System.StrUtils
+  , System.Generics.Defaults
   , DelphiLint.ProjectOptions
   , Winapi.ShLwApi
   , System.Generics.Collections
@@ -272,6 +278,62 @@ begin
   for I := 0 to Length(Arr) - 1 do begin
     Result[I] := Mapper(Arr[I]);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TArrayUtils.Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>): Y;
+begin
+  if Length(Arr) = 0 then begin
+    raise ERangeError.Create('Can''t reduce empty array without default');
+  end;
+
+  Result := Reduce<X, Y>(Arr, Accumulator, Default(Y));
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TArrayUtils.Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; DefaultValue: Y): Y;
+var
+  I: Integer;
+begin
+  Result := DefaultValue;
+
+  for I := 0 to Length(Arr) - 1 do begin
+    Result := Accumulator(Result, Arr[I]);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TArrayUtils.Max<X>(Arr: TArray<X>): X;
+var
+  Comparer: IComparer<X>;
+begin
+  if Length(Arr) = 0 then begin
+    raise ERangeError.Create('Can''t get maximum of empty array without default');
+  end;
+
+  Result := Max<X>(Arr, Default(X));
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TArrayUtils.Max<X>(Arr: TArray<X>; DefaultValue: X): X;
+var
+  Comparer: IComparer<X>;
+begin
+  Comparer := TComparer<X>.Default;
+
+  Result := Reduce<X, X>(
+    Arr,
+    function (Highest: X; Current: X): X begin
+      Result := Highest;
+      if Comparer.Compare(Current, Highest) > 0 then begin
+        Result := Current;
+      end;
+    end,
+    DefaultValue);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -100,10 +100,30 @@ type
     procedure TestTryGetProjectDirectoryWithReadOptionsOnGetsAbsoluteAnalysisBaseDir;
   end;
 
+  [TestFixture]
+  TArrayUtilsTest = class(TObject)
+  public
+    [TestCase]
+    procedure TestMapSimpleTypes;
+    [TestCase]
+    procedure TestMapDoesNotFree;
+    [TestCase]
+    procedure TestReduceSimpleTypes;
+    [TestCase]
+    procedure TestReduceDoesNotFree;
+    [TestCase]
+    procedure TestMax;
+    [TestCase]
+    procedure TestReduceNoElementsRaisesException;
+    [TestCase]
+    procedure TestReduceNoElementsWithDefaultReturnsDefault;
+  end;
+
 implementation
 
 uses
     System.Generics.Collections
+  , System.SysUtils
   , DelphiLint.Utils
   , DelphiLint.Context
   , DelphiLint.ProjectOptions
@@ -403,6 +423,165 @@ begin
 
   Assert.IsTrue(TryGetProjectFile(ProjectFile));
   Assert.AreEqual('mno.dproj', ProjectFile);
+end;
+
+//______________________________________________________________________________________________________________________
+
+type
+  TTestObject = class(TObject)
+  private
+    FOnDestroy: TProc;
+  public
+    constructor Create(OnDestroy: TProc);
+    destructor Destroy; override;
+  end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestMapDoesNotFree;
+var
+  MyObj: TTestObject;
+  Freed: Boolean;
+begin
+  Freed := False;
+  MyObj := TTestObject.Create(
+    procedure begin
+      Freed := True;
+    end
+  );
+  try
+    TArrayUtils.Map<TObject, Pointer>(
+      [MyObj],
+      function(Obj: TObject): Pointer
+      begin
+        Result := @Obj;
+      end);
+    Assert.IsFalse(Freed);
+  finally
+    FreeAndNil(MyObj);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestMapSimpleTypes;
+const
+  CExpectedArray: TArray<string> = ['1','3','5','9','11'];
+var
+  MappedArray: TArray<string>;
+begin
+  MappedArray := TArrayUtils.Map<Integer, String>([1,3,5,9,11], IntToStr);
+  Assert.AreEqual(5, Length(MappedArray));
+  Assert.AreEqual('1', MappedArray[0]);
+  Assert.AreEqual('3', MappedArray[1]);
+  Assert.AreEqual('5', MappedArray[2]);
+  Assert.AreEqual('9', MappedArray[3]);
+  Assert.AreEqual('11', MappedArray[4]);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestMax;
+begin
+  Assert.AreEqual(64, TArrayUtils.Max<Integer>([1,32,4,8,64,16,2]));
+  Assert.AreEqual('dza', TArrayUtils.Max<String>(['aaa','bbb','dza','ccc','ddd']));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestReduceDoesNotFree;
+var
+  MyObj: TTestObject;
+  Freed: Boolean;
+begin
+  Freed := False;
+  MyObj := TTestObject.Create(
+    procedure begin
+      Freed := True;
+    end
+  );
+  try
+    TArrayUtils.Reduce<TObject, Pointer>(
+      [MyObj],
+      function(Acc: Pointer; Current: TObject): Pointer
+      begin
+        Result := @Current;
+      end);
+    Assert.IsFalse(Freed);
+  finally
+    FreeAndNil(MyObj);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestReduceNoElementsRaisesException;
+begin
+  Assert.WillRaise(
+    procedure begin
+      TArrayUtils.Reduce<Integer, Integer>(
+        [],
+        function (Acc: Integer; Element: Integer): Integer
+        begin
+          Result := Acc + Element;
+        end
+      );
+    end,
+    ERangeError);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestReduceNoElementsWithDefaultReturnsDefault;
+var
+  Val: Integer;
+begin
+  Val := TArrayUtils.Reduce<Integer, Integer>(
+    [],
+    function (Acc: Integer; Element: Integer): Integer
+    begin
+      Result := Acc + Element;
+    end,
+    50);
+
+  Assert.AreEqual(50, Val);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestReduceSimpleTypes;
+var
+  ReducedStr: string;
+begin
+  ReducedStr := TArrayUtils.Reduce<Integer, String>(
+    [1,3,5,9,11],
+    function(Acc: string; Element: Integer): string
+    begin
+      Result := Acc;
+
+      if Result <> '' then begin
+        Result := Result + ',';
+      end;
+
+      Result := Result + IntToStr(Element);
+    end);
+
+  Assert.AreEqual('1,3,5,9,11', ReducedStr);
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TTestObject.Create(OnDestroy: TProc);
+begin
+  FOnDestroy := OnDestroy;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TTestObject.Destroy;
+begin
+  FOnDestroy;
+  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
