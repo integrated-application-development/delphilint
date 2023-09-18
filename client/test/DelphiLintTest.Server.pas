@@ -127,7 +127,9 @@ begin
           end;
         end;
 
-        Event.SetEvent;
+        if Assigned(Event) then begin
+          Event.SetEvent;
+        end;
       end);
 
     Connection := TLintServerTcpConnection.Create(CLocalhost, MockServer.Port);
@@ -140,10 +142,10 @@ begin
     Assert.AreEqual(11, ReceivedLength);
     Assert.AreEqual('"ab£c def"', ReceivedDecodedStr);
   finally
-    FreeAndNil(Event);
     FreeAndNil(Msg);
     FreeAndNil(Connection);
     FreeAndNil(MockServer);
+    FreeAndNil(Event);
   end;
 end;
 
