@@ -1,4 +1,10 @@
-# ![DelphiLint](docs/images/delphilint-title-dark.png#gh-dark-mode-only)![DelphiLint](docs/images/delphilint-title-light.png#gh-light-mode-only)
+<h1 id="delphilint">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/delphilint-title-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/images/delphilint-title-light.png">
+    <img alt="DelphiLint" src="docs/images/delphilint-title-dark.png"/>
+  </picture>
+</h1>
 
 [![Build](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml) [![Format](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml)
 
