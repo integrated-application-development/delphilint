@@ -68,7 +68,7 @@ public class HttpSonarApi implements SonarApi {
   }
 
   public String getText(String url) throws SonarHostException {
-    return getResponse(url, BodyHandlers.ofString());
+    return getResponse(hostUrl + url, BodyHandlers.ofString());
   }
 
   private <T> T getResponse(String url, BodyHandler<T> handler) throws SonarHostException {
