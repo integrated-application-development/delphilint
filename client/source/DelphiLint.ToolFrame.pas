@@ -598,6 +598,11 @@ begin
   Canvas.FillRect(Rect);
 
   Rule := Analyzer.GetRule(Issue.RuleKey);
+  if not Assigned(Rule) then begin
+    Log.Warn('Rule "%s" could not be drawn', [Issue.RuleKey]);
+    Exit;
+  end;
+
   HasCleanCode := Assigned(Rule.CleanCode);
   if HasCleanCode then begin
     MaxImpactSeverity := TArrayUtils.Max<TImpactSeverity>(Rule.CleanCode.Impacts.Values.ToArray, imsMedium);
