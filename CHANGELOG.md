@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 * Support for the new Clean Code taxonomy for rules and issues
+* Support for the new Sonar standard for rule descriptions
 
 ### Changed
 

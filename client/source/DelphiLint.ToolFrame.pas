@@ -894,7 +894,17 @@ var
   Quality: TSoftwareQuality;
   ImpactSeverity: TImpactSeverity;
   RuleSeverityHtml: string;
+  ProcessedRuleDesc: string;
 begin
+  // Old SonarDelphi versions automatically wrapped the rule in a <p> tag, but newer
+  // ones (beginning with a heading) are meant to be displayed directly.
+  if StartsText('<h', Trim(Rule.Desc)) then begin
+    ProcessedRuleDesc := Rule.Desc;
+  end
+  else begin
+    ProcessedRuleDesc := WrapHtml(Rule.Desc, 'p');
+  end;
+
   if Assigned(Rule.CleanCode) then begin
     for Quality in Rule.CleanCode.Impacts.Keys do begin
       ImpactSeverity := Rule.CleanCode.Impacts[Quality];
@@ -912,9 +922,9 @@ begin
 
     BodyHtml := Format(
       BuildTooltip(
-        '<h2 class="cleancode">' +
+        '<span class="subheading cleancode">' +
         '  <strong>%s rule</strong> | %s' +
-        '</h2>',
+        '</span>',
         GetAttributeTooltip(Rule.CleanCode.Attribute)
       ) +
       '<h1>%s</h1>' +
@@ -926,7 +936,7 @@ begin
         GetCleanCodeAttributeStr(Rule.CleanCode.Attribute),
         Rule.Name,
         ImpactsHtml,
-        WrapHtml(Rule.Desc, 'p')
+        ProcessedRuleDesc
       ]);
 
     Result := BuildHtmlPage(BodyHtml, 'cleancode');
@@ -944,14 +954,14 @@ begin
     BodyHtml := Format(
       '  <h1>%s</h1>' +
       '  <hr/>' +
-      '  <h2><img src="%s"/>%s%s</h2>' +
+      '  <span class="subheading"><img src="%s"/>%s%s</span>' +
       '  %s',
       [
         Rule.Name,
         ImageToBase64(LintResources.RuleTypeIcon(Rule.RuleType)),
         GetRuleTypeStr(Rule.RuleType),
         RuleSeverityHtml,
-        WrapHtml(Rule.Desc, 'p')
+        ProcessedRuleDesc
       ]);
 
     Result := BuildHtmlPage(BodyHtml);
@@ -991,20 +1001,28 @@ begin
     '  margin-top: 9px;' +
     '}' +
     'h1 { margin-top: 0px; font-size: 18px; margin-bottom: 0px; }' +
-    'h2 {' +
+    '.subheading {' +
     '  font-size: 12px;' +
     '  font-weight: normal;' +
     '  margin-top: -2px;' +
     '  margin-bottom: 1px;' +
     '}' +
-    '.cleancode h2 { margin-top: 0; }' +
-    'h2 .gap { display: inline-block; width: 10px; }' +
-    'h2 img { display: inline; vertical-align: middle; margin-right: 2px; }' +
+    'h2 { font-size: 14px; }' +
+    'h3 { font-size: 12px; }' +
+    '.cleancode .subheading { margin-top: 0; }' +
+    '.subheading .gap { display: inline-block; width: 10px; }' +
+    '.subheading img { display: inline; vertical-align: middle; margin-right: 2px; }' +
     'pre {' +
     '  background-color: %s;' +
     '  padding: 0.3em 0.5em;' +
     '  font-size: 1em;' +
     '  font-family: ''Consolas'', monospace;' +
+    '}' +
+    'pre[data-diff-type="noncompliant"] {' +
+    '  border-left: 4px solid red;' +
+    '}' +
+    'pre[data-diff-type="compliant"] {' +
+    '  border-left: 4px solid limegreen;' +
     '}' +
     'a { color: %s; }' +
     '.tooltip-hover {' +
@@ -1018,7 +1036,7 @@ begin
     '  width: 70vw;' +
     '  background-color: %s;' +
     '  padding: 6px 6px;' +
-    '  z-index; 1;' +
+    '  z-index: 1;' +
     '  font-size: 12px;' +
     '}' +
     '.tooltip-hover:hover .tooltip-content {' +
