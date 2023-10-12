@@ -118,7 +118,7 @@ public class SonarServerUtils {
 
     LOG.info(
         "{}/{} issues matched with {} client issues and had metadata retrieved",
-        issues.size() - metadataMap.size(),
+        metadataMap.size(),
         issues.size(),
         remoteIssues.size());
 
