@@ -158,8 +158,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=name,htmlDesc,severity&languages=delphi&qprofile="
-                    + QP_KEY,
+                "/api/server/version",
+                "11.5.3.txt",
+                "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
+                    + QP_KEY
+                    + "&f=name,htmlDesc,severity,cleanCodeAttribute",
                 responseFile));
 
     var host = buildSonarHost(api);
@@ -169,7 +172,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithoutCleanCode() throws SonarHostException {
+  void parsesIssueWithoutCleanCode() {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -201,7 +204,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithCleanCode() throws SonarHostException {
+  void parsesIssueWithCleanCode() {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -246,8 +249,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=name,htmlDesc,severity&languages=delphi&qprofile="
-                    + QP_KEY,
+                "/api/server/version",
+                "9.9.0.0.txt",
+                "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
+                    + QP_KEY
+                    + "&f=name,htmlDesc,severity",
                 "rulesSingularOk.json"));
 
     var host = buildSonarHost(api);
@@ -272,8 +278,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=name,htmlDesc,severity&languages=delphi&qprofile="
-                    + QP_KEY,
+                "/api/server/version",
+                "11.5.3.txt",
+                "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
+                    + QP_KEY
+                    + "&f=name,htmlDesc,severity,cleanCodeAttribute",
                 "rulesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api);

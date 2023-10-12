@@ -163,13 +163,19 @@ public class SonarQubeHost implements SonarHost {
 
   public Set<RemoteRule> getRules() throws SonarHostException {
     SonarQubeQualityProfile profile = getQualityProfile();
+
     String apiPath =
         "/api/rules/search?ps=500&activation=true"
-            + "&f=name,htmlDesc,severity"
             + "&languages="
             + languageKey
             + "&qprofile="
             + profile.getKey();
+
+    if (getCharacteristics().usesCodeAttributes()) {
+      apiPath += "&f=name,htmlDesc,severity,cleanCodeAttribute";
+    } else {
+      apiPath += "&f=name,htmlDesc,severity";
+    }
 
     var rootNode = api.getJson(apiPath);
     if (rootNode == null) {
