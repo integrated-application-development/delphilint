@@ -120,6 +120,7 @@ type
   end;
 
   ILintServerConnection = interface
+    ['{89B2C950-2364-4A9B-B7B3-3B4448399FB9}']
     function GetConnected: Boolean;
     procedure SendMessage(Msg: TTaggedMessage);
     function ReceiveMessage: TTaggedMessage;

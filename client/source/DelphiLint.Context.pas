@@ -22,6 +22,7 @@ uses
 
 type
   ILogger = interface
+    ['{B5D90CF6-B2C9-473D-9DB9-1BB75EAFC517}']
     procedure Debug(const Msg: string); overload;
     procedure Debug(const Msg: string; const Args: array of const); overload;
     procedure Info(const Msg: string); overload;
@@ -31,6 +32,7 @@ type
   end;
 
   IAnalyzer = interface
+    ['{F6ECFABE-D0AE-40F2-B0D6-B3B67947D7DE}']
     function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
     function GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
     function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
@@ -56,6 +58,7 @@ type
   end;
 
   IIDEProject = interface
+    ['{323288E1-A17D-441D-8BA7-5C4290C6F6FD}']
     procedure GetCompleteFileList(FileList: TStrings);
     function Raw: IInterface; // IOTAProject
   end;
@@ -65,6 +68,7 @@ type
   IIDEViewHandler = interface;
 
   IIDEEditView = interface
+    ['{9CA07874-237F-4829-869B-1F99211820A6}']
     procedure Paint;
     procedure GoToPosition(const Line: Integer; const Column: Integer);
     function GetFileName: string;
@@ -79,6 +83,7 @@ type
   end;
 
   IIDESourceEditor = interface
+    ['{BF788F6F-5A6D-420D-A440-5BE6862AEEBA}']
     function GetModule: IIDEModule;
     function GetEditViewCount: Integer;
     function GetEditView(Index: Integer): IIDEEditView;
@@ -92,6 +97,7 @@ type
   end;
 
   IIDEModule = interface
+    ['{B1813022-B926-4436-BDF5-2E590771F581}']
     function GetSourceEditor: IIDESourceEditor;
     procedure Save(const ForceSave: Boolean);
     function GetFileName: string;
@@ -103,6 +109,7 @@ type
 
 
   IIDEHandler = interface
+    ['{65472079-8DD3-43E4-9F24-C69674CCDF03}']
     function GetOnReleased: TEventNotifier<IIDEHandler>;
     function GetOnOwnerFreed: TEventNotifier<IIDEHandler>;
     procedure Release;
@@ -112,11 +119,13 @@ type
   end;
 
   IIDEEditorHandler = interface(IIDEHandler)
+    ['{C1B2BAB1-252E-4C92-B493-58A2BE304D27}']
     procedure OnViewAdded(const View: IIDEEditView);
     procedure OnViewActivated(const View: IIDEEditView);
   end;
 
   IIDEViewHandler = interface(IIDEHandler)
+    ['{F4FB2AF3-546F-43D1-ACFC-31F8972803C0}']
     procedure OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
     procedure OnPaintLine(
       const View: IIDEEditView;
@@ -131,10 +140,12 @@ type
   end;
 
   IIDEEditLineHandler = interface(IIDEHandler)
+    ['{E7168514-2EDB-41FB-8F30-A9D6704488B7}']
     procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
   end;
 
   IIDEEditLineTracker = interface
+    ['{0E41ADA7-FE27-42BD-8153-EBBF96260385}']
     function GetFileName: string;
     procedure Clear;
     function AddNotifier(Notifier: IIDEEditLineHandler): Integer;
@@ -145,6 +156,7 @@ type
   end;
 
   IIDEServices = interface
+    ['{1812752E-1C48-4951-B012-0FFE467FDE9D}']
     // From IOTAIDEThemingServices
     procedure ApplyTheme(Component: TComponent);
     procedure RegisterFormClass(FormClass: TCustomFormClass);
@@ -203,6 +215,7 @@ type
   end;
 
   IPlugin = interface
+    ['{75F7FD1F-CB45-4F19-8197-375321A3ADCB}']
     procedure EnablePlugin;
     procedure DisablePlugin;
     function GetPluginEnabled: Boolean;
@@ -215,6 +228,7 @@ type
   end;
 
   ILintContext = interface
+    ['{AA76E4DC-8624-428A-846C-7DF097A26E83}']
     function GetAnalyzer: IAnalyzer;
     function GetIDEServices: IIDEServices;
     function GetPlugin: IPlugin;
