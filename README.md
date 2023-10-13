@@ -14,7 +14,7 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 ## Features
 
 * Integration with [IntegraDev SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi),
-  including 100+ code analysis rules to pick up on code smells, bugs, and vulnerabilities
+  including 100+ code analysis rules, both structural and semantic
 * On-demand analysis in the Delphi IDE, both single-file and multi-file
 * Two analysis modes:
    * Standalone - run analyses entirely locally with a default set of active rules
@@ -23,6 +23,15 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
       * Suppression of issues that have been resolved in past analyses
       * Usage of the server's version of SonarDelphi
 * Support for reading `sonar-project.properties` files
+* A Visual Studio Code companion that can be used to run analyses and show results in VS Code itself
+
+## Gallery
+
+![A screenshot of the DelphiLint window displaying the description for the "Imports should be moved to the implementation section" rule, and corresponding issues inline in the code](docs/images/gallery-code-view-light.png)
+
+![A screenshot of the DelphiLint window displaying the description for the "Single overloads of the standard math functions should not be used" rule, and corresponding issues inline in the code](docs/images/gallery-code-view.png)
+
+![A screenshot of the DelphiLint window displaying the description for the "IfThen should not be used like a short-circuit operator" rule, and corresponding issues inline in the code](docs/images/gallery-code-view-mountain-mist.png)
 
 ## Installation
 
@@ -104,6 +113,40 @@ next to the Delphi project (`.dproj`) file.
 The default DelphiLint project configuration is Standalone, with the base directory as the directory containing the
 Delphi project file. SonarQube settings are ignored when in standalone mode.
 
+## Contributing
+
+DelphiLint is open for contributions, from bug reports to new features. GitHub issues and pull requests are the core
+locations for community involvement - check them out!
+
+### Reporting bugs
+
+Bugs can be reported on the [GitHub issue tracker](https://github.com/integrated-application-development/delphilint/issues).
+When reporting a bug, please do the following:
+* Check that your issue has not already been reported
+* Include the versions of SonarDelphi (and SonarQube, if applicable) you are using
+* Be as specific as possible in your description
+* If applicable, supply a minimal case that replicates the issue
+
+### Requesting features
+
+Feature requests can be listed on the
+[GitHub issue tracker](https://github.com/integrated-application-development/delphilint/issues).
+Note that this does not necessarily mean a developer will decide to implement the feature - if you would like a feature
+consider implementing it yourself and [making a pull request](#making-pull-requests).
+
+When requesting a feature, please do the following:
+* Check that a similar feature has not already been requested
+* Be as specific as possible in your description
+
+### Making pull requests
+
+[Pull requests](https://github.com/integrated-application-development/delphilint/pulls) are welcome!
+When making a pull request, please do the following:
+* Ensure that the functionality is widely useful rather than specific to your use case
+* For new features, ensure that it has been discussed in an issue prior to making the pull request
+* Describe the contents of your pull request
+* Clearly explain the rationale for adding it to DelphiLint
+
 ## Troubleshooting
 
 #### When I go to analyze a file, it says "File not analyzable" and analysis is greyed out.
@@ -123,12 +166,3 @@ Generally speaking, DelphiLint analyses can take upwards of 30 seconds when deal
 has been a longer time, check the progress of the scan in the logs at
 `%APPDATA%\DelphiLint\logs\delphilint-server.log`. If a problem seems to have occurred, the server can be restarted
 with `DelphiLint > Restart Server`.
-
-## Contributing
-
-To request a new feature or submit a bug, please create an issue and clearly state your request or problem. Even if
-you are planning to submit a pull request, please create an issue first so it can be discussed if necessary.
-
-To contribute, please create a pull request, link it to an existing issue, and clearly state what your change is.
-Please ensure that any Delphi code follows the same style as the existing code, and that running `mvn verify` in
-the `/server` directory succeeds with no changes generated.
