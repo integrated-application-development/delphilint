@@ -200,6 +200,7 @@ class SonarQubeHostTest {
     assertEquals("msg1", issue.getMessage());
     assertEquals(RuleSeverity.MINOR, issue.getSeverity());
     assertEquals(RuleType.CODE_SMELL, issue.getType());
+    assertEquals("e141e75692a375ca2a38daa5e01f38bd", issue.getLineHash());
     assertNull(issue.getCleanCode());
   }
 
@@ -232,6 +233,7 @@ class SonarQubeHostTest {
     assertEquals("msg1", issue.getMessage());
     assertEquals(RuleSeverity.MINOR, issue.getSeverity());
     assertEquals(RuleType.CODE_SMELL, issue.getType());
+    assertEquals("e141e75692a375ca2a38daa5e01f38bd", issue.getLineHash());
     assertNotNull(issue.getCleanCode());
     assertEquals(CleanCodeAttribute.CLEAR, issue.getCleanCode().getAttribute());
     assertEquals(

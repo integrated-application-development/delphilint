@@ -273,6 +273,10 @@ public class SonarQubeHost implements SonarHost {
       issueBuilder.withCleanCode(sqIssue.getCleanCodeAttribute(), impacts);
     }
 
+    if (sqIssue instanceof SonarQubeIssue) {
+      issueBuilder.withHash(((SonarQubeIssue) sqIssue).getLineHash());
+    }
+
     return issueBuilder.build();
   }
 
