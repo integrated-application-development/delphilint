@@ -137,6 +137,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.IDEContext.pas"/>
         <DCCReference Include="DelphiLint.HtmlGen.pas"/>
         <DCCReference Include="DelphiLint.ExtWebView2.pas"/>
+        <DCCReference Include="DelphiLint.LiveData.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
@@ -322,19 +323,25 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

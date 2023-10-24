@@ -26,6 +26,7 @@ uses
   , DelphiLint.Events
   , System.SyncObjs
   , DelphiLint.Context
+  , DelphiLint.LiveData
   ;
 
 type

@@ -36,6 +36,7 @@ uses
   , Vcl.Edge
   , Winapi.WebView2
   , Winapi.ActiveX
+  , DelphiLint.LiveData
   ;
 
 type

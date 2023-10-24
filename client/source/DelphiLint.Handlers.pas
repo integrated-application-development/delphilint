@@ -25,6 +25,7 @@ uses
   , DelphiLint.Events
   , DelphiLint.Context
   , DelphiLint.Data
+  , DelphiLint.LiveData
   ;
 
 type

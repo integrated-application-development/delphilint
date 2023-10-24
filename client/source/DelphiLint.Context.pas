@@ -35,6 +35,7 @@ uses
   , DelphiLint.Settings
   , DelphiLint.ProjectOptions
   , DelphiLint.IDEBaseTypes
+  , DelphiLint.LiveData
   ;
 
 type
