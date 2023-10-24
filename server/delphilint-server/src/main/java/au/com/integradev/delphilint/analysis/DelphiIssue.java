@@ -18,6 +18,8 @@
 package au.com.integradev.delphilint.analysis;
 
 import au.com.integradev.delphilint.remote.IssueStatus;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 
 public class DelphiIssue {
@@ -26,6 +28,7 @@ public class DelphiIssue {
   private String file;
   private TextRange range;
   private RemoteMetadata metadata;
+  private List<DelphiQuickFix> quickFixes;
 
   public DelphiIssue(Issue issue, RemoteMetadata metadata) {
     var textRange = issue.getTextRange();
@@ -41,6 +44,8 @@ public class DelphiIssue {
                 textRange.getEndLine(),
                 textRange.getEndLineOffset());
     this.metadata = metadata;
+    this.quickFixes =
+        issue.quickFixes().stream().map(DelphiQuickFix::new).collect(Collectors.toList());
   }
 
   public DelphiIssue(
@@ -74,6 +79,10 @@ public class DelphiIssue {
 
   public RemoteMetadata getMetadata() {
     return metadata;
+  }
+
+  public List<DelphiQuickFix> getQuickFixes() {
+    return quickFixes;
   }
 
   public static class RemoteMetadata {
