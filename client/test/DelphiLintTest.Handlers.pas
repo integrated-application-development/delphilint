@@ -22,6 +22,7 @@ interface
 uses
     DUnitX.TestFramework
   , DelphiLint.Data
+  , DelphiLint.LiveData
   ;
 
 type

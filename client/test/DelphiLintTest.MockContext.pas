@@ -34,6 +34,7 @@ uses
   , DelphiLint.Context
   , DelphiLint.Events
   , DelphiLint.Data
+  , DelphiLint.LiveData
   , DelphiLint.Settings
   , DelphiLint.ProjectOptions
   , DelphiLintTest.MockUtils
