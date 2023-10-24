@@ -17,58 +17,23 @@
  */
 package au.com.integradev.delphilint.server.message.data;
 
-import au.com.integradev.delphilint.analysis.TextRange;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
-public class IssueData {
-  @JsonProperty private String ruleKey;
+public class QuickFixData {
   @JsonProperty private String message;
-  @JsonProperty private String file;
-  @JsonProperty private TextRange range;
-  @JsonProperty private IssueMetadataData metadata;
-  @JsonProperty private List<QuickFixData> quickFixes;
+  @JsonProperty private List<TextEditData> textEdits;
 
-  public IssueData(
-      String ruleKey,
-      String message,
-      String file,
-      TextRange range,
-      IssueMetadataData metadata,
-      List<QuickFixData> quickFixes) {
-    this.ruleKey = ruleKey;
+  public QuickFixData(String message, List<TextEditData> textEdits) {
     this.message = message;
-    this.file = file;
-    this.range = range;
-    this.metadata = metadata;
-    this.quickFixes = quickFixes;
-  }
-
-  public String getRuleKey() {
-    return ruleKey;
+    this.textEdits = textEdits;
   }
 
   public String getMessage() {
     return message;
   }
 
-  public String getFile() {
-    return file;
-  }
-
-  public void setFile(String file) {
-    this.file = file;
-  }
-
-  public TextRange getRange() {
-    return range;
-  }
-
-  public IssueMetadataData getMetadata() {
-    return metadata;
-  }
-
-  public List<QuickFixData> getQuickFixes() {
-    return quickFixes;
+  public List<TextEditData> getTextEdits() {
+    return textEdits;
   }
 }

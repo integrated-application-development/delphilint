@@ -18,12 +18,16 @@
 package au.com.integradev.delphilint.server.message;
 
 import au.com.integradev.delphilint.analysis.DelphiIssue;
+import au.com.integradev.delphilint.analysis.DelphiQuickFix;
 import au.com.integradev.delphilint.analysis.TextRange;
 import au.com.integradev.delphilint.server.message.data.IssueData;
 import au.com.integradev.delphilint.server.message.data.IssueMetadataData;
+import au.com.integradev.delphilint.server.message.data.QuickFixData;
+import au.com.integradev.delphilint.server.message.data.TextEditData;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,34 +47,46 @@ public final class ResponseAnalyzeResult {
         delphiIssues.stream()
             .map(
                 delphiIssue -> {
-                  TextRange range = null;
-                  if (delphiIssue.getTextRange() != null) {
-                    range =
-                        new TextRange(
-                            delphiIssue.getTextRange().getStartLine(),
-                            delphiIssue.getTextRange().getStartOffset(),
-                            delphiIssue.getTextRange().getEndLine(),
-                            delphiIssue.getTextRange().getEndOffset());
-                  }
-
-                  IssueMetadataData metadata = null;
-                  if (delphiIssue.getMetadata() != null) {
-                    metadata =
-                        new IssueMetadataData(
-                            delphiIssue.getMetadata().getAssignee(),
-                            delphiIssue.getMetadata().getCreationDate(),
-                            delphiIssue.getMetadata().getStatus());
-                  }
-
                   return new IssueData(
                       delphiIssue.getRuleKey(),
                       delphiIssue.getMessage(),
                       delphiIssue.getFile(),
-                      range,
-                      metadata);
+                      transformRange(delphiIssue.getTextRange()),
+                      transformMetadata(delphiIssue.getMetadata()),
+                      transformQuickFixes(delphiIssue.getQuickFixes()));
                 })
             .collect(Collectors.toSet());
 
     return new ResponseAnalyzeResult(issues);
+  }
+
+  private static TextRange transformRange(TextRange range) {
+    if (range == null) {
+      return null;
+    }
+
+    return new TextRange(
+        range.getStartLine(), range.getStartOffset(), range.getEndLine(), range.getEndOffset());
+  }
+
+  private static IssueMetadataData transformMetadata(DelphiIssue.RemoteMetadata metadata) {
+    if (metadata == null) {
+      return null;
+    }
+
+    return new IssueMetadataData(
+        metadata.getAssignee(), metadata.getCreationDate(), metadata.getStatus());
+  }
+
+  private static List<QuickFixData> transformQuickFixes(List<DelphiQuickFix> quickFixes) {
+    return quickFixes.stream()
+        .map(
+            quickFix ->
+                new QuickFixData(
+                    quickFix.message(),
+                    quickFix.textEdits().stream()
+                        .map(edit -> new TextEditData(edit.replacement(), edit.range()))
+                        .collect(Collectors.toList())))
+        .collect(Collectors.toList());
   }
 }
