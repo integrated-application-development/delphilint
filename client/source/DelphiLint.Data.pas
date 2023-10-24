@@ -106,6 +106,32 @@ type
     property Status: TIssueStatus read FStatus;
   end;
 
+  TQuickFixTextEdit = class(TObject)
+  private
+    FReplacement: string;
+    FRange: TRange;
+  public
+    constructor Create(Replacement: string; Range: TRange);
+    constructor CreateFromJson(Json: TJSONObject);
+    destructor Destroy; override;
+
+    property Replacement: string read FReplacement;
+    property Range: TRange read FRange;
+  end;
+
+  TQuickFix = class(TObject)
+  private
+    FMessage: string;
+    FTextEdits: TObjectList<TQuickFixTextEdit>;
+  public
+    constructor Create(Message: string; TextEdits: TObjectList<TQuickFixTextEdit>);
+    constructor CreateFromJson(Json: TJSONObject);
+    destructor Destroy; override;
+
+    property Message: string read FMessage;
+    property TextEdits: TObjectList<TQuickFixTextEdit> read FTextEdits;
+  end;
+
 //______________________________________________________________________________________________________________________
 
   TLintIssue = class(TObject)
@@ -115,6 +141,7 @@ type
     FFilePath: string;
     FRange: TRange;
     FMetadata: TIssueMetadata;
+    FQuickFixes: TObjectList<TQuickFix>;
 
   public
     constructor Create(
@@ -122,7 +149,8 @@ type
       Message: string;
       FilePath: string;
       Range: TRange;
-      Metadata: TIssueMetadata = nil);
+      Metadata: TIssueMetadata = nil;
+      QuickFixes: TObjectList<TQuickFix> = nil);
     constructor CreateFromJson(Json: TJSONObject);
     destructor Destroy; override;
 
@@ -131,6 +159,7 @@ type
     property FilePath: string read FFilePath;
     property Range: TRange read FRange write FRange;
     property Metadata: TIssueMetadata read FMetadata write FMetadata;
+    property QuickFixes: TObjectList<TQuickFix> read FQuickFixes;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -303,7 +332,8 @@ constructor TLintIssue.Create(
   Message: string;
   FilePath: string;
   Range: TRange;
-  Metadata: TIssueMetadata
+  Metadata: TIssueMetadata;
+  QuickFixes: TObjectList<TQuickFix>
 );
 begin
   inherited Create;
@@ -312,6 +342,10 @@ begin
   FFilePath := FilePath;
   FRange := Range;
   FMetadata := Metadata;
+  FQuickFixes := QuickFixes;
+  if not Assigned(FQuickFixes) then begin
+    FQuickFixes := TObjectList<TQuickFix>.Create;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -320,6 +354,8 @@ constructor TLintIssue.CreateFromJson(Json: TJSONObject);
 var
   RangeJson: TJSONValue;
   MetadataJson: TJSONValue;
+  QuickFixJson: TJSONValue;
+  QuickFixElement: TJSONValue;
 begin
   inherited Create;
   FRuleKey := Json.GetValue<string>('ruleKey');
@@ -336,6 +372,14 @@ begin
   if Assigned(MetadataJson) and (MetadataJson is TJSONObject) then begin
     FMetadata := TIssueMetadata.CreateFromJson(MetadataJson as TJSONObject);
   end;
+
+  FQuickFixes := TObjectList<TQuickFix>.Create;
+  QuickFixJson := Json.GetValue<TJSONValue>('quickFixes', nil);
+  if Assigned(QuickFixJson) and (QuickFixJson is TJSONArray) then begin
+    for QuickFixElement in TJSONArray(QuickFixJson) do begin
+      FQuickFixes.Add(TQuickFix.CreateFromJson(TJSONObject(QuickFixElement)));
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -344,6 +388,7 @@ destructor TLintIssue.Destroy;
 begin
   FreeAndNil(FRange);
   FreeAndNil(FMetadata);
+  FreeAndNil(FQuickFixes);
   inherited;
 end;
 
@@ -539,6 +584,62 @@ begin
   Self.Host.Url := Url;
   Self.Host.Token := Token;
   Self.ProjectKey := ProjectKey;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TQuickFixTextEdit.Create(Replacement: string; Range: TRange);
+begin
+  FReplacement := Replacement;
+  FRange := Range;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TQuickFixTextEdit.CreateFromJson(Json: TJSONObject);
+begin
+  FReplacement := Json.GetValue<string>('replacement');
+  FRange := TRange.CreateFromJson(Json.GetValue<TJSONObject>('range'));
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TQuickFixTextEdit.Destroy;
+begin
+  FreeAndNil(FRange);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TQuickFix.Create(Message: string; TextEdits: TObjectList<TQuickFixTextEdit>);
+begin
+  FMessage := Message;
+  FTextEdits := TextEdits;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TQuickFix.CreateFromJson(Json: TJSONObject);
+var
+  EditsJson: TJSONArray;
+  EditJson: TJSONValue;
+begin
+  FMessage := Json.GetValue<string>('message');
+  FTextEdits := TObjectList<TQuickFixTextEdit>.Create;
+
+  EditsJson := Json.GetValue<TJSONArray>('textEdits');
+  for EditJson in EditsJson do begin
+    FTextEdits.Add(TQuickFixTextEdit.CreateFromJson(TJSONObject(EditJson)));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TQuickFix.Destroy;
+begin
+  FreeAndNil(FTextEdits);
+  inherited;
 end;
 
 end.

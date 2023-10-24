@@ -22,9 +22,11 @@ interface
 uses
     DelphiLint.Data
   , DelphiLint.Events
+  , System.Generics.Collections
   ;
 
 type
+  TLiveQuickFix = class;
 
   ILiveIssue = interface
     ['{AC60181F-D4C3-46B2-8B02-02FDD1D511D6}']
@@ -44,6 +46,7 @@ type
     function IsTethered: Boolean;
     function GetLinesMoved: Integer;
     procedure SetLinesMoved(NewStartLine: Integer);
+    function QuickFixes: TObjectList<TLiveQuickFix>;
 
     procedure NewLineMoveSession;
     procedure UpdateTether(LineNum: Integer; LineText: string);
@@ -53,6 +56,46 @@ type
 
     property LinesMoved: Integer read GetLinesMoved write SetLinesMoved;
     property OnUntethered: TEventNotifier<Integer> read GetOnUntethered;
+  end;
+
+//______________________________________________________________________________________________________________________
+
+  TLiveTextEdit = class(TObject)
+  private
+    FReplacement: string;
+    FStartLine: Integer;
+    FEndLine: Integer;
+    FStartLineOffset: Integer;
+    FEndLineOffset: Integer;
+  public
+    constructor Create(TextEdit: TQuickFixTextEdit; IssueLine: Integer);
+
+    property Replacement: string read FReplacement;
+    property RelativeStartLine: Integer read FStartLine write FStartLine;
+    property RelativeEndLine: Integer read FEndLine write FEndLine;
+    property StartLineOffset: Integer read FStartLineOffset write FStartLineOffset;
+    property EndLineOffset: Integer read FEndLineOffset write FEndLineOffset;
+  end;
+
+  TLiveIssueImpl = class;
+
+//______________________________________________________________________________________________________________________
+
+  TLiveQuickFix = class(TObject)
+  private
+    FMessage: string;
+    FTextEdits: TObjectList<TLiveTextEdit>;
+    FTethered: Boolean;
+    FIssue: TLiveIssueImpl;
+  public
+    constructor Create(QuickFix: TQuickFix; Issue: TLiveIssueImpl);
+    procedure Untether;
+    destructor Destroy; override;
+
+    property Message: string read FMessage;
+    property TextEdits: TObjectList<TLiveTextEdit> read FTextEdits;
+    property Tethered: Boolean read FTethered;
+    property Issue: TLiveIssueImpl read FIssue;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -74,6 +117,7 @@ type
     FTethered: Boolean;
     FOnUntethered: TEventNotifier<Integer>;
     FLines: TArray<string>;
+    FQuickFixes: TObjectList<TLiveQuickFix>;
   public
     constructor Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
     destructor Destroy; override;
@@ -89,6 +133,7 @@ type
     function CreationDate: string;
     function Status: TIssueStatus;
     function HasMetadata: Boolean;
+    function QuickFixes: TObjectList<TLiveQuickFix>;
 
     function StartLine: Integer;
     function EndLine: Integer;
@@ -118,6 +163,8 @@ uses
 //______________________________________________________________________________________________________________________
 
 constructor TLiveIssueImpl.Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
+var
+  QuickFix: TQuickFix;
 begin
   inherited Create;
 
@@ -161,6 +208,11 @@ begin
   FLinesMoved := 0;
   FLines := IssueLines;
   FTethered := True;
+
+  FQuickFixes := TObjectList<TLiveQuickFix>.Create;
+  for QuickFix in Issue.QuickFixes do begin
+    FQuickFixes.Add(TLiveQuickFix.Create(QuickFix, Self));
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -168,16 +220,23 @@ end;
 destructor TLiveIssueImpl.Destroy;
 begin
   FreeAndNil(FOnUntethered);
+  FreeAndNil(FQuickFixes);
   inherited;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLiveIssueImpl.Untether;
+var
+  QuickFix: TLiveQuickFix;
 begin
   if FTethered then begin
     FTethered := False;
     FOnUntethered.Notify(StartLine);
+  end;
+
+  for QuickFix in FQuickFixes do begin
+    QuickFix.Untether;
   end;
 end;
 
@@ -288,6 +347,8 @@ begin
   Result := FTethered;
 end;
 
+//______________________________________________________________________________________________________________________
+
 function TLiveIssueImpl.Message: string;
 begin
   Result := FMessage;
@@ -302,19 +363,78 @@ begin
   FLinesMoved := 0;
 end;
 
+//______________________________________________________________________________________________________________________
+
 function TLiveIssueImpl.OriginalEndLine: Integer;
 begin
   Result := FEndLine;
 end;
+
+//______________________________________________________________________________________________________________________
 
 function TLiveIssueImpl.OriginalStartLine: Integer;
 begin
   Result := FStartLine;
 end;
 
+//______________________________________________________________________________________________________________________
+
 function TLiveIssueImpl.RuleKey: string;
 begin
   Result := FRuleKey;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.QuickFixes: TObjectList<TLiveQuickFix>;
+begin
+  Result := FQuickFixes;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TLiveQuickFix.Create(QuickFix: TQuickFix; Issue: TLiveIssueImpl);
+var
+  TextEdit: TQuickFixTextEdit;
+begin
+  inherited Create;
+
+  FTethered := True;
+  FMessage := QuickFix.Message;
+  FTextEdits := TObjectList<TLiveTextEdit>.Create;
+  FIssue := Issue;
+
+  for TextEdit in QuickFix.TextEdits do begin
+    FTextEdits.Add(TLiveTextEdit.Create(TextEdit, Issue.StartLine));
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveQuickFix.Untether;
+begin
+  FTethered := False;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TLiveQuickFix.Destroy;
+begin
+  FreeAndNil(FTextEdits);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TLiveTextEdit.Create(TextEdit: TQuickFixTextEdit; IssueLine: Integer);
+begin
+  inherited Create;
+
+  FReplacement := TextEdit.Replacement;
+  FStartLine := TextEdit.Range.StartLine - IssueLine;
+  FEndLine := TextEdit.Range.EndLine - IssueLine;
+  FStartLineOffset := TextEdit.Range.StartLineOffset;
+  FEndLineOffset := TextEdit.Range.EndLineOffset;
 end;
 
 end.
