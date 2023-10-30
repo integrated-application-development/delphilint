@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2023-10-31
+
 ### Added
 
 * Support for the new Clean Code taxonomy for rules and issues
@@ -135,7 +137,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval
 * Support for reading `sonar-project.properties`
 
-[unreleased]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/Integrated-Application-Development/delphilint/compare/v0.3.0...v0.4.0
