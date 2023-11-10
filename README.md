@@ -6,14 +6,14 @@
   </picture>
 </h1>
 
-[![Build](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/build.yml) [![Format](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml/badge.svg)](https://github.com/Integrated-Application-Development/delphilint/actions/workflows/format.yml)
+[![Build](https://github.com/integrated-application-development/delphilint/actions/workflows/build.yml/badge.svg)](https://github.com/integrated-application-development/delphilint/actions/workflows/build.yml) [![Format](https://github.com/integrated-application-development/delphilint/actions/workflows/format.yml/badge.svg)](https://github.com/integrated-application-development/delphilint/actions/workflows/format.yml)
 
 DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analysis and linting, powered by
-[SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi).
+[SonarDelphi](https://github.com/integrated-application-development/sonar-delphi).
 
 ## Features
 
-* Integration with [IntegraDev SonarDelphi](https://github.com/Integrated-Application-Development/sonar-delphi),
+* Integration with [IntegraDev SonarDelphi](https://github.com/integrated-application-development/sonar-delphi),
   including 100+ code analysis rules, both structural and semantic
 * On-demand analysis in the Delphi IDE, both single-file and multi-file
 * Two analysis modes:
@@ -28,15 +28,15 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 ## Installation
 
 1. [Build DelphiLint from source](#building-from-source) or, if you are using Delphi 11.2, download the packaged zip
-   artifact from [the latest release](https://github.com/Integrated-Application-Development/delphilint/releases/latest).
-2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/Integrated-Application-Development/sonar-delphi).
+   artifact from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest).
+2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi).
 3. Unzip the DelphiLint package folder from step 1, then run `./setup.ps1 -SonarDelphiJarLocation <path>` inside it.
 4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
 
 ### Installing the VS Code companion
 
 1. [Build the VS Code companion from source](#building-the-vs-code-companion) or download the .vsix artifact from
-   [the latest release](https://github.com/Integrated-Application-Development/delphilint/releases/latest).
+   [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest).
 2. Run `code --install-extension <vsix>` to install the extension.
 
 > [!IMPORTANT] For the companion to work, a DelphiLint installation of the same version must be installed.

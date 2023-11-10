@@ -18,11 +18,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Integrated-Application-Development/delphilint"
+    "url": "https://github.com/integrated-application-development/delphilint"
   },
-  "homepage": "https://github.com/Integrated-Application-Development/delphilint/blob/master/README.md",
+  "homepage": "https://github.com/integrated-application-development/delphilint/blob/master/README.md",
   "bugs": {
-    "url": "https://github.com/Integrated-Application-Development/delphilint/issues"
+    "url": "https://github.com/integrated-application-development/delphilint/issues"
   },
   "activationEvents": [
     "onLanguage:delphi",
