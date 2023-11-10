@@ -39,7 +39,8 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
    [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest).
 2. Run `code --install-extension <vsix>` to install the extension.
 
-> [!IMPORTANT] For the companion to work, a DelphiLint installation of the same version must be installed.
+> [!IMPORTANT]
+> For the companion to work, a DelphiLint installation of the same version must be installed.
 
 ## Building from source
 
