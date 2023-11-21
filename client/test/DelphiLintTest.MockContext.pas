@@ -362,7 +362,9 @@ uses
   ;
 
 type
-  TNoOpLogger = class(TInterfacedObject, ILogger)
+  TConsoleLogger = class(TInterfacedObject, ILogger)
+  private
+    procedure Write(const Level: string; const Msg: string);
   public
     procedure Debug(const Msg: string); overload;
     procedure Debug(const Msg: string; const Args: array of const); overload;
@@ -762,34 +764,44 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TNoOpLogger.Debug(const Msg: string);
+procedure TConsoleLogger.Debug(const Msg: string);
 begin
-  // No-op
+  Write('DEBUG', Msg);
 end;
 
-procedure TNoOpLogger.Debug(const Msg: string; const Args: array of const);
+procedure TConsoleLogger.Debug(const Msg: string; const Args: array of const);
 begin
-  // No-op
+  Write('DEBUG', Format(Msg, Args));
 end;
 
-procedure TNoOpLogger.Info(const Msg: string; const Args: array of const);
+procedure TConsoleLogger.Info(const Msg: string; const Args: array of const);
 begin
-  // No-op
+  Write('INFO', Format(Msg, Args));
 end;
 
-procedure TNoOpLogger.Info(const Msg: string);
+procedure TConsoleLogger.Info(const Msg: string);
 begin
-  // No-op
+  Write('INFO', Msg);
 end;
 
-procedure TNoOpLogger.Warn(const Msg: string);
+procedure TConsoleLogger.Warn(const Msg: string);
 begin
-  // No-op
+  Write('WARN', Msg);
 end;
 
-procedure TNoOpLogger.Warn(const Msg: string; const Args: array of const);
+procedure TConsoleLogger.Warn(const Msg: string; const Args: array of const);
 begin
-  // No-op
+  Write('WARN', Format(Msg, Args));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TConsoleLogger.Write(const Level, Msg: string);
+var
+  TimeStr: string;
+begin
+  TimeStr := FormatDateTime('hh:nn:ss.zzz', Now);
+  WriteLn(Format('%s [%s] %s', [TimeStr, Level, Msg]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -1324,7 +1336,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 initialization
-  SetLogger(TNoOpLogger.Create);
+  SetLogger(TConsoleLogger.Create);
   SetLintContext(TMockLintContext.Create);
 
 end.
