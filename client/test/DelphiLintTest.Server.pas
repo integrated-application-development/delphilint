@@ -297,6 +297,7 @@ begin
   MockServer := TMockTcpServer.Create;
   try
     Connection := TLintServerTcpConnection.Create(CLocalhost, MockServer.Port);
+    Sleep(50);
     Assert.IsTrue(Connection.Connected);
   finally
     FreeAndNil(Connection);
@@ -314,7 +315,9 @@ begin
   try
     MockServer := TMockTcpServer.Create;
     Connection := TLintServerTcpConnection.Create(CLocalhost, MockServer.Port);
+    Sleep(50);
     FreeAndNil(MockServer);
+    Sleep(50);
     Assert.IsFalse(Connection.Connected);
   finally
     FreeAndNil(MockServer);
