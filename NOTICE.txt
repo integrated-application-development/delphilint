@@ -1,4 +1,4 @@
-DelphiLint Client for RAD Studio
+DelphiLint
 Copyright (C) 2023 Integrated Application Development
 Author(s):
 Elliot Hillary (ehillary@integradev.com.au)
@@ -19,10 +19,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
 
 ---------------------------------------------------------------------
 
-DelphiLint Server
-Copyright (C) 2023 Integrated Application Development
-Author(s):
-Elliot Hillary (ehillary@integradev.com.au)
+Icons from SonarLint IntelliJ
+Copyright (C) 2015-2023 SonarSource
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
