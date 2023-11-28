@@ -25,6 +25,7 @@ uses
   , Vcl.Graphics
   , DelphiLint.Events
   , DelphiLint.Context
+  , DelphiLint.Data
   ;
 
 type
@@ -117,9 +118,51 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TLinePaintContext = record
+    View: IIDEEditView;
+    Canvas: TCanvas;
+    LineNumber: Integer;
+    LineText: string;
+    TextRect: TRect;
+    LineRect: TRect;
+    CellSize: TSize;
+  end;
+
+//______________________________________________________________________________________________________________________
+
+  TLintLinePainter = class(TObject)
+  private
+    FTagTextColor: TColor;
+    FTagBgColor: TColor;
+    FUnderlineColor: TColor;
+
+    procedure DrawUnderline(
+      const Issue: TLiveIssue;
+      const Context: TLinePaintContext
+    );
+    procedure DrawTag(
+      const Msg: string;
+      const Context: TLinePaintContext
+    );
+    function ColumnToPx(
+      const Col: Integer;
+      const Context: TLinePaintContext
+    ): Integer;
+  public
+    procedure PaintLine(
+      const Issues: TArray<TLiveIssue>;
+      const Context: TLinePaintContext
+    );
+
+    constructor Create(TagTextColor: TColor; TagBgColor: TColor; UnderlineColor: TColor);
+  end;
+
+//______________________________________________________________________________________________________________________
+
   TViewHandler = class(THandler, IIDEViewHandler)
   private
     FRepaint: Boolean;
+    FLinePainter: TLintLinePainter;
     procedure OnAnalysisComplete(const Paths: TArray<string>);
   public
     constructor Create;
@@ -135,7 +178,7 @@ type
       const LineRect: TRect;
       const CellSize: TSize
     );
-end;
+  end;
 
 //______________________________________________________________________________________________________________________
 
@@ -146,9 +189,7 @@ uses
   , System.Classes
   , System.StrUtils
   , DelphiLint.Utils
-  , Vcl.Themes
   , System.SysUtils
-  , DelphiLint.Data
   ;
 
 //______________________________________________________________________________________________________________________
@@ -416,9 +457,13 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TViewHandler.Create;
+const
+  CTextColor: TColor = $00322f2d;
+  CBgColor: TColor = $0036c5ff;
 begin
   inherited;
 
+  FLinePainter := TLintLinePainter.Create(CTextColor, CBgColor, CBgColor);
   FRepaint := False;
   Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
 end;
@@ -430,6 +475,7 @@ begin
   if ContextValid then begin
     Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
   end;
+  FreeAndNil(FLinePainter);
   inherited;
 end;
 
@@ -452,131 +498,170 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TViewHandler.OnPaintLine(const View: IIDEEditView; LineNumber: Integer; LineText: string;
-  const TextWidth: Integer; const Canvas: TCanvas; const TextRect,
-  LineRect: TRect; const CellSize: TSize);
-
-  function ColumnToPx(const Col: Integer): Integer;
-  begin
-    Result := TextRect.Left + (Col + 1 - View.LeftColumn) * CellSize.Width;
-  end;
-
-  procedure DrawLine(const StartChar: Integer; const EndChar: Integer; const Color: TColor);
-  var
-    StartX: Integer;
-    EndX: Integer;
-  begin
-    Canvas.Pen.Color := Color;
-    Canvas.Pen.Width := 1;
-
-    StartX := Max(ColumnToPx(StartChar), TextRect.Left);
-    EndX := Max(ColumnToPx(EndChar), TextRect.Left);
-    if EndChar = -1 then begin
-      EndX := TextRect.Right;
-    end;
-
-    Canvas.Rectangle(
-      StartX,
-      TextRect.Bottom - 2,
-      EndX,
-      TextRect.Bottom
-    );
-  end;
-
-  procedure DrawMessage(const Msg: string; const Color: TColor; const BgColor: TColor);
-  var
-    LeftBound: Integer;
-    RightBound: Integer;
-    TextLeft: Integer;
-    HalfHeight: Integer;
-  begin
-    LeftBound := TextRect.Right + (CellSize.Width div 2);
-    TextLeft := LeftBound + CellSize.Width;
-    HalfHeight := TextRect.Height div 2;
-    RightBound := TextLeft + (Length(Msg) + 2) * CellSize.Width;
-
-    if RightBound > LineRect.Right then begin
-      RightBound := LineRect.Right;
-    end;
-
-    Canvas.Brush.Color := BgColor;
-    Canvas.Brush.Style := bsSolid;
-    Canvas.Polygon([
-      TPoint.Create(LeftBound, LineRect.Top + HalfHeight),
-      TPoint.Create(TextLeft, LineRect.Top),
-      TPoint.Create(RightBound, LineRect.Top),
-      TPoint.Create(RightBound, LineRect.Bottom),
-      TPoint.Create(TextLeft, LineRect.Bottom),
-      TPoint.Create(TextLeft, LineRect.Top + 2 * HalfHeight)
-    ]);
-
-    Canvas.Font.Color := Color;
-    Canvas.Font.Style := [fsBold];
-    Canvas.Brush.Style := bsClear;
-    Canvas.TextOut(TextLeft + CellSize.Width, TextRect.Top - 1, Msg);
-    Canvas.Font.Style := [];
-  end;
-
+procedure TViewHandler.OnPaintLine(
+  const View: IIDEEditView;
+  LineNumber: Integer;
+  LineText: string;
+  const TextWidth: Integer;
+  const Canvas: TCanvas;
+  const TextRect: TRect;
+  const LineRect: TRect;
+  const CellSize: TSize
+);
 var
   Issues: TArray<TLiveIssue>;
-  Issue: TLiveIssue;
-  Msg: string;
-  StartLineOffset: Integer;
-  EndLineOffset: Integer;
-  NumIssuesOnLine: Integer;
-  TextColor: TColor;
-  BgColor: TColor;
+  Context: TLinePaintContext;
 begin
   Issues := Analyzer.GetIssues(View.FileName, LineNumber);
 
-  TextColor := $00322f2d;
-  BgColor := $0036c5ff;
-
-  NumIssuesOnLine := 0;
-
   if Length(Issues) > 0 then begin
+    Context.View := View;
+    Context.LineNumber := LineNumber;
+    Context.LineText := LineText;
+    Context.Canvas := Canvas;
+    Context.TextRect := TextRect;
+    Context.LineRect := LineRect;
+    Context.CellSize := CellSize;
 
-    for Issue in Issues do begin
-      Issue.UpdateTether(LineNumber, LineText);
-
-      if not Issue.Tethered then begin
-        Continue;
-      end;
-
-      StartLineOffset := Issue.StartLineOffset;
-      EndLineOffset := Issue.EndLineOffset;
-
-      if Issue.StartLine <> LineNumber then begin
-        StartLineOffset := 0;
-      end;
-
-      if Issue.EndLine <> LineNumber then begin
-        EndLineOffset := -1;
-      end;
-
-      DrawLine(StartLineOffset, EndLineOffset, BgColor);
-
-      if Issue.StartLine = LineNumber then begin
-        NumIssuesOnLine := NumIssuesOnLine + 1;
-
-        if Msg = '' then begin
-          Msg := Issue.Message;
-        end;
-      end;
-    end;
-
-    if NumIssuesOnLine > 0 then begin
-      if NumIssuesOnLine > 1 then begin
-        if (Length(Msg) > 0) and (Msg[Length(Msg)] = '.') then begin
-          Msg := LeftStr(Msg, Length(Msg) - 1);
-        end;
-
-        Msg := Format('%d issues (%s + %d more)', [NumIssuesOnLine, Msg, NumIssuesOnLine - 1]);
-      end;
-
-      DrawMessage(Msg, TextColor, BgColor);
-    end;
+    FLinePainter.PaintLine(Issues, Context);
   end;
 end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintLinePainter.ColumnToPx(
+  const Col: Integer;
+  const Context: TLinePaintContext
+): Integer;
+begin
+  Result := Context.TextRect.Left + (Col + 1 - Context.View.LeftColumn) * Context.CellSize.Width;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TLintLinePainter.Create(TagTextColor: TColor; TagBgColor: TColor; UnderlineColor: TColor);
+begin
+  FTagTextColor := TagTextColor;
+  FTagBgColor := TagBgColor;
+  FUnderlineColor := UnderlineColor;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintLinePainter.DrawTag(const Msg: string; const Context: TLinePaintContext);
+var
+  LeftBound: Integer;
+  RightBound: Integer;
+  TextLeft: Integer;
+  HalfHeight: Integer;
+begin
+  LeftBound := Context.TextRect.Right + (Context.CellSize.Width div 2);
+  TextLeft := LeftBound + Context.CellSize.Width;
+  HalfHeight := Context.TextRect.Height div 2;
+  RightBound := TextLeft + (Length(Msg) + 2) * Context.CellSize.Width;
+
+  if RightBound > Context.LineRect.Right then begin
+    RightBound := Context.LineRect.Right;
+  end;
+
+  Context.Canvas.Brush.Color := FTagBgColor;
+  Context.Canvas.Brush.Style := bsSolid;
+  Context.Canvas.Polygon([
+    TPoint.Create(LeftBound, Context.LineRect.Top + HalfHeight),
+    TPoint.Create(TextLeft, Context.LineRect.Top),
+    TPoint.Create(RightBound, Context.LineRect.Top),
+    TPoint.Create(RightBound, Context.LineRect.Bottom),
+    TPoint.Create(TextLeft, Context.LineRect.Bottom),
+    TPoint.Create(TextLeft, Context.LineRect.Top + 2 * HalfHeight)
+  ]);
+
+  Context.Canvas.Font.Color := FTagTextColor;
+  Context.Canvas.Font.Style := [fsBold];
+  Context.Canvas.Brush.Style := bsClear;
+  Context.Canvas.TextOut(TextLeft + Context.CellSize.Width, Context.TextRect.Top - 1, Msg);
+  Context.Canvas.Font.Style := [];
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintLinePainter.DrawUnderline(
+  const Issue: TLiveIssue;
+  const Context: TLinePaintContext
+);
+var
+  StartX: Integer;
+  EndX: Integer;
+  StartLineOffset: Integer;
+  EndLineOffset: Integer;
+begin
+  StartLineOffset := Issue.StartLineOffset;
+  if Issue.StartLine <> Context.LineNumber then begin
+    StartLineOffset := 0;
+  end;
+
+  EndLineOffset := Issue.EndLineOffset;
+  if Issue.EndLine <> Context.LineNumber then begin
+    EndLineOffset := -1;
+  end;
+
+  StartX := Max(ColumnToPx(StartLineOffset, Context), Context.TextRect.Left);
+  EndX := Max(ColumnToPx(EndLineOffset, Context), Context.TextRect.Left);
+  if EndX = -1 then begin
+    EndX := Context.TextRect.Right;
+  end;
+
+  Context.Canvas.Pen.Color := FUnderlineColor;
+  Context.Canvas.Rectangle(
+    StartX,
+    Context.TextRect.Bottom - 2,
+    EndX,
+    Context.TextRect.Bottom
+  );
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintLinePainter.PaintLine(
+  const Issues: TArray<TLiveIssue>;
+  const Context: TLinePaintContext
+);
+var
+  Issue: TLiveIssue;
+  Msg: string;
+  NumIssuesOnLine: Integer;
+begin
+  NumIssuesOnLine := 0;
+
+  for Issue in Issues do begin
+    Issue.UpdateTether(Context.LineNumber, Context.LineText);
+    if not Issue.Tethered then begin
+      Continue;
+    end;
+
+    DrawUnderline(Issue, Context);
+
+    if Issue.StartLine = Context.LineNumber then begin
+      NumIssuesOnLine := NumIssuesOnLine + 1;
+
+      if Msg = '' then begin
+        Msg := Issue.Message;
+      end;
+    end;
+  end;
+
+  if NumIssuesOnLine = 1 then begin
+    DrawTag(Msg, Context);
+  end
+  else if NumIssuesOnLine > 1 then begin
+    if (Length(Msg) > 0) and (Msg[Length(Msg)] = '.') then begin
+      Msg := LeftStr(Msg, Length(Msg) - 1);
+    end;
+
+    Msg := Format('%d issues (%s + %d more)', [NumIssuesOnLine, Msg, NumIssuesOnLine - 1]);
+    DrawTag(Msg, Context);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.
