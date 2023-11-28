@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Inline issue display and underline have been redesigned to be more prominent
+
 ## [0.6.0] - 2023-10-31
 
 ### Added

@@ -144,6 +144,7 @@ implementation
 uses
     System.Math
   , System.Classes
+  , System.StrUtils
   , DelphiLint.Utils
   , Vcl.Themes
   , System.SysUtils
@@ -455,17 +456,6 @@ procedure TViewHandler.OnPaintLine(const View: IIDEEditView; LineNumber: Integer
   const TextWidth: Integer; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 
-  function InDarkMode: Boolean;
-  var
-    BgColor: TColor;
-    Color: LongInt;
-  begin
-    BgColor := LintContext.IDEServices.GetStyleColor(scGenericBackground);
-    Color := ColorToRGB(BgColor);
-
-    Result := ((GetRValue(Color) + GetGValue(Color) + GetBValue(Color)) < 384);
-  end;
-
   function ColumnToPx(const Col: Integer): Integer;
   begin
     Result := TextRect.Left + (Col + 1 - View.LeftColumn) * CellSize.Width;
@@ -485,16 +475,46 @@ procedure TViewHandler.OnPaintLine(const View: IIDEEditView; LineNumber: Integer
       EndX := TextRect.Right;
     end;
 
-    Canvas.MoveTo(StartX, TextRect.Bottom - 1);
-    Canvas.LineTo(EndX, TextRect.Bottom - 1);
+    Canvas.Rectangle(
+      StartX,
+      TextRect.Bottom - 2,
+      EndX,
+      TextRect.Bottom
+    );
   end;
 
-  procedure DrawMessage(const Msg: string; const Color: TColor);
+  procedure DrawMessage(const Msg: string; const Color: TColor; const BgColor: TColor);
+  var
+    LeftBound: Integer;
+    RightBound: Integer;
+    TextLeft: Integer;
+    HalfHeight: Integer;
   begin
+    LeftBound := TextRect.Right + (CellSize.Width div 2);
+    TextLeft := LeftBound + CellSize.Width;
+    HalfHeight := TextRect.Height div 2;
+    RightBound := TextLeft + (Length(Msg) + 2) * CellSize.Width;
+
+    if RightBound > LineRect.Right then begin
+      RightBound := LineRect.Right;
+    end;
+
+    Canvas.Brush.Color := BgColor;
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Polygon([
+      TPoint.Create(LeftBound, LineRect.Top + HalfHeight),
+      TPoint.Create(TextLeft, LineRect.Top),
+      TPoint.Create(RightBound, LineRect.Top),
+      TPoint.Create(RightBound, LineRect.Bottom),
+      TPoint.Create(TextLeft, LineRect.Bottom),
+      TPoint.Create(TextLeft, LineRect.Top + 2 * HalfHeight)
+    ]);
+
     Canvas.Font.Color := Color;
+    Canvas.Font.Style := [fsBold];
     Canvas.Brush.Style := bsClear;
-    Canvas.TextOut(LineRect.Left + (2 * CellSize.Width), LineRect.Top, '!');
-    Canvas.TextOut(TextRect.Right, TextRect.Top, Msg);
+    Canvas.TextOut(TextLeft + CellSize.Width, TextRect.Top - 1, Msg);
+    Canvas.Font.Style := [];
   end;
 
 var
@@ -503,21 +523,19 @@ var
   Msg: string;
   StartLineOffset: Integer;
   EndLineOffset: Integer;
-  TetheredIssues: Boolean;
+  NumIssuesOnLine: Integer;
   TextColor: TColor;
+  BgColor: TColor;
 begin
   Issues := Analyzer.GetIssues(View.FileName, LineNumber);
 
+  TextColor := $00322f2d;
+  BgColor := $0036c5ff;
+
+  NumIssuesOnLine := 0;
+
   if Length(Issues) > 0 then begin
-    if InDarkMode then begin
-      TextColor := clWebGold;
-    end
-    else begin
-      TextColor := clWebSienna;
-    end;
 
-
-    TetheredIssues := False;
     for Issue in Issues do begin
       Issue.UpdateTether(LineNumber, LineText);
 
@@ -525,7 +543,6 @@ begin
         Continue;
       end;
 
-      TetheredIssues := True;
       StartLineOffset := Issue.StartLineOffset;
       EndLineOffset := Issue.EndLineOffset;
 
@@ -537,15 +554,27 @@ begin
         EndLineOffset := -1;
       end;
 
-      DrawLine(StartLineOffset, EndLineOffset, TextColor);
+      DrawLine(StartLineOffset, EndLineOffset, BgColor);
 
       if Issue.StartLine = LineNumber then begin
-        Msg := Msg + ' - ' + Issue.Message;
+        NumIssuesOnLine := NumIssuesOnLine + 1;
+
+        if Msg = '' then begin
+          Msg := Issue.Message;
+        end;
       end;
     end;
 
-    if TetheredIssues then begin
-      DrawMessage(Msg, TextColor);
+    if NumIssuesOnLine > 0 then begin
+      if NumIssuesOnLine > 1 then begin
+        if (Length(Msg) > 0) and (Msg[Length(Msg)] = '.') then begin
+          Msg := LeftStr(Msg, Length(Msg) - 1);
+        end;
+
+        Msg := Format('%d issues (%s + %d more)', [NumIssuesOnLine, Msg, NumIssuesOnLine - 1]);
+      end;
+
+      DrawMessage(Msg, TextColor, BgColor);
     end;
   end;
 end;
