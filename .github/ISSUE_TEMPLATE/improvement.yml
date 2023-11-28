@@ -1,6 +1,5 @@
 name: Improvement
 description: Suggest an improvement
-title: "[Improvement]: "
 labels: ["enhancement", "triage"]
 body:
   - type: markdown
