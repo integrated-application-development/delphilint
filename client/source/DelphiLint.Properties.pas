@@ -20,7 +20,6 @@ interface
 
 uses
     System.IniFiles
-  , System.SysUtils
   ;
 
 type
@@ -53,38 +52,12 @@ type
     procedure Load(IniFile: TIniFile); override;
   end;
 
-  TCustomStringPropField = class(TStringPropField)
-  private
-    FGetDefault: TFunc<string>;
-  protected
-    function GetFallback: Variant; override;
-  public
-    constructor Create(Section: string; Key: string; GetDefault: TFunc<string>);
-  end;
-
-  TIntPropField = class(TPropFieldBase)
-  protected
-    function GetFallback: Variant; override;
-  public
-    procedure Save(IniFile: TIniFile); override;
-    procedure Load(IniFile: TIniFile); override;
-  end;
-
   TBoolPropField = class(TPropFieldBase)
   protected
     function GetFallback: Variant; override;
   public
     procedure Save(IniFile: TIniFile); override;
     procedure Load(IniFile: TIniFile); override;
-  end;
-
-  TCustomBoolPropField = class(TBoolPropField)
-  private
-    FGetDefault: TFunc<Boolean>;
-  protected
-    function GetFallback: Variant; override;
-  public
-    constructor Create(Section: string; Key: string; GetDefault: TFunc<Boolean>);
   end;
 
   TPropertiesFile = class(TInterfacedObject)
@@ -118,6 +91,7 @@ implementation
 
 uses
     System.Variants
+  , System.SysUtils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -171,36 +145,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TCustomStringPropField.Create(Section, Key: string; GetDefault: TFunc<string>);
-begin
-  inherited Create(Section, Key);
-  FGetDefault := GetDefault;
-end;
-
-function TCustomStringPropField.GetFallback: Variant;
-begin
-  Result := FGetDefault();
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TIntPropField.GetFallback: Variant;
-begin
-  Result := 0;
-end;
-
-procedure TIntPropField.Load(IniFile: TIniFile);
-begin
-  FValue := IniFile.ReadInteger(FSection, FKey, GetDefault);
-end;
-
-procedure TIntPropField.Save(IniFile: TIniFile);
-begin
-  IniFile.WriteInteger(FSection, FKey, FValue);
-end;
-
-//______________________________________________________________________________________________________________________
-
 function TBoolPropField.GetFallback: Variant;
 begin
   Result := False;
@@ -214,19 +158,6 @@ end;
 procedure TBoolPropField.Save(IniFile: TIniFile);
 begin
   IniFile.WriteBool(FSection, FKey, FValue);
-end;
-
-//______________________________________________________________________________________________________________________
-
-constructor TCustomBoolPropField.Create(Section, Key: string; GetDefault: TFunc<Boolean>);
-begin
-  inherited Create(Section, Key);
-  FGetDefault := GetDefault;
-end;
-
-function TCustomBoolPropField.GetFallback: Variant;
-begin
-  Result := FGetDefault();
 end;
 
 //______________________________________________________________________________________________________________________

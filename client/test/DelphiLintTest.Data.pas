@@ -95,8 +95,14 @@ end;
 
 procedure TDataJsonParseTest.TestCreateRuleCleanCode;
 const
-  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule",'
-    + '"severity":"MAJOR","type":"CODE_SMELL","cleanCode":{"attribute":"COMPLETE","category":"INTENTIONAL","impacts":{"SECURITY":"HIGH"}}}';
+  CRuleJsonStr: string = '{' +
+      '"key":"myrulekey",' +
+      '"name":"My Rule",' +
+      '"desc":"My description for the rule",' +
+      '"severity":"MAJOR",' +
+      '"type":"CODE_SMELL",' +
+      '"cleanCode":{"attribute":"COMPLETE","category":"INTENTIONAL","impacts":{"SECURITY":"HIGH"}}' +
+    '}';
 var
   JsonObject: TJSONObject;
   Rule: TRule;

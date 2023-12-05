@@ -307,8 +307,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 class function TArrayUtils.Max<X>(Arr: TArray<X>): X;
-var
-  Comparer: IComparer<X>;
 begin
   if Length(Arr) = 0 then begin
     raise ERangeError.Create('Can''t get maximum of empty array without default');

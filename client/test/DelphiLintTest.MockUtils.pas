@@ -25,7 +25,6 @@ type
   private
     FOnCalled: TEventNotifier<THookedEventInfo<TEventType>>;
   protected
-    procedure NotifyEvent(Discriminator: TEventType); overload;
     procedure NotifyEvent(Discriminator: TEventType; Args: array of const); overload;
   public
     constructor Create;
@@ -58,13 +57,6 @@ destructor THookedObject<TEventType>.Destroy;
 begin
   FreeAndNil(FOnCalled);
   inherited;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure THookedObject<TEventType>.NotifyEvent(Discriminator: TEventType);
-begin
-  NotifyEvent(Discriminator, []);
 end;
 
 //______________________________________________________________________________________________________________________

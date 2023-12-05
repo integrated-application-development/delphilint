@@ -7,7 +7,6 @@ uses
   , IdIOHandler
   , IdTCPServer
   , IdContext
-  , DelphiLint.Server
   , DelphiLint.Events
   ;
 
@@ -55,10 +54,9 @@ uses
   , System.JSON
   , System.SyncObjs
   , System.TimeSpan
-  , IdServerIOHandler
-  , IdStack
   , IdExceptionCore
   , IdGlobal
+  , DelphiLint.Server
   ;
 
 //______________________________________________________________________________________________________________________

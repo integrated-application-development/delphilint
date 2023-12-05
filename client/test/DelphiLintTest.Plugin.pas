@@ -14,8 +14,8 @@ type
     procedure MockAllToolBars(IDEServices: TMockIDEServices);
     procedure BuildMockedContext(out IDEServices: TMockIDEServices);
   public
-    [SetUp]
-    procedure SetUp;
+    [Setup]
+    procedure Setup;
     [TearDown]
     procedure TearDown;
 
@@ -63,7 +63,7 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure TIDEPluginTest.SetUp;
+procedure TIDEPluginTest.Setup;
 begin
   MockContext.Reset;
 end;

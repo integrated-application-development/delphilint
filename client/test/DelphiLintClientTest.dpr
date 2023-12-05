@@ -19,7 +19,7 @@ uses
   DUnitX.Loggers.Console,
   {$ENDIF }
   {$ENDIF }
-  DUnitX.Loggers.Xml.NUnit,
+  DUnitX.Loggers.XML.NUnit,
   DUnitX.TestFramework,
   DelphiLintTest.Events in 'DelphiLintTest.Events.pas',
   DelphiLintTest.Data in 'DelphiLintTest.Data.pas',
@@ -59,7 +59,7 @@ begin
     if TDUnitX.Options.ConsoleMode <> TDunitXConsoleMode.Off then
     begin
       Logger := TDUnitXConsoleLogger.Create(TDUnitX.Options.ConsoleMode = TDunitXConsoleMode.Quiet);
-      Runner.AddLogger(logger);
+      Runner.AddLogger(Logger);
     end;
     //Generate an NUnit compatible XML File
     NUnitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);

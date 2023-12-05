@@ -24,7 +24,6 @@ uses
 
 type
   TEventListener<T> = reference to procedure(const Arg: T);
-  TEventListener = reference to procedure;
 
   TEventNotifier<T> = class(TObject)
   private

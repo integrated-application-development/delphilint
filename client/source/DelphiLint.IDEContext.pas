@@ -755,7 +755,16 @@ procedure TToolsApiViewNotifier.PaintLine(const View: IOTAEditView; LineNumber: 
   const TextWidth: Word; const LineAttributes: TOTAAttributeArray; const Canvas: TCanvas; const TextRect,
   LineRect: TRect; const CellSize: TSize);
 begin
-  FHandler.OnPaintLine(TToolsApiEditView.Create(View), LineNumber, string(LineText), TextWidth, Canvas, TextRect, LineRect, CellSize);
+  FHandler.OnPaintLine(
+    TToolsApiEditView.Create(View),
+    LineNumber,
+    string(LineText),
+    TextWidth,
+    Canvas,
+    TextRect,
+    LineRect,
+    CellSize
+  );
 end;
 
 //______________________________________________________________________________________________________________________

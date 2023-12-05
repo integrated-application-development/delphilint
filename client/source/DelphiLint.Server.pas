@@ -35,16 +35,9 @@ const
   C_Initialize = 20;
   C_Analyze = 30;
   C_AnalyzeResult = 35;
-  C_AnalyzeError = 36;
   C_RuleRetrieve = 40;
   C_RuleRetrieveResult = 45;
-  C_RuleRetrieveError = 46;
   C_Initialized = 25;
-  C_InitializeError = 26;
-  C_InvalidRequest = 241;
-  C_UnexpectedError = 242;
-
-  C_Timeout = 10000;
 
 type
 

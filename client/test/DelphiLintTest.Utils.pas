@@ -13,8 +13,8 @@ type
   private
     procedure MockIDEServices(out IDEServices: TMockIDEServices);
   public
-    [SetUp]
-    procedure SetUp;
+    [Setup]
+    procedure Setup;
     [TearDown]
     procedure TearDown;
 
@@ -139,7 +139,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TUtilsTest.SetUp;
+procedure TUtilsTest.Setup;
 begin
   MockContext.Reset;
 end;
@@ -465,12 +465,10 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TArrayUtilsTest.TestMapSimpleTypes;
-const
-  CExpectedArray: TArray<string> = ['1','3','5','9','11'];
 var
   MappedArray: TArray<string>;
 begin
-  MappedArray := TArrayUtils.Map<Integer, String>([1,3,5,9,11], IntToStr);
+  MappedArray := TArrayUtils.Map<Integer, string>([1,3,5,9,11], IntToStr);
   Assert.AreEqual(5, Length(MappedArray));
   Assert.AreEqual('1', MappedArray[0]);
   Assert.AreEqual('3', MappedArray[1]);
@@ -484,7 +482,7 @@ end;
 procedure TArrayUtilsTest.TestMax;
 begin
   Assert.AreEqual(64, TArrayUtils.Max<Integer>([1,32,4,8,64,16,2]));
-  Assert.AreEqual('dza', TArrayUtils.Max<String>(['aaa','bbb','dza','ccc','ddd']));
+  Assert.AreEqual('dza', TArrayUtils.Max<string>(['aaa','bbb','dza','ccc','ddd']));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -553,7 +551,7 @@ procedure TArrayUtilsTest.TestReduceSimpleTypes;
 var
   ReducedStr: string;
 begin
-  ReducedStr := TArrayUtils.Reduce<Integer, String>(
+  ReducedStr := TArrayUtils.Reduce<Integer, string>(
     [1,3,5,9,11],
     function(Acc: string; Element: Integer): string
     begin
@@ -588,5 +586,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TUtilsTest);
+  TDUnitX.RegisterTestFixture(TArrayUtilsTest);
 
 end.

@@ -416,14 +416,14 @@ end;
 
 procedure TMockAnalyzer.AnalyzeActiveFile;
 begin
-  NotifyEvent(azcAnalyzeActiveFile);
+  NotifyEvent(azcAnalyzeActiveFile, []);
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TMockAnalyzer.AnalyzeOpenFiles;
 begin
-  NotifyEvent(azcAnalyzeOpenFiles);
+  NotifyEvent(azcAnalyzeOpenFiles, []);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -579,7 +579,7 @@ end;
 
 procedure TMockAnalyzer.RestartServer;
 begin
-  NotifyEvent(azcRestartServer);
+  NotifyEvent(azcRestartServer, []);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -1208,7 +1208,7 @@ end;
 
 procedure TMockEditView.Paint;
 begin
-  NotifyEvent(evcPaint);
+  NotifyEvent(evcPaint, []);
 end;
 
 procedure TMockEditView.RemoveNotifier(Index: Integer);

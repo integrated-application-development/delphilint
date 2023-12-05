@@ -390,7 +390,7 @@ begin
   FCleanCode := nil;
 
   if Json.TryGetValue<TJSONObject>('cleanCode', CleanCodeJson) and Assigned(CleanCodeJson) then begin
-    FCleanCode := TRuleCleanCode.CreateFroMJson(CleanCodeJson);
+    FCleanCode := TRuleCleanCode.CreateFromJson(CleanCodeJson);
   end;
 end;
 
