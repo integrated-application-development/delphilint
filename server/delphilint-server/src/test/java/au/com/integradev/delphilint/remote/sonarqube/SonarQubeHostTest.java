@@ -627,8 +627,18 @@ class SonarQubeHostTest {
     }
 
     @Override
+    public JsonNode getJson(String url, Map<String, String> params) {
+      return getJson(url + HttpUtils.buildParamString(params));
+    }
+
+    @Override
     public Path getFile(String url) {
       return getPath(url);
+    }
+
+    @Override
+    public Path getFile(String url, Map<String, String> params) {
+      return getFile(url + HttpUtils.buildParamString(params));
     }
 
     @Override
@@ -638,6 +648,11 @@ class SonarQubeHostTest {
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
+    }
+
+    @Override
+    public String getText(String url, Map<String, String> params) {
+      return getText(url + HttpUtils.buildParamString(params));
     }
   }
 }

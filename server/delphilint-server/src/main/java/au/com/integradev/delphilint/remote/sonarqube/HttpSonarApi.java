@@ -32,6 +32,7 @@ import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class HttpSonarApi implements SonarApi {
@@ -58,6 +59,11 @@ public class HttpSonarApi implements SonarApi {
     return null;
   }
 
+  @Override
+  public JsonNode getJson(String url, Map<String, String> params) throws SonarHostException {
+    return getJson(url + HttpUtils.buildParamString(params));
+  }
+
   public Path getFile(String url) throws SonarHostException {
     try {
       Path temp = Files.createTempFile("delphilint-server", ".tmp");
@@ -67,8 +73,18 @@ public class HttpSonarApi implements SonarApi {
     }
   }
 
+  @Override
+  public Path getFile(String url, Map<String, String> params) throws SonarHostException {
+    return getFile(url + HttpUtils.buildParamString(params));
+  }
+
   public String getText(String url) throws SonarHostException {
     return getResponse(hostUrl + url, BodyHandlers.ofString());
+  }
+
+  @Override
+  public String getText(String url, Map<String, String> params) throws SonarHostException {
+    return getText(url + HttpUtils.buildParamString(params));
   }
 
   private <T> T getResponse(String url, BodyHandler<T> handler) throws SonarHostException {
