@@ -93,6 +93,7 @@ public class CachingPluginDownloader {
     try {
       Files.copy(tempPath.get(), destination, REPLACE_EXISTING);
       LOG.info("Plugin jar saved to destination");
+      Files.delete(tempPath.get());
       return true;
     } catch (IOException e) {
       LOG.error(e);
