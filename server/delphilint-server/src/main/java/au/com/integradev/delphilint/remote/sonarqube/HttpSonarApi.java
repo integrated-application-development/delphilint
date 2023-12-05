@@ -67,6 +67,9 @@ public class HttpSonarApi implements SonarApi {
   public Path getFile(String url) throws SonarHostException {
     try {
       Path temp = Files.createTempFile("delphilint-server", ".tmp");
+      if (!temp.toFile().setWritable(true, true)) {
+        throw new IOException("Could not set permissions on temp file");
+      }
       return getResponse(hostUrl + url, BodyHandlers.ofFile(temp));
     } catch (IOException e) {
       throw new UncheckedIOException(e);
