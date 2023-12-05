@@ -35,8 +35,11 @@ public class DelphiLintInputFile implements ClientInputFile {
     this.relativePath = relativePath;
   }
 
+  /**
+   * @deprecated
+   */
   @Override
-  @Deprecated
+  @Deprecated(since = "?")
   public String getPath() {
     return baseDir
         .resolve(relativePath)
