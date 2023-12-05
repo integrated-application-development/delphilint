@@ -81,7 +81,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -111,7 +111,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -141,7 +141,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> unresolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -168,7 +168,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -196,7 +196,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -205,7 +205,7 @@ class SonarServerUtilsTest {
                 .withType(RuleType.SECURITY_HOTSPOT)
                 .withHashFrom(FILE_A)
                 .build(),
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk2")
                 .withMessage("issue 2")
                 .withRange(9, 0, 20, 10)
@@ -234,7 +234,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
@@ -260,7 +260,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(8, 3, 6, 9)
@@ -285,7 +285,7 @@ class SonarServerUtilsTest {
 
     Set<RemoteIssue> resolvedIssues =
         Set.of(
-            new RemoteIssueBuilder()
+            new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("remote issue 1")
                 .withRange(8, 3, 6, 9)

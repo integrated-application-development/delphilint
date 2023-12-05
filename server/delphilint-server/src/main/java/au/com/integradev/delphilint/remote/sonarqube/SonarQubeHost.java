@@ -23,7 +23,6 @@ import au.com.integradev.delphilint.remote.IssueStatus;
 import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.RemoteCleanCode;
 import au.com.integradev.delphilint.remote.RemoteIssue;
-import au.com.integradev.delphilint.remote.RemoteIssueBuilder;
 import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
 import au.com.integradev.delphilint.remote.RuleSeverity;
@@ -33,6 +32,7 @@ import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,20 +40,38 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class SonarQubeHost implements SonarHost {
   private static final Logger LOG = LogManager.getLogger(SonarQubeHost.class);
   private static final Version FIRST_SUPPORTED_VERSION = new Version("7.9");
   private static final Version FIRST_CODE_ATTRIBUTES_VERSION = new Version("10.2");
+
+  private static final String URL_SERVER_VERSION = "/api/server/version";
+  private static final String URL_QUALITY_PROFILES_SEARCH = "/api/qualityprofiles/search";
+  private static final String URL_RULES_SEARCH = "/api/rules/search";
+  private static final String URL_PLUGINS_DOWNLOAD = "/api/plugins/download";
+  private static final String URL_PLUGINS_INSTALLED = "/api/plugins/installed";
+
+  private static final String PARAM_PAGE_SIZE = "ps";
+  private static final String PARAM_LANGUAGE = "language";
+  private static final String PARAM_LANGUAGES = "languages";
+  private static final String PARAM_QUALITY_PROFILE = "qprofile";
+  private static final String PARAM_FIELDS = "f";
+  private static final String PARAM_PROJECT = "project";
+  private static final String PARAM_ACTIVATION = "activation";
+
+  private static final String RULES_ARRAY_NAME = "rules";
 
   private final String projectKey;
   private final String languageKey;
@@ -82,7 +100,7 @@ public class SonarQubeHost implements SonarHost {
   }
 
   private SonarCharacteristics calculateCharacteristics() throws SonarHostException {
-    String versionStr = api.getText("/api/server/version");
+    String versionStr = api.getText(URL_SERVER_VERSION);
     var version = new Version(versionStr);
 
     if (version.compareTo(FIRST_SUPPORTED_VERSION) < 0) {
@@ -101,38 +119,46 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
-    String url = "/api/qualityprofiles/search?language=" + languageKey;
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put(PARAM_LANGUAGE, languageKey);
     if (projectKey.isEmpty()) {
-      url += "&defaults=true";
+      params.put("defaults", "true");
     } else {
-      url += "&project=" + projectKey;
+      params.put(PARAM_PROJECT, projectKey);
     }
 
-    var rootNode = api.getJson(url);
+    var rootNode = api.getJson(URL_QUALITY_PROFILES_SEARCH, params);
 
-    if (rootNode != null) {
-      var profilesArray = rootNode.get("profiles");
-      if (profilesArray != null && profilesArray.size() > 0) {
-        var profile = profilesArray.get(0);
-        try {
-          return jsonMapper.treeToValue(profile, SonarQubeQualityProfile.class);
-        } catch (JsonProcessingException e) {
-          throw new SonarHostException("Problem parsing quality profile JSON: " + e.getMessage());
-        }
+    if (rootNode == null) {
+      throw new SonarHostException("Could not retrieve quality profile from SonarQube");
+    }
+
+    var profilesArray = rootNode.get("profiles");
+    if (profilesArray == null || profilesArray.isEmpty()) {
+      String errorMessage = getErrorMessageFromJson(rootNode);
+      if (errorMessage != null) {
+        throw new SonarHostException(
+            "SonarQube error when retrieving quality profile: " + errorMessage);
       } else {
-        var errorsArray = rootNode.get("errors");
-        if (errorsArray != null && errorsArray.size() > 0) {
-          var errorMessage = errorsArray.get(0).get("msg");
-          if (errorMessage != null) {
-            throw new SonarHostException(
-                "SonarQube error when retrieving quality profile: " + errorMessage.asText());
-          }
-        }
-
         throw new SonarHostException("No quality profile found for project " + projectKey);
       }
+    }
+
+    var profile = profilesArray.get(0);
+    try {
+      return jsonMapper.treeToValue(profile, SonarQubeQualityProfile.class);
+    } catch (JsonProcessingException e) {
+      throw new SonarHostException("Problem parsing quality profile JSON: " + e.getMessage());
+    }
+  }
+
+  @Nullable
+  private String getErrorMessageFromJson(JsonNode rootNode) {
+    var errorsArray = rootNode.get("errors");
+    if (errorsArray != null && !errorsArray.isEmpty() && errorsArray.get(0).has("msg")) {
+      return errorsArray.get(0).get("msg").asText();
     } else {
-      throw new SonarHostException("Could not retrieve quality profile from SonarQube");
+      return null;
     }
   }
 
@@ -140,18 +166,20 @@ public class SonarQubeHost implements SonarHost {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptyMap();
 
-    var rootNode =
-        api.getJson(
-            "/api/rules/search?ps=500&activation=true&f=name&language="
-                + languageKey
-                + "&qprofile="
-                + profile.getKey());
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put(PARAM_PAGE_SIZE, "500");
+    params.put(PARAM_ACTIVATION, "true");
+    params.put(PARAM_FIELDS, "name");
+    params.put(PARAM_LANGUAGE, languageKey);
+    params.put(PARAM_QUALITY_PROFILE, profile.getKey());
+
+    var rootNode = api.getJson(URL_RULES_SEARCH, params);
     if (rootNode == null) {
       throw new SonarHostException(
           "Could not retrieve rule names from SonarQube for quality profile " + profile.getName());
     }
 
-    var rulesArray = rootNode.get("rules");
+    var rulesArray = rootNode.get(RULES_ARRAY_NAME);
     var ruleMap = new HashMap<String, String>();
 
     for (var rule : rulesArray) {
@@ -164,26 +192,25 @@ public class SonarQubeHost implements SonarHost {
   public Set<RemoteRule> getRules() throws SonarHostException {
     SonarQubeQualityProfile profile = getQualityProfile();
 
-    String apiPath =
-        "/api/rules/search?ps=500&activation=true"
-            + "&languages="
-            + languageKey
-            + "&qprofile="
-            + profile.getKey();
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put(PARAM_PAGE_SIZE, "500");
+    params.put(PARAM_ACTIVATION, "true");
+    params.put(PARAM_LANGUAGES, languageKey);
+    params.put(PARAM_QUALITY_PROFILE, profile.getKey());
 
     if (getCharacteristics().usesCodeAttributes()) {
-      apiPath += "&f=name,htmlDesc,severity,cleanCodeAttribute";
+      params.put(PARAM_FIELDS, "name,htmlDesc,severity,cleanCodeAttribute");
     } else {
-      apiPath += "&f=name,htmlDesc,severity";
+      params.put(PARAM_FIELDS, "name,htmlDesc,severity");
     }
 
-    var rootNode = api.getJson(apiPath);
+    var rootNode = api.getJson(URL_RULES_SEARCH, params);
     if (rootNode == null) {
       throw new SonarHostException(
           "No JSON response from SonarQube for rule information retrieval");
     }
 
-    var rulesArray = rootNode.get("rules");
+    var rulesArray = rootNode.get(RULES_ARRAY_NAME);
     Set<RemoteRule> ruleSet = new HashSet<>();
 
     for (var rule : rulesArray) {
@@ -207,7 +234,7 @@ public class SonarQubeHost implements SonarHost {
                 sonarQubeRule.getKey(),
                 sonarQubeRule.getName(),
                 sonarQubeRule.getHtmlDesc(),
-                RuleSeverity.fromSonarLintSeverity(sonarQubeRule.getSeverity()),
+                RuleSeverity.fromSonarLintIssueSeverity(sonarQubeRule.getSeverity()),
                 RuleType.fromSonarLintRuleType(sonarQubeRule.getType()),
                 cleanCode));
       } catch (JsonProcessingException e) {
@@ -220,7 +247,7 @@ public class SonarQubeHost implements SonarHost {
   }
 
   private List<String> joinStringsWithLimit(
-      Collection<String> values, Function<String, String> mapper, int maxChars) {
+      Collection<String> values, UnaryOperator<String> mapper, int maxChars) {
     List<String> strings = new ArrayList<>();
     var stringBuilder = new StringBuilder();
 
@@ -241,17 +268,9 @@ public class SonarQubeHost implements SonarHost {
     return strings;
   }
 
-  private String buildUrlQueryString(Collection<String> params) {
-    if (!params.isEmpty()) {
-      return "?" + String.join("&", params);
-    } else {
-      return "";
-    }
-  }
-
   private RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue) {
     var issueBuilder =
-        new RemoteIssueBuilder()
+        new RemoteIssue.Builder()
             .withRuleKey(sqIssue.getRuleKey())
             .withRange(sqIssue.getTextRange())
             .withMessage(sqIssue.getMessage())
@@ -303,7 +322,7 @@ public class SonarQubeHost implements SonarHost {
       ConnectedList<SonarQubeIssue> serverIssues =
           new ConnectedList<>(
               api,
-              "/api/issues/search" + buildUrlQueryString(dynIssueParams),
+              "/api/issues/search" + HttpUtils.buildParamString(dynIssueParams),
               "issues",
               SonarQubeIssue.class);
 
@@ -324,7 +343,7 @@ public class SonarQubeHost implements SonarHost {
       ConnectedList<SonarQubeHotspot> resolvedIssues =
           new ConnectedList<>(
               api,
-              "/api/hotspots/search" + buildUrlQueryString(dynHotspotParams),
+              "/api/hotspots/search" + HttpUtils.buildParamString(dynHotspotParams),
               "hotspots",
               SonarQubeHotspot.class);
 
@@ -374,17 +393,19 @@ public class SonarQubeHost implements SonarHost {
     var profile = getQualityProfile();
     if (profile == null) return Collections.emptySet();
 
-    var rootNode =
-        api.getJson(
-            "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language="
-                + languageKey
-                + "&qprofile="
-                + profile.getKey());
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put(PARAM_PAGE_SIZE, "500");
+    params.put(PARAM_ACTIVATION, "true");
+    params.put(PARAM_FIELDS, "actives,templateKey");
+    params.put(PARAM_LANGUAGE, languageKey);
+    params.put(PARAM_QUALITY_PROFILE, profile.getKey());
+
+    var rootNode = api.getJson(URL_RULES_SEARCH, params);
     if (rootNode == null) {
       throw new SonarHostException("Could not retrieve active rules from SonarQube");
     }
 
-    var rulesArray = rootNode.get("rules");
+    var rulesArray = rootNode.get(RULES_ARRAY_NAME);
 
     var activesArray = rootNode.get("actives");
 
@@ -430,11 +451,11 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public Optional<Path> getPluginJar(String pluginKey) throws SonarHostException {
-    return Optional.ofNullable(api.getFile("/api/plugins/download?plugin=" + pluginKey));
+    return Optional.ofNullable(api.getFile(URL_PLUGINS_DOWNLOAD, Map.of("plugin", pluginKey)));
   }
 
   public Set<RemotePlugin> getDelphiPlugins() throws SonarHostException {
-    var rootNode = api.getJson("/api/plugins/installed");
+    var rootNode = api.getJson(URL_PLUGINS_INSTALLED);
     if (rootNode == null) {
       throw new SonarHostException("Could not retrieve installed plugins from SonarQube");
     }
