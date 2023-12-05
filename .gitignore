@@ -22,7 +22,6 @@ target/
 # SonarDelphi
 .scannerwork/
 __recovery/
-sonar-project.properties
 
 # JavaScript
 package-lock.json
