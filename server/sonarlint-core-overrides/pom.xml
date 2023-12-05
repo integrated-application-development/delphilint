@@ -12,7 +12,7 @@
       <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <name>DelphiLint :: SonarLint Core Overrides</name>
+  <name>DelphiLint Server :: SonarLint Core Overrides</name>
   <description>Shadow of sonarlint-core to add Delphi language support</description>
 
   <properties>

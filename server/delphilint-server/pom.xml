@@ -12,7 +12,7 @@
       <relativePath>../pom.xml</relativePath>
   </parent>
   
-  <name>DelphiLint :: Server</name>
+  <name>DelphiLint Server :: Core</name>
 
   <organization>
     <name>Integrated Application Development</name>

@@ -14,7 +14,7 @@
     <module>sonarlint-core-overrides</module>
   </modules>
   
-  <name>DelphiLint</name>
+  <name>DelphiLint Server</name>
   <description>SonarDelphi-powered code analysis server</description>
   <inceptionYear>2023</inceptionYear>
   <url>https://github.com/integrated-application-development/delphilint</url>
