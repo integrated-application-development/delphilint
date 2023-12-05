@@ -20,7 +20,6 @@ package au.com.integradev.delphilint.analysis;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.SonarHasher;
 import java.nio.file.Path;
-import java.util.regex.Pattern;
 import org.apache.commons.lang3.NotImplementedException;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.commons.HotspotReviewStatus;
@@ -35,8 +34,6 @@ public class TrackableWrappers {
   }
 
   public static class ClientTrackable implements Trackable<Issue> {
-    private static final Pattern MATCH_ALL_WHITESPACES = Pattern.compile("\\s");
-
     private final Issue issue;
 
     public ClientTrackable(Issue issue) {

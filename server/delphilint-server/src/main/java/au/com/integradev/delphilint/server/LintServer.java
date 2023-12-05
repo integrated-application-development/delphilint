@@ -276,7 +276,6 @@ public class LintServer {
               "The configured SonarQube instance could not be accessed: " + e.getMessage()));
     } catch (Exception e) {
       LOG.error("Unknown error during analysis", e);
-      e.printStackTrace();
       sendMessage.accept(
           LintMessage.analyzeError(
               "Unknown error during analysis: "
@@ -336,7 +335,6 @@ public class LintServer {
               "The configured SonarQube instance could not be accessed: " + e));
     } catch (Exception e) {
       LOG.error("Unknown error during analysis", e);
-      e.printStackTrace();
       sendMessage.accept(
           LintMessage.initializeError(
               "Unknown error during analysis: "
@@ -364,7 +362,6 @@ public class LintServer {
           LintMessage.ruleRetrieveResult(new ResponseRuleRetrieveResult(ruleInfoMap)));
     } catch (Exception e) {
       LOG.error("Error encountered during rule retrieval", e);
-      e.printStackTrace();
       sendMessage.accept(
           LintMessage.ruleRetrieveError(e.getClass().getSimpleName() + ": " + e.getMessage()));
     }
