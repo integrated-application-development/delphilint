@@ -142,6 +142,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Resources.pas"/>
         <DCCReference Include="DelphiLint.Context.pas"/>
         <DCCReference Include="DelphiLint.IDEContext.pas"/>
+        <DCCReference Include="DelphiLint.HtmlGen.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>

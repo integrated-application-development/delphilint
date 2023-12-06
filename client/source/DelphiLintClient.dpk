@@ -59,6 +59,7 @@ contains
   DelphiLint.Version in 'DelphiLint.Version.pas',
   DelphiLint.Resources in 'DelphiLint.Resources.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
-  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas';
+  DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
+  DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas';
 
 end.
