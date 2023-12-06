@@ -43,7 +43,7 @@ contains
   DelphiLint.Handlers in 'DelphiLint.Handlers.pas',
   DelphiLint.Server in 'DelphiLint.Server.pas',
   DelphiLint.Data in 'DelphiLint.Data.pas',
-  DelphiLint.Logger in 'DelphiLint.Logger.pas',
+  DelphiLint.FileLogger in 'DelphiLint.FileLogger.pas',
   DelphiLint.IDEBaseTypes in 'DelphiLint.IDEBaseTypes.pas',
   DelphiLint.Events in 'DelphiLint.Events.pas',
   DelphiLint.Settings in 'DelphiLint.Settings.pas',

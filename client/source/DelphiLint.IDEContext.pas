@@ -113,7 +113,7 @@ uses
   , System.DateUtils
   , Winapi.Windows
   , DelphiLint.Analyzer
-  , DelphiLint.Logger
+  , DelphiLint.FileLogger
   , DelphiLint.Plugin
   , DelphiLint.SetupForm
   , ToolsAPI

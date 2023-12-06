@@ -107,7 +107,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.Handlers.pas"/>
         <DCCReference Include="DelphiLint.Server.pas"/>
         <DCCReference Include="DelphiLint.Data.pas"/>
-        <DCCReference Include="DelphiLint.Logger.pas"/>
+        <DCCReference Include="DelphiLint.FileLogger.pas"/>
         <DCCReference Include="DelphiLint.IDEBaseTypes.pas"/>
         <DCCReference Include="DelphiLint.Events.pas"/>
         <DCCReference Include="DelphiLint.Settings.pas"/>
