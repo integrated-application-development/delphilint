@@ -175,6 +175,7 @@ type
 
   public
     constructor CreateFromJson(Json: TJSONObject);
+    destructor Destroy; override;
 
     property RuleKey: string read FRuleKey;
     property Name: string read FName;
@@ -392,6 +393,14 @@ begin
   if Json.TryGetValue<TJSONObject>('cleanCode', CleanCodeJson) and Assigned(CleanCodeJson) then begin
     FCleanCode := TRuleCleanCode.CreateFromJson(CleanCodeJson);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TRule.Destroy;
+begin
+  FreeAndNil(FCleanCode);
+  inherited;
 end;
 
 //______________________________________________________________________________________________________________________
