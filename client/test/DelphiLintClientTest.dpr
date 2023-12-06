@@ -28,7 +28,8 @@ uses
   DelphiLintTest.MockContext in 'DelphiLintTest.MockContext.pas',
   DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas',
   DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas',
-  DelphiLintTest.Server in 'DelphiLintTest.Server.pas';
+  DelphiLintTest.Server in 'DelphiLintTest.Server.pas',
+  DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas';
 
 {$IFDEF TESTINSIGHT}
 begin

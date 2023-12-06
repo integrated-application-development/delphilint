@@ -141,6 +141,7 @@
         <DCCReference Include="DelphiLintTest.Plugin.pas"/>
         <DCCReference Include="DelphiLintTest.Utils.pas"/>
         <DCCReference Include="DelphiLintTest.Server.pas"/>
+        <DCCReference Include="DelphiLintTest.FileLogger.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
