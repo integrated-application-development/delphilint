@@ -24,11 +24,21 @@ type
     procedure TestParseRuleTypes;
     [TestCase]
     procedure TestParseRuleSeverities;
+    [TestCase]
+    procedure TestCreateIssue;
   end;
 
   [TestFixture]
   TLiveIssueTest = class(TObject)
   public
+    [TestCase]
+    procedure TestIssueWithNoRangeIsSetToEntireFirstLine;
+    [TestCase]
+    procedure TestWrongNumberOfAssociatedLinesRaisesRangeError;
+    [TestCase]
+    procedure TestTransfersMetadataWhenHasMetadata;
+    [TestCase]
+    procedure TestTransfersMetadataWhenNotHasMetadata;
     [TestCase]
     procedure TestUpdateTetherOnUnchangedLineStaysTethered;
     [TestCase]
@@ -128,6 +138,41 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TDataJsonParseTest.TestCreateIssue;
+const
+  CIssueJsonStr: string = '{' +
+    '"ruleKey":"rk1",' +
+    '"message":"msg1",' +
+    '"file":"myfile1",' +
+    '"range":{"startLine":5,"startOffset":4,"endLine":6,"endOffset":16},' +
+    '"metadata":{"assignee":"myassignee","creationDate":"myDate","status":"REOPENED"}' +
+  '}';
+var
+  JsonObject: TJSONObject;
+  Issue: TLintIssue;
+begin
+  JsonObject := Parse<TJSONObject>(CIssueJsonStr);
+  try
+    Issue := TLintIssue.CreateFromJson(JsonObject);
+
+    Assert.AreEqual(Issue.RuleKey, 'rk1');
+    Assert.AreEqual(Issue.Message, 'msg1');
+    Assert.AreEqual(Issue.FilePath, 'myfile1');
+    Assert.AreEqual(Issue.Range.StartLine, 5);
+    Assert.AreEqual(Issue.Range.StartLineOffset, 4);
+    Assert.AreEqual(Issue.Range.EndLine, 6);
+    Assert.AreEqual(Issue.Range.EndLineOffset, 16);
+    Assert.AreEqual(Issue.Metadata.Assignee, 'myassignee');
+    Assert.AreEqual(Issue.Metadata.CreationDate, 'myDate');
+    Assert.AreEqual(Issue.Metadata.Status, issReopened);
+  finally
+    FreeAndNil(Issue);
+    FreeAndNil(JsonObject);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TDataJsonParseTest.TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
 const
   CRuleJsonFormatStr: string = '{"key":"","name":"","desc":"","severity":"%s","type":"CODE_SMELL"}';
@@ -183,6 +228,64 @@ begin
   TestParseRuleSeverity('MAJOR', rsMajor);
   TestParseRuleSeverity('CRITICAL', rsCritical);
   TestParseRuleSeverity('BLOCKER', rsBlocker);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueTest.TestTransfersMetadataWhenHasMetadata;
+var
+  IssueData: TLintIssue;
+  LiveIssue: TLiveIssue;
+begin
+  IssueData := TLintIssue.Create(
+    'rk1',
+    'msg',
+    'abc.pas',
+    nil,
+    TIssueMetadata.Create(
+      'myassignee',
+      issReopened,
+      'creationdate'
+    ));
+  try
+    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], True);
+    Assert.IsTrue(LiveIssue.HasMetadata);
+    Assert.AreEqual(LiveIssue.Assignee, 'myassignee');
+    Assert.AreEqual(LiveIssue.Status, issReopened);
+    Assert.AreEqual(LiveIssue.CreationDate, 'creationdate');
+  finally
+    FreeAndNil(LiveIssue);
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueTest.TestTransfersMetadataWhenNotHasMetadata;
+var
+  IssueData: TLintIssue;
+  LiveIssue: TLiveIssue;
+begin
+  IssueData := TLintIssue.Create(
+    'rk1',
+    'msg',
+    'abc.pas',
+    nil,
+    TIssueMetadata.Create(
+      'myassignee',
+      issReopened,
+      'creationdate'
+    ));
+  try
+    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], False);
+    Assert.IsFalse(LiveIssue.HasMetadata);
+    Assert.AreEqual(LiveIssue.Assignee, 'myassignee');
+    Assert.AreEqual(LiveIssue.Status, issReopened);
+    Assert.AreEqual(LiveIssue.CreationDate, 'creationdate');
+  finally
+    FreeAndNil(LiveIssue);
+    FreeAndNil(IssueData);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -354,6 +457,44 @@ begin
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(6, 'IJKLMNOP');
     Assert.IsTrue(LiveIssue.Tethered);
+  finally
+    FreeAndNil(LiveIssue);
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueTest.TestWrongNumberOfAssociatedLinesRaisesRangeError;
+var
+  IssueData: TLintIssue;
+begin
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(4, 0, 4, 26));
+  try
+    Assert.WillRaise(
+      procedure begin
+        FreeAndNil(TLiveIssue.Create(IssueData, ['abc', 'def'], False));
+      end
+    );
+  finally
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueTest.TestIssueWithNoRangeIsSetToEntireFirstLine;
+var
+  IssueData: TLintIssue;
+  LiveIssue: TLiveIssue;
+begin
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', nil);
+  try
+    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], False);
+    Assert.AreEqual(LiveIssue.StartLine, 1);
+    Assert.AreEqual(LiveIssue.EndLine, 1);
+    Assert.AreEqual(LiveIssue.StartLineOffset, 0);
+    Assert.AreEqual(LiveIssue.EndLineOffset, 0);
   finally
     FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
