@@ -433,6 +433,7 @@ end;
 
 constructor TIDEPlugin.Create(IDEServices: IIDEServices);
 begin
+  inherited Create;
   FCore := TPluginCore.Create(nil, IDEServices);
 end;
 

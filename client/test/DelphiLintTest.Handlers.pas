@@ -295,7 +295,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockedEditLineTracker.AddLine(const Line, Value: Integer);
+procedure TMockedEditLineTracker.AddLine(const Line: Integer; const Value: Integer);
 begin
   if Assigned(FOnLineAdded) then begin
     FOnLineAdded(Line, Value);

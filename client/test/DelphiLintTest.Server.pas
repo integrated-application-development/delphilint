@@ -63,6 +63,8 @@ uses
 
 constructor TMockTcpServer.Create;
 begin
+  inherited Create;
+
   FOnExecute := TEventNotifier<TIdIOHandler>.Create;
 
   FTcpServer := TIdTCPServer.Create;

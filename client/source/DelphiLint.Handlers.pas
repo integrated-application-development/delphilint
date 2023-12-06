@@ -271,7 +271,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLineTracker.OnNotifierTriggered(OldLine, NewLine, Data: Integer);
+procedure TLineTracker.OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
 var
   ChangedLine: TChangedLine;
 begin
@@ -541,6 +541,7 @@ end;
 
 constructor TLintLinePainter.Create(TagTextColor: TColor; TagBgColor: TColor; UnderlineColor: TColor);
 begin
+  inherited Create;
   FTagTextColor := TagTextColor;
   FTagBgColor := TagBgColor;
   FUnderlineColor := UnderlineColor;

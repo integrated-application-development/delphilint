@@ -307,7 +307,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TLintIssue.Create(RuleKey, Message, FilePath: string; Range: TRange; Metadata: TIssueMetadata);
+constructor TLintIssue.Create(
+  RuleKey: string;
+  Message: string;
+  FilePath: string;
+  Range: TRange;
+  Metadata: TIssueMetadata
+);
 begin
   inherited Create;
   FRuleKey := RuleKey;
@@ -379,6 +385,8 @@ var
   Quality: TSoftwareQuality;
   Severity: TImpactSeverity;
 begin
+  inherited Create;
+
   FAttribute := TCleanCodeAttribute(IndexStr(Json.GetValue<string>('attribute'), C_Attributes));
   FCategory := TCleanCodeAttributeCategory(IndexStr(Json.GetValue<string>('category'), C_Categories));
   FImpacts := TDictionary<TSoftwareQuality, TImpactSeverity>.Create;

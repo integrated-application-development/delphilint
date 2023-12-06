@@ -133,9 +133,12 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+type
+  EMyTestError = type Exception;
+
 procedure TestNotify(const Msg: string);
 begin
-  raise Exception.Create(Msg);
+  raise EMyTestError.Create(Msg);
 end;
 
 procedure TEventNotifierTest.TestNotifyTopLevelProc;
@@ -151,7 +154,7 @@ begin
       procedure begin
         Notifier.Notify(CMessage);
       end,
-      Exception,
+      EMyTestError,
       CMessage);
   finally
     FreeAndNil(Notifier);

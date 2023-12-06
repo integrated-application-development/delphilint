@@ -292,7 +292,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TUtilsTest.TestToAbsolutePath(RelativePath, BaseDir, Expected: string);
+procedure TUtilsTest.TestToAbsolutePath(RelativePath: string; BaseDir: string; Expected: string);
 begin
   Assert.AreEqual(Expected, ToAbsolutePath(RelativePath, BaseDir));
 end;
@@ -571,6 +571,7 @@ end;
 
 constructor TTestObject.Create(OnDestroy: TProc);
 begin
+  inherited Create;
   FOnDestroy := OnDestroy;
 end;
 

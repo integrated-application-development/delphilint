@@ -96,7 +96,7 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-constructor TPropFieldBase.Create(Section, Key: string);
+constructor TPropFieldBase.Create(Section: string; Key: string);
 begin
   inherited Create;
   FSection := Section;
@@ -106,7 +106,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TPropFieldBase.Create(Section, Key: string; DefaultValue: Variant);
+constructor TPropFieldBase.Create(Section: string; Key: string; DefaultValue: Variant);
 begin
   inherited Create;
   FSection := Section;
@@ -250,7 +250,7 @@ begin
   SetValue(Index, Value);
 end;
 
-procedure TPropertiesFile.SetValueInt(Index, Value: Integer);
+procedure TPropertiesFile.SetValueInt(Index: Integer; Value: Integer);
 begin
   SetValue(Index, Value);
 end;

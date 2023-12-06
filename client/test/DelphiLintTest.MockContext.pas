@@ -592,7 +592,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.UpdateIssueLine(FilePath: string; OriginalLine, NewLine: Integer);
+procedure TMockAnalyzer.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 begin
   NotifyEvent(azcUpdateIssueLine, [FilePath, OriginalLine, NewLine]);
 end;
@@ -796,7 +796,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TConsoleLogger.Write(const Level, Msg: string);
+procedure TConsoleLogger.Write(const Level: string; const Msg: string);
 var
   TimeStr: string;
 begin
@@ -842,7 +842,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockIDEServices.MockSystemColor(Key, Value: TColor);
+procedure TMockIDEServices.MockSystemColor(Key: TColor; Value: TColor);
 begin
   FSystemColors.AddOrSetValue(Key, Value);
 end;
@@ -924,7 +924,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TMockIDEServices.AddPluginBitmap(const Caption: string; Image: TBitmap; IsUnregistered: Boolean;
-  const LicenseStatus, Version: string);
+  const LicenseStatus: string; const Version: string);
 begin
   FIDE.PluginTitle := Caption;
   FIDE.PluginIcon := Image;
@@ -935,7 +935,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TMockIDEServices.AddPluginInfo(const Title, Description: string; Image: TBitmap): Integer;
+function TMockIDEServices.AddPluginInfo(const Title: string; const Description: string; Image: TBitmap): Integer;
 begin
   Result := FNextId;
   Inc(FNextId);
@@ -960,7 +960,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockIDEServices.EditOptions(const Area, PageCaption: string);
+procedure TMockIDEServices.EditOptions(const Area: string; const PageCaption: string);
 begin
   NotifyEvent(iscEditOptions, [Area, PageCaption]);
 end;
@@ -1201,7 +1201,7 @@ begin
   Result := FLineTracker;
 end;
 
-procedure TMockEditView.GoToPosition(const Line, Column: Integer);
+procedure TMockEditView.GoToPosition(const Line: Integer; const Column: Integer);
 begin
   NotifyEvent(evcGoToPosition, [Line, Column]);
 end;
@@ -1292,7 +1292,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockEditLineTracker.AddLine(const Line, Value: Integer);
+procedure TMockEditLineTracker.AddLine(const Line: Integer; const Value: Integer);
 begin
   FLines.AddOrSetValue(Line, Value);
 end;
