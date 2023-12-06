@@ -29,7 +29,8 @@ uses
   DelphiLintTest.Plugin in 'DelphiLintTest.Plugin.pas',
   DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas',
   DelphiLintTest.Server in 'DelphiLintTest.Server.pas',
-  DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas';
+  DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas',
+  DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas';
 
 {$IFDEF TESTINSIGHT}
 begin

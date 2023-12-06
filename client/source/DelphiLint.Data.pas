@@ -156,6 +156,11 @@ type
     FImpacts: TDictionary<TSoftwareQuality, TImpactSeverity>;
 
   public
+    constructor Create(
+      Attribute: TCleanCodeAttribute;
+      Category: TCleanCodeAttributeCategory;
+      Impacts: TDictionary<TSoftwareQuality, TImpactSeverity>
+    );
     constructor CreateFromJson(Json: TJSONObject);
     destructor Destroy; override;
 
@@ -174,6 +179,14 @@ type
     FCleanCode: TRuleCleanCode;
 
   public
+    constructor Create(
+      RuleKey: string;
+      Name: string;
+      Desc: string;
+      Severity: TRuleSeverity;
+      RuleType: TRuleType;
+      CleanCode: TRuleCleanCode = nil
+    );
     constructor CreateFromJson(Json: TJSONObject);
     destructor Destroy; override;
 
@@ -339,6 +352,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+constructor TRuleCleanCode.Create(
+  Attribute: TCleanCodeAttribute;
+  Category: TCleanCodeAttributeCategory;
+  Impacts: TDictionary<TSoftwareQuality, TImpactSeverity>
+);
+begin
+  inherited Create;
+  FAttribute := Attribute;
+  FCategory := Category;
+  FImpacts := Impacts;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TRuleCleanCode.CreateFromJson(Json: TJSONObject);
 const
   C_Attributes: array of string = ['FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
@@ -370,6 +397,27 @@ destructor TRuleCleanCode.Destroy;
 begin
   FreeAndNil(FImpacts);
   inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TRule.Create(
+  RuleKey: string;
+  Name: string;
+  Desc: string;
+  Severity: TRuleSeverity;
+  RuleType: TRuleType;
+  CleanCode: TRuleCleanCode
+);
+begin
+  inherited Create;
+
+  FRuleKey := RuleKey;
+  FName := Name;
+  FDesc := Desc;
+  FSeverity := Severity;
+  FType := RuleType;
+  FCleanCode := CleanCode;
 end;
 
 //______________________________________________________________________________________________________________________
