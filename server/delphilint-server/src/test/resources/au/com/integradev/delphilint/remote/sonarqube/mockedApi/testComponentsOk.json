@@ -1,0 +1,30 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 500,
+    "total": 2
+  },
+  "baseComponent": {
+    "key": "MyProject",
+    "name": "My Project",
+    "qualifier": "TRK",
+    "tags": [],
+    "visibility": "public"
+  },
+  "components": [
+    {
+      "key": "MyProject:test/TestUnitA.pas",
+      "name": "TestUnitA.pas",
+      "qualifier": "UTS",
+      "path": "test/TestUnitA.pas",
+      "language": "delphi"
+    },
+    {
+      "key": "MyProject:test/TestUnitB.pas",
+      "name": "TestUnitB.pas",
+      "qualifier": "UTS",
+      "path": "test/TestUnitB.pas",
+      "language": "delphi"
+    }
+  ]
+}

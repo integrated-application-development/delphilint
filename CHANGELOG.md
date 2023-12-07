@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Inline issue display and underline have been redesigned to be more prominent
 
+### Fixed
+
+* Scanning both source files (in `sonar.sources`) and test files (in `sonar.tests`) at the same time no longer
+  fails with an error in Connected Mode
+
 ## [0.6.0] - 2023-10-31
 
 ### Added

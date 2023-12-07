@@ -115,12 +115,19 @@ public class StandaloneSonarHost implements SonarHost {
   }
 
   @Override
-  public Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths) {
+  public Set<String> getTestFilePaths() {
     return Collections.emptySet();
   }
 
   @Override
-  public Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths) {
+  public Collection<RemoteIssue> getResolvedIssues(
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
+    return Collections.emptySet();
+  }
+
+  @Override
+  public Collection<RemoteIssue> getUnresolvedIssues(
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
     return Collections.emptySet();
   }
 

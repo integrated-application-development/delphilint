@@ -22,6 +22,7 @@ import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarServerUtils;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,7 @@ import org.sonarsource.sonarlint.core.commons.progress.ProgressMonitor;
 import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoadResult;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoader;
+import org.springframework.util.StringUtils;
 
 public class DelphiAnalysisEngine implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
@@ -96,6 +98,20 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     return configBuilder.build();
   }
 
+  private Set<String> getTestFiles(Set<String> inputFiles, String[] testDirs) {
+    Set<String> testFiles = new HashSet<>();
+
+    for (String testBase : testDirs) {
+      for (String inputFile : inputFiles) {
+        if (StringUtils.startsWithIgnoreCase(inputFile, testBase)) {
+          testFiles.add(inputFile);
+        }
+      }
+    }
+
+    return testFiles;
+  }
+
   public Set<DelphiIssue> analyze(
       Path baseDir,
       Set<Path> inputFiles,
@@ -125,7 +141,18 @@ public class DelphiAnalysisEngine implements AutoCloseable {
         .iterator()
         .forEachRemaining(file -> fileRelativePaths.add(file.relativePath()));
 
-    return SonarServerUtils.postProcessIssues(fileRelativePaths, issues, host);
+    Set<String> testFileRelativePaths;
+    if (properties.containsKey("sonar.tests")) {
+      testFileRelativePaths =
+          getTestFiles(fileRelativePaths, properties.get("sonar.tests").split(","));
+    } else if (!properties.isEmpty()) {
+      testFileRelativePaths = Collections.emptySet();
+    } else {
+      testFileRelativePaths = null;
+    }
+
+    return SonarServerUtils.postProcessIssues(
+        fileRelativePaths, testFileRelativePaths, issues, host);
   }
 
   public LoadedPlugins getLoadedPlugins() {

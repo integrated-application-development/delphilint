@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,6 +63,7 @@ public class SonarQubeHost implements SonarHost {
   private static final String URL_RULES_SEARCH = "/api/rules/search";
   private static final String URL_PLUGINS_DOWNLOAD = "/api/plugins/download";
   private static final String URL_PLUGINS_INSTALLED = "/api/plugins/installed";
+  private static final String URL_COMPONENTS_TREE = "/api/components/tree";
 
   private static final String PARAM_PAGE_SIZE = "ps";
   private static final String PARAM_LANGUAGE = "language";
@@ -299,6 +301,37 @@ public class SonarQubeHost implements SonarHost {
     return issueBuilder.build();
   }
 
+  public Set<String> getTestFilePaths() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put(PARAM_PAGE_SIZE, "500");
+    params.put("component", projectKey);
+    params.put("qualifiers", "UTS");
+
+    ConnectedList<SonarQubeComponent> componentsList =
+        new ConnectedList<>(
+            api,
+            URL_COMPONENTS_TREE + HttpUtils.buildParamString(params),
+            "components",
+            SonarQubeComponent.class);
+
+    return StreamSupport.stream(componentsList.spliterator(), false)
+        .map(SonarQubeComponent::getPath)
+        .collect(Collectors.toSet());
+  }
+
+  private Set<RemoteIssue> getIssuesAndHotspots(
+      Collection<String> relativeFilePaths,
+      Collection<String> testRelativeFilePaths,
+      Collection<String> issueParams,
+      Collection<String> hotspotParams) {
+    Set<RemoteIssue> issues = getIssuesAndHotspots(relativeFilePaths, issueParams, hotspotParams);
+    if (!testRelativeFilePaths.isEmpty()) {
+      issues.addAll(getIssuesAndHotspots(testRelativeFilePaths, issueParams, hotspotParams));
+    }
+
+    return issues;
+  }
+
   private Set<RemoteIssue> getIssuesAndHotspots(
       Collection<String> relativeFilePaths,
       Collection<String> issueParams,
@@ -355,13 +388,15 @@ public class SonarQubeHost implements SonarHost {
     return remoteIssues;
   }
 
-  public Collection<RemoteIssue> getResolvedIssues(Collection<String> relativeFilePaths) {
+  public Collection<RemoteIssue> getResolvedIssues(
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
 
     return getIssuesAndHotspots(
             relativeFilePaths,
+            testRelativeFilePaths,
             List.of("resolved=true", "resolutions=FALSE-POSITIVE,WONTFIX,FIXED"),
             List.of("status=REVIEWED"))
         .stream()
@@ -373,13 +408,17 @@ public class SonarQubeHost implements SonarHost {
         .collect(Collectors.toSet());
   }
 
-  public Collection<RemoteIssue> getUnresolvedIssues(Collection<String> relativeFilePaths) {
+  public Collection<RemoteIssue> getUnresolvedIssues(
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
 
     return getIssuesAndHotspots(
-            relativeFilePaths, List.of("resolved=false"), Collections.emptyList())
+            relativeFilePaths,
+            testRelativeFilePaths,
+            List.of("resolved=false"),
+            Collections.emptyList())
         .stream()
         .filter(
             issue ->

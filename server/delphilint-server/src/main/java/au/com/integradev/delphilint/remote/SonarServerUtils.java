@@ -29,9 +29,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.issuetracking.Tracker;
 import org.sonarsource.sonarlint.core.issuetracking.Tracking;
@@ -44,16 +46,45 @@ public class SonarServerUtils {
   }
 
   public static Set<DelphiIssue> postProcessIssues(
-      Collection<String> fileRelativePaths, Collection<Issue> issues, SonarHost host)
+      Collection<String> fileRelativePaths,
+      @Nullable Collection<String> testFileRelativePaths,
+      Collection<Issue> issues,
+      SonarHost host)
       throws SonarHostException {
     LOG.info("Post processing {} issues", issues.size());
 
-    issues = pruneResolvedIssues(fileRelativePaths, populateIssueMessages(host, issues), host);
-    Map<Issue, RemoteMetadata> metadataMap = getRemoteIssueData(fileRelativePaths, issues, host);
+    testFileRelativePaths =
+        getTestRelativePathsIfNull(testFileRelativePaths, host).stream()
+            .filter(fileRelativePaths::contains)
+            .collect(Collectors.toSet());
+
+    Set<String> mainFileRelativePaths =
+        fileRelativePaths.stream()
+            .filter(Predicate.not(testFileRelativePaths::contains))
+            .collect(Collectors.toSet());
+
+    issues =
+        pruneResolvedIssues(
+            mainFileRelativePaths,
+            testFileRelativePaths,
+            populateIssueMessages(host, issues),
+            host);
+    Map<Issue, RemoteMetadata> metadataMap =
+        getRemoteIssueData(mainFileRelativePaths, testFileRelativePaths, issues, host);
 
     return issues.stream()
         .map(issue -> new DelphiIssue(issue, metadataMap.getOrDefault(issue, null)))
         .collect(Collectors.toSet());
+  }
+
+  private static Collection<String> getTestRelativePathsIfNull(
+      @Nullable Collection<String> testFileRelativePaths, SonarHost host)
+      throws SonarHostException {
+    if (testFileRelativePaths == null) {
+      return host.getTestFilePaths();
+    } else {
+      return testFileRelativePaths;
+    }
   }
 
   private static Set<Issue> populateIssueMessages(SonarHost host, Collection<Issue> issues)
@@ -98,9 +129,13 @@ public class SonarServerUtils {
   }
 
   private static Map<Issue, RemoteMetadata> getRemoteIssueData(
-      Collection<String> fileRelativePaths, Collection<Issue> issues, SonarHost host)
+      Collection<String> fileRelativePaths,
+      Collection<String> testFileRelativePaths,
+      Collection<Issue> issues,
+      SonarHost host)
       throws SonarHostException {
-    Collection<RemoteIssue> remoteIssues = host.getUnresolvedIssues(fileRelativePaths);
+    Collection<RemoteIssue> remoteIssues =
+        host.getUnresolvedIssues(fileRelativePaths, testFileRelativePaths);
     var tracking = matchIssues(issues, remoteIssues);
 
     Map<Issue, RemoteMetadata> metadataMap =
@@ -126,9 +161,13 @@ public class SonarServerUtils {
   }
 
   private static Set<Issue> pruneResolvedIssues(
-      Collection<String> fileRelativePaths, Collection<Issue> issues, SonarHost host)
+      Collection<String> fileRelativePaths,
+      Collection<String> testFileRelativePaths,
+      Collection<Issue> issues,
+      SonarHost host)
       throws SonarHostException {
-    Collection<RemoteIssue> resolvedIssues = host.getResolvedIssues(fileRelativePaths);
+    Collection<RemoteIssue> resolvedIssues =
+        host.getResolvedIssues(fileRelativePaths, testFileRelativePaths);
     var tracking = matchIssues(issues, resolvedIssues);
 
     Set<Issue> returnIssues = new HashSet<>();

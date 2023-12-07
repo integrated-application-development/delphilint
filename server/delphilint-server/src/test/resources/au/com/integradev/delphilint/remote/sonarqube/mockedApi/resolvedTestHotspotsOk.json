@@ -1,0 +1,42 @@
+{
+  "paging": {
+    "pageIndex": 1,
+    "pageSize": 100,
+    "total": 1
+  },
+  "hotspots": [
+    {
+      "key": "AWzdjP868oeNGeVNFTVp",
+      "component": "MyProject:TestUnitA.pas",
+      "project": "MyProject",
+      "securityCategory": "others",
+      "vulnerabilityProbability": "LOW",
+      "status": "REVIEWED",
+      "resolution": "FIXED",
+      "line": 80,
+      "message": "Custom security hotspot message",
+      "assignee": "user1",
+      "author": "",
+      "creationDate": "2010-08-27T02:25:53+1000",
+      "updateDate": "2023-07-20T14:26:41+1000",
+      "textRange": {
+        "startLine": 80,
+        "endLine": 80,
+        "startOffset": 36,
+        "endOffset": 48
+      },
+      "flows": [],
+      "ruleKey": "HotspotOnlyForTestCode",
+      "messageFormattings": []
+    }
+  ],
+  "components": [
+    {
+      "key": "MyProject:TestUnitA.pas",
+      "qualifier": "UTS",
+      "name": "TestUnitA.pas",
+      "longName": "TestUnitA.pas",
+      "path": "TestUnitA.pas"
+    }
+  ]
+}

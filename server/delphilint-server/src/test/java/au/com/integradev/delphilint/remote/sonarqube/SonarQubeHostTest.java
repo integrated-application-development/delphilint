@@ -188,7 +188,7 @@ class SonarQubeHostTest {
 
     var host = buildSonarHost(api, "MyProject");
     var issueOpt =
-        host.getResolvedIssues(Set.of("UnitA.pas")).stream()
+        host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).stream()
             .filter(issue -> issue.getLikeType() == IssueLikeType.ISSUE)
             .findFirst();
 
@@ -221,7 +221,7 @@ class SonarQubeHostTest {
 
     var host = buildSonarHost(api, "MyProject");
     var issueOpt =
-        host.getResolvedIssues(Set.of("UnitA.pas")).stream()
+        host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).stream()
             .filter(issue -> issue.getLikeType() == IssueLikeType.ISSUE)
             .findFirst();
 
@@ -312,7 +312,40 @@ class SonarQubeHostTest {
     var api = new ResourceBackedSonarApi(RESOURCE_DIR, Collections.emptyMap());
 
     var host = buildSonarHost(api);
-    assertTrue(host.getResolvedIssues(Set.of("UnitA.pas")).isEmpty());
+    assertTrue(host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).isEmpty());
+  }
+
+  @Test
+  void getsResolvedTestIssuesAndHotspots() {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "resolvedHotspotsOk.json",
+                "/api/hotspots/search?files=TestUnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "resolvedTestHotspotsOk.json",
+                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "resolvedTestIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "resolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> resolvedIssues =
+        new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
   }
 
   @Test
@@ -331,7 +364,8 @@ class SonarQubeHostTest {
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
-    Set<RemoteIssue> resolvedIssues = new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas")));
+    Set<RemoteIssue> resolvedIssues =
+        new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()));
 
     assertEquals(9, resolvedIssues.size());
     assertEquals(
@@ -344,6 +378,39 @@ class SonarQubeHostTest {
         resolvedIssues.stream()
             .filter(issue -> issue.getLikeType() == IssueLikeType.ISSUE)
             .count());
+  }
+
+  @Test
+  void getsUnresolvedTestIssuesAndHotspots() {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject",
+                "unresolvedHotspotsOk.json",
+                "/api/hotspots/search?files=TestUnitA.pas,&projectKey=MyProject",
+                "unresolvedTestHotspotsOk.json",
+                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false&p=1",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=false",
+                "unresolvedTestIssuesOk.json",
+                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=false&p=1",
+                "unresolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> unresolvedIssues =
+        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
   }
 
   @Test
@@ -363,7 +430,7 @@ class SonarQubeHostTest {
 
     var host = buildSonarHost(api, "MyProject");
     Set<RemoteIssue> unresolvedIssues =
-        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas")));
+        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()));
 
     assertEquals(8, unresolvedIssues.size());
     assertEquals(
@@ -394,7 +461,8 @@ class SonarQubeHostTest {
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
-    Set<RemoteIssue> resolvedIssues = new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas")));
+    Set<RemoteIssue> resolvedIssues =
+        new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()));
 
     var resolvedHotspots =
         resolvedIssues.stream()
@@ -423,7 +491,7 @@ class SonarQubeHostTest {
 
     var host = buildSonarHost(api, "MyProject");
     Set<RemoteIssue> unresolvedIssues =
-        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas")));
+        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()));
 
     var unresolvedHotspots =
         unresolvedIssues.stream()
@@ -592,6 +660,23 @@ class SonarQubeHostTest {
         plugins.stream().filter(RemotePlugin::isCorePlugin).collect(Collectors.toSet());
     assertEquals(1, mainPlugins.size());
     assertEquals("communitydelphi", mainPlugins.stream().findFirst().get().getPluginKey());
+  }
+
+  @Test
+  void getsTestFilePaths() {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                "/api/components/tree?ps=500&component=MyProject&qualifiers=UTS",
+                "testComponentsOk.json",
+                "/api/components/tree?ps=500&component=MyProject&qualifiers=UTS&p=1",
+                "testComponentsOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+
+    Set<String> testFilePaths = host.getTestFilePaths();
+    assertEquals(2, testFilePaths.size());
   }
 
   static class ResourceBackedSonarApi implements SonarApi {
