@@ -29,6 +29,10 @@ uses
 
 type
   TAnalyzerImpl = class(TInterfacedObject, IAnalyzer)
+  private const
+    CServerAcquireErrorMsg = 'There was a problem reaching the DelphiLint server.';
+  private type
+    TServerCallback = reference to procedure(Server: TLintServer);
   private
     FServerThread: TLintServerThread;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -52,6 +56,8 @@ type
 
     procedure AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+
+    procedure ExecuteWithServer(Callback: TServerCallback; OnError: TErrorAction);
 
   protected
     function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
@@ -215,8 +221,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TAnalyzerImpl.AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
-var
-  Server: TLintServer;
 begin
   if GetInAnalysis then begin
     Log.Info('An analysis has been requested, but it will be ignored as there is another in progress');
@@ -227,19 +231,21 @@ begin
   FCurrentAnalysis := TCurrentAnalysis.Create(Options.InputFiles);
   FOnAnalysisStarted.Notify(Options.InputFiles);
 
-  Server := FServerThread.AcquireServer;
-  try
-    try
+  ExecuteWithServer(
+    procedure(Server: TLintServer) begin
       Server.Analyze(Options, OnAnalyzeResult, OnAnalyzeError, DownloadPlugin);
-    except
-      on E: ELintServerError do begin
-        TaskMessageDlg('The DelphiLint server encountered an error.', Format('%s.', [E.Message]), mtError, [mbOK], 0);
-        Exit;
-      end;
-    end;
-  finally
-    FServerThread.ReleaseServer;
-  end;
+    end,
+    procedure(Msg: string) begin
+      OnAnalyzeError('');
+      TaskMessageDlg(
+        CServerAcquireErrorMsg,
+        Format('%s.', [Msg]),
+        mtError,
+        [mbOK],
+        0
+      );
+    end
+  );
 end;
 
 //______________________________________________________________________________________________________________________
@@ -319,6 +325,26 @@ begin
   FreeAndNil(FOnAnalysisFailed);
   FreeAndNil(FCurrentAnalysis);
   inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TAnalyzerImpl.ExecuteWithServer(Callback: TServerCallback; OnError: TErrorAction);
+var
+  Server: TLintServer;
+begin
+  try
+    Server := FServerThread.AcquireServer;
+    try
+      Callback(Server);
+    finally
+      FServerThread.ReleaseServer;
+    end;
+  except
+    on E: ELintServerError do begin
+      OnError(E.Message);
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -446,7 +472,9 @@ begin
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisFailed.Notify(Paths);
 
-      TaskMessageDlg('DelphiLint encountered a problem during analysis.', Message + '.', mtWarning, [mbOK], 0);
+      if Message <> '' then begin
+        TaskMessageDlg('DelphiLint encountered a problem during analysis.', Message + '.', mtWarning, [mbOK], 0);
+      end;
     end);
 end;
 
@@ -625,7 +653,6 @@ end;
 
 function TAnalyzerImpl.TryRefreshRules: Boolean;
 var
-  Server: TLintServer;
   ProjectFile: string;
   ProjectOptions: TLintProjectOptions;
   RulesRetrieved: TEvent;
@@ -656,36 +683,45 @@ begin
       DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;
     end;
 
-    Server := FServerThread.AcquireServer;
-    try
-      Server.RetrieveRules(
-        SonarOptions,
-        procedure(Rules: TObjectDictionary<string, TRule>)
-        begin
-          if not TimedOut then begin
-            // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
-            // If FRules is ever accessed by a third thread a mutex will be required.
-            FreeAndNil(FRules);
-            FRules := Rules;
-            RulesRetrieved.SetEvent;
-          end
-          else begin
-            Log.Warn('Server retrieved rules after timeout had expired');
-          end;
-        end,
-        procedure(ErrorMsg: string) begin
-          if not TimedOut then begin
-            RulesRetrieved.SetEvent;
-            Log.Warn('Error retrieving latest rules: ' + ErrorMsg);
-          end
-          else begin
-            Log.Warn('Server rule retrieval returned error after timeout had expired');
-          end;
-        end,
-        DownloadPlugin);
-    finally
-      FServerThread.ReleaseServer;
-    end;
+    ExecuteWithServer(
+      procedure(Server: TLintServer) begin
+        Server.RetrieveRules(
+          SonarOptions,
+          procedure(Rules: TObjectDictionary<string, TRule>)
+          begin
+            if not TimedOut then begin
+              // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
+              // If FRules is ever accessed by a third thread a mutex will be required.
+              FreeAndNil(FRules);
+              FRules := Rules;
+              RulesRetrieved.SetEvent;
+            end
+            else begin
+              Log.Warn('Server retrieved rules after timeout had expired');
+            end;
+          end,
+          procedure(ErrorMsg: string) begin
+            if not TimedOut then begin
+              RulesRetrieved.SetEvent;
+              Log.Warn('Error retrieving latest rules: ' + ErrorMsg);
+            end
+            else begin
+              Log.Warn('Server rule retrieval returned error after timeout had expired');
+            end;
+          end,
+          DownloadPlugin
+        );
+      end,
+      procedure(Msg: string) begin
+        TaskMessageDlg(
+          CServerAcquireErrorMsg,
+          Format('%s.', [Msg]),
+          mtError,
+          [mbOK],
+          0
+        );
+      end
+    );
 
     if RulesRetrieved.WaitFor(3000) = TWaitResult.wrSignaled then begin
       Result := True;
@@ -703,30 +739,34 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TAnalyzerImpl.RestartServer;
+var
+  RestartSuccessful: Boolean;
 begin
-  try
-    FServerThread.AcquireServer;
-    try
+  RestartSuccessful := False;
+
+  ExecuteWithServer(
+    procedure(Server: TLintServer) begin
       FServerThread.RefreshServer;
-    finally
-      FServerThread.ReleaseServer;
-    end;
-  except
-    on E: ELintServerError do begin
+      RestartSuccessful := True;
+    end,
+    procedure(Msg: string) begin
       TaskMessageDlg(
-        'The DelphiLint server encountered a problem while restarting.',
-        Format('%s.', [E.Message]),
+        CServerAcquireErrorMsg,
+        Format('%s.', [Msg]),
         mtError,
         [mbOK],
-        0);
-    end;
-  end;
+        0
+      );
+    end
+  );
 
   if GetInAnalysis then begin
-    OnAnalyzeError('Analysis failed because the server was restarted');
+    OnAnalyzeError('Analysis failed because the server was stopped');
   end;
 
-  MessageDlg('The DelphiLint server has been restarted.', mtInformation, [mbOK], 0);
+  if RestartSuccessful then begin
+    MessageDlg('The DelphiLint server has been restarted.', mtInformation, [mbOK], 0);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

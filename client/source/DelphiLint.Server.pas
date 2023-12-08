@@ -181,6 +181,7 @@ type
     FServerDone: Boolean;
 
     function AcquireServerPossibleUninit: TLintServer;
+    procedure AutoRefreshServer;
   protected
     procedure DoTerminate; override;
 
@@ -201,8 +202,10 @@ implementation
 
 uses
     IdGlobal
+  , IdExceptionCore
   , Winapi.Windows
   , IdStack
+  , Vcl.Dialogs
   , System.IOUtils
   , System.TimeSpan
   , DelphiLint.Utils
@@ -334,14 +337,7 @@ begin
       LintContext.Settings.DebugShowConsole);
   end;
 
-  try
-    FConnection := BuildServerConnection('127.0.0.1', Port);
-  except
-    on EIdSocketError do begin
-      raise ELintPortRefused.Create('Connection refused for TCP client');
-    end;
-  end;
-
+  FConnection := BuildServerConnection('127.0.0.1', Port);
   Log.Info('Connection initialised to DelphiLint server on port %d', [Port]);
 end;
 
@@ -713,7 +709,7 @@ procedure TLintServer.StopExtServer;
 var
   QuitMsg: TLintMessage;
 begin
-  if FConnection.Connected then begin
+  if Assigned(FConnection) and FConnection.Connected then begin
     QuitMsg := TLintMessage.Quit;
     try
       SendMessage(QuitMsg);
@@ -792,6 +788,29 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintServerThread.AutoRefreshServer;
+begin
+  try
+    RefreshServer;
+  except
+    on E: ELintPortRefused do begin
+      Queue(
+        procedure begin
+          TaskMessageDlg(
+            'The DelphiLint server encountered a problem during an automatic restart.',
+            'Please correct your configuration and start the server again with DelphiLint > Restart Server.',
+            mtError,
+            [mbOK],
+            0
+          );
+        end
+      );
+    end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TLintServerThread.AcquireServer: TLintServer;
 begin
   if FServerDone then begin
@@ -801,7 +820,7 @@ begin
   FLock.Acquire;
   try
     if not Assigned(FServer) then begin
-      FServer := TLintServer.Create;
+      RefreshServer;
     end;
   except
     on E: Exception do begin
@@ -877,7 +896,7 @@ begin
     try
       if not Terminated then begin
         if Assigned(FServer) and not FServer.Process then begin
-          RefreshServer;
+          AutoRefreshServer;
         end;
       end;
     finally
@@ -899,6 +918,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TLintServerTcpConnection.Create(Host: string; Port: Integer);
+const
+  CErrorFormat = 'Could not connect to DelphiLint server (%s connecting to port %d)';
 begin
   inherited Create;
 
@@ -910,8 +931,11 @@ begin
   try
     FTcpClient.Connect;
   except
+    on EIdConnectTimeout do begin
+      raise ELintServerTimedOut.CreateFmt(CErrorFormat, ['timed out', Port]);
+    end;
     on EIdSocketError do begin
-      raise ELintPortRefused.Create('Connection refused for TCP client');
+      raise ELintPortRefused.CreateFmt(CErrorFormat, ['socket error', Port]);
     end;
   end;
 end;

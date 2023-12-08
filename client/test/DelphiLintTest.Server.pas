@@ -54,7 +54,6 @@ uses
   , System.JSON
   , System.SyncObjs
   , System.TimeSpan
-  , IdExceptionCore
   , IdGlobal
   , DelphiLint.Server
   ;
@@ -164,7 +163,7 @@ begin
         TimeStopped := Now;
       end;
     end,
-    EIdConnectTimeout);
+    ELintServerTimedOut);
   Assert.IsTrue(TTimeSpan.Subtract(TimeStopped, TimeStarted).TotalMilliseconds > 1900, 'Waited longer than 1900ms');
   Assert.IsTrue(TTimeSpan.Subtract(TimeStopped, TimeStarted).TotalMilliseconds < 2200, 'Duration less than 2200ms');
 end;
