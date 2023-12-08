@@ -601,20 +601,102 @@ function TLintServer.StartExtServer(
   JavaExe: string;
   WorkingDir: string;
   ShowConsole: Boolean): Integer;
-const
-  C_Title = 'DelphiLint Server';
+
+  function StartServerJar(PortFile: string): THandle;
+  const
+    CTitle = 'DelphiLint Server';
+  var
+    CommandLine: string;
+    StartupInfo: TStartupInfo;
+    ProcessInfo: TProcessInformation;
+    CreationFlags: Cardinal;
+    ErrorCode: Integer;
+  begin
+    CommandLine := Format(' -jar "%s" "%s"', [Jar, PortFile]);
+
+    ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
+    StartupInfo.cb := SizeOf(TStartupInfo);
+
+    CreationFlags := NORMAL_PRIORITY_CLASS;
+    if ShowConsole then begin
+      StartupInfo.lpTitle := CTitle;
+      CreationFlags := CreationFlags or CREATE_NEW_CONSOLE;
+    end
+    else begin
+      CreationFlags := CreationFlags or DETACHED_PROCESS;
+    end;
+
+    if not CreateProcess(
+      PChar(JavaExe),
+      PChar(CommandLine),
+      nil,
+      nil,
+      False,
+      CreationFlags,
+      nil,
+      PChar(WorkingDir),
+      StartupInfo,
+      ProcessInfo
+    ) then begin
+      ErrorCode := GetLastError;
+      raise ELintServerFailed.CreateFmt(
+        'DelphiLint server could not be started (error code %d: %s)',
+        [ErrorCode, SysErrorMessage(ErrorCode)]);
+    end;
+
+    Result := ProcessInfo.hProcess;
+    CloseHandle(ProcessInfo.hThread);
+  end;
+
+  function WaitForPortFileUpdate(const PortFile: string; const FirstChangeTime: TDateTime): Integer;
+  var
+    PortStr: string;
+    ChangedTime: TDateTime;
+    TempChangedTime: TDateTime;
+    Attempts: Integer;
+  begin
+    ChangedTime := FirstChangeTime;
+    Attempts := 0;
+    repeat
+      Sleep(50);
+      if FileAge(PortFile, TempChangedTime) then begin
+        ChangedTime := TempChangedTime;
+      end;
+      Inc(Attempts);
+    until (ChangedTime <> FirstChangeTime) or (Attempts > 50);
+
+    if ChangedTime = FirstChangeTime then begin
+      raise ELintServerFailed.Create('Server failed to communicate port');
+    end;
+
+    PortStr := '';
+    Attempts := 0;
+    repeat
+      try
+        PortStr := TFile.ReadAllText(PortFile);
+      except
+        on EReadError do begin
+          // File was locked, try again
+          Sleep(50);
+        end;
+      end;
+      Inc(Attempts);
+    until (PortStr <> '') or (Attempts > 5);
+
+    if (PortStr = '') then begin
+      raise ELintServerFailed.Create('Server port file was unreadable');
+    end
+    else if not IsNumeric(PortStr) then begin
+      raise ELintServerFailed.CreateFmt('Server reported nonsense port "%s"', [PortStr]);
+    end;
+    TFile.Delete(PortFile);
+
+    Result := StrToInt(PortStr);
+  end;
+
 var
-  CommandLine: string;
-  StartupInfo: TStartupInfo;
-  ProcessInfo: TProcessInformation;
-  ErrorCode: Integer;
-  CreationFlags: Cardinal;
   PortFile: string;
-  PortStr: string;
-  ClientChangedTime: TDateTime;
-  ChangedTime: TDateTime;
-  TempChangedTime: TDateTime;
-  Attempts: Integer;
+  FirstChangeTime: TDateTime;
 begin
   if not FileExists(Jar) then begin
     raise ELintServerMisconfigured.CreateFmt('Server jar not found at path "%s"', [Jar]);
@@ -625,82 +707,12 @@ begin
   end;
 
   PortFile := TPath.GetTempFileName;
-  if not FileAge(PortFile, ClientChangedTime) then begin
+  if not FileAge(PortFile, FirstChangeTime) then begin
     raise EFileNotFoundException.Create('Could not get details of temp file containing port');
   end;
 
-  CommandLine := Format(' -jar "%s" "%s"', [Jar, PortFile]);
-
-  ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
-  StartupInfo.cb := SizeOf(TStartupInfo);
-
-  CreationFlags := NORMAL_PRIORITY_CLASS;
-  if ShowConsole then begin
-    StartupInfo.lpTitle := C_Title;
-    CreationFlags := CreationFlags or CREATE_NEW_CONSOLE;
-  end
-  else begin
-    CreationFlags := CreationFlags or DETACHED_PROCESS;
-  end;
-
-  if not CreateProcess(
-    PChar(JavaExe),
-    PChar(CommandLine),
-    nil,
-    nil,
-    False,
-    CreationFlags,
-    nil,
-    PChar(WorkingDir),
-    StartupInfo,
-    ProcessInfo
-  ) then begin
-    ErrorCode := GetLastError;
-    raise ELintServerFailed.CreateFmt(
-      'DelphiLint server could not be started (error code %d: %s)',
-      [ErrorCode, SysErrorMessage(ErrorCode)]);
-  end;
-
-  FExtProcessHandle := ProcessInfo.hProcess;
-  CloseHandle(ProcessInfo.hThread);
-
-  ChangedTime := ClientChangedTime;
-  Attempts := 0;
-  repeat
-    Sleep(50);
-    if FileAge(PortFile, TempChangedTime) then begin
-      ChangedTime := TempChangedTime;
-    end;
-    Inc(Attempts);
-  until (ChangedTime <> ClientChangedTime) or (Attempts > 50);
-
-  if ChangedTime = ClientChangedTime then begin
-    raise ELintServerFailed.Create('Server failed to communicate port');
-  end;
-
-  PortStr := '';
-  Attempts := 0;
-  repeat
-    try
-      PortStr := TFile.ReadAllText(PortFile);
-    except
-      on EReadError do begin
-        // File was locked, try again
-        Sleep(50);
-      end;
-    end;
-    Inc(Attempts);
-  until (PortStr <> '') or (Attempts > 5);
-
-  if (PortStr = '') then begin
-    raise ELintServerFailed.Create('Server port file was unreadable');
-  end
-  else if not IsNumeric(PortStr) then begin
-    raise ELintServerFailed.CreateFmt('Server reported nonsense port "%s"', [PortStr]);
-  end;
-  TFile.Delete(PortFile);
-
-  Result := StrToInt(PortStr);
+  FExtProcessHandle := StartServerJar(PortFile);
+  Result := WaitForPortFileUpdate(PortFile, FirstChangeTime);
 end;
 
 //______________________________________________________________________________________________________________________
