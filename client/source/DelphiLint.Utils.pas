@@ -108,20 +108,17 @@ var
 begin
   ProductVersion := LintContext.IDEServices.ExpandRootMacro('$(ProductVersion)');
 
-  if ProductVersion = '21.0' then begin
+  if ProductVersion = '22.0' then begin
+    Result := 'VER350';
+  end
+  else if ProductVersion = '21.0' then begin
     Result := 'VER340';
   end
   else if ProductVersion = '20.0' then begin
     Result := 'VER330';
   end
-  else if ProductVersion = '19.0' then begin
-    Result := 'VER320';
-  end
-  else if ProductVersion = '18.0' then begin
-    Result := 'VER310';
-  end
   else begin
-    Result := 'VER350';
+    Result := 'VER360';
   end;
 end;
 
