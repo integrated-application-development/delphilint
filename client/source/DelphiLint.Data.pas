@@ -27,6 +27,40 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TSonarHostOptions = record
+    Url: string;
+    Token: string;
+
+    constructor Create(Url: string; Token: string);
+  end;
+
+  TSonarProjectOptions = record
+    Host: TSonarHostOptions;
+    ProjectKey: string;
+
+    constructor Create(Url: string; Token: string; ProjectKey: string);
+  end;
+
+  TInitializeOptions = record
+    BdsPath: string;
+    CompilerVersion: string;
+    DefaultSonarDelphiJarPath: string;
+    SonarHost: TSonarHostOptions;
+
+    constructor Create(BdsPath: string; CompilerVersion: string; DefaultSonarDelphiJarPath: string);
+  end;
+
+  TAnalyzeOptions = record
+    BaseDir: string;
+    InputFiles: TArray<string>;
+    ProjectPropertiesPath: string;
+    Sonar: TSonarProjectOptions;
+
+    constructor Create(BaseDir: string; InputFiles: TArray<string>);
+  end;
+
+//______________________________________________________________________________________________________________________
+
   TRange = class(TObject)
   private
     FStartLine: Integer;
@@ -598,6 +632,40 @@ begin
       Exit;
     end;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TAnalyzeOptions.Create(BaseDir: string; InputFiles: TArray<string>);
+begin
+  Self.BaseDir := BaseDir;
+  Self.InputFiles := InputFiles;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TInitializeOptions.Create(BdsPath: string; CompilerVersion: string; DefaultSonarDelphiJarPath: string);
+begin
+  Self.BdsPath := BdsPath;
+  Self.CompilerVersion := CompilerVersion;
+  Self.DefaultSonarDelphiJarPath := DefaultSonarDelphiJarPath;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TSonarHostOptions.Create(Url: string; Token: string);
+begin
+  Self.Url := Url;
+  Self.Token := Token;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TSonarProjectOptions.Create(Url: string; Token: string; ProjectKey: string);
+begin
+  Self.Host.Url := Url;
+  Self.Host.Token := Token;
+  Self.ProjectKey := ProjectKey;
 end;
 
 end.

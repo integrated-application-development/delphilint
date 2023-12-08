@@ -50,14 +50,7 @@ type
 
     function FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 
-    procedure AnalyzeFiles(
-      const Files: TArray<string>;
-      const BaseDir: string;
-      const SonarHostUrl: string = '';
-      const ProjectKey: string = '';
-      const ApiToken: string = '';
-      const ProjectPropertiesPath: string = '';
-      const DownloadPlugin: Boolean = True);
+    procedure AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
     procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 
   protected
@@ -192,30 +185,28 @@ end;
 procedure TAnalyzerImpl.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
 var
   ProjectOptions: TLintProjectOptions;
-  SonarHostUrl: string;
-  ProjectKey: string;
-  SonarHostToken: string;
+  AnalyzeOptions: TAnalyzeOptions;
 begin
   ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
   try
-    if ProjectOptions.AnalysisConnectedMode then begin
-      SonarHostUrl := ProjectOptions.SonarHostUrl;
-      ProjectKey := ProjectOptions.SonarHostProjectKey;
-      SonarHostToken := ProjectOptions.SonarHostToken;
-    end;
-
-    AnalyzeFiles(
-      Files,
+    AnalyzeOptions := TAnalyzeOptions.Create(
       IfThen(
         ProjectOptions.AnalysisBaseDir <> '',
         ProjectOptions.AnalysisBaseDirAbsolute,
         TPath.GetDirectoryName(ProjectFile)),
-      SonarHostUrl,
-      ProjectKey,
-      SonarHostToken,
-      ProjectOptions.ProjectPropertiesPath,
-      ProjectOptions.SonarHostDownloadPlugin
+      Files
     );
+    AnalyzeOptions.ProjectPropertiesPath := ProjectOptions.ProjectPropertiesPath;
+
+    if ProjectOptions.AnalysisConnectedMode then begin
+      AnalyzeOptions.Sonar := TSonarProjectOptions.Create(
+        ProjectOptions.SonarHostUrl,
+        ProjectOptions.SonarHostToken,
+        ProjectOptions.SonarHostProjectKey
+      );
+    end;
+
+    AnalyzeFiles(AnalyzeOptions, ProjectOptions.SonarHostDownloadPlugin);
   finally
     FreeAndNil(ProjectOptions);
   end;
@@ -223,40 +214,23 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzerImpl.AnalyzeFiles(
-  const Files: TArray<string>;
-  const BaseDir: string;
-  const SonarHostUrl: string = '';
-  const ProjectKey: string = '';
-  const ApiToken: string = '';
-  const ProjectPropertiesPath: string = '';
-  const DownloadPlugin: Boolean = True);
+procedure TAnalyzerImpl.AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
 var
   Server: TLintServer;
-  IncludedFiles: TArray<string>;
 begin
   if GetInAnalysis then begin
     Log.Info('An analysis has been requested, but it will be ignored as there is another in progress');
     Exit;
   end;
 
-  IncludedFiles := FilterNonProjectFiles(Files, BaseDir);
-  FCurrentAnalysis := TCurrentAnalysis.Create(IncludedFiles);
-  FOnAnalysisStarted.Notify(IncludedFiles);
+  Options.InputFiles := FilterNonProjectFiles(Options.InputFiles, Options.BaseDir);
+  FCurrentAnalysis := TCurrentAnalysis.Create(Options.InputFiles);
+  FOnAnalysisStarted.Notify(Options.InputFiles);
 
   Server := FServerThread.AcquireServer;
   try
     try
-      Server.Analyze(
-        BaseDir,
-        IncludedFiles,
-        OnAnalyzeResult,
-        OnAnalyzeError,
-        SonarHostUrl,
-        ProjectKey,
-        ApiToken,
-        ProjectPropertiesPath,
-        DownloadPlugin);
+      Server.Analyze(Options, OnAnalyzeResult, OnAnalyzeError, DownloadPlugin);
     except
       on E: ELintServerError do begin
         TaskMessageDlg('The DelphiLint server encountered an error.', Format('%s.', [E.Message]), mtError, [mbOK], 0);
@@ -656,10 +630,8 @@ var
   ProjectOptions: TLintProjectOptions;
   RulesRetrieved: TEvent;
   TimedOut: Boolean;
-  SonarHostUrl: string;
-  ProjectKey: string;
-  SonarHostToken: string;
   DownloadPlugin: Boolean;
+  SonarOptions: TSonarProjectOptions;
 begin
   Log.Debug('Refreshing ruleset');
   Result := False;
@@ -676,17 +648,18 @@ begin
 
     DownloadPlugin := False;
     if ProjectOptions.AnalysisConnectedMode then begin
-      SonarHostUrl := ProjectOptions.SonarHostUrl;
-      ProjectKey := ProjectOptions.SonarHostProjectKey;
-      SonarHostToken := ProjectOptions.SonarHostToken;
+      SonarOptions := TSonarProjectOptions.Create(
+        ProjectOptions.SonarHostUrl,
+        ProjectOptions.SonarHostToken,
+        ProjectOptions.SonarHostProjectKey
+      );
       DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;
     end;
 
     Server := FServerThread.AcquireServer;
     try
       Server.RetrieveRules(
-        SonarHostUrl,
-        ProjectKey,
+        SonarOptions,
         procedure(Rules: TObjectDictionary<string, TRule>)
         begin
           if not TimedOut then begin
@@ -709,7 +682,6 @@ begin
             Log.Warn('Server rule retrieval returned error after timeout had expired');
           end;
         end,
-        SonarHostToken,
         DownloadPlugin);
     finally
       FServerThread.ReleaseServer;
