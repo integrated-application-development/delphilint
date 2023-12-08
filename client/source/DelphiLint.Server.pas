@@ -123,7 +123,24 @@ type
     property Connected: Boolean read GetConnected;
   end;
 
-  TLintServer = class(TObject)
+  ILintServer = interface
+    ['{6D976C9C-8CEE-452C-9DC9-1F3BBD97415A}']
+
+    function Process: Boolean;
+    procedure Initialize(HostOptions: TSonarHostOptions; DownloadPlugin: Boolean);
+    procedure Analyze(
+      Options: TAnalyzeOptions;
+      OnResult: TAnalyzeResultAction;
+      OnError: TErrorAction;
+      DownloadPlugin: Boolean = True);
+    procedure RetrieveRules(
+      SonarOptions: TSonarProjectOptions;
+      OnResult: TRuleRetrieveResultAction;
+      OnError: TErrorAction;
+      DownloadPlugin: Boolean = True);
+  end;
+
+  TLintServer = class(TInterfacedObject, ILintServer)
   private
     FConnection: ILintServerConnection;
     FResponseActions: TDictionary<Integer, TResponseAction>;
@@ -177,13 +194,14 @@ type
   TLintServerThread = class(TThread)
   private
     FLock: TMutex;
-    FServer: TLintServer;
+    FServer: ILintServer;
     FServerDone: Boolean;
 
-    function AcquireServerPossibleUninit: TLintServer;
+    function AcquireServerPossibleUninit: ILintServer;
     procedure AutoRefreshServer;
   protected
     procedure DoTerminate; override;
+    function CreateNewServerInstance: ILintServer; virtual;
 
   public
     constructor Create;
@@ -191,7 +209,7 @@ type
 
     procedure Execute; override;
 
-    function AcquireServer: TLintServer;
+    function AcquireServer: ILintServer;
     procedure RefreshServer;
     procedure ReleaseServer;
   end;
@@ -792,7 +810,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintServerThread.AcquireServerPossibleUninit: TLintServer;
+function TLintServerThread.AcquireServerPossibleUninit: ILintServer;
 begin
   FLock.Acquire;
   Result := FServer;
@@ -823,7 +841,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintServerThread.AcquireServer: TLintServer;
+function TLintServerThread.AcquireServer: ILintServer;
 begin
   if FServerDone then begin
     raise ELintServerError.Create('Server acquisition attempted from terminated thread');
@@ -849,14 +867,14 @@ end;
 procedure TLintServerThread.RefreshServer;
 begin
   try
-    FreeAndNil(FServer);
+    FServer := nil;
   except
     on E: Exception do begin
       Log.Warn('Refreshing server failed as an error was raised when freeing the old server: %s', [E.Message]);
     end;
   end;
 
-  FServer := TLintServer.Create;
+  FServer := CreateNewServerInstance;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -876,9 +894,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintServerThread.CreateNewServerInstance: ILintServer;
+begin
+  Result := TLintServer.Create;
+end;
+
+//______________________________________________________________________________________________________________________
+
 destructor TLintServerThread.Destroy;
 begin
-  FreeAndNil(FServer);
+  FServer := nil;
   FreeAndNil(FLock);
   inherited;
 end;
@@ -920,7 +945,7 @@ begin
 
   AcquireServerPossibleUninit;
   try
-    FreeAndNil(FServer);
+    FServer := nil;
     FServerDone := True;
   finally
     ReleaseServer;

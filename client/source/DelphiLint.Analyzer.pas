@@ -32,7 +32,7 @@ type
   private const
     CServerAcquireErrorMsg = 'There was a problem reaching the DelphiLint server.';
   private type
-    TServerCallback = reference to procedure(Server: TLintServer);
+    TServerCallback = reference to procedure(Server: ILintServer);
   private
     FServerThread: TLintServerThread;
     FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
@@ -232,7 +232,7 @@ begin
   FOnAnalysisStarted.Notify(Options.InputFiles);
 
   ExecuteWithServer(
-    procedure(Server: TLintServer) begin
+    procedure(Server: ILintServer) begin
       Server.Analyze(Options, OnAnalyzeResult, OnAnalyzeError, DownloadPlugin);
     end,
     procedure(Msg: string) begin
@@ -331,7 +331,7 @@ end;
 
 procedure TAnalyzerImpl.ExecuteWithServer(Callback: TServerCallback; OnError: TErrorAction);
 var
-  Server: TLintServer;
+  Server: ILintServer;
 begin
   try
     Server := FServerThread.AcquireServer;
@@ -684,7 +684,7 @@ begin
     end;
 
     ExecuteWithServer(
-      procedure(Server: TLintServer) begin
+      procedure(Server: ILintServer) begin
         Server.RetrieveRules(
           SonarOptions,
           procedure(Rules: TObjectDictionary<string, TRule>)
@@ -745,7 +745,8 @@ begin
   RestartSuccessful := False;
 
   ExecuteWithServer(
-    procedure(Server: TLintServer) begin
+    procedure(Server: ILintServer) begin
+      Server := nil;
       FServerThread.RefreshServer;
       RestartSuccessful := True;
     end,
