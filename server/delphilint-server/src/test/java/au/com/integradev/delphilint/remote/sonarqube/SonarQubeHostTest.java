@@ -162,7 +162,7 @@ class SonarQubeHostTest {
                 "11.5.3.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name,htmlDesc,severity,cleanCodeAttribute",
+                    + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
                 responseFile));
 
     var host = buildSonarHost(api);
@@ -179,11 +179,11 @@ class SonarQubeHostTest {
             Map.of(
                 "/api/qualityprofiles/search?language=delphi&project=MyProject",
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "issuesSingularOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "issuesSingularOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -212,11 +212,11 @@ class SonarQubeHostTest {
             Map.of(
                 "/api/qualityprofiles/search?language=delphi&project=MyProject",
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "issuesSingularCleanCodeOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "issuesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -255,7 +255,7 @@ class SonarQubeHostTest {
                 "9.9.0.0.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name,htmlDesc,severity",
+                    + "&f=name%2ChtmlDesc%2Cseverity",
                 "rulesSingularOk.json"));
 
     var host = buildSonarHost(api);
@@ -284,7 +284,7 @@ class SonarQubeHostTest {
                 "11.5.3.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name,htmlDesc,severity,cleanCodeAttribute",
+                    + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
                 "rulesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api);
@@ -323,17 +323,17 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/hotspots/search?files=TestUnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedTestHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "resolvedTestIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "resolvedTestIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -356,11 +356,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -388,17 +388,17 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject",
                 "unresolvedHotspotsOk.json",
-                "/api/hotspots/search?files=TestUnitA.pas,&projectKey=MyProject",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&projectKey=MyProject",
                 "unresolvedTestHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=false",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=false",
                 "unresolvedTestIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:TestUnitA.pas,&resolved=false&p=1",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedTestIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -421,11 +421,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject",
                 "unresolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -453,11 +453,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=true&resolutions=FALSE-POSITIVE,WONTFIX,FIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -482,11 +482,11 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas,&projectKey=MyProject",
+                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject",
                 "unresolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject:UnitA.pas,&resolved=false&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -521,7 +521,7 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language=delphi&qprofile="
+                "/api/rules/search?ps=500&activation=true&f=actives%2CtemplateKey&language=delphi&qprofile="
                     + QP_KEY,
                 "activeRulesOk.json"));
 
@@ -548,7 +548,7 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language=delphi&qprofile="
+                "/api/rules/search?ps=500&activation=true&f=actives%2CtemplateKey&language=delphi&qprofile="
                     + QP_KEY,
                 "activeRulesOk.json"));
 
@@ -575,7 +575,7 @@ class SonarQubeHostTest {
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/rules/search?ps=500&activation=true&f=actives,templateKey&language=delphi&qprofile="
+                "/api/rules/search?ps=500&activation=true&f=actives%2CtemplateKey&language=delphi&qprofile="
                     + QP_KEY,
                 "activeRulesOk.json"));
 

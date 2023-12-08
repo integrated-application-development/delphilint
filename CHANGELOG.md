@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Scanning both source files (in `sonar.sources`) and test files (in `sonar.tests`) at the same time no longer
   fails with an error in Connected Mode
 * A plugin-destabilising access violation no longer occurs if the server connection times out
+* Analyzing a file that has a relative path including spaces no longer fails with an error in Connected Mode
 
 ## [0.6.0] - 2023-10-31
 

@@ -52,4 +52,24 @@ class HttpUtilsTest {
     assertEquals(
         "?myKeyA=myValueA&myKeyB=myValueB&myKeyC=myValueC", HttpUtils.buildParamString(params));
   }
+
+  @Test
+  void htmlEncodesParamList() {
+    List<String> params = new ArrayList<>();
+    params.add("my=Ke yA=my=Value A");
+    params.add("my&KeyB=myValue&B");
+
+    assertEquals(
+        "?my=Ke+yA%3Dmy%3DValue+A&my%26KeyB=myValue%26B", HttpUtils.buildParamString(params));
+  }
+
+  @Test
+  void htmlEncodesParamMap() {
+    Map<String, String> params = new LinkedHashMap<>();
+    params.put("my=Ke yA", "my=Value A");
+    params.put("my&KeyB", "myValue&B");
+
+    assertEquals(
+        "?my%3DKe+yA=my%3DValue+A&my%26KeyB=myValue%26B", HttpUtils.buildParamString(params));
+  }
 }
