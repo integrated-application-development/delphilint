@@ -403,4 +403,30 @@ class SonarServerUtilsTest {
     verify(host, times(1)).getResolvedIssues(mainFilePaths, includedTestFilePaths);
     verify(host, times(1)).getUnresolvedIssues(mainFilePaths, includedTestFilePaths);
   }
+
+  @Test
+  void queriesTestFilesIfBadRequest() throws SonarHostException {
+    Set<String> allFilePaths = Set.of("a", "b", "c");
+
+    Set<String> localTestFilePaths = Set.of("b", "c", "d");
+    Set<String> localMainFilePaths = Set.of("a");
+    Set<String> localIncludedTestFilePaths = Set.of("b", "c");
+
+    Set<String> serverTestFilePaths = Set.of("a", "c", "d");
+    Set<String> serverMainFilePaths = Set.of("b");
+    Set<String> serverIncludedTestFilePaths = Set.of("a", "c");
+
+    SonarHost host = mock(SonarHost.class);
+    when(host.getResolvedIssues(localMainFilePaths, localIncludedTestFilePaths))
+        .thenThrow(new UncheckedSonarHostException(new SonarHostBadRequestException()));
+    when(host.getTestFilePaths()).thenReturn(serverTestFilePaths);
+
+    SonarServerUtils.postProcessIssues(
+        allFilePaths, localTestFilePaths, Collections.emptySet(), host);
+
+    verify(host, times(1)).getResolvedIssues(localMainFilePaths, localIncludedTestFilePaths);
+    verify(host, times(1)).getTestFilePaths();
+    verify(host, times(1)).getResolvedIssues(serverMainFilePaths, serverIncludedTestFilePaths);
+    verify(host, times(1)).getUnresolvedIssues(serverMainFilePaths, serverIncludedTestFilePaths);
+  }
 }

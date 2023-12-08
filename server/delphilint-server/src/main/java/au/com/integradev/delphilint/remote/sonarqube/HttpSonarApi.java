@@ -18,6 +18,7 @@
 package au.com.integradev.delphilint.remote.sonarqube;
 
 import au.com.integradev.delphilint.remote.JsonHttpHandler;
+import au.com.integradev.delphilint.remote.SonarHostBadRequestException;
 import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarHostStatusCodeException;
@@ -102,10 +103,12 @@ public class HttpSonarApi implements SonarApi {
     try {
       var response = http.send(request, handler);
 
-      if (response.statusCode() == 401) {
-        throw new SonarHostUnauthorizedException();
-      } else if (response.statusCode() == 200) {
+      if (response.statusCode() == 200) {
         return response.body();
+      } else if (response.statusCode() == 400) {
+        throw new SonarHostBadRequestException();
+      } else if (response.statusCode() == 401) {
+        throw new SonarHostUnauthorizedException();
       } else {
         throw new SonarHostStatusCodeException(response.statusCode());
       }

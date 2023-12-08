@@ -46,44 +46,60 @@ public class SonarServerUtils {
   }
 
   public static Set<DelphiIssue> postProcessIssues(
-      Collection<String> fileRelativePaths,
-      @Nullable Collection<String> testFileRelativePaths,
+      Collection<String> includedFiles,
+      @Nullable Collection<String> allTestFiles,
       Collection<Issue> issues,
       SonarHost host)
       throws SonarHostException {
     LOG.info("Post processing {} issues", issues.size());
 
-    testFileRelativePaths =
-        getTestRelativePathsIfNull(testFileRelativePaths, host).stream()
-            .filter(fileRelativePaths::contains)
+    boolean testFilePathsProvided = allTestFiles != null;
+
+    // Retrieve the test file paths from SonarQube if they can't be derived from the
+    // sonar-project.properties
+    if (allTestFiles == null) {
+      allTestFiles = host.getTestFilePaths();
+    }
+
+    Collection<String> includedTestFiles =
+        allTestFiles.stream().filter(includedFiles::contains).collect(Collectors.toSet());
+
+    Set<String> includedMainFiles =
+        includedFiles.stream()
+            .filter(Predicate.not(includedTestFiles::contains))
             .collect(Collectors.toSet());
 
-    Set<String> mainFileRelativePaths =
-        fileRelativePaths.stream()
-            .filter(Predicate.not(testFileRelativePaths::contains))
-            .collect(Collectors.toSet());
-
-    issues =
-        pruneResolvedIssues(
-            mainFileRelativePaths,
-            testFileRelativePaths,
-            populateIssueMessages(host, issues),
-            host);
-    Map<Issue, RemoteMetadata> metadataMap =
-        getRemoteIssueData(mainFileRelativePaths, testFileRelativePaths, issues, host);
-
-    return issues.stream()
-        .map(issue -> new DelphiIssue(issue, metadataMap.getOrDefault(issue, null)))
-        .collect(Collectors.toSet());
+    try {
+      return doPostProcessing(includedMainFiles, includedTestFiles, issues, host);
+    } catch (SonarHostBadRequestException e) {
+      // The test file paths provided by the sonar-project.properties are probably out of date
+      // - fall back on retrieving the test file paths from SonarQube
+      if (testFilePathsProvided) {
+        return postProcessIssues(includedFiles, null, issues, host);
+      } else {
+        throw e;
+      }
+    }
   }
 
-  private static Collection<String> getTestRelativePathsIfNull(
-      @Nullable Collection<String> testFileRelativePaths, SonarHost host)
+  private static Set<DelphiIssue> doPostProcessing(
+      Collection<String> includedMainFiles,
+      Collection<String> includedTestFiles,
+      Collection<Issue> issues,
+      SonarHost host)
       throws SonarHostException {
-    if (testFileRelativePaths == null) {
-      return host.getTestFilePaths();
-    } else {
-      return testFileRelativePaths;
+    try {
+      issues =
+          pruneResolvedIssues(
+              includedMainFiles, includedTestFiles, populateIssueMessages(host, issues), host);
+      Map<Issue, RemoteMetadata> metadataMap =
+          getRemoteIssueData(includedMainFiles, includedTestFiles, issues, host);
+
+      return issues.stream()
+          .map(issue -> new DelphiIssue(issue, metadataMap.getOrDefault(issue, null)))
+          .collect(Collectors.toSet());
+    } catch (UncheckedSonarHostException e) {
+      throw (SonarHostException) e.getCause();
     }
   }
 
