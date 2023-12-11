@@ -101,7 +101,7 @@ public class StandaloneSonarHost implements SonarHost {
   }
 
   public String getName() {
-    return "";
+    return "Standalone";
   }
 
   @Override
