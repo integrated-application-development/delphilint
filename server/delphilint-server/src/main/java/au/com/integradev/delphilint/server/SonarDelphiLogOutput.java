@@ -21,8 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.commons.log.ClientLogOutput;
 
-public class SonarLintLogOutput implements ClientLogOutput {
-  private static final Logger LOG = LogManager.getLogger(SonarLintLogOutput.class);
+public class SonarDelphiLogOutput implements ClientLogOutput {
+  private static final Logger LOG = LogManager.getLogger(SonarDelphiLogOutput.class);
 
   private String errorMessage = "";
 

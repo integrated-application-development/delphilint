@@ -43,12 +43,12 @@ import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoadResult;
 import org.sonarsource.sonarlint.core.plugin.commons.PluginsLoader;
 import org.springframework.util.StringUtils;
 
-public class DelphiAnalysisEngine implements AutoCloseable {
-  private static final Logger LOG = LogManager.getLogger(DelphiAnalysisEngine.class);
+public class AnalysisOrchestrator implements AutoCloseable {
+  private static final Logger LOG = LogManager.getLogger(AnalysisOrchestrator.class);
   private final GlobalAnalysisContainer globalContainer;
   private final LoadedPlugins loadedPlugins;
 
-  public DelphiAnalysisEngine(EngineStartupConfiguration startupConfig) {
+  public AnalysisOrchestrator(EngineStartupConfiguration startupConfig) {
     var engineConfig =
         AnalysisEngineConfiguration.builder()
             .setWorkDir(Path.of(System.getProperty("java.io.tmpdir")))
@@ -112,7 +112,7 @@ public class DelphiAnalysisEngine implements AutoCloseable {
     return testFiles;
   }
 
-  public Set<DelphiIssue> analyze(
+  public Set<DelphiIssue> runAnalysis(
       Path baseDir,
       Set<Path> inputFiles,
       ClientProgressMonitor progressMonitor,

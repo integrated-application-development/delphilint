@@ -1,23 +1,6 @@
-/*
- * DelphiLint Server
- * Copyright (C) 2023 Integrated Application Development
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
 package au.com.integradev.delphilint.server;
 
-import au.com.integradev.delphilint.analysis.DelphiAnalysisEngine;
+import au.com.integradev.delphilint.analysis.AnalysisOrchestrator;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
 import au.com.integradev.delphilint.analysis.SonarDelphiUtils;
 import au.com.integradev.delphilint.remote.SonarHost;
@@ -36,16 +19,6 @@ import au.com.integradev.delphilint.server.message.ResponseRuleRetrieveResult;
 import au.com.integradev.delphilint.server.message.data.RuleData;
 import au.com.integradev.delphilint.server.plugin.CachingPluginDownloader;
 import au.com.integradev.delphilint.server.plugin.DownloadedPlugin;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -59,164 +32,39 @@ import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.commons.log.SonarLintLogger;
 
-public class LintServer {
-  private static final Logger LOG = LogManager.getLogger(LintServer.class);
-  private final ServerSocket serverSocket;
-  private DelphiAnalysisEngine engine;
+/**
+ * As the interface to all of DelphiLint's core functionality, the analysis server manages
+ * initialisation of the analysis orchestrator, running analyses, and connection to any external
+ * hosts.
+ */
+public class AnalysisServer {
+  private static final Logger LOG = LogManager.getLogger(AnalysisServer.class);
+  private AnalysisOrchestrator orchestrator;
   private final CachingPluginDownloader pluginDownloader;
   private Set<DownloadedPlugin> pluginGroup;
-  private final ObjectMapper mapper;
-  private boolean running;
 
-  public LintServer(Path pluginsPath) throws IOException {
-    this(pluginsPath, 0);
-  }
-
-  public LintServer(Path pluginsPath, int port) throws IOException {
-    engine = null;
-    serverSocket = new ServerSocket(port);
-    running = false;
-    mapper = new ObjectMapper();
+  public AnalysisServer(Path pluginsPath) {
+    orchestrator = null;
     pluginDownloader = new CachingPluginDownloader(pluginsPath);
     pluginGroup = null;
-
-    LOG.info("Server started on port {}", serverSocket.getLocalPort());
   }
 
-  public void run() throws IOException {
-    LOG.info("Awaiting socket connection");
-
-    Socket clientSocket = serverSocket.accept();
-
-    LOG.info("Socket connected");
-
-    var out = clientSocket.getOutputStream();
-    var in = clientSocket.getInputStream();
-
-    running = true;
-    while (running) {
-      LOG.debug("Awaiting next message");
-      readStream(in, out);
-    }
-
-    LOG.info("Terminating lint server");
-
-    out.close();
-    in.close();
-    clientSocket.close();
-  }
-
-  public int getPort() {
-    return serverSocket.getLocalPort();
-  }
-
-  private void writeStream(OutputStream out, int id, LintMessage response) {
-    LOG.info("Sending {}", response.getCategory());
-
-    String dataString;
-    try {
-      dataString = mapper.writeValueAsString(response.getData());
-    } catch (JsonProcessingException e) {
-      LOG.error("Unexpected error while converting outgoing message data to a JSON string", e);
-      writeStream(out, id, LintMessage.unexpectedError(e.getMessage()));
-      return;
-    }
-
-    var dataBytes = dataString.getBytes(StandardCharsets.UTF_8);
-
-    try {
-      out.write(
-          ByteBuffer.allocate(9)
-              .put(response.getCategory().getCode())
-              .putInt(id)
-              .putInt(dataBytes.length)
-              .array());
-      out.write(dataBytes);
-    } catch (IOException e) {
-      LOG.error("Unexpected IO exception while writing message data to stream", e);
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  private void readStream(InputStream in, OutputStream out) {
-    MessageCategory category;
-    int id;
-    int length;
-    String dataString;
-    try {
-      category = MessageCategory.fromCode(in.read());
-      id = ByteBuffer.wrap(in.readNBytes(4)).getInt();
-      length = ByteBuffer.wrap(in.readNBytes(4)).getInt();
-      dataString = new String(in.readNBytes(length), StandardCharsets.UTF_8);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-
-    LOG.info("Received {}", category);
-
-    Consumer<LintMessage> sendMessage = (response -> writeStream(out, id, response));
-
-    if (category == null) {
-      LOG.warn("Received message with an unrecognised category");
-      sendMessage.accept(LintMessage.invalidRequest("Unrecognised category"));
-      return;
-    }
-
-    Object data = null;
-
-    if (category.getDataClass() != null) {
-      if (length == 0) {
-        LOG.warn("Received message of type {}, but no data was supplied", category);
-        sendMessage.accept(LintMessage.invalidRequest("No data supplied"));
-        return;
-      }
-
-      try {
-        data = mapper.readValue(dataString, category.getDataClass());
-      } catch (JsonProcessingException e) {
-        LOG.warn(
-            "Received message of type {} with data in an incorrect format: {}",
-            category,
-            e.getMessage());
-        sendMessage.accept(LintMessage.invalidRequest("Data is in an incorrect format"));
-        return;
-      }
-    }
-
-    try {
-      processRequest(new LintMessage(category, data), sendMessage);
-    } catch (Exception e) {
-      LOG.warn("Unexpected error during message processing", e);
-      sendMessage.accept(LintMessage.unexpectedError(e.getMessage()));
-    }
-  }
-
-  private void processRequest(LintMessage message, Consumer<LintMessage> sendMessage) {
-    switch (message.getCategory()) {
-      case INITIALIZE:
-        handleInitialize((RequestInitialize) message.getData(), sendMessage);
-        break;
-      case ANALYZE:
-        handleAnalyze((RequestAnalyze) message.getData(), sendMessage);
-        break;
-      case RULE_RETRIEVE:
-        handleRuleRetrieve((RequestRuleRetrieve) message.getData(), sendMessage);
-        break;
-      case QUIT:
-        LOG.info("Quit received, shutting down.");
-        running = false;
-        break;
-      case PING:
-        sendMessage.accept(LintMessage.pong((String) message.getData()));
-        break;
-      default:
-        LOG.warn("TCP request has unhandled category {}", message.getCategory());
-        sendMessage.accept(LintMessage.invalidRequest("Unhandled request category"));
-    }
-  }
-
-  private void handleAnalyze(RequestAnalyze requestAnalyze, Consumer<LintMessage> sendMessage) {
-    if (engine == null) {
+  /**
+   * Attempts to start a Delphi analysis via an initialized orchestrator.
+   *
+   * <ul>
+   *   <li>If the orchestrator is uninitialized, returns an unexpected error (242).
+   *   <li>If the orchestrator is initialized and the analysis fails, returns an analysis error
+   *       (36).
+   *   <li>If the orchestrator is initialized and the analysis succeeds, returns an analysis result
+   *       (35).
+   * </ul>
+   *
+   * @param requestAnalyze the parameters to run the analysis with.
+   * @param sendMessage a callback to send a tagged message back to the client.
+   */
+  public void analyze(RequestAnalyze requestAnalyze, Consumer<LintMessage> sendMessage) {
+    if (orchestrator == null) {
       sendMessage.accept(
           LintMessage.unexpectedError("Please initialize before attempting to analyze"));
       return;
@@ -237,11 +85,11 @@ public class LintServer {
     }
 
     try {
-      var logOutput = new SonarLintLogOutput();
+      var logOutput = new SonarDelphiLogOutput();
       SonarLintLogger.setTarget(logOutput);
 
       var issues =
-          engine.analyze(
+          orchestrator.runAnalysis(
               requestAnalyze.getBaseDir(),
               requestAnalyze.getInputFiles(),
               null,
@@ -291,15 +139,26 @@ public class LintServer {
     System.gc();
   }
 
-  private void handleInitialize(
-      RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
+  /**
+   * Attempts to initialize the analysis orchestrator.
+   *
+   * <ul>
+   *   <li>If an error occurs or the SonarQube host cannot be reached, returns an initialization
+   *       error (26).
+   *   <li>If the initialization succeeds, returns an initialization successful (20).
+   * </ul>
+   *
+   * @param requestInitialize the parameters to initialize the orchestrator with.
+   * @param sendMessage a callback to send a message back to the client.
+   */
+  public void initialize(RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
     try {
       SonarHost host =
           getSonarHost(requestInitialize.getSonarHostUrl(), "", requestInitialize.getApiToken());
       Set<DownloadedPlugin> desiredPluginGroup =
           pluginDownloader.getRemotePluginJars(host).orElse(null);
 
-      if (!Objects.equals(pluginGroup, desiredPluginGroup) || engine == null) {
+      if (!Objects.equals(pluginGroup, desiredPluginGroup) || orchestrator == null) {
         pluginGroup = desiredPluginGroup;
         LOG.info("Starting analysis engine with new plugins");
 
@@ -313,7 +172,7 @@ public class LintServer {
                         .map(DownloadedPlugin::getPath)
                         .collect(Collectors.toSet()));
 
-        engine = new DelphiAnalysisEngine(delphiConfig);
+        orchestrator = new AnalysisOrchestrator(delphiConfig);
       }
       sendMessage.accept(LintMessage.initialized());
     } catch (SonarHostUnauthorizedException e) {
@@ -345,7 +204,18 @@ public class LintServer {
     }
   }
 
-  private void handleRuleRetrieve(
+  /**
+   * Attempts to retrieve rule metadata from a host.
+   *
+   * <ul>
+   *   <li>If an error occurs, returns a rule retrieve error (46).
+   *   <li>If the retrieval is successful, returns a rule retrieve result (45).
+   * </ul>
+   *
+   * @param requestRuleRetrieve the parameters to use to retrieve the rule metadata.
+   * @param sendMessage a callback to send a message back to the client.
+   */
+  public void retrieveRules(
       RequestRuleRetrieve requestRuleRetrieve, Consumer<LintMessage> sendMessage) {
     try {
       SonarHost host =
@@ -369,12 +239,12 @@ public class LintServer {
 
   private SonarHost getSonarHost(String url, String projectKey, String apiToken) {
     if (url.isEmpty()) {
-      if (engine == null) {
+      if (orchestrator == null) {
         LOG.info("Using stub standalone mode - analysis engine is not initialized");
         return new StandaloneSonarHost();
       } else {
         LOG.info("Using standalone mode");
-        return new StandaloneSonarHost(engine.getLoadedPlugins());
+        return new StandaloneSonarHost(orchestrator.getLoadedPlugins());
       }
     } else {
       LOG.info("Using connected mode");

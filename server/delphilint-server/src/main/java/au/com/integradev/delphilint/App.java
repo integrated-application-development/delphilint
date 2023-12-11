@@ -17,7 +17,8 @@
  */
 package au.com.integradev.delphilint;
 
-import au.com.integradev.delphilint.server.LintServer;
+import au.com.integradev.delphilint.server.AnalysisServer;
+import au.com.integradev.delphilint.server.TlvConnection;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,25 +39,27 @@ public class App {
       Files.createDirectory(pluginsPath);
     }
 
-    LintServer server;
+    TlvConnection connection;
+    AnalysisServer server = new AnalysisServer(pluginsPath);
 
     if (args.length > 0) {
-      server = new LintServer(pluginsPath);
+      connection = new TlvConnection(server);
 
       File portFile = new File(args[0]);
       if (portFile.exists()) {
         Files.write(
-            portFile.toPath(), String.valueOf(server.getPort()).getBytes(StandardCharsets.UTF_8));
+            portFile.toPath(),
+            String.valueOf(connection.getPort()).getBytes(StandardCharsets.UTF_8));
         LOG.info("Server port written to port file at {}", portFile.toPath());
       } else {
         LOG.info("Port file at {} does not exist", portFile.toPath());
-        server = new LintServer(pluginsPath, DEFAULT_PORT);
+        connection = new TlvConnection(server, DEFAULT_PORT);
       }
     } else {
-      server = new LintServer(pluginsPath, DEFAULT_PORT);
+      connection = new TlvConnection(server, DEFAULT_PORT);
     }
 
-    server.run();
+    connection.run();
     LOG.info("Application stopped");
   }
 }
