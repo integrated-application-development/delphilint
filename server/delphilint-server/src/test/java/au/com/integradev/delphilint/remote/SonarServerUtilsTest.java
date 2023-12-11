@@ -418,7 +418,7 @@ class SonarServerUtilsTest {
 
     SonarHost host = mock(SonarHost.class);
     when(host.getResolvedIssues(localMainFilePaths, localIncludedTestFilePaths))
-        .thenThrow(new UncheckedSonarHostException(new SonarHostBadRequestException()));
+        .thenThrow(new SonarHostBadRequestException());
     when(host.getTestFilePaths()).thenReturn(serverTestFilePaths);
 
     SonarServerUtils.postProcessIssues(

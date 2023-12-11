@@ -172,7 +172,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithoutCleanCode() {
+  void parsesIssueWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -205,7 +205,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithCleanCode() {
+  void parsesIssueWithCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -308,7 +308,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsNoResolvedIssuesWithNoProjectKey() {
+  void getsNoResolvedIssuesWithNoProjectKey() throws SonarHostException {
     var api = new ResourceBackedSonarApi(RESOURCE_DIR, Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -316,7 +316,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedTestIssuesAndHotspots() {
+  void getsResolvedTestIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -349,7 +349,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedIssuesAndHotspots() {
+  void getsResolvedIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -381,7 +381,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedTestIssuesAndHotspots() {
+  void getsUnresolvedTestIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -414,7 +414,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedIssuesAndHotspots() {
+  void getsUnresolvedIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -446,7 +446,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void doesNotTreatAcknowledgedHotspotsAsResolvedIssues() {
+  void doesNotTreatAcknowledgedHotspotsAsResolvedIssues() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -475,7 +475,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void treatsAcknowledgedHotspotsAsUnresolvedIssues() {
+  void treatsAcknowledgedHotspotsAsUnresolvedIssues() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,
@@ -663,7 +663,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsTestFilePaths() {
+  void getsTestFilePaths() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             RESOURCE_DIR,

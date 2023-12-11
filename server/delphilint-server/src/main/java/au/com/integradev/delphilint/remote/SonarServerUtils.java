@@ -88,19 +88,15 @@ public class SonarServerUtils {
       Collection<Issue> issues,
       SonarHost host)
       throws SonarHostException {
-    try {
-      issues =
-          pruneResolvedIssues(
-              includedMainFiles, includedTestFiles, populateIssueMessages(host, issues), host);
-      Map<Issue, RemoteMetadata> metadataMap =
-          getRemoteIssueData(includedMainFiles, includedTestFiles, issues, host);
+    issues =
+        pruneResolvedIssues(
+            includedMainFiles, includedTestFiles, populateIssueMessages(host, issues), host);
+    Map<Issue, RemoteMetadata> metadataMap =
+        getRemoteIssueData(includedMainFiles, includedTestFiles, issues, host);
 
-      return issues.stream()
-          .map(issue -> new DelphiIssue(issue, metadataMap.getOrDefault(issue, null)))
-          .collect(Collectors.toSet());
-    } catch (UncheckedSonarHostException e) {
-      throw (SonarHostException) e.getCause();
-    }
+    return issues.stream()
+        .map(issue -> new DelphiIssue(issue, metadataMap.getOrDefault(issue, null)))
+        .collect(Collectors.toSet());
   }
 
   private static Set<Issue> populateIssueMessages(SonarHost host, Collection<Issue> issues)

@@ -31,6 +31,7 @@ import au.com.integradev.delphilint.remote.SoftwareQuality;
 import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -301,29 +302,34 @@ public class SonarQubeHost implements SonarHost {
     return issueBuilder.build();
   }
 
-  public Set<String> getTestFilePaths() {
+  public Set<String> getTestFilePaths() throws SonarHostException {
     Map<String, String> params = new LinkedHashMap<>();
     params.put(PARAM_PAGE_SIZE, "500");
     params.put("component", projectKey);
     params.put("qualifiers", "UTS");
 
-    ConnectedList<SonarQubeComponent> componentsList =
-        new ConnectedList<>(
-            api,
-            URL_COMPONENTS_TREE + HttpUtils.buildParamString(params),
-            "components",
-            SonarQubeComponent.class);
+    try {
+      ConnectedList<SonarQubeComponent> componentsList =
+          new ConnectedList<>(
+              api,
+              URL_COMPONENTS_TREE + HttpUtils.buildParamString(params),
+              "components",
+              SonarQubeComponent.class);
 
-    return StreamSupport.stream(componentsList.spliterator(), false)
-        .map(SonarQubeComponent::getPath)
-        .collect(Collectors.toSet());
+      return StreamSupport.stream(componentsList.spliterator(), false)
+          .map(SonarQubeComponent::getPath)
+          .collect(Collectors.toSet());
+    } catch (UncheckedSonarHostException e) {
+      throw (SonarHostException) e.getCause();
+    }
   }
 
   private Set<RemoteIssue> getIssuesAndHotspots(
       Collection<String> relativeFilePaths,
       Collection<String> testRelativeFilePaths,
       Collection<String> issueParams,
-      Collection<String> hotspotParams) {
+      Collection<String> hotspotParams)
+      throws SonarHostException {
     Set<RemoteIssue> issues = getIssuesAndHotspots(relativeFilePaths, issueParams, hotspotParams);
     if (!testRelativeFilePaths.isEmpty()) {
       issues.addAll(getIssuesAndHotspots(testRelativeFilePaths, issueParams, hotspotParams));
@@ -335,7 +341,8 @@ public class SonarQubeHost implements SonarHost {
   private Set<RemoteIssue> getIssuesAndHotspots(
       Collection<String> relativeFilePaths,
       Collection<String> issueParams,
-      Collection<String> hotspotParams) {
+      Collection<String> hotspotParams)
+      throws SonarHostException {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
@@ -352,15 +359,19 @@ public class SonarQubeHost implements SonarHost {
       LOG.info("Getting issues for component keys: {}", componentKeyBatch);
       dynIssueParams.set(0, "componentKeys=" + componentKeyBatch);
 
-      ConnectedList<SonarQubeIssue> serverIssues =
-          new ConnectedList<>(
-              api,
-              "/api/issues/search" + HttpUtils.buildParamString(dynIssueParams),
-              "issues",
-              SonarQubeIssue.class);
+      try {
+        ConnectedList<SonarQubeIssue> serverIssues =
+            new ConnectedList<>(
+                api,
+                "/api/issues/search" + HttpUtils.buildParamString(dynIssueParams),
+                "issues",
+                SonarQubeIssue.class);
 
-      for (SonarQubeIssue sqIssue : serverIssues) {
-        remoteIssues.add(sqIssueToRemote(sqIssue));
+        for (SonarQubeIssue sqIssue : serverIssues) {
+          remoteIssues.add(sqIssueToRemote(sqIssue));
+        }
+      } catch (UncheckedSonarHostException e) {
+        throw (SonarHostException) e.getCause();
       }
     }
 
@@ -373,15 +384,19 @@ public class SonarQubeHost implements SonarHost {
       LOG.info("Getting hotspots for files: {}", filePathBatch);
       dynHotspotParams.set(0, "files=" + filePathBatch);
 
-      ConnectedList<SonarQubeHotspot> resolvedIssues =
-          new ConnectedList<>(
-              api,
-              "/api/hotspots/search" + HttpUtils.buildParamString(dynHotspotParams),
-              "hotspots",
-              SonarQubeHotspot.class);
+      try {
+        ConnectedList<SonarQubeHotspot> resolvedIssues =
+            new ConnectedList<>(
+                api,
+                "/api/hotspots/search" + HttpUtils.buildParamString(dynHotspotParams),
+                "hotspots",
+                SonarQubeHotspot.class);
 
-      for (SonarQubeHotspot sqHotspot : resolvedIssues) {
-        remoteIssues.add(sqIssueToRemote(sqHotspot));
+        for (SonarQubeHotspot sqHotspot : resolvedIssues) {
+          remoteIssues.add(sqIssueToRemote(sqHotspot));
+        }
+      } catch (UncheckedSonarHostException e) {
+        throw (SonarHostException) e.getCause();
       }
     }
 
@@ -389,7 +404,8 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public Collection<RemoteIssue> getResolvedIssues(
-      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths)
+      throws SonarHostException {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
@@ -409,7 +425,8 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public Collection<RemoteIssue> getUnresolvedIssues(
-      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths) {
+      Collection<String> relativeFilePaths, Collection<String> testRelativeFilePaths)
+      throws SonarHostException {
     if (projectKey.isEmpty()) {
       return Collections.emptySet();
     }
