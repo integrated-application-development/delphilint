@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Inline issue display and underline have been redesigned to be more prominent
+* The server is no longer immediately restarted if it is killed - instead it is restarted when it is next needed
 
 ### Fixed
 

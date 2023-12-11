@@ -198,7 +198,6 @@ type
     FServerDone: Boolean;
 
     function AcquireServerPossibleUninit: ILintServer;
-    procedure AutoRefreshServer;
   protected
     procedure DoTerminate; override;
     function CreateNewServerInstance: ILintServer; virtual;
@@ -223,7 +222,6 @@ uses
   , IdExceptionCore
   , Winapi.Windows
   , IdStack
-  , Vcl.Dialogs
   , System.IOUtils
   , System.TimeSpan
   , DelphiLint.Utils
@@ -818,29 +816,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServerThread.AutoRefreshServer;
-begin
-  try
-    RefreshServer;
-  except
-    on E: ELintPortRefused do begin
-      Queue(
-        procedure begin
-          TaskMessageDlg(
-            'The DelphiLint server encountered a problem during an automatic restart.',
-            'Please correct your configuration and start the server again with DelphiLint > Restart Server.',
-            mtError,
-            [mbOK],
-            0
-          );
-        end
-      );
-    end;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
 function TLintServerThread.AcquireServer: ILintServer;
 begin
   if FServerDone then begin
@@ -933,7 +908,7 @@ begin
     try
       if not Terminated then begin
         if Assigned(FServer) and not FServer.Process then begin
-          AutoRefreshServer;
+          FServer := nil;
         end;
       end;
     finally
