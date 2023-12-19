@@ -48,6 +48,7 @@ type
     function DelphiLintSplash: TBitmap;
 
     function JsLibScript: string;
+    function RuleHtmlCss: string;
   end;
 
 function LintResources: TLintResources;
@@ -111,6 +112,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintResources.RuleHtmlCss: string;
+begin
+  Result := LoadFileString('DL_HTML_CSS');
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TLintResources.RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
 const
   C_RuleSeverityResourceNames: array[TRuleSeverity] of string = (
@@ -154,10 +162,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 function TLintResources.JsLibScript: string;
-const
-  C_JsLibResourceName = 'DL_HTML_SCRIPT';
 begin
-  Result := LoadFileString(C_JsLibResourceName);
+  Result := LoadFileString('DL_HTML_SCRIPT');
 end;
 
 //______________________________________________________________________________________________________________________

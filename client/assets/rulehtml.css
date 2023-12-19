@@ -1,0 +1,230 @@
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-size: 12px;
+  margin-top: 9px;
+}
+
+h1 {
+  margin-top: 0px;
+  font-size: 18px;
+  margin-bottom: 0px;
+}
+
+.subheading {
+  font-size: 12px;
+  font-weight: normal;
+  margin-top: -2px;
+  margin-bottom: 1px;
+}
+
+h2 {
+  font-size: 14px;
+}
+
+h3 {
+  font-size: 12px;
+}
+
+.cleancode .subheading {
+  margin-top: 0;
+}
+
+.subheading .gap {
+  display: inline-block;
+  width: 10px;
+}
+
+.subheading img {
+  display: inline;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+pre {
+  padding: 0.3em 0.5em;
+  font-size: 1em;
+  font-family: "Consolas", monospace;
+}
+
+.tooltip-hover {
+  position: relative;
+}
+
+.tooltip-content {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  width: 70vw;
+  padding: 6px 6px;
+  z-index: 1;
+  font-size: 12px;
+}
+
+.tooltip-hover:hover .tooltip-content {
+  display: block;
+}
+
+.impacts {
+  font-size: 11px;
+  margin-bottom: 0;
+}
+
+p {
+  margin-top: 10px;
+}
+
+.impact {
+  display: inline-block;
+  margin-right: 5px;
+  padding: 3px 5px;
+  border-radius: 12px;
+}
+
+.impact img {
+  display: inline;
+  vertical-align: middle;
+}
+
+.impact.low {
+  color: rgb(49, 108, 146);
+  background-color: rgb(233, 244, 251);
+}
+
+.impact.medium {
+  color: rgb(140, 94, 30);
+  background-color: rgb(254, 245, 208);
+}
+
+.impact.high {
+  color: rgb(128, 27, 20);
+  background-color: rgb(254, 228, 226);
+}
+
+.code-added {
+  background-color: rgb(31, 60, 37);
+}
+
+.code-removed {
+  background-color: rgb(70, 36, 34);
+}
+
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117;
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72;
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff;
+}
+
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff;
+}
+
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657;
+}
+
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e;
+}
+
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787;
+}
+
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9;
+}
+
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold;
+}
+
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60;
+}
+
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic;
+}
+
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold;
+}
+
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16;
+}
+
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+}

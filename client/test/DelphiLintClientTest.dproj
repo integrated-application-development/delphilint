@@ -236,6 +236,11 @@ $(PreBuildEvent)]]>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>DL_JSLIB_SCRIPT</ResourceId>
         </RcItem>
+        <RcItem Include="..\assets\rulehtml.css">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_HTML_CSS</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -645,7 +650,19 @@ $(PreBuildEvent)]]>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\assets\rulehtml.css" Configuration="TestInsight" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\jslib\dist\compiled.js" Configuration="GUI" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\jslib\dist\compiled.js" Configuration="TestInsight" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
@@ -678,6 +695,12 @@ $(PreBuildEvent)]]>
                 <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.exe" Configuration="TestInsight" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.rsm" Configuration="TestInsight" Class="DebugSymbols">
+                    <Platform Name="Win32">
+                        <RemoteName>DelphiLintClientTest.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

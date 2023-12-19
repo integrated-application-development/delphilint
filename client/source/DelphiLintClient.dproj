@@ -216,6 +216,11 @@ $(PreBuildEvent)]]>
             <ResourceType>RCDATA</ResourceType>
             <ResourceId>DL_IS_MEDIUM</ResourceId>
         </RcItem>
+        <RcItem Include="..\assets\rulehtml.css">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_HTML_CSS</ResourceId>
+        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -242,12 +247,6 @@ $(PreBuildEvent)]]>
                 <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClient.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win32">
-                        <RemoteName>DelphiLintClient.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
