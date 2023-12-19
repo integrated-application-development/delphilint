@@ -34,12 +34,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
-        <Cfg_2_Win32>true</Cfg_2_Win32>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>DelphiLintClient</SanitizedProjectName>
         <DCC_BplOutput>.\target\$(Platform)\$(Config)</DCC_BplOutput>
@@ -52,22 +46,22 @@
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <PostBuildEvent>
-            <![CDATA[copy dlversion.inc.orig dlversion.inc 
- del dlversion.inc.orig
+            <![CDATA[copy dlversion.inc.orig dlversion.inc
+del dlversion.inc.orig
 $(PostBuildEvent)]]>
         </PostBuildEvent>
+        <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
         <PreBuildEvent>
             <![CDATA[powershell -NoProfile -File PreBuild.ps1
 $(PreBuildEvent)]]>
         </PreBuildEvent>
+        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
+        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Description>DelphiLint</DCC_Description>
         <DCC_UsePackage>vcl;rtl;IndyProtocols;vclie;vcledge;$(DCC_UsePackage)</DCC_UsePackage>
-        <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
-        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
-        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -82,17 +76,12 @@ $(PreBuildEvent)]]>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <Debugger_HostApplication>$(BDSBIN)\bds.exe</Debugger_HostApplication>
-        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
-        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -333,7 +322,7 @@ $(PreBuildEvent)]]>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc &amp; del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -341,7 +330,7 @@ $(PreBuildEvent)]]>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc &amp; del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

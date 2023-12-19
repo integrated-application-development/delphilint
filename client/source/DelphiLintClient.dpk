@@ -62,4 +62,6 @@ contains
   DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
   DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas';
 
+{$R *Additional.res}
+
 end.

@@ -32,6 +32,8 @@ uses
   DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas',
   DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas';
 
+{$R *Additional.res}
+
 {$IFDEF TESTINSIGHT}
 begin
   TestInsight.DUnitX.RunRegisteredTests;
