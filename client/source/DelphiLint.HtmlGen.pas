@@ -13,7 +13,7 @@ type
     class function ColorToHex(Color: TColor): string;
     class function WrapHtml(Html: string; WrappingTag: string): string;
     class function ImageToBase64(Image: TGraphic): string;
-    class function BuildHtmlPage(BodyHtml: string; Css: string = ''; BodyClass: string = ''): string;
+    class function BuildHtmlPage(BodyHtml: string; Css: string = ''; Js: string = ''; BodyClass: string = ''): string;
   end;
 
   TRuleHtmlGenerator = class(TObject)
@@ -177,7 +177,7 @@ begin
         ProcessedRuleDesc
       ]);
 
-    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss, 'cleancode');
+    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss, LintResources.JsLibScript, 'cleancode');
   end
   else begin
     if Rule.RuleType <> rtSecurityHotspot then begin
@@ -202,13 +202,13 @@ begin
         ProcessedRuleDesc
       ]);
 
-    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss);
+    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss, LintResources.JsLibScript);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-class function THtmlUtils.BuildHtmlPage(BodyHtml: string; Css: string = ''; BodyClass: string = ''): string;
+class function THtmlUtils.BuildHtmlPage(BodyHtml: string; Css: string = ''; Js: string = ''; BodyClass: string = ''): string;
 begin
   Result := Format(
     '<!DOCTYPE html>' +
@@ -217,9 +217,12 @@ begin
     '  <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge"/>' +
     '  <style>%s</style>' +
     '</head>' +
-    '<body class="%s">%s</body>' +
+    '<body class="%s">' +
+    '  %s' +
+    '  <script>%s</script>' +
+    '</body>' +
     '</html>',
-    [Css, BodyClass, BodyHtml]);
+    [Css, BodyClass, BodyHtml, Js]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -299,7 +302,107 @@ begin
     '}' +
     '.impact.low { color: rgb(49, 108, 146); background-color: rgb(233, 244, 251); }' +
     '.impact.medium { color: rgb(140, 94, 30); background-color: rgb(254, 245, 208); }' +
-    '.impact.high { color: rgb(128, 27, 20); background-color: rgb(254, 228, 226); }',
+    '.impact.high { color: rgb(128, 27, 20); background-color: rgb(254, 228, 226); }' +
+    // HLJS'/*!' +
+    '.hljs {' +
+    '  color: #c9d1d9;' +
+    '  background: #0d1117;' +
+    '}' +
+    '.hljs-doctag,' +
+    '.hljs-keyword,' +
+    '.hljs-meta .hljs-keyword,' +
+    '.hljs-template-tag,' +
+    '.hljs-template-variable,' +
+    '.hljs-type,' +
+    '.hljs-variable.language_ {' +
+    '  /* prettylights-syntax-keyword */' +
+    '  color: #ff7b72;' +
+    '}' +
+    '.hljs-title,' +
+    '.hljs-title.class_,' +
+    '.hljs-title.class_.inherited__,' +
+    '.hljs-title.function_ {' +
+    '  /* prettylights-syntax-entity */' +
+    '  color: #d2a8ff;' +
+    '}' +
+    '.hljs-attr,' +
+    '.hljs-attribute,' +
+    '.hljs-literal,' +
+    '.hljs-meta,' +
+    '.hljs-number,' +
+    '.hljs-operator,' +
+    '.hljs-variable,' +
+    '.hljs-selector-attr,' +
+    '.hljs-selector-class,' +
+    '.hljs-selector-id {' +
+    '  /* prettylights-syntax-constant */' +
+    '  color: #79c0ff;' +
+    '}' +
+    '.hljs-regexp,' +
+    '.hljs-string,' +
+    '.hljs-meta .hljs-string {' +
+    '  /* prettylights-syntax-string */' +
+    '  color: #a5d6ff;' +
+    '}' +
+    '.hljs-built_in,' +
+    '.hljs-symbol {' +
+    '  /* prettylights-syntax-variable */' +
+    '  color: #ffa657;' +
+    '}' +
+    '.hljs-comment,' +
+    '.hljs-code,' +
+    '.hljs-formula {' +
+    '  /* prettylights-syntax-comment */' +
+    '  color: #8b949e;' +
+    '}' +
+    '.hljs-name,' +
+    '.hljs-quote,' +
+    '.hljs-selector-tag,' +
+    '.hljs-selector-pseudo {' +
+    '  /* prettylights-syntax-entity-tag */' +
+    '  color: #7ee787;' +
+    '}' +
+    '.hljs-subst {' +
+    '  /* prettylights-syntax-storage-modifier-import */' +
+    '  color: #c9d1d9;' +
+    '}' +
+    '.hljs-section {' +
+    '  /* prettylights-syntax-markup-heading */' +
+    '  color: #1f6feb;' +
+    '  font-weight: bold;' +
+    '}' +
+    '.hljs-bullet {' +
+    '  /* prettylights-syntax-markup-list */' +
+    '  color: #f2cc60;' +
+    '}' +
+    '.hljs-emphasis {' +
+    '  /* prettylights-syntax-markup-italic */' +
+    '  color: #c9d1d9;' +
+    '  font-style: italic;' +
+    '}' +
+    '.hljs-strong {' +
+    '  /* prettylights-syntax-markup-bold */' +
+    '  color: #c9d1d9;' +
+    '  font-weight: bold;' +
+    '}' +
+    '.hljs-addition {' +
+    '  /* prettylights-syntax-markup-inserted */' +
+    '  color: #aff5b4;' +
+    '  background-color: #033a16;' +
+    '}' +
+    '.hljs-deletion {' +
+    '  /* prettylights-syntax-markup-deleted */' +
+    '  color: #ffdcd7;' +
+    '  background-color: #67060c;' +
+    '}' +
+    '.hljs-char.escape_,' +
+    '.hljs-link,' +
+    '.hljs-params,' +
+    '.hljs-property,' +
+    '.hljs-punctuation,' +
+    '.hljs-tag {' +
+    '  /* purposely ignored */' +
+    '}',
     [FTextColor, FBgColor, FCodeBgColor, FLinkColor, FCodeBgColor]);
 end;
 

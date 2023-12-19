@@ -37,6 +37,8 @@ type
     [TestCase]
     procedure TestUsesColorsFromIDETheme;
     [TestCase]
+    procedure TestEmbedsJsLibScript;
+    [TestCase]
     procedure TestWrapsOldStyleDescriptions;
     [TestCase]
     procedure TestDoesNotWrapNewStyleDescriptions;
@@ -174,6 +176,29 @@ begin
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
     Assert.Contains(HtmlText, CDescription);
     Assert.DoesNotContain(HtmlText, '<p>' + CDescription + '</p>');
+  finally
+    FreeAndNil(Rule);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TRuleHtmlGeneratorTest.TestEmbedsJsLibScript;
+var
+  Rule: TRule;
+  HtmlText: string;
+begin
+  Rule := TRule.Create(
+    'rk1',
+    'RuleName1',
+    'My desc',
+    rsMajor,
+    rtCodeSmell,
+    nil
+  );
+  try
+    HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
+    Assert.Contains(HtmlText, '<script>' + LintResources.JsLibScript + '</script>');
   finally
     FreeAndNil(Rule);
   end;
@@ -435,10 +460,11 @@ procedure THtmlUtilsTest.TestBuildHtmlPage;
 var
   HtmlStr: string;
 begin
-  HtmlStr := THtmlUtils.BuildHtmlPage('!!BODY!!', '!!CSS!!', '!!BODYCLASS!!');
+  HtmlStr := THtmlUtils.BuildHtmlPage('!!BODY!!', '!!CSS!!', '!!JS!!', '!!BODYCLASS!!');
 
   Assert.Contains(HtmlStr, '<style>!!CSS!!</style>');
-  Assert.Contains(HtmlStr, '<body class="!!BODYCLASS!!">!!BODY!!</body>');
+  Assert.Contains(HtmlStr, '<body class="!!BODYCLASS!!">  !!BODY!!');
+  Assert.Contains(HtmlStr, '<script>!!JS!!</script>');
 end;
 
 //______________________________________________________________________________________________________________________

@@ -31,9 +31,11 @@ type
   private
     FLoadedPngs: TObjectDictionary<string, TPngImage>;
     FLoadedBitmaps: TObjectDictionary<string, TBitmap>;
+    FLoadedStrings: TDictionary<string, string>;
 
     function LoadPng(ResourceName: string): TPngImage;
     function LoadBitmap(ResourceName: string): TBitmap;
+    function LoadFileString(ResourceName: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -44,6 +46,8 @@ type
     function ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
     function DelphiLintIcon: TBitmap;
     function DelphiLintSplash: TBitmap;
+
+    function JsLibScript: string;
   end;
 
 function LintResources: TLintResources;
@@ -52,6 +56,8 @@ implementation
 
 uses
     System.SysUtils
+  , System.Classes
+  , System.Types
   ;
 
 var
@@ -76,6 +82,7 @@ begin
 
   FLoadedPngs := TObjectDictionary<string, TPngImage>.Create;
   FLoadedBitmaps := TObjectDictionary<string, TBitmap>.Create;
+  FLoadedStrings := TDictionary<string, string>.Create;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -84,6 +91,7 @@ destructor TLintResources.Destroy;
 begin
   FreeAndNil(FLoadedPngs);
   FreeAndNil(FLoadedBitmaps);
+  FreeAndNil(FLoadedStrings);
   inherited;
 end;
 
@@ -145,6 +153,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintResources.JsLibScript: string;
+const
+  C_JsLibResourceName = 'DL_HTML_SCRIPT';
+begin
+  Result := LoadFileString(C_JsLibResourceName);
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TLintResources.LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
 const
   C_FileStatusResourceNames: array[TCurrentFileStatus] of string = (
@@ -183,6 +200,27 @@ begin
   end;
 
   Result := FLoadedPngs[ResourceName];
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintResources.LoadFileString(ResourceName: string): string;
+var
+  Stream: TResourceStream;
+  StreamReader: TStreamReader;
+begin
+  if not FLoadedStrings.ContainsKey(ResourceName) then begin
+    Stream := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
+    try
+      StreamReader := TStreamReader.Create(Stream, True);
+      FLoadedStrings.Add(ResourceName, StreamReader.ReadToEnd);
+    finally
+      FreeAndNil(StreamReader);
+      FreeAndNil(Stream);
+    end;
+  end;
+
+  Result := FLoadedStrings[ResourceName];
 end;
 
 //______________________________________________________________________________________________________________________
