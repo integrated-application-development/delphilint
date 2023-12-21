@@ -111,7 +111,7 @@ function Invoke-ClientCompile([string]$DelphiBin, [string]$BuildConfig) {
 function Invoke-ServerCompile() {
   Push-Location (Join-Path $PSScriptRoot ..\server)
   try {
-    & .\build.ps1
+    & .\buildversioned.ps1
   }
   finally {
     Pop-Location
