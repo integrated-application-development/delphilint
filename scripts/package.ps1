@@ -1,21 +1,27 @@
 #! powershell -File
 param(
-  [switch]$NoCompanion
+  [Parameter(Mandatory)]
+  [string]$DelphiBin,
+  [switch]$ShowOutput
 )
 
 $ErrorActionPreference = "Stop"
-
 Import-Module "$PSScriptRoot/common" -Force
 
-function Wait-BuildArtifact([string]$Path, [string]$Message) {
-  while(-not (Test-Path $Path)) {
-    Write-Host -ForegroundColor Red $Message
-    $TryAgain = Read-Host -Prompt "Try again? (y/n)"
-    if(-not (Test-PromptConfirmed $TryAgain)) {
-      Exit
-    }
+$Version = Get-Version
+$StaticVersion = $Version -replace "\+dev.*$","+dev"
+$BuildConfig = "Release"
+
+$TargetDir = Join-Path $PSScriptRoot "../target"
+$PackageDir = Join-Path $TargetDir "DelphiLint-$Version"
+
+function Assert-BuildArtifact([string]$Path, [string]$Message) {
+  if(Test-Path $Path) {
+    Write-Status -Status Success "$Path exists."
+  } else {
+    Write-Status -Status Problem "$Path does not exist."
+    Exit
   }
-  Write-Host "Build artifact at $Path exists."
 }
 
 function Test-ClientVersion([string]$Path, [string]$Version) {
@@ -32,17 +38,15 @@ function Test-ClientVersion([string]$Path, [string]$Version) {
   return $MatchMajor -and $MatchMinor -and $MatchPatch -and $MatchDevVersion
 }
 
-function Wait-ClientVersion([string]$Version, [string]$Message) {
+function Assert-ClientVersion([string]$Version, [string]$Message) {
   $Path = (Join-Path $PSScriptRoot "../client/source/dlversion.inc")
 
-  while(-not (Test-ClientVersion -Path $Path -Version $Version)) {
-    Write-Host -ForegroundColor Red $Message
-    $TryAgain = Read-Host -Prompt "Try again? (y/n)"
-    if(-not (Test-PromptConfirmed $TryAgain)) {
-      Exit
-    }
+  if(Test-ClientVersion -Path $Path -Version $Version) {
+    Write-Status -Status Success "Version is set correctly as $Version in dlversion.inc."
+  } else {
+    Write-Status -Status Problem "Version is not set correctly as $Version in dlversion.inc."
+    Exit
   }
-  Write-Host "Version is set correctly as $Version in dlversion.inc."
 }
 
 function New-SetupScript([string]$Path, [string]$Version) {
@@ -94,57 +98,167 @@ function Get-VscCompanion([string]$Version) {
   return Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphilint-vscode-$Version.vsix"
 }
 
+function Invoke-ClientCompile([string]$DelphiBin, [string]$BuildConfig) {
+  Push-Location (Join-Path $PSScriptRoot ..\client\source)
+  try {
+    & cmd /c "`"$DelphiBin\\rsvars.bat`" && msbuild /p:config=`"$BuildConfig`""
+  }
+  finally {
+    Pop-Location
+  }
+}
+
+function Invoke-ServerCompile() {
+  Push-Location (Join-Path $PSScriptRoot ..\server)
+  try {
+    & .\build.ps1
+  }
+  finally {
+    Pop-Location
+  }
+}
+
+function Invoke-VscCompanionCompile {
+  Push-Location (Join-Path $PSScriptRoot ..\companion\delphilint-vscode)
+  try {
+    & vsce package
+  }
+  finally {
+    Pop-Location
+  }
+}
+
+function Clear-TargetFolder {
+  New-Item -ItemType Directory $TargetDir -Force | Out-Null
+  Get-ChildItem -Path $TargetDir -Recurse | Remove-Item -Force -Recurse
+}
+
+function New-PackageFolder([hashtable]$Artifacts) {
+  New-Item -ItemType Directory $PackageDir -Force
+
+  $Artifacts.GetEnumerator() | ForEach-Object {
+    Copy-Item -Path $_.Key -Destination (Join-Path $PackageDir $_.Value)
+  }
+  New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
+}
+
 #-----------------------------------------------------------------------------------------------------------------------
 
-$Version = Get-Version
-$StaticVersion = $Version -replace "\+dev.*$","+dev"
-$BuildConfig = "Release"
+$StandaloneArtifacts = @{}
+$PackagedArtifacts = @{}
 
-Write-Host "Packaging DelphiLint $Version."
+$Projects = @(
+  @{
+    "Name" = "Build client"
+    "Prerequisite" = {
+      Assert-ClientVersion -Version $Version
+    }
+    "Build" = {
+      Invoke-ClientCompile -DelphiBin $DelphiBin -BuildConfig $BuildConfig
+      $PackagedArtifacts.Add((Get-ClientBpl $BuildConfig), "DelphiLintClient-$Version.bpl");
+    }
+    "Postrequisite" = {
+      Assert-BuildArtifact (Get-ClientBpl $BuildConfig)
+    }
+  },
+  @{
+    "Name" = "Build server"
+    "Build" = {
+      Invoke-ServerCompile
 
-Write-Host "`nDue diligence:"
-Wait-Prompt "  1. Is the client .bpl compiled for $Version in ${BuildConfig}?" -ExitOnNo
-Wait-Prompt "  2. Is the server .jar compiled for ${Version}?" -ExitOnNo
-if(-not $NoCompanion) {
-  Wait-Prompt "  3. Is the VS Code extension .vsix compiled for ${StaticVersion}?" -ExitOnNo
+      $ServerJar = Get-ServerJar $Version
+      $StandaloneArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
+      $PackagedArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
+    }
+    "Postrequisite" = {
+      Assert-BuildArtifact (Get-ServerJar $Version)
+    }
+  },
+  @{
+    "Name" = "Build VS Code companion"
+    "Build" = {
+      Invoke-VscCompanionCompile
+      $StandaloneArtifacts.Add((Get-VscCompanion $StaticVersion), "delphilint-vscode-$StaticVersion.vsix");
+    }
+    "Postrequisite" = {
+      Assert-BuildArtifact (Get-VscCompanion $StaticVersion)
+    }
+  },
+  @{
+    "Name" = "Collate build artifacts"
+    "Build" = {
+      Clear-TargetFolder
+      $StandaloneArtifacts.GetEnumerator() | ForEach-Object {
+        Copy-Item -Path $_.Key -Destination (Join-Path $TargetDir $_.Value)
+      }
+      New-PackageFolder $PackagedArtifacts
+    }
+    "Postrequisite" = {
+      $StandaloneArtifacts.Values | ForEach-Object {
+        Assert-BuildArtifact (Join-Path $TargetDir $_)
+      }
+      $PackagedArtifacts.Values | ForEach-Object {
+        Assert-BuildArtifact (Join-Path $PackageDir $_)
+      }
+    }
+  },
+  @{
+    "Name" = "Zip build artifacts"
+    "Build" = {
+      $ZippedPackage = Join-Path $TargetDir "DelphiLint-$Version.zip"
+      Compress-Archive $PackageDir -DestinationPath $ZippedPackage -Force
+    }
+    "Postrequisite" = {
+      $ZippedPackage = Join-Path $TargetDir "DelphiLint-$Version.zip"
+      Assert-BuildArtifact $ZippedPackage
+    }
+  }
+);
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+Write-Indent "DelphiLint ${Version}:"
+Push-Indent
+
+$Projects | ForEach-Object {
+  Write-Indent -ForegroundColor Cyan "$($_.Name):"
+  Push-Indent
+  Write-Indent "Preconditions:"
+  if($_.Prerequisite) {
+    & $_.Prerequisite
+  }
+  Write-Indent
+
+  Write-Indent "Build:"
+  Push-Indent
+
+  $Output = ""
+
+  if($ShowOutput) {
+    & $_.Build | ForEach-Object { Write-Indent $_ }
+  } else {
+    $Output = (& $_.Build)
+  }
+
+  if($LASTEXITCODE -eq 0) {
+    Write-Success "Succeeded."
+  } else {
+    $Output | ForEach-Object { Write-Indent $_ }
+    Write-Problem "Failed."
+    Exit
+  }
+
+  Pop-Indent
+
+  Write-Indent
+  Write-Indent "Postconditions:"
+  if($_.Postrequisite) {
+    & $_.Postrequisite
+  }
+
+  Pop-Indent
+  Write-Indent
 }
 
-Write-Host "`nValidating build artifacts..."
-
-Wait-ClientVersion -Version $Version -Message "Update the constants in client/source/dlversion.inc to $Version."
-$ClientBpl = Get-ClientBpl $BuildConfig
-Wait-BuildArtifact -Path $ClientBpl -Message "Build the client .bpl for $BuildConfig."
-$ServerJar = Get-ServerJar $Version
-Wait-BuildArtifact -Path $ServerJar -Message "Build the server .jar for $Version."
-if(-not $NoCompanion) {
-  $VscCompanionVsix = Get-VscCompanion $StaticVersion
-  Wait-BuildArtifact -Path $VscCompanionVsix -Message "Build the VS Code extension .vsix for $StaticVersion."
-}
-
-Write-Host "Build artifacts validated.`n"
-
-$TargetDir = Join-Path $PSScriptRoot "../target"
-New-Item -ItemType Directory $TargetDir -Force | Out-Null
-Get-ChildItem -Path $TargetDir -Recurse | Remove-Item -Force -Recurse
-
-$PackageDir = Join-Path $TargetDir "DelphiLint-$Version"
-New-Item -ItemType Directory $PackageDir -Force | Out-Null
-
-Write-Host "Package directory created."
-
-Copy-Item $ClientBpl (Join-Path $PackageDir "DelphiLintClient-$Version.bpl") | Out-Null
-Copy-Item $ServerJar (Join-Path $PackageDir "delphilint-server-$Version.jar") | Out-Null
-Copy-Item $ServerJar (Join-Path $TargetDir "delphilint-server-$Version.jar") | Out-Null
-if(-not $NoCompanion) {
-  Copy-Item $VscCompanionVsix (Join-Path $TargetDir "delphilint-vscode-$StaticVersion.vsix") | Out-Null
-}
-New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
-
-Write-Host "Build artifacts copied."
-
-$ZippedPackage = Join-Path $TargetDir "DelphiLint-$Version.zip"
-Compress-Archive $PackageDir -DestinationPath $ZippedPackage -Force
-
-Write-Host "Package compressed at $ZippedPackage."
-
-Write-Host -ForegroundColor Green "DelphiLint $Version packaged."
+Pop-Indent
+Write-Success "[DelphiLint $Version] packaged."
