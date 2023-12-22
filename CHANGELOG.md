@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Syntax highlighting for code examples in rule descriptions
+* Diff views for code examples in rule descriptions
+
 ### Changed
 
 * Inline issue display and underline have been redesigned to be more prominent
