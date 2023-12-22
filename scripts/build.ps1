@@ -114,6 +114,7 @@ function Invoke-ServerCompile() {
 function Invoke-VscCompanionCompile {
   Push-Location (Join-Path $PSScriptRoot ..\companion\delphilint-vscode)
   try {
+    & npm install
     & vsce package
   }
   finally {
