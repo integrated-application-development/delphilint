@@ -2,7 +2,8 @@
 param(
   [Parameter(Mandatory)]
   [string]$DelphiBin,
-  [switch]$ShowOutput
+  [switch]$ShowOutput,
+  [switch]$SkipCompanion
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,12 +13,16 @@ $Version = Get-Version
 $StaticVersion = $Version -replace "\+dev.*$","+dev"
 $BuildConfig = "Release"
 
+$ClientBpl = Join-Path $PSScriptRoot "../client/source/target/Win32/$BuildConfig/DelphiLintClient.bpl"
+$ServerJar = Join-Path $PSScriptRoot "../server/delphilint-server/target/delphilint-server-$Version.jar"
+$CompanionVsix = Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphilint-vscode-$StaticVersion.vsix"
+
 $TargetDir = Join-Path $PSScriptRoot "../target"
 $PackageDir = Join-Path $TargetDir "DelphiLint-$Version"
 
 function Assert-BuildArtifact([string]$Path, [string]$Message) {
   if(Test-Path $Path) {
-    Write-Status -Status Success "$Path exists."
+    Write-Status -Status Success "$(Resolve-PathToRoot $Path) exists."
   } else {
     Write-Status -Status Problem "$Path does not exist."
     Exit
@@ -86,18 +91,6 @@ function New-SetupScript([string]$Path, [string]$Version) {
   Set-Content -Path $Path -Value $SetupScript
 }
 
-function Get-ClientBpl([string]$BuildConfig) {
-  return Join-Path $PSScriptRoot "../client/source/target/Win32/$BuildConfig/DelphiLintClient.bpl"
-}
-
-function Get-ServerJar([string]$Version) {
-  return Join-Path $PSScriptRoot "../server/delphilint-server/target/delphilint-server-$Version.jar"
-}
-
-function Get-VscCompanion([string]$Version) {
-  return Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphilint-vscode-$Version.vsix"
-}
-
 function Invoke-ClientCompile([string]$DelphiBin, [string]$BuildConfig) {
   Push-Location (Join-Path $PSScriptRoot ..\client\source)
   try {
@@ -142,6 +135,39 @@ function New-PackageFolder([hashtable]$Artifacts) {
   New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
 }
 
+function Invoke-Project([hashtable]$Project) {
+  if($Project.Prerequisite) {
+    Write-Host -ForegroundColor Yellow "Preconditions:"
+    & $Project.Prerequisite
+    Write-Host
+  }
+
+  $Time = Measure-Command {
+    $Output = ""
+
+    if($ShowOutput) {
+      & $Project.Build | ForEach-Object { Write-Host $_ }
+    } else {
+      $Output = (& $Project.Build)
+    }
+
+    if($LASTEXITCODE -eq 0) {
+      Write-Host -ForegroundColor Green "Succeeded" -NoNewline
+    } else {
+      $Output | ForEach-Object { Write-Host $_ }
+      Write-Problem "Failed."
+      Exit
+    }
+  }
+  Write-Host -ForegroundColor Green " in $($Time.TotalSeconds) seconds."
+
+  if($Project.Postrequisite) {
+    Write-Host
+    Write-Host -ForegroundColor Yellow "Postconditions:"
+    & $Project.Postrequisite
+  }
+}
+
 #-----------------------------------------------------------------------------------------------------------------------
 
 $StandaloneArtifacts = @{}
@@ -155,33 +181,37 @@ $Projects = @(
     }
     "Build" = {
       Invoke-ClientCompile -DelphiBin $DelphiBin -BuildConfig $BuildConfig
-      $PackagedArtifacts.Add((Get-ClientBpl $BuildConfig), "DelphiLintClient-$Version.bpl");
+      $PackagedArtifacts.Add($ClientBpl, "DelphiLintClient-$Version.bpl");
     }
     "Postrequisite" = {
-      Assert-BuildArtifact (Get-ClientBpl $BuildConfig)
+      Assert-BuildArtifact $ClientBpl
     }
   },
   @{
     "Name" = "Build server"
     "Build" = {
       Invoke-ServerCompile
-
-      $ServerJar = Get-ServerJar $Version
       $StandaloneArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
       $PackagedArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
     }
     "Postrequisite" = {
-      Assert-BuildArtifact (Get-ServerJar $Version)
+      Assert-BuildArtifact $ServerJar
     }
   },
   @{
     "Name" = "Build VS Code companion"
     "Build" = {
-      Invoke-VscCompanionCompile
-      $StandaloneArtifacts.Add((Get-VscCompanion $StaticVersion), "delphilint-vscode-$StaticVersion.vsix");
+      if($SkipCompanion) {
+        Write-Host -ForegroundColor Yellow "-SkipCompanion flag passed - skipping build."
+      } else {
+        Invoke-VscCompanionCompile
+        $StandaloneArtifacts.Add($CompanionVsix, "delphilint-vscode-$StaticVersion.vsix");
+      }
     }
     "Postrequisite" = {
-      Assert-BuildArtifact (Get-VscCompanion $StaticVersion)
+      if(-not $SkipCompanion) {
+        Assert-BuildArtifact $CompanionVsix
+      }
     }
   },
   @{
@@ -217,48 +247,14 @@ $Projects = @(
 
 #-----------------------------------------------------------------------------------------------------------------------
 
-Write-Indent "DelphiLint ${Version}:"
-Push-Indent
+Write-Title "Packaging DelphiLint ${Version}"
 
-$Projects | ForEach-Object {
-  Write-Indent -ForegroundColor Cyan "$($_.Name):"
-  Push-Indent
-  Write-Indent "Preconditions:"
-  if($_.Prerequisite) {
-    & $_.Prerequisite
+$Time = Measure-Command {
+  $Projects | ForEach-Object {
+    Write-Header $_.Name
+    Invoke-Project $_
   }
-  Write-Indent
-
-  Write-Indent "Build:"
-  Push-Indent
-
-  $Output = ""
-
-  if($ShowOutput) {
-    & $_.Build | ForEach-Object { Write-Indent $_ }
-  } else {
-    $Output = (& $_.Build)
-  }
-
-  if($LASTEXITCODE -eq 0) {
-    Write-Success "Succeeded."
-  } else {
-    $Output | ForEach-Object { Write-Indent $_ }
-    Write-Problem "Failed."
-    Exit
-  }
-
-  Pop-Indent
-
-  Write-Indent
-  Write-Indent "Postconditions:"
-  if($_.Postrequisite) {
-    & $_.Postrequisite
-  }
-
-  Pop-Indent
-  Write-Indent
 }
 
-Pop-Indent
-Write-Success "[DelphiLint $Version] packaged."
+Write-Title "DelphiLint $Version packaged"
+Write-Host "Succeeded in $($Time.TotalSeconds) seconds."

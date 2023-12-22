@@ -40,34 +40,31 @@ function Split-Version([string]$Version) {
   }
 }
 
-$global:Indent = ""
-
-function Push-Indent {
-  $global:Indent = "  $Indent"
+function Write-Title([string]$Title) {
+  $NumSpaces = 80 - $Title.Length
+  $LeftPad = $NumSpaces / 2 + $Title.Length
+  Write-Host -ForegroundColor Cyan $Title.PadLeft($LeftPad, "=").PadRight(80, "=");
 }
 
-function Pop-Indent {
-  $global:Indent = $Indent -replace "^  ",""
-}
-
-function Write-Indent {
-  Write-Host "$Indent" -NoNewline
-  Write-Host @Args
+function Write-Header([string]$Title) {
+  $NumSpaces = 80 - $Title.Length
+  $LeftPad = $NumSpaces / 2 + $Title.Length
+  Write-Host -ForegroundColor Cyan $Title.PadLeft($LeftPad, "-").PadRight(80, "-");
 }
 
 function Write-Problem([string]$Message) {
-  Write-Indent -ForegroundColor Red $Message
+  Write-Host -ForegroundColor Red $Message
 }
 
 function Write-Success([string]$Message) {
-  Write-Indent -ForegroundColor Green $Message
+  Write-Host -ForegroundColor Green $Message
 }
 
 function Write-Status(
   [ValidateSet("Success", "Question", "Problem")]
   [string]$Status
 ) {
-  Write-Indent "[" -NoNewline
+  Write-Host "[" -NoNewline
   if($Status -eq "Success") {
     Write-Host -ForegroundColor Green "/" -NoNewline
   } elseif ($Status -eq "Problem") {
@@ -78,6 +75,15 @@ function Write-Status(
 
   Write-Host "] " -NoNewline
   Write-Host @Args
+}
+
+function Resolve-PathToRoot([string]$Path) {
+  Push-Location $PSScriptRoot\..
+  try {
+    return (Resolve-Path -Relative $Path) -replace "^\.[\/\\]",""
+  } finally {
+    Pop-Location
+  }
 }
 
 Export-ModuleMember -Variable $Indent
