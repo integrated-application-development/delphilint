@@ -50,27 +50,16 @@ Prerequisites:
 * Maven 3.5.0+
 * Java 11+
 * PowerShell
+* `npm`
+* `vsce` (can be installed with `npm install --global @vscode/vsce`)
+* Visual Studio Code
 
 1. Clone the repository at the latest release.
-2. Build the server project by running `/server/build.ps1`.
-3. Build the client project by compiling `/client/source/DelphiLintClient.dproj` in Release with Delphi 11 or above.
-4. (Optional) [Build the VS Code companion.](#building-the-vs-code-companion) If this step is skipped, pass
-   `-NoCompanion` to the package script in the next step.
-5. Run `/package.ps1` and follow the instructions to create the setup zip.
+2. Build the project by running `/scripts/build.ps1 -DelphiBin <path/to/bin>`, where `<path/to/bin>` is the
+   path to your Delphi IDE installation's `bin` directory (e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
 
-### Building the VS Code companion
-
-Prerequisites:
-
-* npm
-* VS Code
-* VS Code Extension Manager (Can be installed with `npm install --global @vscode/vsce`)
-
-1. Clone the repository at the latest release.
-2. In `/companion/delphilint-vscode`:
-   1. Run `npm install`.
-   2. Run `vsce package` to create a `.vsix` file in `/companion/delphilint-vscode`.
-3. Run `code --install-extension <vsix>` to install the extension.
+The VS Code companion can be skipped from the install by passing the `-SkipCompanion` flag to the script in step 2.
+If the companion is omitted, `npm`, `vsce`, and Visual Studio Code are not required.
 
 ## Usage
 
