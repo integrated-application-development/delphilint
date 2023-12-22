@@ -20,6 +20,8 @@ function Set-ClientVersion([string]$Path, [string]$Version) {
   $DlVersionContent = Expand-DlVersionMacro $DlVersionContent -Macro "DEV" -Value $DevVersionStr
 
   Set-Content $Path -Value $DlVersionContent -NoNewline
+
+  Write-Host "Version updated in dlversion.inc."
 }
 
 function Set-ServerVersion([string[]]$Paths, [string]$Version) {
@@ -34,10 +36,11 @@ function Set-ServerVersion([string[]]$Paths, [string]$Version) {
     $Content = Get-Content $_ -Raw
     $Content = ($VersionTag.replace($Content, "`<version>$VersionStr</version>", 1))
     Set-Content $_ -Value $Content -NoNewline
+    Write-Host "Version updated in $_."
   }
 }
 
-function Set-VscClientVersion([string]$Path, [string]$Version) {
+function Set-VscCompanionVersion([string]$Path, [string]$Version) {
   $Split = Split-Version $Version
 
   $DevStr = if ($Split.Dev) { "+dev" } else { "" }
@@ -48,17 +51,27 @@ function Set-VscClientVersion([string]$Path, [string]$Version) {
   $PackageContent = Get-Content $Path -Raw
   $PackageContent = $VersionProp.replace($PackageContent, "`"version`": `"$VersionStr`"", 1)
   Set-Content $Path -Value $PackageContent -NoNewline
+  Write-Host "Version updated in package.json."
 }
 
 #-----------------------------------------------------------------------------------------------------------------------
 
-$Version = Get-Version
+Write-Title "Updating version metadata"
 
+Write-Header "Retrieving version"
+$Version = Get-Version
+Write-Host "Desired version is $Version."
+
+Write-Header "Client version"
 Set-ClientVersion (Join-Path $PSScriptRoot "../client/source/dlversion.inc") $Version
 
 $PomFiles = @("../server", "../server/delphilint-server", "../server/sonarlint-core-overrides") |
-  ForEach-Object { "$PSScriptRoot/$_/pom.xml" }
+  ForEach-Object { Resolve-Path "$PSScriptRoot/$_/pom.xml" }
 
+Write-Header "Server version"
 Set-ServerVersion $PomFiles $Version
 
-Set-VscClientVersion (Join-Path $PSScriptRoot "../companion/delphilint-vscode/package.json") $Version
+Write-Header "Companion version"
+Set-VscCompanionVersion (Join-Path $PSScriptRoot "../companion/delphilint-vscode/package.json") $Version
+
+Write-Title "Version metadata updated"

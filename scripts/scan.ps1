@@ -14,6 +14,7 @@ param(
   [string]$Password
 )
 $ErrorActionPreference = "Continue"
+Import-Module "$PSScriptRoot/common" -Force
 
 function Get-SonarArgs {
   $SonarArgs = $RemainingArgs
@@ -53,10 +54,16 @@ function Invoke-CompanionScan {
   }
 }
 
-Write-Host -ForegroundColor Cyan "Scanning DelphiLint Client..."
-Invoke-ClientScan
-Write-Host -ForegroundColor Cyan "Scanning DelphiLint Server..."
-Invoke-ServerScan
-Write-Host -ForegroundColor Cyan "Scanning DelphiLint Companion..."
-Invoke-CompanionScan
-Write-Host -ForegroundColor Green "Scans complete."
+#-----------------------------------------------------------------------------------------------------------------------
+
+Write-Title "Scanning DelphiLint projects"
+$Time = Measure-Command {
+  Write-Header "Scan client"
+  Invoke-ClientScan | Write-Host
+  Write-Header "Scan server"
+  Invoke-ServerScan | Write-Host
+  Write-Header "Scan companion"
+  Invoke-CompanionScan | Write-Host
+}
+Write-Title "DelphiLint projects scanned"
+Write-Host "Succeeded in $($Time.TotalSeconds) seconds."
