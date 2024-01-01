@@ -8,6 +8,7 @@ function Invoke-Webpack {
   Write-Host "Building JS libraries..."
   Push-Location (Join-Path $PSScriptRoot jslib)
   try {
+    & npm install
     & npx webpack
   }
   finally {
