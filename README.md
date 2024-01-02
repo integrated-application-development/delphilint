@@ -59,7 +59,7 @@ Prerequisites:
    path to your Delphi IDE installation's `bin` directory (e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
 
 The VS Code companion can be skipped from the install by passing the `-SkipCompanion` flag to the script in step 2.
-If the companion is omitted, `npm`, `vsce`, and Visual Studio Code are not required.
+If the companion is omitted, `vsce` and Visual Studio Code are not required.
 
 ## Usage
 
