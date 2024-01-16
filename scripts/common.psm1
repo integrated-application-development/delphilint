@@ -86,5 +86,4 @@ function Resolve-PathToRoot([string]$Path) {
   }
 }
 
-Export-ModuleMember -Variable $Indent
 Export-ModuleMember -Function *
