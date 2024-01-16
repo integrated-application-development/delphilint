@@ -573,7 +573,7 @@ begin
           Issue.Range.EndLine - Issue.Range.StartLine + 1);
       end
       else begin
-        SetLength(RelevantLines, 0);
+        RelevantLines := Copy(FileContents[SanitizedPath], 0, 1);
       end;
 
       LiveIssue := TLiveIssue.Create(Issue, RelevantLines, IssuesHaveMetadata);

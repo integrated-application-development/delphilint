@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fails with an error in Connected Mode
 * A plugin-destabilising access violation no longer occurs if the server connection times out
 * Analyzing a file that has a relative path including spaces no longer fails with an error in Connected Mode
+* Analyzing a file with a file-level issue no longer raises an exception
 
 ## [0.6.0] - 2023-10-31
 
