@@ -285,7 +285,13 @@ end;
 
 procedure TLineTracker.TrackLine(Line: Integer);
 begin
-  FTracker.AddLine(Line, Line);
+  try
+    FTracker.AddLine(Line, Line);
+  except
+    on Err: EAccessViolation do begin
+      ShowException(Err, ReturnAddress);
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
