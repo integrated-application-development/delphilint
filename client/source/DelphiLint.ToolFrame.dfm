@@ -35,6 +35,7 @@ object LintToolFrame: TLintToolFrame
         Align = alClient
         TabOrder = 0
         UserDataFolder = '%LOCALAPPDATA%\bds.exe.WebView2'
+        OnCreateWebViewCompleted = RuleBrowserCreateWebViewCompleted
         OnNavigationStarting = RuleBrowserNavigationStarting
         OnNewWindowRequested = RuleBrowserNewWindowRequested
       end

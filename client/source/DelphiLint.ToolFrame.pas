@@ -82,6 +82,7 @@ type
     procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
     procedure RuleBrowserNavigationStarting(Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
     procedure RuleBrowserNewWindowRequested(Sender: TCustomEdgeBrowser; Args: TNewWindowRequestedEventArgs);
+    procedure RuleBrowserCreateWebViewCompleted(Sender: TCustomEdgeBrowser; AResult: HRESULT);
   private const
     C_IssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -693,6 +694,15 @@ begin
   if IssueListBox.Items.Count > Selected then begin
     IssueListBox.ItemIndex := Selected;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.RuleBrowserCreateWebViewCompleted(Sender: TCustomEdgeBrowser; AResult: HRESULT);
+begin
+  RuleBrowser.SettingsInterface.Set_AreDevToolsEnabled({$IFDEF DEBUG}1{$ELSE}0{$ENDIF});
+  RuleBrowser.SettingsInterface.Set_AreDefaultContextMenusEnabled(0);
+  RuleBrowser.SettingsInterface.Set_IsZoomControlEnabled(0);
 end;
 
 //______________________________________________________________________________________________________________________
