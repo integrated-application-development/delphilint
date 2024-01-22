@@ -6,7 +6,15 @@ html {
 body {
   font-family: "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
   font-size: 12px;
-  margin-top: 9px;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+.content {
+  margin: 8px;
 }
 
 h1 {

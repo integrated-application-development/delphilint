@@ -259,7 +259,7 @@ begin
     '  <style>%s</style>' +
     '</head>' +
     '<body class="%s">' +
-    '  %s' +
+    '  <div class="content">%s</div>' +
     '  <script src="script.js"></script>' +
     '</body>' +
     '</html>',
@@ -271,11 +271,13 @@ end;
 function TRuleHtmlGenerator.GenerateCss: string;
 begin
   Result := Format(
-    'body { color: %s; background-color: %s; }' +
+    'html { color: %s; background-color: %s; }' +
+    'body::-webkit-scrollbar { background-color: %s; padding: 1em; }' +
+    'body::-webkit-scrollbar-thumb { background-color: %s; }' +
     'pre { background-color: %s; }' +
     'a { color: %s; }' +
     '.tooltip-content { background-color: %s; }',
-    [FTextColor, FBgColor, FCodeBgColor, FLinkColor, FCodeBgColor]);
+    [FTextColor, FBgColor, FBgColor, FCodeBgColor, FCodeBgColor, FLinkColor, FCodeBgColor]);
 end;
 
 //______________________________________________________________________________________________________________________
