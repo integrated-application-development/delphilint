@@ -34,6 +34,9 @@ uses
   , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
   , DelphiLint.HtmlGen
+  , Winapi.WebView2
+  , Winapi.ActiveX
+  , Vcl.Edge
   ;
 
 type
@@ -68,7 +71,7 @@ type
     StatusPanel: TPanel;
     ProgLabel: TLabel;
     ResizeIndicatorPanel: TPanel;
-    RuleBrowser: TWebBrowser;
+    RuleBrowser: TEdgeBrowser;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -77,22 +80,8 @@ type
     procedure OnIssueDoubleClicked(Sender: TObject);
     procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
-    procedure RuleBrowserBeforeNavigate2(
-      ASender: TObject;
-      const PDisp: IDispatch;
-      const URL: OleVariant;
-      const Flags: OleVariant;
-      const TargetFrameName: OleVariant;
-      const PostData: OleVariant;
-      const Headers: OleVariant;
-      var Cancel: WordBool);
-    procedure RuleBrowserNewWindow3(
-      ASender: TObject;
-      var PDisp: IDispatch;
-      var Cancel: WordBool;
-      Flags: Cardinal;
-      const UrlContext: WideString;
-      const Url: WideString);
+    procedure RuleBrowserNavigationStarting(Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
+    procedure RuleBrowserNewWindowRequested(Sender: TCustomEdgeBrowser; Args: TNewWindowRequestedEventArgs);
   private const
     C_IssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -209,18 +198,19 @@ begin
   end;
 
   LintContext.Plugin.OnActiveFileChanged.AddListener(ChangeActiveFile);
+
+  TThread.ForceQueue(
+    TThread.Current,
+    procedure begin
+      Log.Info('Creating web view');
+      RuleBrowser.CreateWebView;
+    end);
 end;
 
 //______________________________________________________________________________________________________________________
 
 destructor TLintToolFrame.Destroy;
-var
-  RuleKey: string;
 begin
-  for RuleKey in FRuleHtmls.Keys do begin
-    TFile.Delete(FRuleHtmls[RuleKey]);
-  end;
-
   FreeAndNil(FRuleHtmls);
   FreeAndNil(FRuleHtmlGenerator);
   inherited;
@@ -707,6 +697,32 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintToolFrame.RuleBrowserNavigationStarting(Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
+var
+  Uri: PWideChar;
+begin
+  Args.ArgsInterface.Get_uri(Uri);
+ if not StartsText('file:', Uri) then begin
+   Log.Info('New URL requested in rule webview, intercepting and showing externally');
+   Args.ArgsInterface.Set_Cancel(1);
+   ShellExecute(0, 'open', Uri, nil, nil, SW_SHOWNORMAL);
+ end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.RuleBrowserNewWindowRequested(Sender: TCustomEdgeBrowser; Args: TNewWindowRequestedEventArgs);
+var
+  Uri: PWideChar;
+begin
+  Log.Info('New window requested in rule webview, intercepting and showing externally');
+  Args.ArgsInterface.Set_Handled(1);
+  Args.ArgsInterface.Get_uri(Uri);
+  ShellExecute(0, 'open', Uri, nil, nil, SW_SHOWNORMAL);
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintToolFrame.RefreshRuleView;
 var
   SelectedIndex: Integer;
@@ -742,14 +758,14 @@ end;
 procedure TLintToolFrame.SetRuleView(Rule: TRule);
 begin
   if (not FRuleHtmls.ContainsKey(Rule.RuleKey)) or (not FileExists(FRuleHtmls[Rule.RuleKey])) then begin
-    FRuleHtmls.AddOrSetValue(Rule.RuleKey, ExpandUNCFileName(FRuleHtmlGenerator.GenerateHtmlFile(Rule)));
+    FRuleHtmls.AddOrSetValue(Rule.RuleKey, FRuleHtmlGenerator.GenerateHtmlFile(Rule));
   end;
 
   try
     FNavigationAllowed := True;
     if FVisibleRule <> Rule.RuleKey then begin
       try
-        RuleBrowser.Navigate2(FRuleHtmls[Rule.RuleKey]);
+        RuleBrowser.Navigate('file:///' + NormalizePath(FRuleHtmls[Rule.RuleKey]));
       except
         on E: EOleException do begin
           Log.Warn('OLE exception occurred during navigation: %s', [E.Message]);
@@ -763,46 +779,6 @@ begin
   finally
     FNavigationAllowed := False;
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.RuleBrowserBeforeNavigate2(
-  ASender: TObject;
-  const PDisp: IDispatch;
-  const URL: OleVariant;
-  const Flags: OleVariant;
-  const TargetFrameName: OleVariant;
-  const PostData: OleVariant;
-  const Headers: OleVariant;
-  var Cancel: WordBool);
-var
-  UrlStr: string;
-begin
-  Cancel := not FRuleHtmls.ContainsValue(URL);
-  if Cancel then begin
-    Log.Info('New URL requested in rule webview, intercepting and showing externally');
-    UrlStr := URL;
-    ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.RuleBrowserNewWindow3(
-  ASender: TObject;
-  var PDisp: IDispatch;
-  var Cancel: WordBool;
-  Flags: Cardinal;
-  const UrlContext: WideString;
-  const Url: WideString);
-var
-  UrlStr: string;
-begin
-  Log.Info('New window requested in rule webview, intercepting and showing externally');
-  Cancel := True;
-  UrlStr := Url;
-  ShellExecute(0, 'open', PChar(UrlStr), nil, nil, SW_SHOWNORMAL);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -27,21 +27,16 @@ object LintToolFrame: TLintToolFrame
       Caption = 'RulePanel'
       ShowCaption = False
       TabOrder = 3
-      object RuleBrowser: TWebBrowser
+      object RuleBrowser: TEdgeBrowser
         Left = 0
         Top = 0
         Width = 265
         Height = 294
         Align = alClient
         TabOrder = 0
-        OnBeforeNavigate2 = RuleBrowserBeforeNavigate2
-        OnNewWindow3 = RuleBrowserNewWindow3
-        ControlData = {
-          4C000000631B0000631E00000100000001020000000000000000000000000000
-          000000004C000000000000000000000001000000E0D057007335CF11AE690800
-          2B2E126200000000000000004C0000000114020000000000C000000000000046
-          8000000000000000000000000000000000000000000000000000000000000000
-          00000000000000000100000000000000000000000000000000000000}
+        UserDataFolder = '%LOCALAPPDATA%\bds.exe.WebView2'
+        OnNavigationStarting = RuleBrowserNavigationStarting
+        OnNewWindowRequested = RuleBrowserNewWindowRequested
       end
     end
     object IssueListBox: TListBox

@@ -3,7 +3,9 @@ unit DelphiLint.HtmlGen;
 interface
 
 uses
-    Vcl.Graphics
+    System.Classes
+  , System.Generics.Collections
+  , Vcl.Graphics
   , DelphiLint.Data
   ;
 
@@ -13,7 +15,6 @@ type
     class function ColorToHex(Color: TColor): string;
     class function WrapHtml(Html: string; WrappingTag: string): string;
     class function ImageToBase64(Image: TGraphic): string;
-    class function BuildHtmlPage(BodyHtml: string; Css: string = ''; Js: string = ''; BodyClass: string = ''): string;
   end;
 
   TRuleHtmlGenerator = class(TObject)
@@ -22,8 +23,14 @@ type
     FBgColor: string;
     FCodeBgColor: string;
     FLinkColor: string;
+    FTempPath: string;
+    FJsPath: string;
+    FCssPath: string;
+    FLocks: TObjectList<TFileStream>;
 
     function BuildTooltip(Html: string; Text: string = ''): string;
+    function BuildHtmlPage(BodyHtml: string; BodyClass: string = ''): string;
+    procedure CreateReadOnlyFile(Path: string; Text: string);
   public
     class function GetRuleTypeStr(RuleType: TRuleType): string;
     class function GetRuleSeverityStr(Severity: TRuleSeverity): string;
@@ -35,11 +42,14 @@ type
     class function GetAttributeTooltip(Attribute: TCleanCodeAttribute): string;
 
     constructor Create;
+    destructor Destroy; override;
     procedure UpdateColors;
 
     function GenerateHtmlText(Rule: TRule): string;
     function GenerateHtmlFile(Rule: TRule): string;
     function GenerateCss: string;
+
+    property TempPath: string read FTempPath;
   end;
 
 implementation
@@ -48,7 +58,6 @@ uses
     System.SysUtils
   , System.StrUtils
   , System.IOUtils
-  , System.Classes
   , System.NetEncoding
   , Winapi.Windows
   , DelphiLint.Context
@@ -102,7 +111,39 @@ end;
 constructor TRuleHtmlGenerator.Create;
 begin
   inherited Create;
+  FLocks := TObjectList<TFileStream>.Create;
+
   UpdateColors;
+
+  FTempPath := TPath.Combine(TPath.GetTempPath, TGUID.NewGuid.ToString);
+  TDirectory.CreateDirectory(FTempPath);
+  FJsPath := TPath.Combine(FTempPath, 'script.js');
+  CreateReadOnlyFile(FJsPath, LintResources.JsLibScript);
+  FCssPath := TPath.Combine(FTempPath, 'style.css');
+  CreateReadOnlyFile(FCssPath, LintResources.RuleHtmlCss);
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TRuleHtmlGenerator.Destroy;
+begin
+  FreeAndNil(FLocks);
+  TDirectory.Delete(FTempPath, True);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TRuleHtmlGenerator.CreateReadOnlyFile(Path: string; Text: string);
+var
+  Stream: TFileStream;
+  Bytes: TBytes;
+begin
+  Bytes := TEncoding.UTF8.GetBytes(Text);
+
+  Stream := TFileStream.Create(Path, fmCreate or fmShareDenyWrite);
+  FLocks.Add(Stream);
+  Stream.WriteBuffer(Bytes, Length(Bytes));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -119,8 +160,8 @@ end;
 
 function TRuleHtmlGenerator.GenerateHtmlFile(Rule: TRule): string;
 begin
-  Result := TPath.GetTempFileName;
-  TFile.WriteAllText(Result, GenerateHtmlText(Rule), TEncoding.UTF8);
+  Result := TPath.Combine(FTempPath, TGUID.NewGuid.ToString + '.html');
+  CreateReadOnlyFile(Result, GenerateHtmlText(Rule));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -177,7 +218,7 @@ begin
         ProcessedRuleDesc
       ]);
 
-    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss, LintResources.JsLibScript, 'cleancode');
+    Result := BuildHtmlPage(BodyHtml, 'cleancode');
   end
   else begin
     if Rule.RuleType <> rtSecurityHotspot then begin
@@ -202,34 +243,34 @@ begin
         ProcessedRuleDesc
       ]);
 
-    Result := THtmlUtils.BuildHtmlPage(BodyHtml, GenerateCss, LintResources.JsLibScript);
+    Result := BuildHtmlPage(BodyHtml);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-class function THtmlUtils.BuildHtmlPage(BodyHtml: string; Css: string = ''; Js: string = ''; BodyClass: string = ''): string;
+function TRuleHtmlGenerator.BuildHtmlPage(BodyHtml: string; BodyClass: string): string;
 begin
   Result := Format(
     '<!DOCTYPE html>' +
     '<html>' +
     '<head>' +
-    '  <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge"/>' +
+    '  <link rel="stylesheet" href="style.css"/> ' +
     '  <style>%s</style>' +
     '</head>' +
     '<body class="%s">' +
     '  %s' +
-    '  <script>%s</script>' +
+    '  <script src="script.js"></script>' +
     '</body>' +
     '</html>',
-    [Css, BodyClass, BodyHtml, Js]);
+    [GenerateCss, BodyClass, BodyHtml]);
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TRuleHtmlGenerator.GenerateCss: string;
 begin
-  Result := LintResources.RuleHtmlCss + Format(
+  Result := Format(
     'body { color: %s; background-color: %s; }' +
     'pre { background-color: %s; }' +
     'a { color: %s; }' +
