@@ -104,6 +104,7 @@ object LintToolFrame: TLintToolFrame
       Width = 708
       Height = 50
       Align = alBottom
+      BevelOuter = bvNone
       Caption = 'FileHeadingPanel'
       ParentBackground = False
       ShowCaption = False
@@ -142,10 +143,10 @@ object LintToolFrame: TLintToolFrame
       end
       object LintButtonPanel: TPanel
         AlignWithMargins = True
-        Left = 617
-        Top = 1
+        Left = 618
+        Top = 0
         Width = 84
-        Height = 48
+        Height = 50
         Margins.Left = 0
         Margins.Top = 0
         Margins.Right = 6
@@ -187,6 +188,7 @@ object LintToolFrame: TLintToolFrame
     Width = 708
     Height = 27
     Align = alBottom
+    BevelOuter = bvNone
     Caption = 'StatusPanel'
     ShowCaption = False
     TabOrder = 2
