@@ -28,15 +28,13 @@ uses
   , Vcl.StdCtrls
   , Vcl.Menus
   , Vcl.ToolWin
-  , Vcl.OleCtrls
   , Winapi.Windows
-  , SHDocVw
   , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
   , DelphiLint.HtmlGen
+  , Vcl.Edge
   , Winapi.WebView2
   , Winapi.ActiveX
-  , Vcl.Edge
   ;
 
 type
@@ -719,7 +717,10 @@ begin
     Color.G := GetGValue(DelphiColor);
     Color.B := GetBValue(DelphiColor);
     Color.A := 255;
-    Log.Info('Default webview background set (%d)', [Controller2.Put_DefaultBackgroundColor(Color)]);
+    Controller2.Put_DefaultBackgroundColor(Color);
+
+    Controller2.Get_DefaultBackgroundColor(Color);
+    Log.Info('Default background is now rgba(%d, %d, %d, %d)', [Color.R, Color.G, Color.B, Color.A]);
   end;
 end;
 
