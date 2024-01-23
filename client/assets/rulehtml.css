@@ -5,7 +5,7 @@ html {
 
 body {
   font-family: "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   margin: 0;
   position: fixed;
   top: 0;
@@ -53,29 +53,13 @@ h3 {
   margin-right: 2px;
 }
 
-pre {
-  padding: 0.5em 0.5em;
-  font-size: 1em;
-  font-family: "Consolas", monospace;
-}
-
-.tooltip-hover {
-  position: relative;
-}
-
-.tooltip-content {
-  display: none;
-  position: absolute;
-  top: 20px;
-  left: 16px;
-  width: 70vw;
-  padding: 6px 6px;
-  z-index: 1;
+pre, code {
   font-size: 12px;
 }
 
-.tooltip-hover:hover .tooltip-content {
-  display: block;
+pre {
+  padding: 0.5em 0.5em;
+  font-family: "Consolas", monospace;
 }
 
 .impacts {

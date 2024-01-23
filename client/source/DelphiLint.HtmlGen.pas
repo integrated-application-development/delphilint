@@ -28,7 +28,6 @@ type
     FCssPath: string;
     FLocks: TObjectList<TFileStream>;
 
-    function BuildTooltip(Html: string; Text: string = ''): string;
     function BuildHtmlPage(BodyHtml: string; BodyClass: string = ''): string;
     procedure CreateReadOnlyFile(Path: string; Text: string);
   public
@@ -187,30 +186,26 @@ begin
   if Assigned(Rule.CleanCode) then begin
     for Quality in Rule.CleanCode.Impacts.Keys do begin
       ImpactSeverity := Rule.CleanCode.Impacts[Quality];
-      ImpactsHtml := ImpactsHtml + BuildTooltip(
-        Format(
-          '<span class="impact %s">%s <img src="%s"/></span>',
-          [
-            GetImpactSeverityClassName(ImpactSeverity),
-            GetSoftwareQualityStr(Quality),
-            THtmlUtils.ImageToBase64(LintResources.ImpactSeverityIcon(ImpactSeverity))
-          ]),
-        GetImpactTooltip(Quality, ImpactSeverity)
-      );
+      ImpactsHtml := ImpactsHtml + Format(
+        '<span class="impact %s" title="%s">%s <img src="%s"/></span>',
+        [
+          GetImpactSeverityClassName(ImpactSeverity),
+          GetImpactTooltip(Quality, ImpactSeverity),
+          GetSoftwareQualityStr(Quality),
+          THtmlUtils.ImageToBase64(LintResources.ImpactSeverityIcon(ImpactSeverity))
+        ]);
     end;
 
     BodyHtml := Format(
-      BuildTooltip(
-        '<span class="subheading cleancode">' +
-          '<strong>%s rule</strong> | %s' +
-        '</span>',
-        GetAttributeTooltip(Rule.CleanCode.Attribute)
-      ) +
+      '<span class="subheading cleancode" title="%s">' +
+        '<strong>%s rule</strong> | %s' +
+      '</span>' +
       '<h1>%s</h1>' +
       '<hr/>' +
       '<div class="impacts">%s</div>' +
       '%s',
       [
+        GetAttributeTooltip(Rule.CleanCode.Attribute),
         GetCleanCodeCategoryStr(Rule.CleanCode.Category),
         GetCleanCodeAttributeStr(Rule.CleanCode.Attribute),
         Rule.Name,
@@ -419,13 +414,6 @@ begin
     sqaReliability: Result := 'Reliability';
     sqaMaintainability: Result := 'Maintainability';
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TRuleHtmlGenerator.BuildTooltip(Html: string; Text: string): string;
-begin
-  Result := Format('<span class="tooltip-hover"><span class="tooltip-content">%s</span>%s</span>', [Text, Html]);
 end;
 
 //______________________________________________________________________________________________________________________
