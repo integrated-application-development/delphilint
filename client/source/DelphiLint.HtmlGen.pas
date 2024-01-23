@@ -21,7 +21,7 @@ type
   private
     FTextColor: string;
     FBgColor: string;
-    FCodeBgColor: string;
+    FScrollbarColor: string;
     FLinkColor: string;
     FTempPath: string;
     FJsPath: string;
@@ -151,7 +151,7 @@ procedure TRuleHtmlGenerator.UpdateColors;
 begin
   FTextColor := THtmlUtils.ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnText));
   FBgColor := THtmlUtils.ColorToHex(LintContext.IDEServices.GetSystemColor(clWindow));
-  FCodeBgColor := THtmlUtils.ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnFace));
+  FScrollbarColor := THtmlUtils.ColorToHex(LintContext.IDEServices.GetSystemColor(clBtnFace));
   FLinkColor := THtmlUtils.ColorToHex(LintContext.IDEServices.GetSystemColor(clHotLight));
 end;
 
@@ -269,10 +269,8 @@ begin
     'html { color: %s; background-color: %s; }' +
     'body::-webkit-scrollbar { background-color: %s; padding: 1em; }' +
     'body::-webkit-scrollbar-thumb { background-color: %s; }' +
-    'pre { background-color: %s; }' +
-    'a { color: %s; }' +
-    '.tooltip-content { background-color: %s; }',
-    [FTextColor, FBgColor, FBgColor, FCodeBgColor, FCodeBgColor, FLinkColor, FCodeBgColor]);
+    'a { color: %s; }',
+    [FTextColor, FBgColor, FBgColor, FScrollbarColor, FLinkColor]);
 end;
 
 //______________________________________________________________________________________________________________________

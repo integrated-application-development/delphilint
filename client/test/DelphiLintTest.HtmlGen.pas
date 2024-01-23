@@ -19,10 +19,6 @@ type
     procedure TestNoWrapTwice;
     [TestCase]
     procedure TestImageToBase64;
-    [TestCase]
-    procedure TestBuildHtmlPage;
-    [TestCase]
-    procedure TestBuildHtmlPageCreatesIE8Page;
   end;
 
   [TestFixture]
@@ -37,7 +33,7 @@ type
     [TestCase]
     procedure TestUsesColorsFromIDETheme;
     [TestCase]
-    procedure TestEmbedsJsLibScript;
+    procedure TestLinksToJsLibScript;
     [TestCase]
     procedure TestWrapsOldStyleDescriptions;
     [TestCase]
@@ -92,7 +88,7 @@ begin
   MockIDEServices := TMockIDEServices.Create;
   MockIDEServices.MockSystemColor(clBtnText, $0000FF); // Text color
   MockIDEServices.MockSystemColor(clWindow, $00FF00); // Background color
-  MockIDEServices.MockSystemColor(clBtnFace, $FF0000); // Code background color
+  MockIDEServices.MockSystemColor(clBtnFace, $FF0000); // Scrollbar color
   MockIDEServices.MockSystemColor(clHotLight, $00FFFF); // Link color
   MockContext.MockIDEServices(MockIDEServices);
   FHtmlGenerator := TRuleHtmlGenerator.Create;
@@ -113,21 +109,25 @@ var
 begin
   Css := FHtmlGenerator.GenerateCss;
   Assert.IsMatch(
-    'body\s*{[^}]*?color:\s*#FF0000',
+    'html\s*{[^}]*?color:\s*#FF0000',
     Css,
-    'CSS body text color should be the hex code for clBtnText');
+    'CSS HTML text color should be the hex code for clBtnText');
   Assert.IsMatch(
-    'body\s*{[^}]*?background-color:\s*#00FF00',
+    'html\s*{[^}]*?background-color:\s*#00FF00',
     Css,
-    'CSS body background color should be the hex code for clWindow');
+    'CSS HTML background color should be the hex code for clWindow');
   Assert.IsMatch(
-    'pre\s*{[^}]*?background-color:\s*#0000FF',
+    'body::-webkit-scrollbar\s*{[^}]*?background-color:\s*#00FF00',
     Css,
-    'CSS body background color should be the hex code for clBtnFace');
+    'CSS scrollbar background color should be the hex code for clWindow');
+  Assert.IsMatch(
+    'body::-webkit-scrollbar-thumb\s*{[^}]*?background-color:\s*#0000FF',
+    Css,
+    'CSS scrollbar thumb color should be the hex code for clBtnFace');
   Assert.IsMatch(
     'a\s*{[^}]*?color:\s*#FFFF00',
     Css,
-    'CSS body background color should be the hex code for clHotLight');
+    'CSS link color should be the hex code for clHotLight');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -183,7 +183,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TRuleHtmlGeneratorTest.TestEmbedsJsLibScript;
+procedure TRuleHtmlGeneratorTest.TestLinksToJsLibScript;
 var
   Rule: TRule;
   HtmlText: string;
@@ -198,7 +198,7 @@ begin
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<script>' + LintResources.JsLibScript + '</script>');
+    Assert.Contains(HtmlText, '<script src="script.js"></script>');
   finally
     FreeAndNil(Rule);
   end;
@@ -452,31 +452,6 @@ begin
   finally
     FreeAndNil(Rule);
   end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure THtmlUtilsTest.TestBuildHtmlPage;
-var
-  HtmlStr: string;
-begin
-  HtmlStr := THtmlUtils.BuildHtmlPage('!!BODY!!', '!!CSS!!', '!!JS!!', '!!BODYCLASS!!');
-
-  Assert.Contains(HtmlStr, '<style>!!CSS!!</style>');
-  Assert.Contains(HtmlStr, '<body class="!!BODYCLASS!!">  !!BODY!!');
-  Assert.Contains(HtmlStr, '<script>!!JS!!</script>');
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure THtmlUtilsTest.TestBuildHtmlPageCreatesIE8Page;
-var
-  HtmlStr: string;
-begin
-  HtmlStr := THtmlUtils.BuildHtmlPage('!!BODY!!', '!!CSS!!', '!!BODYCLASS!!');
-
-  Assert.StartsWith('<!DOCTYPE html>', HtmlStr);
-  Assert.Contains(HtmlStr, '<meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge"/>');
 end;
 
 //______________________________________________________________________________________________________________________
