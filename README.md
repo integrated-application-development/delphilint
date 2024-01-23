@@ -51,6 +51,7 @@ Prerequisites:
 * Java 11+
 * PowerShell
 * `npm`
+* Microsoft Edge 79.0.309 or above
 * `vsce` (can be installed with `npm install --global @vscode/vsce`)
 * Visual Studio Code
 
