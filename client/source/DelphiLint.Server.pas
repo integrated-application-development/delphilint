@@ -691,7 +691,7 @@ function TLintServer.StartExtServer(
       try
         PortStr := TFile.ReadAllText(PortFile);
       except
-        on EReadError do begin
+        on EInOutError do begin
           // File was locked, try again
           Sleep(50);
         end;
