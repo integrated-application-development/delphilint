@@ -157,9 +157,11 @@ uses
   , DelphiLint.Utils
   , DelphiLint.Resources
   , DelphiLint.Context
+  , DelphiLint.ExtWebView2
   ;
 
 {$R *.dfm}
+
 
 constructor TLintToolFrame.Create(Owner: TComponent);
 var
@@ -203,7 +205,6 @@ begin
   TThread.ForceQueue(
     TThread.Current,
     procedure begin
-      Log.Info('Creating web view');
       RuleBrowser.CreateWebView;
     end);
 end;
@@ -699,24 +700,51 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.RuleBrowserCreateWebViewCompleted(Sender: TCustomEdgeBrowser; AResult: HRESULT);
+var
+  Controller2: ICoreWebView2Controller2;
+  Color: COREWEBVIEW2_COLOR;
+  DelphiColor: Integer;
 begin
+  if not RuleBrowser.WebViewCreated then begin
+    Exit;
+  end;
+
   RuleBrowser.SettingsInterface.Set_AreDevToolsEnabled({$IFDEF DEBUG}1{$ELSE}0{$ENDIF});
   RuleBrowser.SettingsInterface.Set_AreDefaultContextMenusEnabled(0);
   RuleBrowser.SettingsInterface.Set_IsZoomControlEnabled(0);
+
+  if Supports(RuleBrowser.ControllerInterface, ICoreWebView2Controller2, Controller2) then begin
+    DelphiColor := ColorToRGB(LintContext.IDEServices.GetSystemColor(clWindow));
+    Color.R := GetRValue(DelphiColor);
+    Color.G := GetGValue(DelphiColor);
+    Color.B := GetBValue(DelphiColor);
+    Color.A := 255;
+    Log.Info('Default webview background set (%d)', [Controller2.Put_DefaultBackgroundColor(Color)]);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.RuleBrowserNavigationStarting(Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
 var
+  ArgsInterface3: ICoreWebView2NavigationStartingEventArgs3;
+  NavigationKind: COREWEBVIEW2_NAVIGATION_KIND;
   Uri: PWideChar;
 begin
+  if Supports(Args.ArgsInterface, ICoreWebView2NavigationStartingEventArgs3, ArgsInterface3) then begin
+    ArgsInterface3.Get_NavigationKind(NavigationKind);
+    if NavigationKind = COREWEBVIEW2_NAVIGATION_KIND_BACK_OR_FORWARD then begin
+      Log.Info('Back/forward requested in rule webview, cancelling');
+      Args.ArgsInterface.Set_Cancel(1);
+    end;
+  end;
+
   Args.ArgsInterface.Get_uri(Uri);
- if not StartsText('file:', Uri) then begin
-   Log.Info('New URL requested in rule webview, intercepting and showing externally');
-   Args.ArgsInterface.Set_Cancel(1);
-   ShellExecute(0, 'open', Uri, nil, nil, SW_SHOWNORMAL);
- end;
+  if not StartsText('file:', Uri) then begin
+    Log.Info('New URL requested in rule webview, intercepting and showing externally');
+    Args.ArgsInterface.Set_Cancel(1);
+    ShellExecute(0, 'open', Uri, nil, nil, SW_SHOWNORMAL);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

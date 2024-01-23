@@ -60,7 +60,8 @@ contains
   DelphiLint.Resources in 'DelphiLint.Resources.pas',
   DelphiLint.Context in 'DelphiLint.Context.pas',
   DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
-  DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas';
+  DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas',
+  DelphiLint.ExtWebView2 in 'DelphiLint.ExtWebView2.pas';
 
 {$R *Additional.res}
 
