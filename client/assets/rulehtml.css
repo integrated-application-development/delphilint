@@ -59,11 +59,16 @@ h3 {
 
 pre, code {
   font-size: 12px;
+  border-radius: 4px;
 }
 
 pre {
   padding: 0.5em 0.5em;
   font-family: "Consolas", monospace;
+}
+
+code {
+  padding: 0.1em 0.3em;
 }
 
 .impacts {
