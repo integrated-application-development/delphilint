@@ -13,6 +13,10 @@ body {
   overflow-y: auto;
 }
 
+body::-webkit-scrollbar {
+  width: 17px;
+}
+
 .content {
   margin: 8px;
 }
