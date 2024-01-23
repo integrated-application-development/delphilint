@@ -11,11 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Syntax highlighting for code examples in rule descriptions
 * Diff views for code examples in rule descriptions
+* Enhanced security for temporary HTML files
 
 ### Changed
 
 * Inline issue display and underline have been redesigned to be more prominent
 * The server is no longer immediately restarted if it is killed - instead it is restarted when it is next needed
+* The embedded HTML renderer is now Microsoft Edge instead of Internet Explorer
+* Zoom functionality, history navigation, and the right click context menu is now disabled in rule descriptions
+* The rule description scrollbar has been redesigned to be more subtle
 
 ### Fixed
 
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * A plugin-destabilising access violation no longer occurs if the server connection times out
 * Analyzing a file that has a relative path including spaces no longer fails with an error in Connected Mode
 * Analyzing a file with a file-level issue no longer raises an exception
+* Connecting to the DelphiLint server no longer occasionally fails to read a temp file
 
 ## [0.6.0] - 2023-10-31
 
