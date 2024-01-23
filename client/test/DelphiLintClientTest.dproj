@@ -2,7 +2,7 @@
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Console</AppType>
-        <Config Condition="'$(Config)'==''">TestInsight</Config>
+        <Config Condition="'$(Config)'==''">GUI</Config>
         <FrameworkType>None</FrameworkType>
         <MainSource>DelphiLintClientTest.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
