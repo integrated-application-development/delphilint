@@ -17,7 +17,7 @@ async function getServer() {
     if (!serverPromise) {
       serverPromise = createServer();
     }
-    let s = await serverPromise;
+    const s = await serverPromise;
     serverPromise = undefined;
     return s;
   } else {
@@ -31,7 +31,7 @@ async function createServer(): Promise<LintServer> {
       vscode.window.createOutputChannel("DelphiLint Server");
   }
 
-  let s = new LintServer(
+  const s = new LintServer(
     settings.getServerJar(),
     settings.getJavaExe(),
     settings.SETTINGS_DIR,
@@ -46,25 +46,25 @@ async function createServer(): Promise<LintServer> {
 export function activate(context: vscode.ExtensionContext) {
   settings.registerVersion(context.extension.packageJSON.version);
 
-  let lintIssueCollection =
+  const lintIssueCollection =
     vscode.languages.createDiagnosticCollection("delphilint");
   context.subscriptions.push(lintIssueCollection);
 
-  let analyzeThisFileCommand = vscode.commands.registerCommand(
+  const analyzeThisFileCommand = vscode.commands.registerCommand(
     "delphilint-vscode.analyzeThisFile",
-    async () => await analyzeThisFile(getServer, lintIssueCollection)
+    async () => analyzeThisFile(getServer, lintIssueCollection)
   );
   context.subscriptions.push(analyzeThisFileCommand);
 
-  let analyzeAllOpenFilesCommand = vscode.commands.registerCommand(
+  const analyzeAllOpenFilesCommand = vscode.commands.registerCommand(
     "delphilint-vscode.analyzeAllOpenFiles",
-    async () => await analyzeAllOpenFiles(getServer, lintIssueCollection)
+    async () => analyzeAllOpenFiles(getServer, lintIssueCollection)
   );
   context.subscriptions.push(analyzeAllOpenFilesCommand);
 
-  let chooseActiveProjectCommand = vscode.commands.registerCommand(
+  const chooseActiveProjectCommand = vscode.commands.registerCommand(
     "delphilint-vscode.chooseActiveProject",
-    async () => await chooseActiveProject()
+    async () => chooseActiveProject()
   );
   context.subscriptions.push(chooseActiveProjectCommand);
 

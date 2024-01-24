@@ -1,7 +1,7 @@
 export class Exclusive<T> {
-  private _resource: T;
+  private readonly _resource: T;
+  private readonly _waiting: (() => void)[];
   private _locked: boolean;
-  private _waiting: (() => void)[];
 
   constructor(resource: T) {
     this._resource = resource;
@@ -20,7 +20,7 @@ export class Exclusive<T> {
 
   private async acquire(): Promise<T> {
     if (this._locked) {
-      await new Promise<void>((resolve, reject) => this._waiting.push(resolve));
+      await new Promise<void>((resolve, _rjct) => this._waiting.push(resolve));
     }
     this._locked = true;
     return this._resource;
@@ -28,7 +28,7 @@ export class Exclusive<T> {
 
   private release() {
     this._locked = false;
-    let nextWaiting = this._waiting.shift();
+    const nextWaiting = this._waiting.shift();
     if (nextWaiting) {
       nextWaiting();
     }

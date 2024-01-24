@@ -58,11 +58,11 @@ export type LintResponseAction = (message: LintMessage) => void;
 
 class ExtServer {
   private _process?: ChildProcess;
-  private _socket: Socket;
+  private readonly _socket: Socket;
   private _ready: boolean;
   private _exited: boolean;
-  private _readyListeners: (() => void)[];
-  private _exitListeners: (() => void)[];
+  private readonly _readyListeners: (() => void)[];
+  private readonly _exitListeners: (() => void)[];
 
   constructor(
     jar: string,
@@ -97,12 +97,12 @@ class ExtServer {
     workingDir: string,
     onLogMessage: (msg: string) => void
   ) {
-    let port = await new Promise<number>((resolve, reject) => {
-      let portFile = tmp.fileSync().name;
+    const port = await new Promise<number>((resolve, reject) => {
+      const portFile = tmp.fileSync().name;
 
-      fs.watchFile(portFile, { interval: 50 }, (before, after) => {
+      fs.watchFile(portFile, { interval: 50 }, (_before, _after) => {
         fs.unwatchFile(portFile);
-        let portStr = fs.readFileSync(portFile, "utf8");
+        const portStr = fs.readFileSync(portFile, "utf8");
         resolve(parseInt(portStr));
         fs.rmSync(portFile);
       });
@@ -132,7 +132,7 @@ class ExtServer {
   }
 
   readyWait(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, _reject) => {
       if (this._ready) {
         resolve();
       } else {
@@ -155,14 +155,14 @@ class ExtServer {
 }
 
 export class LintServer {
-  private textEncoder: TextEncoder;
+  private readonly textEncoder: TextEncoder;
   private nextId: number;
-  private responseActions: Map<number, LintResponseAction>;
-  private rejections: Map<number, (err: any) => void>;
-  private jar: string;
-  private javaExe: string;
-  private workingDir: string;
-  private processLog: (msg: string) => void;
+  private readonly responseActions: Map<number, LintResponseAction>;
+  private readonly rejections: Map<number, (err: any) => void>;
+  private readonly jar: string;
+  private readonly javaExe: string;
+  private readonly workingDir: string;
+  private readonly processLog: (msg: string) => void;
   private _extServer?: ExtServer;
   private _partialMessage?: Buffer;
 
@@ -189,7 +189,7 @@ export class LintServer {
     if (this._extServer) {
       return this._extServer;
     } else {
-      return await this.startExternalServer();
+      return this.startExternalServer();
     }
   }
 
@@ -219,16 +219,18 @@ export class LintServer {
   }
 
   stopExternalServer(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, _reject) => {
       if (this._extServer) {
         this._extServer.addExitListener(() => {
           this._extServer = undefined;
           resolve();
         });
-        this.sendMessage(LintMessageType.quit, null, (err) => {});
+        this.sendMessage(LintMessageType.quit, null, (_err) => {});
 
         setTimeout(() => {
-          let process = this._extServer ? this._extServer.process() : undefined;
+          const process = this._extServer
+            ? this._extServer.process()
+            : undefined;
           if (process) {
             process.kill();
           }
@@ -242,30 +244,30 @@ export class LintServer {
       buffer = Buffer.concat([this._partialMessage.valueOf(), buffer]);
     }
 
-    let category = buffer.readUint8(0);
-    let id = buffer.readInt32BE(1);
+    const category = buffer.readUint8(0);
+    const id = buffer.readInt32BE(1);
 
     try {
-      let length = buffer.readInt32BE(1 + 4);
+      const length = buffer.readInt32BE(1 + 4);
       if (buffer.byteLength !== 1 + 4 + 4 + length) {
         this._partialMessage = buffer;
         return;
       }
       this._partialMessage = undefined;
 
-      let dataStr = buffer.toString("utf8", 1 + 4 + 4);
-      let dataObj = JSON.parse(dataStr);
+      const dataStr = buffer.toString("utf8", 1 + 4 + 4);
+      const dataObj = JSON.parse(dataStr);
 
-      let onResponse = this.responseActions.get(id);
+      const onResponse = this.responseActions.get(id);
       if (onResponse) {
         onResponse({
-          category: category,
+          category,
           data: dataObj,
         });
         this.responseActions.delete(id);
       }
     } catch (err) {
-      let reject = this.rejections.get(id);
+      const reject = this.rejections.get(id);
       if (reject) {
         reject(err);
       } else {
@@ -279,16 +281,16 @@ export class LintServer {
     id: number,
     data: Object
   ) {
-    let dataStr = JSON.stringify(data);
-    let dataBytes = this.textEncoder.encode(dataStr);
+    const dataStr = JSON.stringify(data);
+    const dataBytes = this.textEncoder.encode(dataStr);
 
-    let messageBytes = Buffer.alloc(1 + 4 + 4 + dataBytes.length);
+    const messageBytes = Buffer.alloc(1 + 4 + 4 + dataBytes.length);
     messageBytes.writeUint8(category.valueOf(), 0);
     messageBytes.writeInt32BE(id, 1);
     messageBytes.writeInt32BE(dataBytes.length, 1 + 4);
     messageBytes.write(dataStr, 1 + 4 + 4, "utf8");
 
-    let extServer = await this.externalServer();
+    const extServer = await this.externalServer();
     extServer.socket().write(messageBytes);
   }
 
@@ -298,7 +300,7 @@ export class LintServer {
     rejection: (err: any) => void,
     onResponse?: LintResponseAction
   ) {
-    let id = this.nextId;
+    const id = this.nextId;
     this.nextId += 1;
     this.rejections.set(id, rejection);
     if (onResponse) {
@@ -308,7 +310,7 @@ export class LintServer {
   }
 
   async initialize(msg: RequestInitialize): Promise<void> {
-    return await new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.sendMessage(LintMessageType.initialize, msg, reject, (msg) => {
         if (msg.category === LintMessageType.initialized) {
           resolve();
@@ -322,7 +324,7 @@ export class LintServer {
   }
 
   async analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
-    return await new Promise<LintIssue[]>((resolve, reject) => {
+    return new Promise<LintIssue[]>((resolve, reject) => {
       this.sendMessage(LintMessageType.analyze, msg, reject, (msg) => {
         if (msg.category === LintMessageType.analyzeResult) {
           resolve(msg.data.issues);

@@ -8,7 +8,7 @@ let statusItem: Exclusive<LintStatusItem> | undefined;
 
 export function getStatusItem(): Exclusive<LintStatusItem> {
   if (!statusItem) {
-    let statusItemRaw = new LintStatusItem(getActiveProject());
+    const statusItemRaw = new LintStatusItem(getActiveProject());
     statusItem = new Exclusive(statusItemRaw);
   }
 
@@ -19,7 +19,7 @@ export function showIssues(
   issues: LintIssue[],
   issueCollection: vscode.DiagnosticCollection
 ) {
-  let files: Map<string, LintIssue[]> = issues.reduce(
+  const files: Map<string, LintIssue[]> = issues.reduce(
     (aggregate, issue) =>
       aggregate.set(issue.file, [...(aggregate.get(issue.file) ?? []), issue]),
     new Map<string, LintIssue[]>()
@@ -27,11 +27,11 @@ export function showIssues(
 
   for (const [fsPath, fileIssues] of files.entries()) {
     const uri = vscode.Uri.file(fsPath);
-    let diagnostics: vscode.Diagnostic[] = [];
+    const diagnostics: vscode.Diagnostic[] = [];
 
     for (const issue of fileIssues) {
       if (issue.range) {
-        let diagnostic = new vscode.Diagnostic(
+        const diagnostic = new vscode.Diagnostic(
           new vscode.Range(
             issue.range.startLine - 1,
             issue.range.startOffset,

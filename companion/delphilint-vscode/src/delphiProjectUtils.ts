@@ -22,13 +22,13 @@ async function getProjectFilesInWorkspace() {
 }
 
 export async function promptProject(): Promise<ProjectChoice> {
-  let projectFiles: string[] = await getProjectFilesInWorkspace();
+  const projectFiles: string[] = await getProjectFilesInWorkspace();
 
-  let quickPickItems = projectFiles
+  const quickPickItems = projectFiles
     .map((file) => {
-      let basename = path.basename(file);
+      const basename = path.basename(file);
 
-      let containingFolders = vscode.workspace.workspaceFolders?.filter(
+      const containingFolders = vscode.workspace.workspaceFolders?.filter(
         (workspace) =>
           file.toLowerCase().startsWith(workspace.uri.fsPath.toLowerCase())
       );
@@ -52,7 +52,7 @@ export async function promptProject(): Promise<ProjectChoice> {
     path: "__none__",
   });
 
-  let chosenItem = await vscode.window.showQuickPick(quickPickItems, {
+  const chosenItem = await vscode.window.showQuickPick(quickPickItems, {
     canPickMany: false,
     title: "DelphiLint: Choose Active Delphi Project",
     ignoreFocusOut: true,
@@ -66,7 +66,7 @@ export async function promptProject(): Promise<ProjectChoice> {
 }
 
 export async function promptActiveProject(): Promise<ProjectChoice> {
-  let proj = await promptProject();
+  const proj = await promptProject();
   setActiveProject(proj);
 
   return proj;
@@ -85,7 +85,7 @@ export async function getOrPromptActiveProject(): Promise<ProjectChoice> {
 export function getProjectOptions(
   projectFilePath: string
 ): ProjectOptions | undefined {
-  let projectOptionsPath = projectFilePath
+  const projectOptionsPath = projectFilePath
     .toLowerCase()
     .replace(".dproj", ".delphilint");
   if (fs.existsSync(projectOptionsPath)) {

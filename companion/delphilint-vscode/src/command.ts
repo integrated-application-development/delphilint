@@ -30,7 +30,7 @@ function isFileInProject(filePath: string, baseDir: string): boolean {
 }
 
 function getDefaultBaseDir(inputFiles: string[]): string {
-  let workspaces = inputFiles
+  const workspaces = inputFiles
     .map((file) => vscode.workspace.getWorkspaceFolder(vscode.Uri.file(file)))
     .filter((dir) => dir) as vscode.WorkspaceFolder[];
 
@@ -40,7 +40,7 @@ function getDefaultBaseDir(inputFiles: string[]): string {
     );
   }
 
-  let baseWorkspace = workspaces[0];
+  const baseWorkspace = workspaces[0];
 
   if (workspaces.length > 1) {
     display.showInfo(
@@ -60,7 +60,7 @@ function constructInputFiles(
     return undefined;
   }
 
-  let sourceFiles = inputFiles.filter(
+  const sourceFiles = inputFiles.filter(
     (file) => isFileDelphiSource(file) && isFileInProject(file, baseDir)
   );
 
@@ -79,18 +79,18 @@ async function doAnalyze(
   statusUpdate: LoggerFunction,
   msg: RequestAnalyze
 ) {
-  let sourceFiles = msg.inputFiles.filter((file) => isFileDelphiSource(file));
+  const sourceFiles = msg.inputFiles.filter((file) => isFileDelphiSource(file));
 
-  let flagshipFile = path.basename(sourceFiles[0]);
-  let otherSourceFilesMsg =
+  const flagshipFile = path.basename(sourceFiles[0]);
+  const otherSourceFilesMsg =
     sourceFiles.length > 1 ? ` + ${sourceFiles.length - 1} more` : "";
-  let analyzingMsg = `Analyzing ${flagshipFile}${otherSourceFilesMsg}...`;
+  const analyzingMsg = `Analyzing ${flagshipFile}${otherSourceFilesMsg}...`;
   statusUpdate(analyzingMsg);
 
-  let issues = await server.analyze(msg);
+  const issues = await server.analyze(msg);
   display.showIssues(issues, issueCollection);
 
-  let issueWord = issues.length === 1 ? "issue" : "issues";
+  const issueWord = issues.length === 1 ? "issue" : "issues";
   statusUpdate(`${issues.length} ${issueWord} found`);
 }
 
@@ -107,17 +107,17 @@ async function analyzeFiles(
     let apiToken = "";
     let sonarHostUrl = "";
     let projectKey = "";
-    let baseDir: string | undefined = undefined;
+    let baseDir: string | null = null;
     let projectPropertiesPath = "";
 
-    let projectChoice = await getOrPromptActiveProject();
+    const projectChoice = await getOrPromptActiveProject();
     statusItem.setActiveProject(projectChoice);
-    let projectFile = projectChoice || undefined;
+    const projectFile = projectChoice || null;
 
     if (projectFile) {
       baseDir = path.dirname(projectFile);
 
-      let projectOptions = getProjectOptions(projectFile);
+      const projectOptions = getProjectOptions(projectFile);
       if (projectOptions) {
         baseDir = projectOptions.baseDir();
         projectPropertiesPath = projectOptions.projectPropertiesPath();
@@ -133,7 +133,11 @@ async function analyzeFiles(
 
     statusItem.setAction("Checking files...");
 
-    let inputFiles = constructInputFiles(files, baseDir, projectFile);
+    const inputFiles = constructInputFiles(
+      files,
+      baseDir,
+      projectFile ?? undefined
+    );
     if (!inputFiles) {
       throw new NoAnalyzableFileError(
         "There are no selected Delphi files that are analyzable under the current project."
@@ -141,25 +145,25 @@ async function analyzeFiles(
     }
 
     statusItem.setAction("Starting server...");
-    let server = await serverSupplier();
+    const server = await serverSupplier();
 
     statusItem.setAction("Initializing server...");
     await server.initialize({
       bdsPath: settings.getBdsPath(),
-      apiToken: apiToken,
+      apiToken,
       compilerVersion: settings.getCompilerVersion(),
       defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
-      sonarHostUrl: sonarHostUrl,
+      sonarHostUrl,
     });
 
     statusItem.setAction("Analyzing...");
     await doAnalyze(server, issueCollection, statusItem.setAction, {
-      baseDir: baseDir,
+      baseDir,
       inputFiles: projectFile ? [...inputFiles, projectFile] : inputFiles,
-      projectKey: projectKey,
-      projectPropertiesPath: projectPropertiesPath,
-      sonarHostUrl: sonarHostUrl,
-      apiToken: apiToken,
+      projectKey,
+      projectPropertiesPath,
+      sonarHostUrl,
+      apiToken,
     });
   } finally {
     inAnalysis = false;
@@ -170,7 +174,7 @@ export async function analyzeThisFile(
   serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection
 ) {
-  let activeTextEditor = vscode.window.activeTextEditor;
+  const activeTextEditor = vscode.window.activeTextEditor;
   if (!activeTextEditor) {
     display.showError("There is no active file for DelphiLint to analyze.");
     return;
@@ -181,7 +185,7 @@ export async function analyzeThisFile(
     return;
   }
 
-  let currentFileUri = activeTextEditor.document.uri;
+  const currentFileUri = activeTextEditor.document.uri;
 
   await display.getStatusItem().with(async (statusItem) => {
     try {
@@ -210,7 +214,7 @@ export async function analyzeAllOpenFiles(
   serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection
 ) {
-  let uris = vscode.window.tabGroups.all.flatMap((group) =>
+  const uris = vscode.window.tabGroups.all.flatMap((group) =>
     group.tabs
       .map((tab) => {
         if (typeof tab.input === "object" && tab.input && "uri" in tab.input) {
@@ -222,7 +226,7 @@ export async function analyzeAllOpenFiles(
       .filter((tab) => tab !== undefined)
   );
 
-  let openTextEditors = uris.map((uri) => (uri as vscode.Uri).fsPath);
+  const openTextEditors = uris.map((uri) => (uri as vscode.Uri).fsPath);
 
   if (openTextEditors.length === 0) {
     display.showError("There are no open files for DelphiLint to analyze.");
@@ -258,7 +262,7 @@ export async function analyzeAllOpenFiles(
 }
 
 export async function chooseActiveProject() {
-  let activeProject = await promptActiveProject();
+  const activeProject = await promptActiveProject();
   display.getStatusItem().with(async (resource) => {
     resource.setActiveProject(activeProject);
   });

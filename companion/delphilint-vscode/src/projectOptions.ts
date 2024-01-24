@@ -17,12 +17,12 @@ type ProjectOptionsIni = {
 };
 
 export class ProjectOptions {
-  private optionsIni: ProjectOptionsIni;
-  private iniPath: string;
+  private readonly optionsIni: ProjectOptionsIni;
+  private readonly iniPath: string;
 
   constructor(path: string) {
     this.iniPath = path;
-    let optionsStr = fs.readFileSync(this.iniPath, "utf8");
+    const optionsStr = fs.readFileSync(this.iniPath, "utf8");
     this.optionsIni = ini.parse(optionsStr) as ProjectOptionsIni;
   }
 

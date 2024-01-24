@@ -25,8 +25,8 @@ type LintSettingsIni = {
 };
 
 function getSettings(path: string): LintSettingsIni {
-  let settingsStr = fs.readFileSync(path, "utf8");
-  let settings = ini.parse(settingsStr);
+  const settingsStr = fs.readFileSync(path, "utf8");
+  const settings = ini.parse(settingsStr);
   return settings as LintSettingsIni;
 }
 
@@ -35,7 +35,7 @@ function getVscodeConfig(section: string): string {
 }
 
 export function getSonarDelphiJar(): string {
-  let settings = getSettings(SETTINGS_FILE);
+  const settings = getSettings(SETTINGS_FILE);
   return (
     settings?.Resources?.SonarDelphiJarOverride ||
     path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar")
@@ -43,7 +43,7 @@ export function getSonarDelphiJar(): string {
 }
 
 export function getServerJar(): string {
-  let settings = getSettings(SETTINGS_FILE);
+  const settings = getSettings(SETTINGS_FILE);
 
   if (
     settings?.Resources?.ServerJarOverride &&
@@ -52,7 +52,7 @@ export function getServerJar(): string {
     return settings.Resources.ServerJarOverride;
   }
 
-  let serverVersionConfig = getVscodeConfig("delphilint.serverVersion");
+  const serverVersionConfig = getVscodeConfig("delphilint.serverVersion");
 
   if (serverVersionConfig.length > 0) {
     return path.join(
@@ -60,9 +60,9 @@ export function getServerJar(): string {
       `delphilint-server-${serverVersionConfig}.jar`
     );
   } else if (version.endsWith("+dev")) {
-    let serverNameStart = "delphilint-server-" + version.toLowerCase();
+    const serverNameStart = "delphilint-server-" + version.toLowerCase();
 
-    let validServers = fs
+    const validServers = fs
       .readdirSync(SETTINGS_DIR)
       .map((file) => file.toLowerCase())
       .filter(
@@ -82,7 +82,7 @@ export function getServerJar(): string {
       );
     }
   } else {
-    let serverPath = path.join(
+    const serverPath = path.join(
       SETTINGS_DIR,
       `delphilint-server-${version}.jar`
     );
@@ -97,12 +97,12 @@ export function getServerJar(): string {
 }
 
 export function getJavaExe(): string {
-  let override = getSettings(SETTINGS_FILE).Resources?.JavaExeOverride;
+  const override = getSettings(SETTINGS_FILE).Resources?.JavaExeOverride;
   if (override) {
     return override;
   }
 
-  let javaHome = process.env.JAVA_HOME;
+  const javaHome = process.env.JAVA_HOME;
   if (!javaHome) {
     return "";
   } else {
