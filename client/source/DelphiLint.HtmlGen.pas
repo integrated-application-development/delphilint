@@ -47,8 +47,6 @@ type
     function GenerateHtmlText(Rule: TRule): string;
     function GenerateHtmlFile(Rule: TRule): string;
     function GenerateCss: string;
-
-    property TempPath: string read FTempPath;
   end;
 
 implementation
