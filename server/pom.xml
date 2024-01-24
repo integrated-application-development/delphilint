@@ -6,7 +6,7 @@
 
   <groupId>au.com.integradev.delphilint</groupId>
   <artifactId>delphilint-parent</artifactId>
-  <version>0.7.0</version>
+  <version>0.7.0+dev.${revision}</version>
   <packaging>pom</packaging>
 
   <modules>
