@@ -4,14 +4,19 @@ import au.com.integradev.delphilint.analysis.TextRange;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /** Utility class emulating SonarQube's issue hashing functionality. */
-public class SonarHasher {
+public final class SonarHasher {
+  private static final Logger LOG = LogManager.getLogger(SonarHasher.class);
   private static final Pattern MATCH_ALL_WHITESPACES = Pattern.compile("\\s");
 
   private SonarHasher() {
@@ -19,14 +24,20 @@ public class SonarHasher {
   }
 
   public static String hashFileRange(Path filePath, TextRange textRange) {
-    return hashFileLine(filePath, textRange.getStartLine());
+    return hashFileLine(filePath, textRange.getStartLine(), StandardCharsets.UTF_8);
+  }
+
+  public static String hashFileRange(Path filePath, TextRange textRange, Charset charset) {
+    return hashFileLine(filePath, textRange.getStartLine(), charset);
   }
 
   public static String hashFileLine(Path filePath, int lineNum) {
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(Files.newInputStream(filePath)))) {
+    return hashFileLine(filePath, lineNum, StandardCharsets.UTF_8);
+  }
 
-      String textToHash = "";
+  public static String hashFileLine(Path filePath, int lineNum, Charset charset) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(Files.newInputStream(filePath), charset))) {
 
       String line = reader.readLine();
       if (line == null) {
@@ -34,6 +45,7 @@ public class SonarHasher {
       }
       int i = 1;
 
+      String textToHash = "";
       do {
         // The SonarQube source code suggests that it hashes only the characters in
         // the text range. Experimental results have shown this not to be the case -
@@ -48,6 +60,7 @@ public class SonarHasher {
 
       return hash(textToHash);
     } catch (IOException e) {
+      LOG.error(e);
       return null;
     }
   }

@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Analyzing a file that has a relative path including spaces no longer fails with an error in Connected Mode
 * Analyzing a file with a file-level issue no longer raises an exception
 * Connecting to the DelphiLint server no longer occasionally fails to read a temp file
+* Issue matching now correctly handles lines with special characters in ANSI-encoded files
 
 ## [0.6.0] - 2023-10-31
 

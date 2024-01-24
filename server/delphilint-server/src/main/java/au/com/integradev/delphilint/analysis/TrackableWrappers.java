@@ -28,7 +28,7 @@ import org.sonarsource.sonarlint.core.commons.RuleType;
 import org.sonarsource.sonarlint.core.commons.TextRangeWithHash;
 import org.sonarsource.sonarlint.core.issuetracking.Trackable;
 
-public class TrackableWrappers {
+public final class TrackableWrappers {
   private TrackableWrappers() {
     // Utility class
   }
@@ -74,7 +74,9 @@ public class TrackableWrappers {
     public String getLineHash() {
       if (issue.getTextRange() != null && issue.getInputFile() != null) {
         return SonarHasher.hashFileRange(
-            Path.of(issue.getInputFile().uri()), new TextRange(issue.getTextRange()));
+            Path.of(issue.getInputFile().uri()),
+            new TextRange(issue.getTextRange()),
+            issue.getInputFile().getCharset());
       } else {
         return null;
       }

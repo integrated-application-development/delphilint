@@ -4,12 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import au.com.integradev.delphilint.analysis.TextRange;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class SonarHasherTest {
   private static final Path FILE_RESOURCE =
-      Path.of("src/test/resources/au/com/integradev/delphilint/remote/LocalFileA.pas");
+      Path.of("src/test/resources/au/com/integradev/delphilint/remote/AsciiFile.pas");
+  private static final Path FILE_RESOURCE_UTF8 =
+      Path.of("src/test/resources/au/com/integradev/delphilint/remote/Utf8File.pas");
+  private static final Path FILE_RESOURCE_ANSI =
+      Path.of("src/test/resources/au/com/integradev/delphilint/remote/AnsiFile.pas");
 
   @Test
   void textWithNoWhitespaceProducesCorrectMd5Hash() {
@@ -37,6 +42,19 @@ class SonarHasherTest {
   void differentTextProducesDifferentHash() {
     assertNotEquals(
         SonarHasher.hash("The quick brown fox"), SonarHasher.hash("jumps over the lazy dog"));
+  }
+
+  @Test
+  void utf8Hash() {
+    String expectedHash = SonarHasher.hashFileLine(FILE_RESOURCE_UTF8, 6, StandardCharsets.UTF_8);
+    assertEquals(expectedHash, SonarHasher.hash("TMy\uD83C\uDF55Pizza = class"));
+  }
+
+  @Test
+  void ansiHash() {
+    String expectedHash =
+        SonarHasher.hashFileLine(FILE_RESOURCE_ANSI, 6, StandardCharsets.ISO_8859_1);
+    assertEquals(expectedHash, SonarHasher.hash("TMy£PoundSterling = class"));
   }
 
   @Test
