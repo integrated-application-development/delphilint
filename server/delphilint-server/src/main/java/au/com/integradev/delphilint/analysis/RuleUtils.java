@@ -19,11 +19,7 @@ package au.com.integradev.delphilint.analysis;
 
 import java.util.List;
 
-public class RuleUtils {
-  private RuleUtils() {
-    // Utility class
-  }
-
+public final class RuleUtils {
   private static final List<String> INCOMPATIBLE_RULES =
       List.of(
           "delph:UnusedMethodsRule",
@@ -31,6 +27,10 @@ public class RuleUtils {
           "delph:UnusedGlobalVariablesRule",
           "delph:UnusedPropertiesRule",
           "delph:UnusedTypesRule");
+
+  private RuleUtils() {
+    // Utility class
+  }
 
   public static boolean isIncompatible(String ruleKey) {
     return INCOMPATIBLE_RULES.contains(ruleKey);

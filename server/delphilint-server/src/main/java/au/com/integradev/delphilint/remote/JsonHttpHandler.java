@@ -26,8 +26,11 @@ import java.net.http.HttpResponse.BodySubscriber;
 import java.net.http.HttpResponse.ResponseInfo;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JsonHttpHandler implements BodyHandler<Supplier<JsonNode>> {
+  private static final Logger LOG = LogManager.getLogger(JsonHttpHandler.class);
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @Override
@@ -46,6 +49,7 @@ public class JsonHttpHandler implements BodyHandler<Supplier<JsonNode>> {
                   try {
                     return mapper.readTree(body);
                   } catch (JsonProcessingException e) {
+                    LOG.error(e);
                     return null;
                   }
                 });

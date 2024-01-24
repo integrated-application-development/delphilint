@@ -23,10 +23,11 @@ import au.com.integradev.delphilint.server.message.data.IssueData;
 import au.com.integradev.delphilint.server.message.data.IssueMetadataData;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ResponseAnalyzeResult {
+public final class ResponseAnalyzeResult {
   @JsonProperty private Set<IssueData> issues;
 
   private ResponseAnalyzeResult(Set<IssueData> issues) {
@@ -37,7 +38,7 @@ public class ResponseAnalyzeResult {
     issues.forEach(issue -> issue.setFile(baseDir.resolve(issue.getFile()).toString()));
   }
 
-  public static ResponseAnalyzeResult fromIssueSet(Set<DelphiIssue> delphiIssues) {
+  public static ResponseAnalyzeResult fromIssueSet(Collection<DelphiIssue> delphiIssues) {
     Set<IssueData> issues =
         delphiIssues.stream()
             .map(

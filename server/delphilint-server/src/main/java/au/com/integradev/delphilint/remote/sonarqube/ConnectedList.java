@@ -29,8 +29,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ConnectedList<T> implements Iterable<T> {
+  private static final Logger LOG = LogManager.getLogger(ConnectedList.class);
   private final String arrayName;
   private final String url;
   private final SonarApi api;
@@ -45,28 +48,37 @@ public class ConnectedList<T> implements Iterable<T> {
     this.clazz = clazz;
   }
 
-  private int getPageCount(JsonNode rootNode) {
-    if (rootNode == null || rootNode.get("paging") == null) return -1;
+  private static int getPageCount(JsonNode rootNode) {
+    if (rootNode == null || rootNode.get("paging") == null) {
+      return -1;
+    }
 
     JsonNode paging = rootNode.get("paging");
     JsonNode pageTotal = paging.get("total");
 
-    if (pageTotal == null || !pageTotal.isInt()) return -1;
+    if (pageTotal == null || !pageTotal.isInt()) {
+      return -1;
+    }
 
     return pageTotal.asInt();
   }
 
   private Collection<T> getArrayContents(JsonNode rootNode) {
-    if (rootNode == null || rootNode.get(arrayName) == null) return Collections.emptyList();
+    if (rootNode == null || rootNode.get(arrayName) == null) {
+      return Collections.emptyList();
+    }
 
     JsonNode array = rootNode.get(arrayName);
 
-    if (array == null || !array.isArray()) return Collections.emptyList();
+    if (array == null || !array.isArray()) {
+      return Collections.emptyList();
+    }
 
     try {
       return jsonMapper.treeToValue(
           array, jsonMapper.getTypeFactory().constructCollectionType(List.class, clazz));
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       return Collections.emptyList();
     }
   }
@@ -79,7 +91,7 @@ public class ConnectedList<T> implements Iterable<T> {
       Queue<T> initialContent = new LinkedList<>(getArrayContents(rootNode));
 
       return new Iterator<>() {
-        private int page = 0;
+        private int page;
         private int pageCount = initialPageCount;
         private final Queue<T> nextContent = initialContent;
 

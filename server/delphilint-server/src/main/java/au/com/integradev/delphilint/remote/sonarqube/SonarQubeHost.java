@@ -151,12 +151,13 @@ public class SonarQubeHost implements SonarHost {
     try {
       return jsonMapper.treeToValue(profile, SonarQubeQualityProfile.class);
     } catch (JsonProcessingException e) {
+      LOG.error(e);
       throw new SonarHostException("Problem parsing quality profile JSON: " + e.getMessage());
     }
   }
 
   @Nullable
-  private String getErrorMessageFromJson(JsonNode rootNode) {
+  private static String getErrorMessageFromJson(JsonNode rootNode) {
     var errorsArray = rootNode.get("errors");
     if (errorsArray != null && !errorsArray.isEmpty() && errorsArray.get(0).has("msg")) {
       return errorsArray.get(0).get("msg").asText();
@@ -167,7 +168,9 @@ public class SonarQubeHost implements SonarHost {
 
   public Map<String, String> getRuleNamesByRuleKey() throws SonarHostException {
     var profile = getQualityProfile();
-    if (profile == null) return Collections.emptyMap();
+    if (profile == null) {
+      return Collections.emptyMap();
+    }
 
     Map<String, String> params = new LinkedHashMap<>();
     params.put(PARAM_PAGE_SIZE, "500");
@@ -241,6 +244,7 @@ public class SonarQubeHost implements SonarHost {
                 RuleType.fromSonarLintRuleType(sonarQubeRule.getType()),
                 cleanCode));
       } catch (JsonProcessingException e) {
+        LOG.error(e);
         throw new SonarHostException(
             "Malformed rule info response from SonarQube: " + e.getMessage());
       }
@@ -249,7 +253,7 @@ public class SonarQubeHost implements SonarHost {
     return ruleSet;
   }
 
-  private List<String> joinStringsWithLimit(
+  private static List<String> joinStringsWithLimit(
       Collection<String> values, UnaryOperator<String> mapper, int maxChars) {
     List<String> strings = new ArrayList<>();
     var stringBuilder = new StringBuilder();
@@ -271,7 +275,7 @@ public class SonarQubeHost implements SonarHost {
     return strings;
   }
 
-  private RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue) {
+  private static RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue) {
     var issueBuilder =
         new RemoteIssue.Builder()
             .withRuleKey(sqIssue.getRuleKey())
@@ -447,7 +451,9 @@ public class SonarQubeHost implements SonarHost {
 
   public Set<RemoteActiveRule> getActiveRules() throws SonarHostException {
     var profile = getQualityProfile();
-    if (profile == null) return Collections.emptySet();
+    if (profile == null) {
+      return Collections.emptySet();
+    }
 
     Map<String, String> params = new LinkedHashMap<>();
     params.put(PARAM_PAGE_SIZE, "500");

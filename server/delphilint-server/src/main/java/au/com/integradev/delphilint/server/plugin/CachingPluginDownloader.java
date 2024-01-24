@@ -81,7 +81,7 @@ public class CachingPluginDownloader {
     return Optional.of(new DownloadedPlugin(cachedPluginPath, plugin.getFileName()));
   }
 
-  private boolean downloadJar(SonarHost host, String pluginKey, Path destination)
+  private static boolean downloadJar(SonarHost host, String pluginKey, Path destination)
       throws SonarHostException {
     Optional<Path> tempPath = host.getPluginJar(pluginKey);
 

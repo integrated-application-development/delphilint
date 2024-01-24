@@ -5,8 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
-public class HttpUtils {
+public final class HttpUtils {
   private HttpUtils() {
     // Utility class
   }
@@ -46,6 +47,6 @@ public class HttpUtils {
                 })
             .collect(Collectors.toList());
 
-    return "?" + String.join("&", encodedParams);
+    return "?" + StringUtils.join(encodedParams, "&");
   }
 }

@@ -10,7 +10,7 @@ public class Version implements Comparable<Version> {
 
   public Version(String version) throws NumberFormatException {
     this.versionParts =
-        Arrays.stream(version.split("\\.")).map(Integer::parseInt).collect(Collectors.toList());
+        Arrays.stream(version.split("\\.", -1)).map(Integer::parseInt).collect(Collectors.toList());
   }
 
   @Override
@@ -31,10 +31,15 @@ public class Version implements Comparable<Version> {
 
   @Override
   public boolean equals(Object other) {
-    if (this == other) return true;
-    if (other == null) return false;
-    if (this.getClass() != other.getClass()) return false;
-    return this.compareTo((Version) other) == 0;
+    if (this == other) {
+      return true;
+    } else if (other == null) {
+      return false;
+    } else if (this.getClass() != other.getClass()) {
+      return false;
+    } else {
+      return this.compareTo((Version) other) == 0;
+    }
   }
 
   @Override

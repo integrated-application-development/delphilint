@@ -65,7 +65,7 @@ public class AnalysisOrchestrator implements AutoCloseable {
     LOG.info("Analysis engine started");
   }
 
-  private AnalysisConfiguration buildConfiguration(
+  private static AnalysisConfiguration buildConfiguration(
       Path baseDir, Set<Path> inputFiles, SonarHost connection, Map<String, String> properties)
       throws SonarHostException {
     var configBuilder =
@@ -98,7 +98,7 @@ public class AnalysisOrchestrator implements AutoCloseable {
     return configBuilder.build();
   }
 
-  private Set<String> getTestFiles(Set<String> inputFiles, String[] testDirs) {
+  private static Set<String> getTestFiles(Set<String> inputFiles, String[] testDirs) {
     Set<String> testFiles = new HashSet<>();
 
     for (String testBase : testDirs) {
@@ -144,7 +144,7 @@ public class AnalysisOrchestrator implements AutoCloseable {
     Set<String> testFileRelativePaths;
     if (properties.containsKey("sonar.tests")) {
       testFileRelativePaths =
-          getTestFiles(fileRelativePaths, properties.get("sonar.tests").split(","));
+          getTestFiles(fileRelativePaths, properties.get("sonar.tests").split(",", -1));
     } else if (!properties.isEmpty()) {
       testFileRelativePaths = Collections.emptySet();
     } else {

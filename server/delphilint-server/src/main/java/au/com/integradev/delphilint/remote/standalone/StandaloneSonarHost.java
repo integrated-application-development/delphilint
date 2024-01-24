@@ -51,10 +51,6 @@ public class StandaloneSonarHost implements SonarHost {
     this.activeRules = Collections.emptySet();
   }
 
-  public SonarCharacteristics getCharacteristics() {
-    return new SonarCharacteristics(false);
-  }
-
   public StandaloneSonarHost(LoadedPlugins loadedPlugins) {
     var rulesExtractor = new RulesDefinitionExtractor();
     List<SonarLintRuleDefinition> ruleDefs =
@@ -98,6 +94,10 @@ public class StandaloneSonarHost implements SonarHost {
                         null,
                         ruleDef.getDefaultParams()))
             .collect(Collectors.toSet());
+  }
+
+  public SonarCharacteristics getCharacteristics() {
+    return new SonarCharacteristics(false);
   }
 
   public String getName() {

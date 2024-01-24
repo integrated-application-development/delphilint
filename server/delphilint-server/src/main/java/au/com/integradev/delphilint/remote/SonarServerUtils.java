@@ -38,7 +38,7 @@ import org.sonarsource.sonarlint.core.analysis.api.Issue;
 import org.sonarsource.sonarlint.core.issuetracking.Tracker;
 import org.sonarsource.sonarlint.core.issuetracking.Tracking;
 
-public class SonarServerUtils {
+public final class SonarServerUtils {
   private static final Logger LOG = LogManager.getLogger(SonarServerUtils.class);
 
   private SonarServerUtils() {

@@ -20,7 +20,6 @@ package au.com.integradev.delphilint;
 import au.com.integradev.delphilint.server.AnalysisServer;
 import au.com.integradev.delphilint.server.TlvConnection;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,35 +30,40 @@ public class App {
   private static final int DEFAULT_PORT = 14000;
   private static final Logger LOG = LogManager.getLogger(App.class);
 
-  public static void main(String[] args) throws IOException {
-    Path settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
-    Path pluginsPath = settingsPath.resolve("plugins");
+  public static void main(String[] args) {
+    try {
+      Path settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
+      Path pluginsPath = settingsPath.resolve("plugins");
 
-    if (!Files.exists(pluginsPath)) {
-      Files.createDirectory(pluginsPath);
-    }
+      if (!Files.exists(pluginsPath)) {
+        Files.createDirectory(pluginsPath);
+      }
 
-    TlvConnection connection;
-    AnalysisServer server = new AnalysisServer(pluginsPath);
+      TlvConnection connection;
+      AnalysisServer server = new AnalysisServer(pluginsPath);
 
-    if (args.length > 0) {
-      connection = new TlvConnection(server);
+      if (args.length > 0) {
+        connection = new TlvConnection(server);
 
-      File portFile = new File(args[0]);
-      if (portFile.exists()) {
-        Files.write(
-            portFile.toPath(),
-            String.valueOf(connection.getPort()).getBytes(StandardCharsets.UTF_8));
-        LOG.info("Server port written to port file at {}", portFile.toPath());
+        File portFile = new File(args[0]);
+        if (portFile.exists()) {
+          Files.write(
+              portFile.toPath(),
+              String.valueOf(connection.getPort()).getBytes(StandardCharsets.UTF_8));
+          LOG.info("Server port written to port file at {}", portFile.toPath());
+        } else {
+          LOG.info("Port file at {} does not exist", portFile.toPath());
+          connection = new TlvConnection(server, DEFAULT_PORT);
+        }
       } else {
-        LOG.info("Port file at {} does not exist", portFile.toPath());
         connection = new TlvConnection(server, DEFAULT_PORT);
       }
-    } else {
-      connection = new TlvConnection(server, DEFAULT_PORT);
-    }
 
-    connection.run();
-    LOG.info("Application stopped");
+      connection.run();
+      LOG.info("Application stopped");
+    } catch (Exception e) {
+      LOG.error(e);
+      System.exit(1);
+    }
   }
 }

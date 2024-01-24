@@ -21,7 +21,7 @@ import au.com.integradev.delphilint.analysis.TextRange;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class RemoteIssue {
+public final class RemoteIssue {
   private final String rule;
   private final int line;
   private final String hash;
@@ -123,9 +123,9 @@ public class RemoteIssue {
   public static class Builder {
     private String rule = "";
     private int line = -1;
-    private String hash = null;
-    private Path hashPath = null;
-    private TextRange textRange = null;
+    private String hash;
+    private Path hashPath;
+    private TextRange textRange;
     private String message = "";
     private RuleSeverity severity = RuleSeverity.MAJOR;
     private RuleType type = RuleType.CODE_SMELL;
@@ -134,7 +134,7 @@ public class RemoteIssue {
     private String assignee = "";
     private String creationDate = "";
     private String resolution = "";
-    private RemoteCleanCode cleanCode = null;
+    private RemoteCleanCode cleanCode;
 
     public Builder withRuleKey(String ruleKey) {
       this.rule = ruleKey;

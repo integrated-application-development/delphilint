@@ -35,8 +35,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HttpSonarApi implements SonarApi {
+  private static final Logger LOG = LogManager.getLogger(HttpSonarApi.class);
   private final HttpClient http;
   private final String hostUrl;
   private final String token;
@@ -113,6 +116,7 @@ public class HttpSonarApi implements SonarApi {
         throw new SonarHostStatusCodeException(response.statusCode());
       }
     } catch (IOException e) {
+      LOG.error(e);
       throw new SonarHostConnectException();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();

@@ -13,6 +13,18 @@ public class RuleData {
   @JsonProperty private RuleType type;
   @JsonProperty private CleanCodeData cleanCode;
 
+  public RuleData(RemoteRule rule) {
+    key = rule.getKey();
+    name = rule.getName();
+    desc = rule.getHtmlDesc();
+    severity = rule.getSeverity();
+    type = rule.getType();
+
+    if (rule.getCleanCode() != null) {
+      cleanCode = new CleanCodeData(rule.getCleanCode());
+    }
+  }
+
   public String getKey() {
     return key;
   }
@@ -31,17 +43,5 @@ public class RuleData {
 
   public RuleType getType() {
     return type;
-  }
-
-  public RuleData(RemoteRule rule) {
-    key = rule.getKey();
-    name = rule.getName();
-    desc = rule.getHtmlDesc();
-    severity = rule.getSeverity();
-    type = rule.getType();
-
-    if (rule.getCleanCode() != null) {
-      cleanCode = new CleanCodeData(rule.getCleanCode());
-    }
   }
 }
