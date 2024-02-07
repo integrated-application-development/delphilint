@@ -50,17 +50,12 @@ Prerequisites:
 * Maven 3.5.0+
 * Java 11+
 * PowerShell
-* `npm`
+* npm
 * Microsoft Edge 79.0.309 or above
-* `vsce` (can be installed with `npm install --global @vscode/vsce`)
-* Visual Studio Code
 
 1. Clone the repository at the latest release.
 2. Build the project by running `/scripts/build.ps1 -DelphiBin <path/to/bin>`, where `<path/to/bin>` is the
    path to your Delphi IDE installation's `bin` directory (e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
-
-The VS Code companion can be skipped from the install by passing the `-SkipCompanion` flag to the script in step 2.
-If the companion is omitted, `vsce` and Visual Studio Code are not required.
 
 ## Usage
 
