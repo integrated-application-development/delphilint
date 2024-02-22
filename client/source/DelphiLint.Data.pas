@@ -85,6 +85,7 @@ type
     issReopened,
     issResolved,
     issClosed,
+    issAccepted,
     issToReview,
     issReviewed
   );
@@ -507,7 +508,16 @@ end;
 
 constructor TIssueMetadata.CreateFromJson(Json: TJSONObject);
 const
-  C_Statuses: array of string = ['OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED', 'CLOSED', 'TO_REVIEW', 'REVIEWED'];
+  C_Statuses: array of string = [
+    'OPEN',
+    'CONFIRMED',
+    'REOPENED',
+    'RESOLVED',
+    'CLOSED',
+    'ACCEPTED',
+    'TO_REVIEW',
+    'REVIEWED'
+  ];
 begin
   inherited;
 

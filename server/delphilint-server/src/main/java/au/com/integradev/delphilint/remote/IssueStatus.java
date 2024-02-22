@@ -8,6 +8,7 @@ public enum IssueStatus {
   REOPENED,
   RESOLVED,
   CLOSED,
+  ACCEPTED,
   TO_REVIEW,
   REVIEWED;
 
@@ -23,6 +24,8 @@ public enum IssueStatus {
         return IssueStatus.RESOLVED;
       case "CLOSED":
         return IssueStatus.CLOSED;
+      case "ACCEPTED":
+        return IssueStatus.ACCEPTED;
       case "TO_REVIEW":
         return IssueStatus.TO_REVIEW;
       case "REVIEWED":

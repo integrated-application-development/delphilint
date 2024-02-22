@@ -163,15 +163,16 @@ class SonarServerUtilsTest {
     assertEquals(1, issues.size());
   }
 
-  @Test
-  void resolvedIdenticalIssuesArePruned() throws SonarHostException {
+  @ParameterizedTest
+  @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
+  void resolvedIdenticalIssuesArePruned(String issueStatus) throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(6, 3, 6, 9)
-                .withStatus(IssueStatus.RESOLVED)
+                .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
                 .withHashFrom(FILE_A)
                 .build());
 
@@ -258,15 +259,16 @@ class SonarServerUtilsTest {
     assertEquals("issue 2", issues.get(0).getMessage());
   }
 
-  @Test
-  void movedResolvedIssuesArePruned() throws SonarHostException {
+  @ParameterizedTest
+  @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
+  void movedResolvedIssuesArePruned(String issueStatus) throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
                 .withRange(8, 3, 6, 9)
-                .withStatus(IssueStatus.RESOLVED)
+                .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
                 .withHash(SonarHasher.hashFileLine(FILE_A, 6))
                 .build());
 
@@ -282,15 +284,17 @@ class SonarServerUtilsTest {
     assertEquals(0, issues.size());
   }
 
-  @Test
-  void movedResolvedIssuesWithDifferentMessagesArePruned() throws SonarHostException {
+  @ParameterizedTest
+  @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
+  void movedResolvedIssuesWithDifferentMessagesArePruned(String issueStatus)
+      throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("remote issue 1")
                 .withRange(8, 3, 6, 9)
-                .withStatus(IssueStatus.RESOLVED)
+                .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
                 .withHash(SonarHasher.hashFileLine(FILE_A, 6))
                 .build());
 

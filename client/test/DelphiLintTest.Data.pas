@@ -15,6 +15,7 @@ type
     function Parse<T: TJSONValue>(Text: string): T;
     procedure TestParseRuleType(Str: string; Value: TRuleType);
     procedure TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
+    procedure TestParseIssueStatus(Str: string; Value: TIssueStatus);
   public
     [TestCase]
     procedure TestCreateRuleNoCleanCode;
@@ -24,6 +25,8 @@ type
     procedure TestParseRuleTypes;
     [TestCase]
     procedure TestParseRuleSeverities;
+    [TestCase]
+    procedure TestParseIssueStatuses;
     [TestCase]
     procedure TestCreateIssue;
   end;
@@ -217,6 +220,39 @@ begin
   TestParseRuleType('VULNERABILITY', rtVulnerability);
   TestParseRuleType('SECURITY_HOTSPOT', rtSecurityHotspot);
   TestParseRuleType('BUG', rtBug);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TDataJsonParseTest.TestParseIssueStatus(Str: string; Value: TIssueStatus);
+const
+  CIssueMetadataJson: string = '{"assignee":"","creationDate":"","status":"%s"}';
+var
+  JsonObject: TJSONObject;
+  Metadata: TIssueMetadata;
+begin
+  JsonObject := Parse<TJSONObject>(Format(CIssueMetadataJson, [Str]));
+  try
+    Metadata := TIssueMetadata.CreateFromJson(JsonObject);
+    Assert.AreEqual(Value, Metadata.Status);
+  finally
+    FreeAndNil(Metadata);
+    FreeAndNil(JsonObject);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TDataJsonParseTest.TestParseIssueStatuses;
+begin
+  TestParseIssueStatus('OPEN', issOpen);
+  TestParseIssueStatus('CONFIRMED', issConfirmed);
+  TestParseIssueStatus('REOPENED', issReopened);
+  TestParseIssueStatus('RESOLVED', issResolved);
+  TestParseIssueStatus('CLOSED', issClosed);
+  TestParseIssueStatus('ACCEPTED', issAccepted);
+  TestParseIssueStatus('TO_REVIEW', issToReview);
+  TestParseIssueStatus('REVIEWED', issReviewed);
 end;
 
 //______________________________________________________________________________________________________________________

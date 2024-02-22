@@ -88,6 +88,7 @@ type
       'Reopened',
       'Resolved',
       'Closed',
+      'Accepted',
       'To review',
       'Reviewed (acknowledged)'
     );
