@@ -97,7 +97,7 @@ public class StandaloneSonarHost implements SonarHost {
   }
 
   public SonarCharacteristics getCharacteristics() {
-    return new SonarCharacteristics(false);
+    return SonarCharacteristics.latest();
   }
 
   public String getName() {

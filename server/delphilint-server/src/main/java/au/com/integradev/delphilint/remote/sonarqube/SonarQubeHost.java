@@ -56,8 +56,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class SonarQubeHost implements SonarHost {
   private static final Logger LOG = LogManager.getLogger(SonarQubeHost.class);
-  private static final Version FIRST_SUPPORTED_VERSION = new Version("7.9");
-  private static final Version FIRST_CODE_ATTRIBUTES_VERSION = new Version("10.2");
 
   private static final String URL_SERVER_VERSION = "/api/server/version";
   private static final String URL_QUALITY_PROFILES_SEARCH = "/api/qualityprofiles/search";
@@ -105,13 +103,7 @@ public class SonarQubeHost implements SonarHost {
   private SonarCharacteristics calculateCharacteristics() throws SonarHostException {
     String versionStr = api.getText(URL_SERVER_VERSION);
     var version = new Version(versionStr);
-
-    if (version.compareTo(FIRST_SUPPORTED_VERSION) < 0) {
-      return SonarCharacteristics.unsupported();
-    }
-
-    boolean codeAttributes = version.compareTo(FIRST_CODE_ATTRIBUTES_VERSION) >= 0;
-    return new SonarCharacteristics(codeAttributes);
+    return new SonarCharacteristics(version);
   }
 
   public SonarCharacteristics getCharacteristics() throws SonarHostException {
