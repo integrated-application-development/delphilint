@@ -181,9 +181,9 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
                 "issuesSingularOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "issuesSingularOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -214,9 +214,9 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
                 "issuesSingularCleanCodeOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "issuesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -327,13 +327,13 @@ class SonarQubeHostTest {
                 "resolvedHotspotsOk.json",
                 "/api/hotspots/search?files=TestUnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedTestHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true",
                 "resolvedTestIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3ATestUnitA.pas%2C&resolved=true&p=1",
                 "resolvedTestIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -358,9 +358,9 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -455,9 +455,9 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&resolutions=FALSE-POSITIVE%2CWONTFIX%2CFIXED&p=1",
+                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");

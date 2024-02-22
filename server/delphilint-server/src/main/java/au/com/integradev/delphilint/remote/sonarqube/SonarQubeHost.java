@@ -417,7 +417,7 @@ public class SonarQubeHost implements SonarHost {
     return getIssuesAndHotspots(
             relativeFilePaths,
             testRelativeFilePaths,
-            List.of("resolved=true", "resolutions=FALSE-POSITIVE,WONTFIX,FIXED"),
+            List.of("resolved=true"),
             List.of("status=REVIEWED"))
         .stream()
         // Acknowledged hotspots should not suppress issues
