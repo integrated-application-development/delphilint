@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Support for the `requiredForLanguages` plugin metadata property when in Connected Mode to SonarQube 10.4 and above,
+  ensuring all Delphi-related plugins are reliably included in analysis
+
 ### Fixed
 
 * The rule description HTML embed no longer has an arbitrary maximum width

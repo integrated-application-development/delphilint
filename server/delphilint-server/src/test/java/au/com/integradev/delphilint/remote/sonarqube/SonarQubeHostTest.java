@@ -609,21 +609,99 @@ class SonarQubeHostTest {
   void getsOnlyDelphiPlugins() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR, Map.of("/api/plugins/installed", "installedPluginsOk.json"));
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                "10.5.txt"));
+
+    var host = buildSonarHost(api);
+    Set<RemotePlugin> plugins = host.getDelphiPlugins();
+    assertTrue(plugins.stream().noneMatch(p -> p.getPluginKey().equals("java")));
+  }
+
+  @Test
+  void getsRequiredForLanguagesDelphiPluginsOnSupportedVersions() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                "10.5.txt"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
 
-    assertEquals(
-        Set.of("communitydelphi", "mycustomdelphi"),
-        plugins.stream().map(RemotePlugin::getPluginKey).collect(Collectors.toSet()));
+    assertTrue(plugins.stream().anyMatch(p -> p.getPluginKey().equals("mydelpcustomhi")));
+  }
+
+  @Test
+  void doesNotGetRequiredForLanguagesDelphiPluginsOnUnsupportedVersions()
+      throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                "10.2.txt"));
+
+    var host = buildSonarHost(api);
+    Set<RemotePlugin> plugins = host.getDelphiPlugins();
+
+    assertTrue(plugins.stream().noneMatch(p -> p.getPluginKey().equals("mydelpcustomhi")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"10.5.txt", "10.2.txt", "5.7.txt", "11.5.3.txt"})
+  void getsNameHeuristicDelphiPluginsOnAllVersions(String versionTxt) throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                versionTxt));
+
+    var host = buildSonarHost(api);
+    Set<RemotePlugin> plugins = host.getDelphiPlugins();
+
+    assertTrue(plugins.stream().anyMatch(p -> p.getPluginKey().equals("mycustomdelphi")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"10.5.txt", "10.2.txt", "5.7.txt", "11.5.3.txt"})
+  void getsCorePluginOnAllVersions(String versionTxt) throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                versionTxt));
+
+    var host = buildSonarHost(api);
+    Set<RemotePlugin> plugins = host.getDelphiPlugins();
+
+    assertTrue(plugins.stream().anyMatch(p -> p.getPluginKey().equals("communitydelphi")));
   }
 
   @Test
   void getsDelphiPluginFilenames() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR, Map.of("/api/plugins/installed", "installedPluginsOk.json"));
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                "10.2.txt"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -645,16 +723,20 @@ class SonarQubeHostTest {
     assertEquals("filename2", secondaryPlugin.get().getFileName());
   }
 
-  @Test
-  void identifiesCorePlugin() throws SonarHostException {
+  @ParameterizedTest
+  @ValueSource(strings = {"10.2.txt", "10.5.txt"})
+  void identifiesCorePlugin(String versionTxt) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR, Map.of("/api/plugins/installed", "installedPluginsOk.json"));
+            RESOURCE_DIR,
+            Map.of(
+                "/api/plugins/installed",
+                "installedPluginsOk.json",
+                "/api/server/version",
+                versionTxt));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
-
-    assertEquals(2, plugins.size());
 
     var mainPlugins =
         plugins.stream().filter(RemotePlugin::isCorePlugin).collect(Collectors.toSet());

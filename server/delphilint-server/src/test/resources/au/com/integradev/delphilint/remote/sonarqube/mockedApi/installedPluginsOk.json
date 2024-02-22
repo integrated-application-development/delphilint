@@ -14,7 +14,8 @@
       "hash": "5d95b71df73b7bf65c6f02bcbf93d103",
       "sonarLintSupported": false,
       "updatedAt": 1690244023032,
-      "type": "EXTERNAL"
+      "type": "EXTERNAL",
+      "requiredForLanguages": ["delphi"]
     },
     {
       "key": "mycustomdelphi",
@@ -28,6 +29,20 @@
       "sonarLintSupported": false,
       "updatedAt": 1692064115031,
       "type": "EXTERNAL"
+    },
+    {
+      "key": "mydelpcustomhi",
+      "name": "More Custom Rules (but I won't say for which language...)",
+      "description": "Custom SonarDelphi rules",
+      "version": "1.0.0",
+      "license": "",
+      "editionBundled": false,
+      "filename": "filename2",
+      "hash": "5d95b71df73b7bac5c6f02bcbf93d103",
+      "sonarLintSupported": false,
+      "updatedAt": 1692064115031,
+      "type": "EXTERNAL",
+      "requiredForLanguages": ["delphi"]
     },
     {
       "key": "java",

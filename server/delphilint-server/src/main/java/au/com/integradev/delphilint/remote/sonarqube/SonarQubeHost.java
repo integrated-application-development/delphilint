@@ -520,9 +520,27 @@ public class SonarQubeHost implements SonarHost {
     for (var plugin : pluginsArray) {
       var keyProp = plugin.get("key");
       var filenameProp = plugin.get("filename");
-      if (keyProp != null
-          && filenameProp != null
-          && StringUtils.containsIgnoreCase(keyProp.asText(), pluginKeyDiscriminator)) {
+
+      boolean isDelphiPlugin = false;
+
+      if (getCharacteristics().supportsPluginRequiredForLanguages()) {
+        var requiredForLanguagesProp = plugin.get("requiredForLanguages");
+        isDelphiPlugin =
+            requiredForLanguagesProp != null
+                && StreamSupport.stream(requiredForLanguagesProp.spliterator(), false)
+                    .anyMatch(el -> el.asText().equals(languageKey));
+      }
+
+      if (!isDelphiPlugin && getCharacteristics().requiresPluginRequiredForLanguagesHeuristic()) {
+        // SonarQube 10.3 and below have no way of indicating whether a plugin is tied
+        // to a specific language, so we have to guess using a heuristic.
+        isDelphiPlugin =
+            keyProp != null
+                && filenameProp != null
+                && StringUtils.containsIgnoreCase(keyProp.asText(), pluginKeyDiscriminator);
+      }
+
+      if (isDelphiPlugin) {
         plugins.add(
             new RemotePlugin(
                 keyProp.asText(), filenameProp.asText(), pluginKey.equals(keyProp.asText())));
