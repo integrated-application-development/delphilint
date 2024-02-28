@@ -24,6 +24,12 @@ uses
   , Vcl.Forms
   , Vcl.StdCtrls
   , DelphiLint.IDEBaseTypes
+  , Vcl.ExtCtrls
+  , Data.DB
+  , Vcl.Grids
+  , Vcl.DBGrids
+  , Vcl.DBCtrls
+  , Datasnap.DBClient
   ;
 
 type
@@ -34,6 +40,11 @@ type
     ClientConfigGroupBox: TGroupBox;
     ClientAutoShowToolWindowCheckBox: TCheckBox;
     ClientSaveBeforeAnalysisCheckBox: TCheckBox;
+    TokensGroupBox: TGroupBox;
+    TokensGrid: TDBGrid;
+    TokensDataSource: TDataSource;
+    TokensDataSet: TClientDataSet;
+    DBNavigator1: TDBNavigator;
     procedure ComponentsButtonClick(Sender: TObject);
   public
     procedure Init;
@@ -54,8 +65,10 @@ implementation
 
 uses
     System.SysUtils
+  , System.Generics.Collections
   , DelphiLint.SetupForm
   , DelphiLint.Context
+  , DelphiLint.Settings
   ;
 
 {$R *.dfm}
@@ -96,17 +109,65 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintSettingsFrame.Init;
+var
+  Ident: TSonarProjectIdentifier;
 begin
   LintContext.Settings.Load;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
   ClientAutoShowToolWindowCheckBox.Checked := LintContext.Settings.ClientAutoShowToolWindow;
   ClientSaveBeforeAnalysisCheckBox.Checked := LintContext.Settings.ClientSaveBeforeAnalysis;
+
+  TokensDataSet.CreateDataSet;
+  TokensDataSet.Open;
+
+  TokensDataSet.DisableControls;
+  try
+    TokensDataSet.EmptyDataSet;
+
+    for Ident in LintContext.Settings.SonarHostTokensMap.Keys do begin
+      TokensDataSet.Append;
+      TokensDataSet.FieldByName('ServerURL').AsString := Ident.Host;
+      TokensDataSet.FieldByName('ProjectKey').AsString := Ident.ProjectKey;
+      TokensDataSet.FieldByName('Token').AsString := LintContext.Settings.SonarHostTokensMap[Ident];
+      TokensDataSet.Post;
+    end;
+
+    TokensDataSet.First;
+  finally
+    TokensDataSet.EnableControls;
+  end;
+
+  TokensDataSet.IndexFieldNames := 'ServerURL;ProjectKey';
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintSettingsFrame.Save;
+var
+  Tokens: TDictionary<TSonarProjectIdentifier, string>;
 begin
+  Tokens := LintContext.Settings.SonarHostTokensMap;
+
+  TokensDataSet.DisableControls;
+  try
+    Tokens.Clear;
+
+    TokensDataSet.First;
+    while not TokensDataSet.Eof do begin
+      if (TokensDataSet.FieldByName('ServerURL').AsString <> '') then begin
+        Tokens.AddOrSetValue(
+          TSonarProjectIdentifier.Create(
+            TokensDataSet.FieldByName('ServerURL').AsString,
+            TokensDataSet.FieldByName('ProjectKey').AsString),
+          TokensDataSet.FieldByName('Token').AsString);
+      end;
+
+      TokensDataSet.Next;
+    end;
+  finally
+    TokensDataSet.EnableControls;
+  end;
+
   LintContext.Settings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
   LintContext.Settings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
   LintContext.Settings.Save;

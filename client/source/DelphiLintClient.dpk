@@ -37,7 +37,10 @@ requires
   vclie,
   vcledge,
   designide,
-  IndyProtocols;
+  IndyProtocols,
+  dbrtl,
+  vcldb,
+  dsnap;
 
 contains
   DelphiLint.Handlers in 'DelphiLint.Handlers.pas',

@@ -2,7 +2,7 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 192
+  Height = 431
   Constraints.MinHeight = 170
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
@@ -14,10 +14,10 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    192)
+    431)
   object ComponentsGroupBox: TGroupBox
     Left = 12
-    Top = 112
+    Top = 352
     Width = 560
     Height = 65
     Anchors = [akLeft, akTop, akRight]
@@ -77,5 +77,97 @@ object LintSettingsFrame: TLintSettingsFrame
       ShowHint = True
       TabOrder = 1
     end
+  end
+  object TokensGroupBox: TGroupBox
+    Left = 12
+    Top = 111
+    Width = 560
+    Height = 226
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 'SonarQube tokens'
+    TabOrder = 2
+    object TokensGrid: TDBGrid
+      Left = 38
+      Top = 32
+      Width = 507
+      Height = 177
+      DataSource = TokensDataSource
+      Options = [dgEditing, dgTitles, dgIndicator, dgRowLines, dgTabs, dgCancelOnExit]
+      TabOrder = 0
+      TitleFont.Charset = DEFAULT_CHARSET
+      TitleFont.Color = clBtnText
+      TitleFont.Height = -12
+      TitleFont.Name = 'Segoe UI'
+      TitleFont.Style = []
+      Columns = <
+        item
+          Expanded = False
+          FieldName = 'ServerURL'
+          Title.Caption = 'Server URL'
+          Width = 154
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'ProjectKey'
+          Title.Caption = 'Project Key'
+          Width = 163
+          Visible = True
+        end
+        item
+          Expanded = False
+          FieldName = 'Token'
+          Title.Caption = 'Authorization Token'
+          Width = 131
+          Visible = True
+        end>
+    end
+  end
+  object DBNavigator1: TDBNavigator
+    Left = 19
+    Top = 143
+    Width = 25
+    Height = 60
+    DataSource = TokensDataSource
+    VisibleButtons = [nbInsert, nbDelete]
+    Hints.Strings = (
+      'Add record'
+      'Remove record'
+      '')
+    Kind = dbnVertical
+    ConfirmDelete = False
+    TabOrder = 3
+  end
+  object TokensDataSource: TDataSource
+    DataSet = TokensDataSet
+    Left = 284
+    Top = 223
+  end
+  object TokensDataSet: TClientDataSet
+    Aggregates = <>
+    FieldDefs = <
+      item
+        Name = 'ServerURL'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 80
+      end
+      item
+        Name = 'ProjectKey'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 80
+      end
+      item
+        Name = 'Token'
+        Attributes = [faRequired]
+        DataType = ftWideString
+        Size = 80
+      end>
+    IndexDefs = <>
+    Params = <>
+    StoreDefs = True
+    Left = 236
+    Top = 223
   end
 end
