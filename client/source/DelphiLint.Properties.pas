@@ -83,8 +83,8 @@ type
     constructor Create(Path: string);
     destructor Destroy; override;
 
-    procedure Save;
-    procedure Load;
+    procedure Save; virtual;
+    procedure Load; virtual;
   end;
 
 implementation

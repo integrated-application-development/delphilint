@@ -38,7 +38,7 @@ type
     SonarHostProjectKeyEdit: TLabeledEdit;
     AnalysisBaseDirEdit: TLabeledEdit;
     ProjectNameLabel: TLabel;
-    CreateTokenButton: TButton;
+    ManageTokensButton: TButton;
     HeaderPanel: TPanel;
     ContentPanel: TPanel;
     FooterPanel: TPanel;
@@ -53,10 +53,9 @@ type
     procedure AnalysisBaseDirEditChange(Sender: TObject);
     procedure SonarHostUrlEditChange(Sender: TObject);
     procedure SonarHostProjectKeyEditChange(Sender: TObject);
-    procedure SonarHostTokenEditChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure CreateTokenButtonClick(Sender: TObject);
+    procedure ManageTokensButtonClick(Sender: TObject);
     procedure ProjectBaseDirBrowseButtonClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
     procedure CancelButtonClick(Sender: TObject);
@@ -68,13 +67,12 @@ type
     FProjectOptions: TLintProjectOptions;
     FProjectFile: string;
 
-    function GetCreateTokenUrl(BaseUrl: string): string;
     function IsUrl(Val: string): Boolean;
 
     function IsConnectedMode: Boolean;
 
     procedure UpdateControls;
-    procedure UpdateCreateTokenButton;
+    procedure UpdateTokenInfo;
   public
     procedure RefreshOptions;
     procedure RefreshTheme;
@@ -91,8 +89,6 @@ uses
   , System.Math
   , Vcl.Themes
   , Vcl.Graphics
-  , Winapi.ShellAPI
-  , Winapi.Windows
   , DelphiLint.Utils
   , DelphiLint.Context
   ;
@@ -123,7 +119,6 @@ begin
     AnalysisModeGroup.ItemIndex := 1;
     SonarHostUrlEdit.Enabled := True;
     SonarHostProjectKeyEdit.Enabled := True;
-    SonarHostTokenEdit.Enabled := True;
     SonarHostDownloadPluginCheckBox.Enabled := True;
     SonarHostGroup.Enabled := True;
   end
@@ -131,14 +126,12 @@ begin
     AnalysisModeGroup.ItemIndex := 0;
     SonarHostUrlEdit.Enabled := False;
     SonarHostProjectKeyEdit.Enabled := False;
-    SonarHostTokenEdit.Enabled := False;
     SonarHostDownloadPluginCheckBox.Enabled := False;
     SonarHostGroup.Enabled := False;
   end;
 
   if Assigned(FProjectOptions) then begin
     SonarHostUrlEdit.Text := FProjectOptions.SonarHostUrl;
-    SonarHostTokenEdit.Text := FProjectOptions.SonarHostToken;
     SonarHostProjectKeyEdit.Text := FProjectOptions.SonarHostProjectKey;
     SonarHostDownloadPluginCheckBox.Checked := FProjectOptions.SonarHostDownloadPlugin;
     AnalysisBaseDirEdit.Text := FProjectOptions.AnalysisBaseDir;
@@ -151,7 +144,6 @@ begin
   end
   else begin
     SonarHostUrlEdit.Text := '';
-    SonarHostTokenEdit.Text := '';
     SonarHostProjectKeyEdit.Text := '';
     SonarHostDownloadPluginCheckBox.Checked := False;
     AnalysisBaseDirEdit.Text := '';
@@ -162,7 +154,7 @@ begin
     Caption := 'DelphiLint Project Options (no project)';
   end;
 
-  UpdateCreateTokenButton;
+  UpdateTokenInfo;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -243,21 +235,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.SonarHostTokenEditChange(Sender: TObject);
-begin
-  if Assigned(FProjectOptions) then begin
-    FProjectOptions.SonarHostToken := SonarHostTokenEdit.Text;
-    UpdateCreateTokenButton;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintOptionsForm.SonarHostUrlEditChange(Sender: TObject);
 begin
   if Assigned(FProjectOptions) then begin
     FProjectOptions.SonarHostUrl := SonarHostUrlEdit.Text;
-    UpdateCreateTokenButton;
+    UpdateTokenInfo;
   end;
 end;
 
@@ -302,29 +284,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.CreateTokenButtonClick(Sender: TObject);
-var
-  Url: string;
+procedure TLintOptionsForm.ManageTokensButtonClick(Sender: TObject);
 begin
-  if Assigned(FProjectOptions) then begin
-    Url := FProjectOptions.SonarHostUrl;
-
-    if IsUrl(Url) then begin
-      Url := GetCreateTokenUrl(Url);
-      ShellExecute(Handle, 'open', PChar(Url), nil, nil, SW_SHOWNORMAL);
-    end;
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintOptionsForm.GetCreateTokenUrl(BaseUrl: string): string;
-begin
-  if not EndsStr('/', BaseUrl) then begin
-    BaseUrl := BaseUrl + '/';
-  end;
-
-  Result := BaseUrl + 'account/security';
+  LintContext.IDEServices.EditOptions('', 'DelphiLint');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -343,11 +305,19 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintOptionsForm.UpdateCreateTokenButton;
+procedure TLintOptionsForm.UpdateTokenInfo;
+var
+  TokenText: string;
 begin
-  CreateTokenButton.Enabled :=
+  TokenText := LintContext.Settings.GetSonarHostToken(
+    SonarHostUrlEdit.Text,
+    SonarHostProjectKeyEdit.Text);
+
+  SonarHostTokenEdit.Text := IfThen(TokenText = '', '(no token)', TokenText);
+
+  ManageTokensButton.Enabled :=
     IsConnectedMode
-    and (FProjectOptions.SonarHostToken = '')
+    and (FProjectOptions.SonarHostProjectKey <> '')
     and IsUrl(FProjectOptions.SonarHostUrl);
 end;
 

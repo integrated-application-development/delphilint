@@ -207,7 +207,10 @@ begin
     if ProjectOptions.AnalysisConnectedMode then begin
       AnalyzeOptions.Sonar := TSonarProjectOptions.Create(
         ProjectOptions.SonarHostUrl,
-        ProjectOptions.SonarHostToken,
+        LintContext.Settings.GetSonarHostToken(
+          ProjectOptions.SonarHostUrl,
+          ProjectOptions.SonarHostProjectKey
+        ),
         ProjectOptions.SonarHostProjectKey
       );
     end;
@@ -677,7 +680,10 @@ begin
     if ProjectOptions.AnalysisConnectedMode then begin
       SonarOptions := TSonarProjectOptions.Create(
         ProjectOptions.SonarHostUrl,
-        ProjectOptions.SonarHostToken,
+        LintContext.Settings.GetSonarHostToken(
+          ProjectOptions.SonarHostUrl,
+          ProjectOptions.SonarHostProjectKey
+        ),
         ProjectOptions.SonarHostProjectKey
       );
       DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;

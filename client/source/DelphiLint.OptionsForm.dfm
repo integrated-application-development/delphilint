@@ -83,9 +83,9 @@ object LintOptionsForm: TLintOptionsForm
         EditLabel.Width = 105
         EditLabel.Height = 15
         EditLabel.Caption = 'Authorization token'
+        Enabled = False
         TabOrder = 2
         Text = ''
-        OnChange = SonarHostTokenEditChange
       end
       object SonarHostProjectKeyEdit: TLabeledEdit
         Left = 16
@@ -100,14 +100,14 @@ object LintOptionsForm: TLintOptionsForm
         Text = ''
         OnChange = SonarHostProjectKeyEditChange
       end
-      object CreateTokenButton: TButton
+      object ManageTokensButton: TButton
         Left = 16
         Top = 202
         Width = 105
         Height = 25
-        Caption = 'Create Token'
+        Caption = 'Manage Tokens'
         TabOrder = 3
-        OnClick = CreateTokenButtonClick
+        OnClick = ManageTokensButtonClick
       end
       object SonarHostDownloadPluginCheckBox: TCheckBox
         Left = 14
@@ -215,7 +215,7 @@ object LintOptionsForm: TLintOptionsForm
     FavoriteLinks = <>
     FileTypes = <>
     Options = [fdoPickFolders]
-    Left = 304
-    Top = 281
+    Left = 168
+    Top = 313
   end
 end
