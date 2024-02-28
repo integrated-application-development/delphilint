@@ -242,10 +242,7 @@ $(PreBuildEvent)]]>
                 <Source>
                     <Source Name="MainSource">DelphiLintClient.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="4">
                 <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
