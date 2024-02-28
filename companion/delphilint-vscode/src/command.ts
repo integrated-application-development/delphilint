@@ -124,7 +124,11 @@ async function analyzeFiles(
         if (projectOptions.connectedMode()) {
           sonarHostUrl = projectOptions.sonarHostUrl();
           projectKey = projectOptions.projectKey();
-          apiToken = projectOptions.apiToken();
+          console.log(settings.getSonarTokens());
+          apiToken =
+            settings.getSonarTokens()?.[projectOptions.sonarHostUrl()]?.[
+              projectOptions.projectKey()
+            ] ?? "";
         }
       }
     } else {

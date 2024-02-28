@@ -22,6 +22,9 @@ type LintSettingsIni = {
     ServerJarOverride?: string;
     SonarDelphiJarOverride?: string;
   };
+  SonarHost?: {
+    Tokens?: string;
+  };
 };
 
 function getSettings(path: string): LintSettingsIni {
@@ -108,6 +111,41 @@ export function getJavaExe(): string {
   } else {
     return path.join(javaHome, "bin", "java.exe");
   }
+}
+
+type SonarTokensMap = { [key: string]: { [key: string]: string } };
+
+export function getSonarTokens(): SonarTokensMap {
+  const tokensStr = getSettings(SETTINGS_FILE).SonarHost?.Tokens;
+  if (tokensStr === undefined) {
+    return {};
+  }
+
+  const kvps = tokensStr.split(",");
+
+  let res: SonarTokensMap = {};
+
+  for (const kvpStr of kvps) {
+    const kvp = kvpStr.split("=");
+    if (kvp.length !== 2) {
+      continue;
+    }
+
+    const key = kvp[0];
+    const value = kvp[1];
+
+    const splitKey = key.split("@");
+    if (splitKey.length !== 2) {
+      continue;
+    }
+
+    const projectKey = splitKey[0];
+    const host = splitKey[1];
+
+    res[host] = { [projectKey]: value };
+  }
+
+  return res;
 }
 
 export function getBdsPath(): string {

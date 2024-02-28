@@ -6,7 +6,6 @@ type ProjectOptionsIni = {
   SonarHost: {
     ProjectKey: string;
     Url: string;
-    Token: string;
     DownloadPlugin: "0" | "1";
   };
   Analysis: {
@@ -32,10 +31,6 @@ export class ProjectOptions {
 
   sonarHostUrl(): string {
     return this.optionsIni.SonarHost.Url;
-  }
-
-  apiToken(): string {
-    return this.optionsIni.SonarHost.Token;
   }
 
   downloadPlugin(): boolean {
