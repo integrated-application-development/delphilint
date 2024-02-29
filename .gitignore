@@ -29,4 +29,9 @@ package-lock.json
 node_modules/
 out/
 *.vsix
-.vscode/
+
+# VSCode
+.vscode/*
+!.vscode
+!.vscode/tasks.json
+!.vscode/launch.json
