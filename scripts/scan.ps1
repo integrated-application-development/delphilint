@@ -5,25 +5,14 @@ param(
   [Parameter(Mandatory)]
   [string]$HostUrl,
   [Parameter(ValueFromRemainingArguments)]
-  [string[]]$RemainingArgs,
-  [Parameter()]
-  [string]$Token,
-  [Parameter()]
-  [string]$Login,
-  [Parameter()]
-  [string]$Password
+  [string[]]$RemainingArgs
 )
 $ErrorActionPreference = "Continue"
 Import-Module "$PSScriptRoot/common" -Force
 
 function Get-SonarArgs {
   $SonarArgs = $RemainingArgs
-
   if($HostUrl) { $SonarArgs += @("-Dsonar.host.url=" + $HostUrl) }
-  if($Token) { $SonarArgs += @("-Dsonar.token=" + $Token) }
-  if($Login) { $SonarArgs += @("-Dsonar.login=" + $Login) }
-  if($Password) { $SonarArgs += @("-Dsonar.password=" + $Password) }
-
   return $SonarArgs
 }
 
