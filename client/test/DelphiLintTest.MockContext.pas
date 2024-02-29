@@ -361,19 +361,6 @@ uses
   , DelphiLint.Utils
   ;
 
-type
-  TConsoleLogger = class(TInterfacedObject, ILogger)
-  private
-    procedure Write(const Level: string; const Msg: string);
-  public
-    procedure Debug(const Msg: string); overload;
-    procedure Debug(const Msg: string; const Args: array of const); overload;
-    procedure Info(const Msg: string); overload;
-    procedure Info(const Msg: string; const Args: array of const); overload;
-    procedure Warn(const Msg: string); overload;
-    procedure Warn(const Msg: string; const Args: array of const); overload;
-  end;
-
 //______________________________________________________________________________________________________________________
 
 function MockContext: TMockLintContext;
@@ -760,48 +747,6 @@ end;
 function TMockLintContext.ValidateSetup: Boolean;
 begin
   Result := FSetupValid;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TConsoleLogger.Debug(const Msg: string);
-begin
-  Write('DEBUG', Msg);
-end;
-
-procedure TConsoleLogger.Debug(const Msg: string; const Args: array of const);
-begin
-  Write('DEBUG', Format(Msg, Args));
-end;
-
-procedure TConsoleLogger.Info(const Msg: string; const Args: array of const);
-begin
-  Write('INFO', Format(Msg, Args));
-end;
-
-procedure TConsoleLogger.Info(const Msg: string);
-begin
-  Write('INFO', Msg);
-end;
-
-procedure TConsoleLogger.Warn(const Msg: string);
-begin
-  Write('WARN', Msg);
-end;
-
-procedure TConsoleLogger.Warn(const Msg: string; const Args: array of const);
-begin
-  Write('WARN', Format(Msg, Args));
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TConsoleLogger.Write(const Level: string; const Msg: string);
-var
-  TimeStr: string;
-begin
-  TimeStr := FormatDateTime('hh:nn:ss.zzz', Now);
-  WriteLn(Format('%s [%s] %s', [TimeStr, Level, Msg]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -1336,7 +1281,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 initialization
-  SetLogger(TConsoleLogger.Create);
   SetLintContext(TMockLintContext.Create);
 
 end.
