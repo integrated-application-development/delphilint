@@ -147,6 +147,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLintTest.Server.pas"/>
         <DCCReference Include="DelphiLintTest.FileLogger.pas"/>
         <DCCReference Include="DelphiLintTest.HtmlGen.pas"/>
+        <DCCReference Include="DelphiLintTest.Settings.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
@@ -650,6 +651,12 @@ $(PreBuildEvent)]]>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\assets\rulehtml.css" Configuration="GUI" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\assets\rulehtml.css" Configuration="TestInsight" Class="ProjectFile">
                     <Platform Name="Win32">
                         <RemoteDir>.\</RemoteDir>
@@ -695,12 +702,6 @@ $(PreBuildEvent)]]>
                 <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.exe" Configuration="TestInsight" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.rsm" Configuration="TestInsight" Class="DebugSymbols">
-                    <Platform Name="Win32">
-                        <RemoteName>DelphiLintClientTest.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

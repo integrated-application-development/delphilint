@@ -30,7 +30,8 @@ uses
   DelphiLintTest.Utils in 'DelphiLintTest.Utils.pas',
   DelphiLintTest.Server in 'DelphiLintTest.Server.pas',
   DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas',
-  DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas';
+  DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas',
+  DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas';
 
 {$R *Additional.res}
 
