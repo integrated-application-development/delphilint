@@ -521,7 +521,7 @@ public class SonarQubeHost implements SonarHost {
       var keyProp = plugin.get("key");
       var filenameProp = plugin.get("filename");
 
-      boolean isDelphiPlugin = false;
+      var isDelphiPlugin = false;
 
       if (getCharacteristics().supportsPluginRequiredForLanguages()) {
         var requiredForLanguagesProp = plugin.get("requiredForLanguages");

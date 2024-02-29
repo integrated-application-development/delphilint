@@ -122,8 +122,7 @@ export function getSonarTokens(): SonarTokensMap {
   }
 
   const kvps = tokensStr.split(",");
-
-  let res: SonarTokensMap = {};
+  const res: SonarTokensMap = {};
 
   for (const kvpStr of kvps) {
     const kvp = kvpStr.split("=");
