@@ -146,7 +146,7 @@ function Invoke-VscCompanionCompile {
   Push-Location (Join-Path $PSScriptRoot ..\companion\delphilint-vscode)
   try {
     & npm install
-    & npx vsce package --skip-license
+    & npx @vscode/vsce package --skip-license
   }
   finally {
     Pop-Location
