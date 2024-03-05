@@ -8,6 +8,8 @@ public class SonarCharacteristics {
   private static final Version FIRST_PLUGIN_REQUIRED_FOR_LANGUAGES_VERSION = new Version("10.4");
   private static final Version EARLIEST_ALL_FEATURES_VERSION =
       FIRST_PLUGIN_REQUIRED_FOR_LANGUAGES_VERSION;
+  private static final Version VERSION_10_2 = new Version("10.2");
+  private static final Version VERSION_10_4 = new Version("10.4");
 
   private final Version version;
 
@@ -26,6 +28,14 @@ public class SonarCharacteristics {
   public boolean requiresPluginRequiredForLanguagesHeuristic() {
     // Currently all versions use the heuristic as a backup method.
     return true;
+  }
+
+  public boolean hotspotsSearchProjectKeyDeprecated() {
+    return version.compareTo(VERSION_10_4) >= 0;
+  }
+
+  public boolean issuesSearchComponentKeysDeprecated() {
+    return version.compareTo(VERSION_10_2) >= 0;
   }
 
   public boolean isSupported() {

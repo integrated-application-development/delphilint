@@ -38,12 +38,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SonarQubeHostTest {
-  private static final Path RESOURCE_DIR =
-      Path.of("src/test/resources/au/com/integradev/delphilint/remote/sonarqube/mockedApi");
   private static final String DEFAULT_QP_URL =
       "/api/qualityprofiles/search?language=delphi&defaults=true";
   private static final String QP_OK_JSON = "qualityProfileOk.json";
   private static final String QP_KEY = "AYmGl3ZO2-GgcVw1YiT1";
+  private static final Version LATEST_VERSION = new Version("10.4");
 
   private static SonarQubeHost buildSonarHost(SonarApi sonarApi) {
     return buildSonarHost(sonarApi, "");
@@ -55,16 +54,16 @@ class SonarQubeHostTest {
 
   @Test
   void recognisesUnsupportedVersion() throws SonarHostException {
-    var api = new ResourceBackedSonarApi(RESOURCE_DIR, Map.of("/api/server/version", "5.7.txt"));
+    var api = new ResourceBackedSonarApi(new Version("5.7"), Collections.emptyMap());
 
     var host = buildSonarHost(api);
     assertFalse(host.getCharacteristics().isSupported());
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"9.9.0.0.txt", "11.2.0.0.01923.txt", "11.5.3.txt"})
-  void recognisesSupportedVersion(String filePath) throws SonarHostException {
-    var api = new ResourceBackedSonarApi(RESOURCE_DIR, Map.of("/api/server/version", filePath));
+  @ValueSource(strings = {"9.9.0.0", "11.2.0.0.01923", "11.5.3"})
+  void recognisesSupportedVersion(String versionStr) throws SonarHostException {
+    var api = new ResourceBackedSonarApi(new Version(versionStr), Collections.emptyMap());
 
     var host = buildSonarHost(api);
     assertTrue(host.getCharacteristics().isSupported());
@@ -72,17 +71,16 @@ class SonarQubeHostTest {
 
   @Test
   void recognisesNonCleanCodeVersion() throws SonarHostException {
-    var api =
-        new ResourceBackedSonarApi(RESOURCE_DIR, Map.of("/api/server/version", "9.9.0.0.txt"));
+    var api = new ResourceBackedSonarApi(new Version("9.9"), Collections.emptyMap());
 
     var host = buildSonarHost(api);
     assertFalse(host.getCharacteristics().usesCodeAttributes());
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"11.2.0.0.01923.txt", "11.5.3.txt"})
-  void recognisesCleanCodeVersion(String filePath) throws SonarHostException {
-    var api = new ResourceBackedSonarApi(RESOURCE_DIR, Map.of("/api/server/version", filePath));
+  @ValueSource(strings = {"10.2", "11.2.0.0.01923", "11.5.3"})
+  void recognisesCleanCodeVersion(String versionStr) throws SonarHostException {
+    var api = new ResourceBackedSonarApi(new Version(versionStr), Collections.emptyMap());
 
     var host = buildSonarHost(api);
     assertTrue(host.getCharacteristics().usesCodeAttributes());
@@ -90,7 +88,7 @@ class SonarQubeHostTest {
 
   @Test
   void getsDefaultQualityProfileWhenNoProject() throws SonarHostException {
-    var api = new ResourceBackedSonarApi(RESOURCE_DIR, Map.of(DEFAULT_QP_URL, QP_OK_JSON));
+    var api = new ResourceBackedSonarApi(LATEST_VERSION, Map.of(DEFAULT_QP_URL, QP_OK_JSON));
 
     var host = buildSonarHost(api);
     SonarQubeQualityProfile profile = host.getQualityProfile();
@@ -105,7 +103,7 @@ class SonarQubeHostTest {
   void getsQualityProfileByProjectKey() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of("/api/qualityprofiles/search?language=delphi&project=MyProject", QP_OK_JSON));
 
     var host = buildSonarHost(api, "MyProject");
@@ -121,7 +119,7 @@ class SonarQubeHostTest {
   void throwsOnErrorQualityProfile() {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of("/api/qualityprofiles/search?language=delphi&defaults=true", "error.json"));
 
     var host = buildSonarHost(api);
@@ -132,7 +130,7 @@ class SonarQubeHostTest {
   void getsRuleNamesByRuleKey() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -154,12 +152,10 @@ class SonarQubeHostTest {
   void getsRules(String responseFile) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/server/version",
-                "11.5.3.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
                     + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
@@ -175,7 +171,7 @@ class SonarQubeHostTest {
   void parsesIssueWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.1"),
             Map.of(
                 "/api/qualityprofiles/search?language=delphi&project=MyProject",
                 QP_OK_JSON,
@@ -208,15 +204,15 @@ class SonarQubeHostTest {
   void parsesIssueWithCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.2"),
             Map.of(
                 "/api/qualityprofiles/search?language=delphi&project=MyProject",
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
                 "issuesSingularCleanCodeOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "issuesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -247,12 +243,10 @@ class SonarQubeHostTest {
   void parsesRuleWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("9.9"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/server/version",
-                "9.9.0.0.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
                     + "&f=name%2ChtmlDesc%2Cseverity",
@@ -276,12 +270,10 @@ class SonarQubeHostTest {
   void parsesRuleWithCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.4"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/server/version",
-                "11.5.3.txt",
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
                     + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
@@ -309,17 +301,17 @@ class SonarQubeHostTest {
 
   @Test
   void getsNoResolvedIssuesWithNoProjectKey() throws SonarHostException {
-    var api = new ResourceBackedSonarApi(RESOURCE_DIR, Collections.emptyMap());
+    var api = new ResourceBackedSonarApi(LATEST_VERSION, Collections.emptyMap());
 
     var host = buildSonarHost(api);
     assertTrue(host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).isEmpty());
   }
 
   @Test
-  void getsResolvedTestIssuesAndHotspots() throws SonarHostException {
+  void getsResolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.1"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -349,18 +341,84 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedIssuesAndHotspots() throws SonarHostException {
+  void getsResolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.2"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
+                "resolvedTestHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=true",
+                "resolvedTestIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=true&p=1",
+                "resolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> resolvedIssues =
+        new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
+  }
+
+  @Test
+  void getsResolvedTestIssuesAndHotspots() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            LATEST_VERSION,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject&status=REVIEWED",
+                "resolvedHotspotsOk.json",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&project=MyProject&status=REVIEWED",
+                "resolvedTestHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=true",
+                "resolvedTestIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=true&p=1",
+                "resolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> resolvedIssues =
+        new HashSet<>(host.getResolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        resolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
+  }
+
+  @Test
+  void getsResolvedIssuesAndHotspots() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            LATEST_VERSION,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject&status=REVIEWED",
+                "resolvedHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
+                "resolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -381,10 +439,10 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedTestIssuesAndHotspots() throws SonarHostException {
+  void getsUnresolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.1"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -414,18 +472,84 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedIssuesAndHotspots() throws SonarHostException {
+  void getsUnresolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            new Version("10.2"),
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
                 "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject",
                 "unresolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&projectKey=MyProject",
+                "unresolvedTestHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=false",
+                "unresolvedTestIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=false&p=1",
+                "unresolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> unresolvedIssues =
+        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
+  }
+
+  @Test
+  void getsUnresolvedTestIssuesAndHotspots() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            LATEST_VERSION,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject",
+                "unresolvedHotspotsOk.json",
+                "/api/hotspots/search?files=TestUnitA.pas%2C&project=MyProject",
+                "unresolvedTestHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=false",
+                "unresolvedTestIssuesOk.json",
+                "/api/issues/search?components=MyProject%3ATestUnitA.pas%2C&resolved=false&p=1",
+                "unresolvedTestIssuesOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    Set<RemoteIssue> unresolvedIssues =
+        new HashSet<>(host.getUnresolvedIssues(Set.of("UnitA.pas"), Set.of("TestUnitA.pas")));
+
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("RuleOnlyForTestCode")));
+    assertTrue(
+        unresolvedIssues.stream()
+            .anyMatch(remoteIssue -> remoteIssue.getRuleKey().equals("HotspotOnlyForTestCode")));
+  }
+
+  @Test
+  void getsUnresolvedIssuesAndHotspots() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            LATEST_VERSION,
+            Map.of(
+                DEFAULT_QP_URL,
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject",
+                "unresolvedHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false",
+                "unresolvedIssuesOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -449,15 +573,15 @@ class SonarQubeHostTest {
   void doesNotTreatAcknowledgedHotspotsAsResolvedIssues() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject&status=REVIEWED",
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject&status=REVIEWED",
                 "resolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
                 "resolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "resolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -478,15 +602,15 @@ class SonarQubeHostTest {
   void treatsAcknowledgedHotspotsAsUnresolvedIssues() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
-                "/api/hotspots/search?files=UnitA.pas%2C&projectKey=MyProject",
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject",
                 "unresolvedHotspotsOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false",
                 "unresolvedIssuesOk.json",
-                "/api/issues/search?componentKeys=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=false&p=1",
                 "unresolvedIssuesOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
@@ -517,7 +641,7 @@ class SonarQubeHostTest {
   void getsActiveRules() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -544,7 +668,7 @@ class SonarQubeHostTest {
   void getsActiveRulesWithParams() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -571,7 +695,7 @@ class SonarQubeHostTest {
   void getsActiveRulesWithNoParams() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 DEFAULT_QP_URL,
                 QP_OK_JSON,
@@ -597,7 +721,7 @@ class SonarQubeHostTest {
   void getsPluginJar() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of("/api/plugins/download?plugin=abcd", "filepath1")); // Can be any file
 
     var host = buildSonarHost(api);
@@ -609,12 +733,7 @@ class SonarQubeHostTest {
   void getsOnlyDelphiPlugins() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                "10.5.txt"));
+            LATEST_VERSION, Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -625,12 +744,7 @@ class SonarQubeHostTest {
   void getsRequiredForLanguagesDelphiPluginsOnSupportedVersions() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                "10.5.txt"));
+            new Version("10.5"), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -643,12 +757,7 @@ class SonarQubeHostTest {
       throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                "10.2.txt"));
+            new Version("9.9"), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -657,16 +766,11 @@ class SonarQubeHostTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"10.5.txt", "10.2.txt", "5.7.txt", "11.5.3.txt"})
-  void getsNameHeuristicDelphiPluginsOnAllVersions(String versionTxt) throws SonarHostException {
+  @ValueSource(strings = {"10.5", "10.2", "5.7", "11.5.3"})
+  void getsNameHeuristicDelphiPluginsOnAllVersions(String versionStr) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                versionTxt));
+            new Version(versionStr), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -675,16 +779,11 @@ class SonarQubeHostTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"10.5.txt", "10.2.txt", "5.7.txt", "11.5.3.txt"})
+  @ValueSource(strings = {"10.5", "10.2", "5.7", "11.5.3"})
   void getsCorePluginOnAllVersions(String versionTxt) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                versionTxt));
+            new Version(versionTxt), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -696,12 +795,7 @@ class SonarQubeHostTest {
   void getsDelphiPluginFilenames() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                "10.2.txt"));
+            new Version("10.2"), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -724,16 +818,11 @@ class SonarQubeHostTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"10.2.txt", "10.5.txt"})
-  void identifiesCorePlugin(String versionTxt) throws SonarHostException {
+  @ValueSource(strings = {"10.2", "10.5"})
+  void identifiesCorePlugin(String versionStr) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
-            Map.of(
-                "/api/plugins/installed",
-                "installedPluginsOk.json",
-                "/api/server/version",
-                versionTxt));
+            new Version(versionStr), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
 
     var host = buildSonarHost(api);
     Set<RemotePlugin> plugins = host.getDelphiPlugins();
@@ -748,7 +837,7 @@ class SonarQubeHostTest {
   void getsTestFilePaths() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
-            RESOURCE_DIR,
+            LATEST_VERSION,
             Map.of(
                 "/api/components/tree?ps=500&component=MyProject&qualifiers=UTS",
                 "testComponentsOk.json",
@@ -762,12 +851,15 @@ class SonarQubeHostTest {
   }
 
   static class ResourceBackedSonarApi implements SonarApi {
-    private final Path basePath;
+    private static final Path BASE_PATH =
+        Path.of("src/test/resources/au/com/integradev/delphilint/remote/sonarqube/mockedApi");
+
     private final Map<String, String> responseResources;
     private final ObjectMapper mapper;
+    private final Version version;
 
-    public ResourceBackedSonarApi(Path basePath, Map<String, String> responseResources) {
-      this.basePath = basePath;
+    public ResourceBackedSonarApi(Version version, Map<String, String> responseResources) {
+      this.version = version;
       this.responseResources = responseResources;
       this.mapper = new ObjectMapper();
     }
@@ -781,7 +873,7 @@ class SonarQubeHostTest {
       if (!responseResources.containsKey(url)) {
         throw new NotImplementedException("No resource assigned to mocked URL " + url);
       }
-      return basePath.resolve(responseResources.get(url));
+      return BASE_PATH.resolve(responseResources.get(url));
     }
 
     @Override
@@ -810,6 +902,10 @@ class SonarQubeHostTest {
 
     @Override
     public String getText(String url) {
+      if (url.endsWith("/api/server/version")) {
+        return version.toString();
+      }
+
       try {
         return Files.readString(getPath(url));
       } catch (IOException e) {

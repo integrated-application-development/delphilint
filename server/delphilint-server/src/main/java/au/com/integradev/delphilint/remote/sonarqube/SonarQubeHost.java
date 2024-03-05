@@ -63,6 +63,8 @@ public class SonarQubeHost implements SonarHost {
   private static final String URL_PLUGINS_DOWNLOAD = "/api/plugins/download";
   private static final String URL_PLUGINS_INSTALLED = "/api/plugins/installed";
   private static final String URL_COMPONENTS_TREE = "/api/components/tree";
+  private static final String URL_ISSUES_SEARCH = "/api/issues/search";
+  private static final String URL_HOTSPOTS_SEARCH = "/api/hotspots/search";
 
   private static final String PARAM_PAGE_SIZE = "ps";
   private static final String PARAM_LANGUAGE = "language";
@@ -343,23 +345,34 @@ public class SonarQubeHost implements SonarHost {
       return Collections.emptySet();
     }
 
+    Set<RemoteIssue> issues = getIssues(relativeFilePaths, issueParams);
+    issues.addAll(getHotspots(relativeFilePaths, hotspotParams));
+    return issues;
+  }
+
+  private Set<RemoteIssue> getIssues(
+      Collection<String> relativeFilePaths, Collection<String> params) throws SonarHostException {
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
     List<String> componentKeyBatches =
         joinStringsWithLimit(relativeFilePaths, filePath -> projectKey + ":" + filePath, 1500);
 
-    List<String> dynIssueParams = new ArrayList<>(issueParams);
+    List<String> dynIssueParams = new ArrayList<>(params);
     dynIssueParams.add(0, "<component keys>");
 
     for (String componentKeyBatch : componentKeyBatches) {
       LOG.info("Getting issues for component keys: {}", componentKeyBatch);
-      dynIssueParams.set(0, "componentKeys=" + componentKeyBatch);
+      if (getCharacteristics().issuesSearchComponentKeysDeprecated()) {
+        dynIssueParams.set(0, "components=" + componentKeyBatch);
+      } else {
+        dynIssueParams.set(0, "componentKeys=" + componentKeyBatch);
+      }
 
       try {
         ConnectedList<SonarQubeIssue> serverIssues =
             new ConnectedList<>(
                 api,
-                "/api/issues/search" + HttpUtils.buildParamString(dynIssueParams),
+                URL_ISSUES_SEARCH + HttpUtils.buildParamString(dynIssueParams),
                 "issues",
                 SonarQubeIssue.class);
 
@@ -371,32 +384,44 @@ public class SonarQubeHost implements SonarHost {
       }
     }
 
+    return remoteIssues;
+  }
+
+  private Set<RemoteIssue> getHotspots(
+      Collection<String> relativeFilePaths, Collection<String> params) throws SonarHostException {
+    Set<RemoteIssue> remoteHotspots = new HashSet<>();
+
     List<String> filePathBatches = joinStringsWithLimit(relativeFilePaths, s -> s, 1500);
-    List<String> dynHotspotParams = new ArrayList<>(hotspotParams);
+    List<String> dynHotspotParams = new ArrayList<>(params);
     dynHotspotParams.add(0, "<files>");
-    dynHotspotParams.add(1, "projectKey=" + projectKey);
+
+    if (getCharacteristics().hotspotsSearchProjectKeyDeprecated()) {
+      dynHotspotParams.add(1, "project=" + projectKey);
+    } else {
+      dynHotspotParams.add(1, "projectKey=" + projectKey);
+    }
 
     for (String filePathBatch : filePathBatches) {
       LOG.info("Getting hotspots for files: {}", filePathBatch);
       dynHotspotParams.set(0, "files=" + filePathBatch);
 
       try {
-        ConnectedList<SonarQubeHotspot> resolvedIssues =
+        ConnectedList<SonarQubeHotspot> resolvedHotspots =
             new ConnectedList<>(
                 api,
-                "/api/hotspots/search" + HttpUtils.buildParamString(dynHotspotParams),
+                URL_HOTSPOTS_SEARCH + HttpUtils.buildParamString(dynHotspotParams),
                 "hotspots",
                 SonarQubeHotspot.class);
 
-        for (SonarQubeHotspot sqHotspot : resolvedIssues) {
-          remoteIssues.add(sqIssueToRemote(sqHotspot));
+        for (SonarQubeHotspot sqHotspot : resolvedHotspots) {
+          remoteHotspots.add(sqIssueToRemote(sqHotspot));
         }
       } catch (UncheckedSonarHostException e) {
         throw (SonarHostException) e.getCause();
       }
     }
 
-    return remoteIssues;
+    return remoteHotspots;
   }
 
   public Collection<RemoteIssue> getResolvedIssues(

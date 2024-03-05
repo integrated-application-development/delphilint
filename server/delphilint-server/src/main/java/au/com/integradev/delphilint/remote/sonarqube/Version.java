@@ -14,6 +14,11 @@ public class Version implements Comparable<Version> {
   }
 
   @Override
+  public String toString() {
+    return versionParts.stream().map(Object::toString).collect(Collectors.joining("."));
+  }
+
+  @Override
   public int compareTo(Version other) {
     int maxLength = Math.max(this.versionParts.size(), other.versionParts.size());
     for (int i = 0; i < maxLength; i++) {
