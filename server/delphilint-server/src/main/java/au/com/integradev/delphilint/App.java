@@ -17,26 +17,40 @@
  */
 package au.com.integradev.delphilint;
 
+import au.com.integradev.delphilint.logclean.LogCleaner;
 import au.com.integradev.delphilint.server.AnalysisServer;
 import au.com.integradev.delphilint.server.TlvConnection;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class App {
   private static final int DEFAULT_PORT = 14000;
   private static final Logger LOG = LogManager.getLogger(App.class);
+  private static final Duration LOG_CUTOFF_DURATION = Duration.ofDays(7);
 
   public static void main(String[] args) {
     try {
       Path settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
       Path pluginsPath = settingsPath.resolve("plugins");
+      Path logsPath = settingsPath.resolve("logs");
 
       if (!Files.exists(pluginsPath)) {
         Files.createDirectory(pluginsPath);
+      }
+
+      if (Files.exists(logsPath)) {
+        try {
+          new LogCleaner(Instant.now().minus(LOG_CUTOFF_DURATION)).clean(logsPath);
+        } catch (IOException e) {
+          LOG.error("Could not clean logs", e);
+        }
       }
 
       TlvConnection connection;
