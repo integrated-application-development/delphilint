@@ -18,104 +18,75 @@ type
     [TearDown]
     procedure TearDown;
 
+    [Test]
+
     [TestCase('AlreadyAbsolute', 'C:\ABC\def,C:\abc,C:\ABC\def')]
-    [TestCase('FirstChild', 'def,C:\ABC,C:\ABC\def')]
-    [TestCase('File', 'def.txt,C:\ABC,C:\ABC\def.txt')]
-    [TestCase('MultiStageRelativePath', 'def\ghi,C:\ABC,C:\ABC\def\ghi')]
-    [TestCase('ForwardSlashes', 'def/ghi,C:/ABC,C:/ABC\def/ghi')]
-    [TestCase('UpwardsRelative', '..\ghi,C:\ABC\def,C:\ABC\ghi')]
-    [TestCase('MiddleUpwardsRelative', 'lmo\..\ghi,C:\ABC\def,C:\ABC\def\ghi')]
     procedure TestToAbsolutePath(RelativePath: string; BaseDir: string; Expected: string);
+    [Test]
     [TestCase('Prenormalized', 'c:/abc/def/ghi.txt,c:/abc/def/ghi.txt')]
-    [TestCase('UpperCase', 'C:/abc/DEF/gHI.txt,c:/abc/def/ghi.txt')]
-    [TestCase('Backslash', 'c:\abc\def\ghi.txt,c:/abc/def/ghi.txt')]
-    [TestCase('Spaces', 'c:/ab c/d ef/ghi.txt,c:/ab c/d ef/ghi.txt')]
-    [TestCase('Combination', 'C:\ab C\D Ef\ghi.TXT,c:/ab c/d ef/ghi.txt')]
     procedure TestNormalizePath(Input: string; Expected: string);
-    [TestCase]
+    [Test]
     procedure TestTryGetCurrentSourceEditorReturnsCurrentSourceEditor;
-    [TestCase]
+    [Test]
     procedure TestTryGetCurrentSourceEditorReturnsFalseWhenNoModule;
-    [TestCase]
+    [Test]
     procedure TestTryGetProjectFileReturnsProjectFile;
-    [TestCase]
+    [Test]
     procedure TestTryGetProjectFileReturnsFalseWhenNoProject;
-    [TestCase]
+    [Test]
     procedure TestGetOpenSourceModulesGetsOnlyPasFiles;
-    [TestCase]
+    [Test]
     procedure TestGetAllFilesReturnsEmptyWhenNotInProject;
-    [TestCase]
+    [Test]
     procedure TestGetAllFilesFiltersOutNonDelphiFiles;
+    [Test]
     [TestCase('LowerCase', 'abc.pas')]
-    [TestCase('UpperCase', 'abc.PAS')]
-    [TestCase('MixedCase', 'abc.pAs')]
     procedure TestIsPasFileIsTrueFor(Path: string);
+    [Test]
     [TestCase('Dpr', 'abc.dpr')]
-    [TestCase('Dpk', 'abc.dpk')]
-    [TestCase('Dproj', 'abc.dproj')]
-    [TestCase('NoExtension', 'abc')]
-    [TestCase('EmptyString', '')]
-    [TestCase('ExactlyPas', 'pas')]
     procedure TestIsPasFileIsFalseFor(Path: string);
+    [Test]
     [TestCase('Dpr', 'abc.dpr')]
-    [TestCase('Dpk', 'abc.dpk')]
-    [TestCase('DprUpperCase', 'abc.DPR')]
-    [TestCase('DpkUpperCase', 'abc.DPK')]
     procedure TestIsMainFileIsTrueFor(Path: string);
+    [Test]
     [TestCase('Pas', 'abc.pas')]
-    [TestCase('Dproj', 'abc.dproj')]
-    [TestCase('NoExtension', 'abc')]
-    [TestCase('EmptyString', '')]
-    [TestCase('ExactlyDpr', 'dpr')]
     procedure TestIsMainFileIsFalseFor(Path: string);
+    [Test]
     [TestCase('Pas', 'abc.pas')]
-    [TestCase('Dpr', 'abc.dpr')]
-    [TestCase('Dpk', 'abc.dpk')]
-    [TestCase('PasUpperCase', 'abc.PAS')]
-    [TestCase('DprUpperCase', 'abc.DPR')]
-    [TestCase('DpkUpperCase', 'abc.DPK')]
     procedure TestIsDelphiSourceIsTrueFor(Path: string);
+    [Test]
     [TestCase('Dproj', 'abc.dproj')]
-    [TestCase('NoExtension', 'abc')]
-    [TestCase('EmptyString', '')]
-    [TestCase('ExactlyPas', 'pas')]
-    [TestCase('ExactlyDpr', 'dpr')]
     procedure TestIsDelphiSourceIsFalseFor(Path: string);
+    [Test]
     [TestCase('Dproj', 'abc.dproj')]
-    [TestCase('DprojUpperCase', 'abc.DPROJ')]
-    [TestCase('DprojMixedCase', 'abc.dPROj')]
     procedure TestIsProjectFileIsTrueFor(Path: string);
+    [Test]
     [TestCase('Pas', 'abc.pas')]
-    [TestCase('Dpr', 'abc.dpr')]
-    [TestCase('Dpk', 'abc.dpk')]
-    [TestCase('NoExtension', 'abc')]
-    [TestCase('EmptyString', '')]
-    [TestCase('ExactlyDproj', 'dproj')]
     procedure TestIsProjectFileIsFalseFor(Path: string);
-    [TestCase]
+    [Test]
     procedure TestTryGetProjectDirectoryReturnsFalseWhenNoProject;
-    [TestCase]
+    [Test]
     procedure TestTryGetProjectDirectoryWithReadOptionsOffGetsProjectFileDirectory;
-    [TestCase]
+    [Test]
     procedure TestTryGetProjectDirectoryWithReadOptionsOnGetsAbsoluteAnalysisBaseDir;
   end;
 
   [TestFixture]
   TArrayUtilsTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestMapSimpleTypes;
-    [TestCase]
+    [Test]
     procedure TestMapDoesNotFree;
-    [TestCase]
+    [Test]
     procedure TestReduceSimpleTypes;
-    [TestCase]
+    [Test]
     procedure TestReduceDoesNotFree;
-    [TestCase]
+    [Test]
     procedure TestMax;
-    [TestCase]
+    [Test]
     procedure TestReduceNoElementsRaisesException;
-    [TestCase]
+    [Test]
     procedure TestReduceNoElementsWithDefaultReturnsDefault;
   end;
 

@@ -10,15 +10,15 @@ type
   [TestFixture]
   TEventNotifierTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestNotifyObjectProc;
-    [TestCase]
+    [Test]
     procedure TestNotifyAnonymousProc;
-    [TestCase]
+    [Test]
     procedure TestNotifyTopLevelProc;
-    [TestCase]
+    [Test]
     procedure TestNotifyMultiple;
-    [TestCase]
+    [Test]
     procedure TestRemoveListener;
   end;
 

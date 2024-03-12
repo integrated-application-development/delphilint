@@ -19,19 +19,19 @@ type
   public
     [TearDown]
     procedure TearDown;
-    [TestCase]
+    [Test]
     procedure TestLogDebug;
-    [TestCase]
+    [Test]
     procedure TestLogInfo;
-    [TestCase]
+    [Test]
     procedure TestLogWarn;
-    [TestCase]
+    [Test]
     procedure TestLogDebugWithArgs;
-    [TestCase]
+    [Test]
     procedure TestLogInfoWithArgs;
-    [TestCase]
+    [Test]
     procedure TestLogWarnWithArgs;
-    [TestCase]
+    [Test]
     procedure TestLogMultiple;
   end;
 

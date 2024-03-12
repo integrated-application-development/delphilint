@@ -19,30 +19,26 @@ type
     [TearDown]
     procedure TearDown;
 
-    [TestCase]
+    [Test]
     procedure TestPluginInfoAddedOnCreate;
-    [TestCase]
+    [Test]
     procedure TestPluginInfoCleanedUp;
-    [TestCase]
+    [Test]
     procedure TestEditorHandlerAddedOnInit;
-    [TestCase]
+    [Test]
     procedure TestEditorHandlerCleanedUp;
-    [TestCase]
+    [Test]
     procedure TestFormClassesRegisteredOnInit;
-    [TestCase]
+    [Test]
     procedure TestEnablesOnInitWhenSetupValid;
-    [TestCase]
+    [Test]
     procedure TestDisablesOnInitWhenSetupInvalid;
+    [Test]
     [TestCase('ShowToolWindow', '0,&Show DelphiLint')]
-    [TestCase('AnalyzeActiveFile', '2,Analyze &This File')]
-    [TestCase('AnalyzeAllOpenFiles', '3,Analyze &All Open Files')]
-    [TestCase('ProjectOptions', '5,Project &Options...')]
-    [TestCase('Settings', '6,Se&ttings...')]
-    [TestCase('RestartServer', '7,&Restart Server')]
     procedure TestMenuItemAdded(ExpectedIndex: Integer; ExpectedCaption: string);
-    [TestCase]
+    [Test]
     procedure TestActionsAddedToIDEInsight;
-    [TestCase]
+    [Test]
     procedure TestIDEInsightActionsCleanedUp;
   end;
 

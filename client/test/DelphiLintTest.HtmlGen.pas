@@ -11,13 +11,13 @@ type
   [TestFixture]
   THtmlUtilsTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestColorToHex;
-    [TestCase]
+    [Test]
     procedure TestWrapHtml;
-    [TestCase]
+    [Test]
     procedure TestNoWrapTwice;
-    [TestCase]
+    [Test]
     procedure TestImageToBase64;
   end;
 
@@ -30,41 +30,41 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    [TestCase]
+    [Test]
     procedure TestUsesColorsFromIDETheme;
-    [TestCase]
+    [Test]
     procedure TestLinksToJsLibScript;
-    [TestCase]
+    [Test]
     procedure TestWrapsOldStyleDescriptions;
-    [TestCase]
+    [Test]
     procedure TestDoesNotWrapNewStyleDescriptions;
-    [TestCase]
+    [Test]
     procedure TestRuleNameIsHeading;
-    [TestCase]
+    [Test]
     procedure TestRuleNameIsHeadingCleanCode;
-    [TestCase]
+    [Test]
     procedure TestSecurityHotspotDoesNotContainSeverity;
-    [TestCase]
+    [Test]
     procedure TestRuleContainsRuleTypeAndSeverity;
-    [TestCase]
+    [Test]
     procedure TestCleanCodeRuleContainsAttributes;
-    [TestCase]
+    [Test]
     procedure TestCleanCodeRuleDoesNotContainRuleTypeOrSeverity;
-    [TestCase]
+    [Test]
     procedure TestAllCleanCodeAttributesHaveTooltip;
-    [TestCase]
+    [Test]
     procedure TestAllQualitiesHaveImpactTooltip;
-    [TestCase]
+    [Test]
     procedure TestAllImpactSeveritiesHaveClassName;
-    [TestCase]
+    [Test]
     procedure TestAllCleanCodeCategoriesHaveStr;
-    [TestCase]
+    [Test]
     procedure TestAllCleanCodeAttributesHaveStr;
-    [TestCase]
+    [Test]
     procedure TestAllSeveritiesHaveStr;
-    [TestCase]
+    [Test]
     procedure TestAllRuleTypesHaveStr;
-    [TestCase]
+    [Test]
     procedure TestAllQualitiesHaveStr;
   end;
 

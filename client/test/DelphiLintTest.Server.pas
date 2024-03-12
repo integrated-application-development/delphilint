@@ -31,19 +31,19 @@ type
   private const
     CLocalhost = '127.0.0.1';
   public
-    [TestCase]
+    [Test]
     procedure TestSendPing;
-    [TestCase]
+    [Test]
     procedure TestReceivePing;
-    [TestCase]
+    [Test]
     procedure TestReceiveMultipleMessagesSequentially;
-    [TestCase]
+    [Test]
     procedure TestReportsConnectedAfterConnect;
-    [TestCase]
+    [Test]
     procedure TestReportsDisconnectedAfterDisconnect;
-    [TestCase]
+    [Test]
     procedure TestReceiveMessageTimeout;
-    [TestCase]
+    [Test]
     procedure TestConnectTimeout;
   end;
 

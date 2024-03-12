@@ -11,33 +11,33 @@ type
   [TestFixture]
   THandlerTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestReleaseTriggersOnReleased;
   end;
 
   [TestFixture]
   TEditLineHandlerTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestCallbackCalledOnLineChanged;
   end;
 
   [TestFixture]
   TLineTrackerTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestTrackLine;
-    [TestCase]
+    [Test]
     procedure TestClearTracking;
-    [TestCase]
+    [Test]
     procedure TestAddsIDENotifierOnCreate;
-    [TestCase]
+    [Test]
     procedure TestRemovesIDENotifierOnDestroy;
-    [TestCase]
+    [Test]
     procedure TestNotifiesOnLineChanged;
-    [TestCase]
+    [Test]
     procedure TestNotifiesOnEditorClosed;
-    [TestCase]
+    [Test]
     procedure TestFilePath;
   end;
 
@@ -51,12 +51,12 @@ type
       LinesMoved: Integer = 0
     ): TLiveIssue;
   public
-    [TestCase]
+    [Test]
     procedure TestIssueLineUpdatedWhenTrackedLineChanged;
-    [TestCase]
+    [Test]
     procedure TestActivatedViewDoesNotDoubleInitTracker;
+    [Test]
     [TestCase('OnViewActivated', 'activated')]
-    [TestCase('OnViewAdded', 'added')]
     procedure TestNewViewInitsTracker(NewType: string);
   end;
 

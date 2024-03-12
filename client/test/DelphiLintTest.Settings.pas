@@ -21,31 +21,31 @@ type
     procedure Setup;
     [TearDown]
     procedure TearDown;
-    [TestCase]
+    [Test]
     procedure TestSettingsDir;
-    [TestCase]
+    [Test]
     procedure TestServerJarOverride;
-    [TestCase]
+    [Test]
     procedure TestSonarDelphiJarOverride;
-    [TestCase]
+    [Test]
     procedure TestJavaExeOverride;
-    [TestCase]
+    [Test]
     procedure TestShowConsole;
-    [TestCase]
+    [Test]
     procedure TestExternalServer;
-    [TestCase]
+    [Test]
     procedure TestAutoShowToolWindow;
-    [TestCase]
+    [Test]
     procedure TestSaveBeforeAnalysis;
-    [TestCase]
+    [Test]
     procedure TestGetServerJarDefault;
-    [TestCase]
+    [Test]
     procedure TestGetSonarDelphiJarDefault;
-    [TestCase]
+    [Test]
     procedure TestGetJavaExeDefault;
-    [TestCase]
+    [Test]
     procedure TestSonarHostTokens;
-    [TestCase]
+    [Test]
     procedure TestSaveAndLoad;
   end;
 

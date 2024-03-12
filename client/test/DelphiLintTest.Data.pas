@@ -17,52 +17,53 @@ type
     procedure TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
     procedure TestParseIssueStatus(Str: string; Value: TIssueStatus);
   public
-    [TestCase]
+    [Test]
     procedure TestCreateRuleNoCleanCode;
-    [TestCase]
+    [Test]
     procedure TestCreateRuleCleanCode;
-    [TestCase]
+    [Test]
     procedure TestParseRuleTypes;
-    [TestCase]
+    [Test]
     procedure TestParseRuleSeverities;
-    [TestCase]
+    [Test]
     procedure TestParseIssueStatuses;
-    [TestCase]
+    [Test]
     procedure TestCreateIssue;
   end;
 
   [TestFixture]
   TLiveIssueTest = class(TObject)
   public
-    [TestCase]
+    [Test]
     procedure TestIssueWithNoRangeIsSetToEntireFirstLine;
-    [TestCase]
+    [Test]
     procedure TestWrongNumberOfAssociatedLinesRaisesRangeError;
-    [TestCase]
+    [Test]
     procedure TestTransfersMetadataWhenHasMetadata;
-    [TestCase]
+    [Test]
     procedure TestTransfersMetadataWhenNotHasMetadata;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnUnchangedLineStaysTethered;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnChangedLineIsUntethered;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnChangedRangeIsUntethered;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnUnchangedLineStaysTetheredMultiline;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnChangedLineIsUntetheredMultiline;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnChangedRangeIsUntetheredMultiline;
-    [TestCase]
+    [Test]
     procedure TestCannotRetether;
-    [TestCase]
+    [Test]
     procedure TestUpdateTetherOnChangedWhitespaceIsUntethered;
+    [Test]
     [TestCase('Down', '3')]
     [TestCase('Up', '-5')]
     [TestCase('Zero', '0')]
     procedure TestMoveLine(Delta: Integer);
-    [TestCase]
+    [Test]
     procedure TestNewLineMoveSession;
   end;
 
