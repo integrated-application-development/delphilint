@@ -24,6 +24,9 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import org.apache.commons.io.ByteOrderMark;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 
 public class DelphiLintInputFile implements ClientInputFile {
@@ -66,13 +69,19 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public InputStream inputStream() throws IOException {
-    return new FileInputStream(baseDir.resolve(relativePath).toString());
+    return new BOMInputStream(
+        new FileInputStream(baseDir.resolve(relativePath).toString()),
+        ByteOrderMark.UTF_8,
+        ByteOrderMark.UTF_16BE,
+        ByteOrderMark.UTF_16LE,
+        ByteOrderMark.UTF_32BE,
+        ByteOrderMark.UTF_32LE);
   }
 
   @Override
   public String contents() throws IOException {
     try (var inputStream = inputStream()) {
-      return inputStream.toString();
+      return IOUtils.toString(inputStream, charset);
     }
   }
 
