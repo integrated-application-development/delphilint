@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import au.com.integradev.delphilint.analysis.DelphiIssue;
 import au.com.integradev.delphilint.analysis.DelphiLintInputFile;
+import au.com.integradev.delphilint.analysis.TextRange;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,30 +25,39 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 import org.sonarsource.sonarlint.core.analysis.api.Issue;
-import org.sonarsource.sonarlint.core.commons.TextRange;
 
 class SonarServerUtilsTest {
   private static final Path BASE_DIR =
       Path.of("src/test/resources/au/com/integradev/delphilint/remote");
-  private static final Path FILE_A =
-      Path.of("src/test/resources/au/com/integradev/delphilint/remote/LocalFileA.pas");
+  private static final Path FILE_PATH =
+      Path.of("src/test/resources/au/com/integradev/delphilint/remote/Utf8File.pas");
 
-  Issue buildIssue(Path filePath, String ruleKey, String message, TextRange range) {
-    ClientInputFile file = new DelphiLintInputFile(BASE_DIR, BASE_DIR.relativize(filePath));
+  Issue buildIssue(String ruleKey, String message, TextRange range) {
+    ClientInputFile file =
+        new DelphiLintInputFile(BASE_DIR, Path.of("Utf8File.pas"), StandardCharsets.UTF_8);
     return new Issue(
         ruleKey,
         message,
         Collections.emptyMap(),
-        range,
+        toSonarLintTextRange(range),
         file,
         Collections.emptyList(),
         Collections.emptyList(),
         Optional.empty());
   }
 
+  static org.sonarsource.sonarlint.core.commons.TextRange toSonarLintTextRange(
+      TextRange textRange) {
+    return new org.sonarsource.sonarlint.core.commons.TextRange(
+        textRange.getStartLine(),
+        textRange.getStartOffset(),
+        textRange.getEndLine(),
+        textRange.getEndOffset());
+  }
+
   @Test
-  void issuesAreConverted() throws SonarHostException {
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+  void testIssuesAreConverted() throws SonarHostException {
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 12)));
 
     SonarHost host = mock(SonarHost.class);
 
@@ -61,12 +72,12 @@ class SonarServerUtilsTest {
     assertEquals(6, issues.get(0).getTextRange().getStartLine());
     assertEquals(3, issues.get(0).getTextRange().getStartOffset());
     assertEquals(6, issues.get(0).getTextRange().getEndLine());
-    assertEquals(9, issues.get(0).getTextRange().getEndOffset());
+    assertEquals(12, issues.get(0).getTextRange().getEndOffset());
   }
 
   @Test
-  void localIssuesHaveNoMetadata() throws SonarHostException {
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+  void testLocalIssuesHaveNoMetadata() throws SonarHostException {
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 9)));
 
     SonarHost host = mock(SonarHost.class);
 
@@ -80,24 +91,26 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void unresolvedSecurityHotspotsPopulateMetadata() throws SonarHostException {
+  void testUnresolvedSecurityHotspotsPopulateMetadata() throws SonarHostException {
+    var textRange = new TextRange(6, 3, 6, 12);
+
     Set<RemoteIssue> unresolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
-                .withRange(6, 3, 6, 9)
+                .withRange(textRange)
                 .withType(RuleType.SECURITY_HOTSPOT)
                 .withStatus(IssueStatus.REVIEWED)
                 .withResolution("ACKNOWLEDGED")
-                .withHashFrom(FILE_A)
+                .withHash(SonarHasher.hashFileRange(FILE_PATH, textRange))
                 .withServerMetadata("user1", "creation date 1")
                 .build());
 
     SonarHost host = mock(SonarHost.class);
     when(host.getUnresolvedIssues(any(), any())).thenReturn(unresolvedIssues);
 
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", textRange));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -110,23 +123,25 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void unresolvedIssuesPopulateMetadata() throws SonarHostException {
+  void testUnresolvedIssuesPopulateMetadata() throws SonarHostException {
+    var textRange = new TextRange(6, 3, 6, 12);
+
     Set<RemoteIssue> unresolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
-                .withRange(6, 3, 6, 9)
+                .withRange(textRange)
                 .withStatus(IssueStatus.CONFIRMED)
                 .withResolution("resolution 1")
-                .withHashFrom(FILE_A)
+                .withHash(SonarHasher.hashFileRange(FILE_PATH, textRange))
                 .withServerMetadata("user1", "creation date 1")
                 .build());
 
     SonarHost host = mock(SonarHost.class);
     when(host.getUnresolvedIssues(any(), any())).thenReturn(unresolvedIssues);
 
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 12)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -140,40 +155,43 @@ class SonarServerUtilsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"OPEN", "CONFIRMED", "REOPENED", "TO_REVIEW"})
-  void unresolvedIssuesAreNotPruned(String issueStatus) throws SonarHostException {
+  void testUnresolvedIssuesAreNotPruned(String issueStatus) throws SonarHostException {
+    var textRange = new au.com.integradev.delphilint.analysis.TextRange(6, 3, 6, 12);
+
     Set<RemoteIssue> unresolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
-                .withRange(6, 3, 6, 9)
+                .withRange(textRange)
                 .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
-                .withHashFrom(FILE_A)
+                .withHash(SonarHasher.hashFileRange(FILE_PATH, textRange))
                 .build());
 
     SonarHost host = mock(SonarHost.class);
     when(host.getUnresolvedIssues(any(), any())).thenReturn(unresolvedIssues);
 
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 12)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
                 Collections.emptySet(), Collections.emptySet(), rawIssues, host));
-
     assertEquals(1, issues.size());
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
-  void resolvedIdenticalIssuesArePruned(String issueStatus) throws SonarHostException {
+  void testResolvedIdenticalIssuesArePruned(String issueStatus) throws SonarHostException {
+    var textRange = new au.com.integradev.delphilint.analysis.TextRange(6, 3, 6, 12);
+
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
                 .withRuleKey("rk1")
                 .withMessage("issue 1")
-                .withRange(6, 3, 6, 9)
+                .withRange(textRange)
                 .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
-                .withHashFrom(FILE_A)
+                .withHash(SonarHasher.hashFileRange(FILE_PATH, textRange))
                 .build());
 
     SonarHost host = mock(SonarHost.class);
@@ -181,8 +199,8 @@ class SonarServerUtilsTest {
 
     Set<Issue> rawIssues =
         Set.of(
-            buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)),
-            buildIssue(FILE_A, "rk2", "issue 2", new TextRange(9, 0, 20, 10)));
+            buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 12)),
+            buildIssue("rk2", "issue 2", new TextRange(9, 0, 20, 10)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -193,7 +211,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void resolvedHotspotsArePruned() throws SonarHostException {
+  void testResolvedHotspotsArePruned() throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
@@ -203,7 +221,7 @@ class SonarServerUtilsTest {
                 .withStatus(IssueStatus.REVIEWED)
                 .withResolution("FIXED")
                 .withType(RuleType.SECURITY_HOTSPOT)
-                .withHashFrom(FILE_A)
+                .withHash("abc")
                 .build(),
             new RemoteIssue.Builder()
                 .withRuleKey("rk2")
@@ -212,7 +230,7 @@ class SonarServerUtilsTest {
                 .withStatus(IssueStatus.REVIEWED)
                 .withResolution("SAFE")
                 .withType(RuleType.SECURITY_HOTSPOT)
-                .withHashFrom(FILE_A)
+                .withHash("abc")
                 .build());
 
     SonarHost host = mock(SonarHost.class);
@@ -220,8 +238,8 @@ class SonarServerUtilsTest {
 
     Set<Issue> rawIssues =
         Set.of(
-            buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)),
-            buildIssue(FILE_A, "rk2", "issue 2", new TextRange(9, 0, 20, 10)));
+            buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 9)),
+            buildIssue("rk2", "issue 2", new TextRange(9, 0, 20, 10)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -231,7 +249,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void acknowledgedHotspotsAreNotPruned() throws SonarHostException {
+  void testAcknowledgedHotspotsAreNotPruned() throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
@@ -240,7 +258,7 @@ class SonarServerUtilsTest {
                 .withRange(6, 3, 6, 9)
                 .withStatus(IssueStatus.REVIEWED)
                 .withResolution("ACKNOWLEDGED")
-                .withHashFrom(FILE_A)
+                .withHash("abc")
                 .build());
 
     SonarHost host = mock(SonarHost.class);
@@ -248,8 +266,8 @@ class SonarServerUtilsTest {
 
     Set<Issue> rawIssues =
         Set.of(
-            buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)),
-            buildIssue(FILE_A, "rk2", "issue 2", new TextRange(9, 0, 20, 10)));
+            buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 9)),
+            buildIssue("rk2", "issue 2", new TextRange(9, 0, 20, 10)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -261,7 +279,7 @@ class SonarServerUtilsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
-  void movedResolvedIssuesArePruned(String issueStatus) throws SonarHostException {
+  void testMovedResolvedIssuesArePruned(String issueStatus) throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
             new RemoteIssue.Builder()
@@ -269,13 +287,13 @@ class SonarServerUtilsTest {
                 .withMessage("issue 1")
                 .withRange(8, 3, 6, 9)
                 .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
-                .withHash(SonarHasher.hashFileLine(FILE_A, 6))
+                .withHash(SonarHasher.hashFileLine(FILE_PATH, 6))
                 .build());
 
     SonarHost host = mock(SonarHost.class);
     when(host.getResolvedIssues(any(), any())).thenReturn(resolvedIssues);
 
-    Set<Issue> rawIssues = Set.of(buildIssue(FILE_A, "rk1", "issue 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "issue 1", new TextRange(6, 3, 6, 9)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -286,7 +304,7 @@ class SonarServerUtilsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"RESOLVED", "ACCEPTED"})
-  void movedResolvedIssuesWithDifferentMessagesArePruned(String issueStatus)
+  void testMovedResolvedIssuesWithDifferentMessagesArePruned(String issueStatus)
       throws SonarHostException {
     Set<RemoteIssue> resolvedIssues =
         Set.of(
@@ -295,14 +313,13 @@ class SonarServerUtilsTest {
                 .withMessage("remote issue 1")
                 .withRange(8, 3, 6, 9)
                 .withStatus(IssueStatus.fromSonarQubeIssueStatus(issueStatus))
-                .withHash(SonarHasher.hashFileLine(FILE_A, 6))
+                .withHash(SonarHasher.hashFileLine(FILE_PATH, 6))
                 .build());
 
     SonarHost host = mock(SonarHost.class);
     when(host.getResolvedIssues(any(), any())).thenReturn(resolvedIssues);
 
-    Set<Issue> rawIssues =
-        Set.of(buildIssue(FILE_A, "rk1", "local issue 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "local issue 1", new TextRange(6, 3, 6, 9)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -312,14 +329,14 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void issuesWithNoMessageUseRuleName() throws SonarHostException {
+  void testIssuesWithNoMessageUseRuleName() throws SonarHostException {
     SonarHost host = mock(SonarHost.class);
     when(host.getRuleNamesByRuleKey()).thenReturn(Map.of("rk1", "Rule key 1"));
 
     Set<Issue> rawIssues =
         Set.of(
-            buildIssue(FILE_A, "rk1", "", new TextRange(6, 3, 6, 9)),
-            buildIssue(FILE_A, "rk1", null, new TextRange(6, 3, 6, 9)));
+            buildIssue("rk1", "", new TextRange(6, 3, 6, 9)),
+            buildIssue("rk1", null, new TextRange(6, 3, 6, 9)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -331,12 +348,11 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void issuesWithMessageUseMessage() throws SonarHostException {
+  void testIssuesWithMessageUseMessage() throws SonarHostException {
     SonarHost host = mock(SonarHost.class);
     when(host.getRuleNamesByRuleKey()).thenReturn(Map.of("rk1", "Rule key 1"));
 
-    Set<Issue> rawIssues =
-        Set.of(buildIssue(FILE_A, "rk1", "Issue message 1", new TextRange(6, 3, 6, 9)));
+    Set<Issue> rawIssues = Set.of(buildIssue("rk1", "Issue message 1", new TextRange(6, 3, 6, 9)));
     List<DelphiIssue> issues =
         new ArrayList<>(
             SonarServerUtils.postProcessIssues(
@@ -347,7 +363,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void providingNullTestPathsQueriesHost() throws SonarHostException {
+  void testProvidingNullTestPathsQueriesHost() throws SonarHostException {
     Set<String> allFilePaths = Set.of("a", "b", "c");
     Set<String> testFilePaths = Set.of("b", "c");
     Set<String> mainFilePaths = Set.of("a");
@@ -363,7 +379,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void providingNonNullTestPathsDoesNotQueryHost() throws SonarHostException {
+  void testProvidingNonNullTestPathsDoesNotQueryHost() throws SonarHostException {
     Set<String> allFilePaths = Set.of("a", "b", "c");
     Set<String> testFilePaths = Set.of("b", "c");
     Set<String> mainFilePaths = Set.of("a");
@@ -377,7 +393,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void onlyQueriedTestFilesInProvidedPathsAreUsed() throws SonarHostException {
+  void testOnlyQueriedTestFilesInProvidedPathsAreUsed() throws SonarHostException {
     Set<String> allFilePaths = Set.of("a", "b", "c");
     Set<String> testFilePaths = Set.of("b", "c", "d");
     Set<String> mainFilePaths = Set.of("a");
@@ -394,7 +410,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void onlyProvidedTestFilesInProvidedPathsAreUsed() throws SonarHostException {
+  void testOnlyProvidedTestFilesInProvidedPathsAreUsed() throws SonarHostException {
     Set<String> allFilePaths = Set.of("a", "b", "c");
     Set<String> testFilePaths = Set.of("b", "c", "d");
     Set<String> mainFilePaths = Set.of("a");
@@ -409,7 +425,7 @@ class SonarServerUtilsTest {
   }
 
   @Test
-  void queriesTestFilesIfBadRequest() throws SonarHostException {
+  void testQueriesTestFilesIfBadRequest() throws SonarHostException {
     Set<String> allFilePaths = Set.of("a", "b", "c");
 
     Set<String> localTestFilePaths = Set.of("b", "c", "d");

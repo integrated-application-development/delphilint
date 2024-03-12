@@ -21,6 +21,8 @@ import au.com.integradev.delphilint.remote.RemoteActiveRule;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarServerUtils;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -68,6 +70,8 @@ public class AnalysisOrchestrator implements AutoCloseable {
   private static AnalysisConfiguration buildConfiguration(
       Path baseDir, Set<Path> inputFiles, SonarHost connection, Map<String, String> properties)
       throws SonarHostException {
+    var charsetDetector = new DelphiCharsetDetector(getConfiguredCharset(properties));
+
     var configBuilder =
         AnalysisConfiguration.builder()
             .setBaseDir(baseDir)
@@ -82,7 +86,12 @@ public class AnalysisOrchestrator implements AutoCloseable {
                             return possiblyAbsolutePath;
                           }
                         })
-                    .map(relativePath -> new DelphiLintInputFile(baseDir, relativePath))
+                    .map(
+                        relativePath ->
+                            new DelphiLintInputFile(
+                                baseDir,
+                                relativePath,
+                                charsetDetector.detectCharset(baseDir.resolve(relativePath))))
                     .collect(Collectors.toUnmodifiableList()));
 
     LOG.info("Added {} extra properties", properties.size());
@@ -96,6 +105,14 @@ public class AnalysisOrchestrator implements AutoCloseable {
     LOG.info("Added {} active rules", activeRules.size());
 
     return configBuilder.build();
+  }
+
+  private static Charset getConfiguredCharset(Map<String, String> properties) {
+    if (properties.containsKey("sonar.encoding")) {
+      return Charset.forName(properties.get("sonar.encoding"));
+    } else {
+      return StandardCharsets.UTF_8;
+    }
   }
 
   private static Set<String> getTestFiles(Set<String> inputFiles, String[] testDirs) {

@@ -29,10 +29,12 @@ import org.sonarsource.sonarlint.core.analysis.api.ClientInputFile;
 public class DelphiLintInputFile implements ClientInputFile {
   private final Path baseDir;
   private final Path relativePath;
+  private final Charset charset;
 
-  public DelphiLintInputFile(Path baseDir, Path relativePath) {
+  public DelphiLintInputFile(Path baseDir, Path relativePath, Charset charset) {
     this.baseDir = baseDir;
     this.relativePath = relativePath;
+    this.charset = charset;
   }
 
   /**
@@ -54,7 +56,7 @@ public class DelphiLintInputFile implements ClientInputFile {
 
   @Override
   public Charset getCharset() {
-    return Charset.defaultCharset();
+    return charset;
   }
 
   @Override

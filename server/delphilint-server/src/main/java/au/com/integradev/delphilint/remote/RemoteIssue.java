@@ -18,7 +18,6 @@
 package au.com.integradev.delphilint.remote;
 
 import au.com.integradev.delphilint.analysis.TextRange;
-import java.nio.file.Path;
 import java.util.Map;
 
 public final class RemoteIssue {
@@ -124,7 +123,6 @@ public final class RemoteIssue {
     private String rule = "";
     private int line = -1;
     private String hash;
-    private Path hashPath;
     private TextRange textRange;
     private String message = "";
     private RuleSeverity severity = RuleSeverity.MAJOR;
@@ -159,15 +157,8 @@ public final class RemoteIssue {
       return this;
     }
 
-    public Builder withHashFrom(Path filePath) {
-      this.hashPath = filePath;
-      return this;
-    }
-
     public Builder withRange(int startLine, int startOffset, int endLine, int endOffset) {
-      this.textRange = new TextRange(startLine, startOffset, endLine, endOffset);
-      this.line = textRange.getStartLine();
-      return this;
+      return this.withRange(new TextRange(startLine, startOffset, endLine, endOffset));
     }
 
     public Builder withSeverity(RuleSeverity severity) {
@@ -208,15 +199,6 @@ public final class RemoteIssue {
     }
 
     public RemoteIssue build() {
-      if (hash == null && hashPath != null) {
-        if (textRange == null) {
-          throw new IllegalStateException(
-              "Cannot build hash from file as text range has not been provided");
-        }
-
-        hash = SonarHasher.hashFileRange(hashPath, textRange);
-      }
-
       return new RemoteIssue(
           rule,
           line,
