@@ -3,7 +3,7 @@ import * as path from "path";
 import { ProjectChoice } from "./delphiProjectUtils";
 
 export class LintStatusItem {
-  private statusItem: vscode.StatusBarItem;
+  private readonly statusItem: vscode.StatusBarItem;
   private activeProject?: ProjectChoice;
   private action?: string;
   private progress: boolean;
@@ -37,8 +37,8 @@ export class LintStatusItem {
         : "Standalone";
     }
 
-    let iconText = this.progress ? "$(loading~spin) " : "";
-    let actionText = this.action ?? "Idle";
+    const iconText = this.progress ? "$(loading~spin) " : "";
+    const actionText = this.action ?? "Idle";
 
     this.statusItem.text = `${iconText}DelphiLint: ${actionText} (${activeProjectText})`;
   }
