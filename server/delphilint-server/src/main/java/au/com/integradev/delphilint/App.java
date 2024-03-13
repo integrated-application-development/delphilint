@@ -20,7 +20,6 @@ package au.com.integradev.delphilint;
 import au.com.integradev.delphilint.logclean.LogCleaner;
 import au.com.integradev.delphilint.server.AnalysisServer;
 import au.com.integradev.delphilint.server.TlvConnection;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -37,20 +36,16 @@ public class App {
 
   public static void main(String[] args) {
     try {
-      Path settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
-      Path pluginsPath = settingsPath.resolve("plugins");
-      Path logsPath = settingsPath.resolve("logs");
+      var settingsPath = Path.of(System.getenv("APPDATA"), "DelphiLint");
+      var pluginsPath = settingsPath.resolve("plugins");
+      var logPath = settingsPath.resolve("logs");
 
       if (!Files.exists(pluginsPath)) {
         Files.createDirectory(pluginsPath);
       }
 
-      if (Files.exists(logsPath)) {
-        try {
-          new LogCleaner(Instant.now().minus(LOG_CUTOFF_DURATION)).clean(logsPath);
-        } catch (IOException e) {
-          LOG.error("Could not clean logs", e);
-        }
+      if (Files.exists(logPath)) {
+        cleanLogs(logPath);
       }
 
       TlvConnection connection;
@@ -59,14 +54,13 @@ public class App {
       if (args.length > 0) {
         connection = new TlvConnection(server);
 
-        File portFile = new File(args[0]);
-        if (portFile.exists()) {
+        var portFile = Path.of(args[0]);
+        if (Files.exists(portFile)) {
           Files.write(
-              portFile.toPath(),
-              String.valueOf(connection.getPort()).getBytes(StandardCharsets.UTF_8));
-          LOG.info("Server port written to port file at {}", portFile.toPath());
+              portFile, String.valueOf(connection.getPort()).getBytes(StandardCharsets.UTF_8));
+          LOG.info("Server port written to port file at {}", portFile);
         } else {
-          LOG.info("Port file at {} does not exist", portFile.toPath());
+          LOG.info("Port file at {} does not exist", portFile);
           connection = new TlvConnection(server, DEFAULT_PORT);
         }
       } else {
@@ -78,6 +72,14 @@ public class App {
     } catch (Exception e) {
       LOG.error(e);
       System.exit(1);
+    }
+  }
+
+  private static void cleanLogs(Path logPath) {
+    try {
+      new LogCleaner(Instant.now().minus(LOG_CUTOFF_DURATION)).clean(logPath);
+    } catch (IOException e) {
+      LOG.error("Could not clean logs", e);
     }
   }
 }

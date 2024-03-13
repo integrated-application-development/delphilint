@@ -62,7 +62,7 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"9.9.0.0", "11.2.0.0.01923", "11.5.3"})
-  void recognisesSupportedVersion(String versionStr) throws SonarHostException {
+  void testRecognisesSupportedVersion(String versionStr) throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version(versionStr), Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -79,7 +79,7 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"10.2", "11.2.0.0.01923", "11.5.3"})
-  void recognisesCleanCodeVersion(String versionStr) throws SonarHostException {
+  void testRecognisesCleanCodeVersion(String versionStr) throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version(versionStr), Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -149,7 +149,7 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"rulesOk.json", "rulesCleanCodeOk.json"})
-  void getsRules(String responseFile) throws SonarHostException {
+  void testGetsRules(String responseFile) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -767,7 +767,8 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"10.5", "10.2", "5.7", "11.5.3"})
-  void getsNameHeuristicDelphiPluginsOnAllVersions(String versionStr) throws SonarHostException {
+  void testGetsNameHeuristicDelphiPluginsOnAllVersions(String versionStr)
+      throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version(versionStr), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
@@ -780,7 +781,7 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"10.5", "10.2", "5.7", "11.5.3"})
-  void getsCorePluginOnAllVersions(String versionTxt) throws SonarHostException {
+  void testGetsCorePluginOnAllVersions(String versionTxt) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version(versionTxt), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
@@ -819,7 +820,7 @@ class SonarQubeHostTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"10.2", "10.5"})
-  void identifiesCorePlugin(String versionStr) throws SonarHostException {
+  void testIdentifiesCorePlugin(String versionStr) throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version(versionStr), Map.of("/api/plugins/installed", "installedPluginsOk.json"));

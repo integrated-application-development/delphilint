@@ -26,7 +26,7 @@ public class LogCleaner {
     }
 
     LOG.debug("Cleaning {} old log files...", logFiles.size());
-    int deletedFiles = 0;
+    var deletedFiles = 0;
     for (Path logFile : logFiles) {
       try {
         Files.delete(logFile);
