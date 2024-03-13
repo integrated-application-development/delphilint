@@ -13,34 +13,45 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 
 ## Features
 
-* Integration with [IntegraDev SonarDelphi](https://github.com/integrated-application-development/sonar-delphi),
-  including 100+ code analysis rules, both structural and semantic
-* On-demand analysis in the Delphi IDE, both single-file and multi-file
+* Brings [SonarDelphi](https://github.com/integrated-application-development/sonar-delphi),
+  a static analyzer for Delphi with 100+ code analysis rules, to the Delphi IDE
+* Analyze one or more files on-the-fly, shortening the feedback loop so you can pick up and fix problems before they're even checked in
+* Detected issues, along with descriptions and rationale, displayed inline in the IDE
 * Two analysis modes:
    * Standalone - run analyses entirely locally with a default set of active rules
    * Connected - connect to a SonarQube instance, allowing for
       * Fetching of active rules and configuration from the server's configured quality profiles
       * Suppression of issues that have been resolved in past analyses
       * Usage of the server's version of SonarDelphi
-* Support for reading `sonar-project.properties` files
-* A Visual Studio Code companion that can be used to run analyses and show results in VS Code itself
+* Support for reading standard `sonar-project.properties` files, providing additional configuration
+* A Visual Studio Code companion extension that can be used to run analyses and show results in VS Code itself
 
 ## Installation
 
-1. [Build DelphiLint from source](#building-from-source) or, if you are using Delphi 11.2, download the packaged zip
-   artifact from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest).
-2. Download or compile the latest SonarDelphi release from the [IntegraDev SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi).
+System requirements:
+
+* Microsoft Edge 79.0.309 or above installed
+* PowerShell execution policy set to `Unrestricted` (see [MSDN](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts?view=powershell-7.4#how-to-run-a-script))
+* [RAD Studio for Delphi 11 or above](https://www.embarcadero.com/products/delphi) installed
+* [Java 11 or above](https://adoptium.net/temurin/releases/?package=jre&version=17) installed
+
+Installation steps:
+
+1. Download the packaged zip for your Delphi version from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest), or [build from source](#building-from-source).
+2. Download or compile the latest SonarDelphi release from the [SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi).
 3. Unzip the DelphiLint package folder from step 1, then run `./setup.ps1 -SonarDelphiJarLocation <path>` inside it.
-4. In RAD Studio, install DelphiLint by going to Components > Install Packages and navigating to the client .bpl.
+4. In RAD Studio, install DelphiLint by going to Components > Install Packages and selecting the client .bpl in `%APPDATA%\DelphiLint`.
 
 ### Installing the VS Code companion
 
-1. [Build the VS Code companion from source](#building-the-vs-code-companion) or download the .vsix artifact from
-   [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest).
+1. Download the .vsix extension file from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest),
+   or [build from source](#building-the-vs-code-companion).
 2. Run `code --install-extension <vsix>` to install the extension.
 
 > [!IMPORTANT]
 > For the companion to work, a DelphiLint installation of the same version must be installed.
+>
+> The VS Code companion is **not** required for the Delphi IDE plugin to function.
 
 ## Building from source
 
