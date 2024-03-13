@@ -12,17 +12,17 @@ import org.junit.jupiter.api.Test;
 
 class HttpUtilsTest {
   @Test
-  void noParamMapStringIsEmpty() {
+  void testNoParamMapStringIsEmpty() {
     assertEquals("", HttpUtils.buildParamString(Collections.emptyMap()));
   }
 
   @Test
-  void singleParamMapString() {
+  void testSingleParamMapString() {
     assertEquals("?myKey=myValue", HttpUtils.buildParamString(Map.of("myKey", "myValue")));
   }
 
   @Test
-  void multiParamMapString() {
+  void testMultiParamMapString() {
     Map<String, String> params = new LinkedHashMap<>();
     params.put("myKeyA", "myValueA");
     params.put("myKeyB", "myValueB");
@@ -33,17 +33,17 @@ class HttpUtilsTest {
   }
 
   @Test
-  void noParamListStringIsEmpty() {
+  void testNoParamListStringIsEmpty() {
     assertEquals("", HttpUtils.buildParamString(Collections.emptyMap()));
   }
 
   @Test
-  void singleParamListString() {
+  void testSingleParamListString() {
     assertEquals("?myKey=myValue", HttpUtils.buildParamString(List.of("myKey=myValue")));
   }
 
   @Test
-  void multiParamListString() {
+  void testMultiParamListString() {
     List<String> params = new ArrayList<>();
     params.add("myKeyA=myValueA");
     params.add("myKeyB=myValueB");
@@ -54,7 +54,7 @@ class HttpUtilsTest {
   }
 
   @Test
-  void htmlEncodesParamList() {
+  void testHtmlEncodesParamList() {
     List<String> params = new ArrayList<>();
     params.add("my=Ke yA=my=Value A");
     params.add("my&KeyB=myValue&B");
@@ -64,7 +64,7 @@ class HttpUtilsTest {
   }
 
   @Test
-  void htmlEncodesParamMap() {
+  void testHtmlEncodesParamMap() {
     Map<String, String> params = new LinkedHashMap<>();
     params.put("my=Ke yA", "my=Value A");
     params.put("my&KeyB", "myValue&B");

@@ -34,57 +34,57 @@ class SonarHasherTest {
   }
 
   @Test
-  void differentCaseProducesDifferentHash() {
+  void testDifferentCaseProducesDifferentHash() {
     assertNotEquals(SonarHasher.hash("foobarbaz"), SonarHasher.hash("FooBarBaz"));
   }
 
   @Test
-  void differentTextProducesDifferentHash() {
+  void testDifferentTextProducesDifferentHash() {
     assertNotEquals(
         SonarHasher.hash("The quick brown fox"), SonarHasher.hash("jumps over the lazy dog"));
   }
 
   @Test
-  void utf8Hash() {
+  void testUtf8Hash() {
     String expectedHash = SonarHasher.hashFileLine(FILE_RESOURCE_UTF8, 6, StandardCharsets.UTF_8);
     assertEquals(expectedHash, SonarHasher.hash("TMy\uD83C\uDF55Pizza = class"));
   }
 
   @Test
-  void ansiHash() {
+  void testAnsiHash() {
     String expectedHash =
         SonarHasher.hashFileLine(FILE_RESOURCE_ANSI, 6, StandardCharsets.ISO_8859_1);
     assertEquals(expectedHash, SonarHasher.hash("TMy£PoundSterling = class"));
   }
 
   @Test
-  void fileLineHashProducesLineHashWithoutWhitespace() {
+  void testFileLineHashProducesLineHashWithoutWhitespace() {
     assertEquals(SonarHasher.hash("MyType=class"), SonarHasher.hashFileLine(FILE_RESOURCE, 6));
   }
 
   @Test
-  void singleLineFileRangeProducesFirstLineHash() {
+  void testSingleLineFileRangeProducesFirstLineHash() {
     assertEquals(
         SonarHasher.hash("MyType=class"),
         SonarHasher.hashFileRange(FILE_RESOURCE, new TextRange(6, 3, 6, 9)));
   }
 
   @Test
-  void multiLineFileRangeProducesFirstLineHash() {
+  void testMultiLineFileRangeProducesFirstLineHash() {
     assertEquals(
         SonarHasher.hash("MyType=class"),
         SonarHasher.hashFileRange(FILE_RESOURCE, new TextRange(6, 5, 9, 2)));
   }
 
   @Test
-  void hashInvalidRangeProducesFirstLineHash() {
+  void testHashInvalidRangeProducesFirstLineHash() {
     assertEquals(
         SonarHasher.hash("MyType=class"),
         SonarHasher.hashFileRange(FILE_RESOURCE, new TextRange(6, 100, 900, 1)));
   }
 
   @Test
-  void hashNonexistentLineProducesEmptyStringHash() {
+  void testHashNonexistentLineProducesEmptyStringHash() {
     assertEquals(
         SonarHasher.hash(""),
         SonarHasher.hashFileRange(FILE_RESOURCE, new TextRange(900, 0, 900, 1)));

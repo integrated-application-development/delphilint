@@ -53,7 +53,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void recognisesUnsupportedVersion() throws SonarHostException {
+  void testRecognisesUnsupportedVersion() throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version("5.7"), Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -70,7 +70,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void recognisesNonCleanCodeVersion() throws SonarHostException {
+  void testRecognisesNonCleanCodeVersion() throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version("9.9"), Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -87,7 +87,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsDefaultQualityProfileWhenNoProject() throws SonarHostException {
+  void testGetsDefaultQualityProfileWhenNoProject() throws SonarHostException {
     var api = new ResourceBackedSonarApi(LATEST_VERSION, Map.of(DEFAULT_QP_URL, QP_OK_JSON));
 
     var host = buildSonarHost(api);
@@ -100,7 +100,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsQualityProfileByProjectKey() throws SonarHostException {
+  void testGetsQualityProfileByProjectKey() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -127,7 +127,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsRuleNamesByRuleKey() throws SonarHostException {
+  void testGetsRuleNamesByRuleKey() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -168,7 +168,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithoutCleanCode() throws SonarHostException {
+  void testParsesIssueWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.1"),
@@ -201,7 +201,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesIssueWithCleanCode() throws SonarHostException {
+  void testParsesIssueWithCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.2"),
@@ -240,7 +240,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesRuleWithoutCleanCode() throws SonarHostException {
+  void testParsesRuleWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("9.9"),
@@ -267,7 +267,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void parsesRuleWithCleanCode() throws SonarHostException {
+  void testParsesRuleWithCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.4"),
@@ -300,7 +300,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsNoResolvedIssuesWithNoProjectKey() throws SonarHostException {
+  void testGetsNoResolvedIssuesWithNoProjectKey() throws SonarHostException {
     var api = new ResourceBackedSonarApi(LATEST_VERSION, Collections.emptyMap());
 
     var host = buildSonarHost(api);
@@ -308,7 +308,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
+  void testGetsResolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.1"),
@@ -341,7 +341,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
+  void testGetsResolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.2"),
@@ -374,7 +374,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedTestIssuesAndHotspots() throws SonarHostException {
+  void testGetsResolvedTestIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -407,7 +407,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsResolvedIssuesAndHotspots() throws SonarHostException {
+  void testGetsResolvedIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -439,7 +439,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
+  void testGetsUnresolvedTestIssuesAndHotspotsPre10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.1"),
@@ -472,7 +472,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
+  void testGetsUnresolvedTestIssuesAndHotspotsPost10_2() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.2"),
@@ -505,7 +505,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedTestIssuesAndHotspots() throws SonarHostException {
+  void testGetsUnresolvedTestIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -538,7 +538,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsUnresolvedIssuesAndHotspots() throws SonarHostException {
+  void testGetsUnresolvedIssuesAndHotspots() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -570,7 +570,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void doesNotTreatAcknowledgedHotspotsAsResolvedIssues() throws SonarHostException {
+  void testDoesNotTreatAcknowledgedHotspotsAsResolvedIssues() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -638,7 +638,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsActiveRules() throws SonarHostException {
+  void testGetsActiveRules() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -665,7 +665,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsActiveRulesWithParams() throws SonarHostException {
+  void testGetsActiveRulesWithParams() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -692,7 +692,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsActiveRulesWithNoParams() throws SonarHostException {
+  void testGetsActiveRulesWithNoParams() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -718,7 +718,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsPluginJar() throws SonarHostException {
+  void testGetsPluginJar() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
@@ -730,7 +730,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsOnlyDelphiPlugins() throws SonarHostException {
+  void testGetsOnlyDelphiPlugins() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION, Map.of("/api/plugins/installed", "installedPluginsOk.json"));
@@ -741,7 +741,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsRequiredForLanguagesDelphiPluginsOnSupportedVersions() throws SonarHostException {
+  void testGetsRequiredForLanguagesDelphiPluginsOnSupportedVersions() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.5"), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
@@ -753,7 +753,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void doesNotGetRequiredForLanguagesDelphiPluginsOnUnsupportedVersions()
+  void testDoesNotGetRequiredForLanguagesDelphiPluginsOnUnsupportedVersions()
       throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
@@ -792,7 +792,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsDelphiPluginFilenames() throws SonarHostException {
+  void testGetsDelphiPluginFilenames() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.2"), Map.of("/api/plugins/installed", "installedPluginsOk.json"));
@@ -834,7 +834,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void getsTestFilePaths() throws SonarHostException {
+  void testGetsTestFilePaths() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             LATEST_VERSION,
