@@ -4,14 +4,17 @@
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
       <PatternLayout pattern="[%d{yyy-MM-dd HH:mm:ss.SSS} %5level] %logger{1}: %msg%n"/>
     </Console>
-    <File name="FileAppender" fileName="logs\delphilint-server.log" immediateFlush="true" append="true">
+    <RollingFile name="RollingFileAppender" fileName="logs/delphilint-server.log" immediateFlush="true" append="true" filePattern="logs/delphilint-server-%d{yyyy-MM-dd}-%i.log">
       <PatternLayout pattern="[%d{yyy-MM-dd HH:mm:ss.SSS} %5level] %logger{1}: %msg%n"/>
-    </File>
+      <Policies>
+        <OnStartupTriggeringPolicy/>
+      </Policies>
+    </RollingFile>
   </Appenders>
   <Loggers>
     <Root level="debug">
       <AppenderRef ref="ConsoleAppender" level="info" />
-      <AppenderRef ref="FileAppender"/>
+      <AppenderRef ref="RollingFileAppender"/>
     </Root>
   </Loggers>
 </Configuration>

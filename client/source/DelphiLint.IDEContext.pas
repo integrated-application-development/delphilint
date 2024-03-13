@@ -219,10 +219,12 @@ function BuildDelphiLintFileLogger: ILogger;
 var
   LogDir: string;
   LogPath: string;
+  StartDate: string;
 begin
   LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
   TDirectory.CreateDirectory(LogDir);
-  LogPath := TPath.Combine(LogDir, 'delphilint-client.log');
+  DateTimeToString(StartDate, 'yyyy-mm-dd-hh-mm-ss', Now);
+  LogPath := TPath.Combine(LogDir, Format('delphilint-client-%s.log', [StartDate]));
   Result := TFileLogger.Create(LogPath);
 end;
 
