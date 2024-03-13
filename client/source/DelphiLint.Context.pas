@@ -124,19 +124,20 @@ type
     procedure OnViewActivated(const View: IIDEEditView);
   end;
 
+  TLinePaintContext = record
+    View: IIDEEditView;
+    Canvas: TCanvas;
+    LineNumber: Integer;
+    LineText: string;
+    TextRect: TRect;
+    LineRect: TRect;
+    CellSize: TSize;
+  end;
+
   IIDEViewHandler = interface(IIDEHandler)
     ['{F4FB2AF3-546F-43D1-ACFC-31F8972803C0}']
     procedure OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
-    procedure OnPaintLine(
-      const View: IIDEEditView;
-      LineNumber: Integer;
-      LineText: string;
-      const TextWidth: Integer;
-      const Canvas: TCanvas;
-      const TextRect: TRect;
-      const LineRect: TRect;
-      const CellSize: TSize
-    );
+    procedure OnPaintLine(const Context: TLinePaintContext);
   end;
 
   IIDEEditLineHandler = interface(IIDEHandler)

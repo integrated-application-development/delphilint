@@ -781,17 +781,18 @@ procedure TToolsApiViewNotifier.PaintLine(
   const LineRect: TRect;
   const CellSize: TSize
 );
+var
+  Context: TLinePaintContext;
 begin
-  FHandler.OnPaintLine(
-    TToolsApiEditView.Create(View),
-    LineNumber,
-    string(LineText),
-    TextWidth,
-    Canvas,
-    TextRect,
-    LineRect,
-    CellSize
-  );
+  Context.View := TToolsApiEditView.Create(View);
+  Context.LineNumber := LineNumber;
+  Context.LineText := string(LineText);
+  Context.Canvas := Canvas;
+  Context.TextRect := TextRect;
+  Context.LineRect := LineRect;
+  Context.CellSize := CellSize;
+
+  FHandler.OnPaintLine(Context);
 end;
 
 //______________________________________________________________________________________________________________________

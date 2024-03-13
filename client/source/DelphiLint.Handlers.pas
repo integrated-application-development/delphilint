@@ -20,8 +20,6 @@ interface
 
 uses
     System.Generics.Collections
-  , System.Types
-  , Winapi.Windows
   , Vcl.Graphics
   , DelphiLint.Events
   , DelphiLint.Context
@@ -118,18 +116,6 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TLinePaintContext = record
-    View: IIDEEditView;
-    Canvas: TCanvas;
-    LineNumber: Integer;
-    LineText: string;
-    TextRect: TRect;
-    LineRect: TRect;
-    CellSize: TSize;
-  end;
-
-//______________________________________________________________________________________________________________________
-
   TLintLinePainter = class(TObject)
   private
     FTagTextColor: TColor;
@@ -168,16 +154,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure OnBeginPaint(const View: IIDEEditView; var FullRepaint: Boolean);
-    procedure OnPaintLine(
-      const View: IIDEEditView;
-      LineNumber: Integer;
-      LineText: string;
-      const TextWidth: Integer;
-      const Canvas: TCanvas;
-      const TextRect: TRect;
-      const LineRect: TRect;
-      const CellSize: TSize
-    );
+    procedure OnPaintLine(const Context: TLinePaintContext);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -188,8 +165,10 @@ uses
     System.Math
   , System.Classes
   , System.StrUtils
-  , DelphiLint.Utils
   , System.SysUtils
+  , System.Types
+  , Winapi.Windows
+  , DelphiLint.Utils
   ;
 
 //______________________________________________________________________________________________________________________
@@ -504,31 +483,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TViewHandler.OnPaintLine(
-  const View: IIDEEditView;
-  LineNumber: Integer;
-  LineText: string;
-  const TextWidth: Integer;
-  const Canvas: TCanvas;
-  const TextRect: TRect;
-  const LineRect: TRect;
-  const CellSize: TSize
-);
+procedure TViewHandler.OnPaintLine(const Context: TLinePaintContext);
 var
   Issues: TArray<TLiveIssue>;
-  Context: TLinePaintContext;
 begin
-  Issues := Analyzer.GetIssues(View.FileName, LineNumber);
+  Issues := Analyzer.GetIssues(Context.View.FileName, Context.LineNumber);
 
   if Length(Issues) > 0 then begin
-    Context.View := View;
-    Context.LineNumber := LineNumber;
-    Context.LineText := LineText;
-    Context.Canvas := Canvas;
-    Context.TextRect := TextRect;
-    Context.LineRect := LineRect;
-    Context.CellSize := CellSize;
-
     FLinePainter.PaintLine(Issues, Context);
   end;
 end;

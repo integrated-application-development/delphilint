@@ -125,6 +125,7 @@ type
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
+    procedure UpdateAnalysisStatusForFile(const Path: string);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -345,7 +346,6 @@ end;
 
 procedure TLintToolFrame.ChangeActiveFile(const Path: string);
 var
-  History: TFileAnalysisHistory;
   FileScannable: Boolean;
 begin
   FileScannable := IsFileInProject(Path);
@@ -357,49 +357,57 @@ begin
       Exit;
     end;
 
-    case Analyzer.GetAnalysisStatus(Path) of
-      fasNeverAnalyzed:
-          UpdateFileStatus(cfsNotAnalyzed);
-      fasOutdatedAnalysis:
-        if Analyzer.TryGetAnalysisHistory(Path, History) then begin
-          if History.Success then begin
-            if History.IssuesFound = 0 then begin
-              UpdateFileStatus(cfsNoIssuesOutdated);
-            end
-            else begin
-              UpdateFileStatus(cfsIssuesOutdated, History.IssuesFound);
-            end;
-          end
-          else begin
-            UpdateFileStatus(cfsNotAnalyzed);
-          end;
-        end
-        else begin
-          Log.Warn('Could not get analysis history for file %s with apparently outdated analysis', [Path]);
-          UpdateFileStatus(cfsNotAnalyzed);
-        end;
-      fasUpToDateAnalysis:
-        if Analyzer.TryGetAnalysisHistory(Path, History) then begin
-          if History.Success then begin
-            if History.IssuesFound = 0 then begin
-              UpdateFileStatus(cfsNoIssues);
-            end
-            else begin
-              UpdateFileStatus(cfsIssues, History.IssuesFound);
-            end;
-          end
-          else begin
-            UpdateFileStatus(cfsFailed);
-          end;
-        end
-        else begin
-          Log.Warn('Could not get analysis history for file %s with apparently up-to-date analysis', [Path]);
-          UpdateFileStatus(cfsNotAnalyzed);
-        end;
-    end;
+    UpdateAnalysisStatusForFile(Path);
   end
   else begin
     UpdateFileStatus(cfsNotAnalyzable);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.UpdateAnalysisStatusForFile(const Path: string);
+
+  procedure UpdateAnalyzedFileStatus(const Path: string; Outdated: Boolean);
+  var
+    History: TFileAnalysisHistory;
+  begin
+    if not Analyzer.TryGetAnalysisHistory(Path, History) then begin
+      Log.Warn('Could not get analysis history for file %s with apparently outdated analysis', [Path]);
+      UpdateFileStatus(cfsNotAnalyzed);
+      Exit;
+    end;
+
+    if not History.Success then begin
+      UpdateFileStatus(cfsNotAnalyzed);
+    end;
+
+    if Outdated then begin
+      if History.IssuesFound = 0 then begin
+        UpdateFileStatus(cfsNoIssuesOutdated);
+      end
+      else begin
+        UpdateFileStatus(cfsIssuesOutdated, History.IssuesFound);
+      end;
+    end
+    else begin
+      if History.IssuesFound = 0 then begin
+        UpdateFileStatus(cfsNoIssues);
+      end
+      else begin
+        UpdateFileStatus(cfsIssues, History.IssuesFound);
+      end;
+    end;
+  end;
+
+begin
+  case Analyzer.GetAnalysisStatus(Path) of
+  fasOutdatedAnalysis:
+    UpdateAnalyzedFileStatus(Path, True);
+  fasUpToDateAnalysis:
+    UpdateAnalyzedFileStatus(Path, False);
+  else
+    UpdateFileStatus(cfsNotAnalyzed);
   end;
 end;
 
