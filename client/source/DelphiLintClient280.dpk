@@ -1,4 +1,4 @@
-package DelphiLintClient;
+package DelphiLintClient280;
 
 {$R *.res}
 {$R *.dres}
@@ -66,6 +66,6 @@ contains
   DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas',
   DelphiLint.ExtWebView2 in 'DelphiLint.ExtWebView2.pas';
 
-{$R *Additional.res}
+{$R DelphiLintClientAdditional.res}
 
 end.

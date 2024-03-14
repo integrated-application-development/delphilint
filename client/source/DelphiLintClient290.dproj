@@ -4,10 +4,10 @@
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>DelphiLintClient.dpk</MainSource>
+        <MainSource>DelphiLintClient290.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{26783A2A-7221-40E7-AD37-9319A2677FB0}</ProjectGuid>
-        <ProjectVersion>19.5</ProjectVersion>
+        <ProjectVersion>20.1</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -35,26 +35,22 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>DelphiLintClient</SanitizedProjectName>
-        <DCC_BplOutput>.\target\$(Platform)\$(Config)</DCC_BplOutput>
+        <SanitizedProjectName>DelphiLintClient290</SanitizedProjectName>
+        <DCC_BplOutput>.\target\290\$(Config)</DCC_BplOutput>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
-        <DCC_DcuOutput>.\target\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_DcpOutput>.\target\290\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\290\$(Config)\dcu</DCC_DcuOutput>
         <DCC_Define>TOOLSAPI;$(DCC_Define)</DCC_Define>
-        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_ExeOutput>.\290\$(Config)</DCC_ExeOutput>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <PostBuildEvent>
-            <![CDATA[copy dlversion.inc.orig dlversion.inc
+        <PostBuildEvent><![CDATA[copy dlversion.inc.orig dlversion.inc
 del dlversion.inc.orig
-$(PostBuildEvent)]]>
-        </PostBuildEvent>
+$(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
-        <PreBuildEvent>
-            <![CDATA[powershell -NoProfile -File PreBuild.ps1
-$(PreBuildEvent)]]>
-        </PreBuildEvent>
+        <PreBuildEvent><![CDATA[powershell -NoProfile -File PreBuild.ps1
+$(PreBuildEvent)]]></PreBuildEvent>
         <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
         <VerInfo_Locale>2057</VerInfo_Locale>
     </PropertyGroup>
@@ -243,14 +239,14 @@ $(PreBuildEvent)]]>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DelphiLintClient.dpk</Source>
+                    <Source Name="MainSource">DelphiLintClient290.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="target\Win32\Debug\DelphiLintClient.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="target\290\Debug\DelphiLintClient290.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>DelphiLintClient.bpl</RemoteName>
+                        <RemoteName>DelphiLintClient290.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -321,19 +317,47 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1
+</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc
+&amp;del dlversion.inc.orig
+</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

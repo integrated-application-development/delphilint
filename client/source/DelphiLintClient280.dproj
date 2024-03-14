@@ -1,0 +1,339 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Base>True</Base>
+        <AppType>Package</AppType>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>DelphiLintClient280.dpk</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{26783A2A-7221-40E7-AD37-9319A2677FB0}</ProjectGuid>
+        <ProjectVersion>19.5</ProjectVersion>
+        <TargetedPlatforms>1</TargetedPlatforms>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>DelphiLintClient280</SanitizedProjectName>
+        <DCC_BplOutput>.\target\280\$(Config)</DCC_BplOutput>
+        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+        <DCC_DcpOutput>.\target\280\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\280\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_Define>TOOLSAPI;$(DCC_Define)</DCC_Define>
+        <DCC_ExeOutput>.\280\$(Config)</DCC_ExeOutput>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
+        <GenDll>true</GenDll>
+        <GenPackage>true</GenPackage>
+        <PostBuildEvent>
+            <![CDATA[copy dlversion.inc.orig dlversion.inc
+del dlversion.inc.orig
+$(PostBuildEvent)]]>
+        </PostBuildEvent>
+        <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
+        <PreBuildEvent>
+            <![CDATA[powershell -NoProfile -File PreBuild.ps1
+$(PreBuildEvent)]]>
+        </PreBuildEvent>
+        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
+        <VerInfo_Locale>2057</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_Description>DelphiLint</DCC_Description>
+        <DCC_UsePackage>vcl;rtl;IndyProtocols;vclie;vcledge;dbrtl;vcldb;dsnap;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
+        <Debugger_HostApplication>$(BDSBIN)\bds.exe</Debugger_HostApplication>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclie.dcp"/>
+        <DCCReference Include="vcledge.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="IndyProtocols.dcp"/>
+        <DCCReference Include="dbrtl.dcp"/>
+        <DCCReference Include="vcldb.dcp"/>
+        <DCCReference Include="dsnap.dcp"/>
+        <DCCReference Include="DelphiLint.Handlers.pas"/>
+        <DCCReference Include="DelphiLint.Server.pas"/>
+        <DCCReference Include="DelphiLint.Data.pas"/>
+        <DCCReference Include="DelphiLint.FileLogger.pas"/>
+        <DCCReference Include="DelphiLint.IDEBaseTypes.pas"/>
+        <DCCReference Include="DelphiLint.Events.pas"/>
+        <DCCReference Include="DelphiLint.Settings.pas"/>
+        <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
+        <DCCReference Include="DelphiLint.Analyzer.pas"/>
+        <DCCReference Include="DelphiLint.Plugin.pas">
+            <Form>PluginCore</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.ToolFrame.pas">
+            <Form>LintToolFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>T</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Utils.pas"/>
+        <DCCReference Include="DelphiLint.SettingsFrame.pas">
+            <Form>LintSettingsFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.OptionsForm.pas">
+            <Form>LintOptionsForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Properties.pas"/>
+        <DCCReference Include="DelphiLint.SetupForm.pas">
+            <Form>LintSetupForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Version.pas"/>
+        <DCCReference Include="DelphiLint.Resources.pas"/>
+        <DCCReference Include="DelphiLint.Context.pas"/>
+        <DCCReference Include="DelphiLint.IDEContext.pas"/>
+        <DCCReference Include="DelphiLint.HtmlGen.pas"/>
+        <DCCReference Include="DelphiLint.ExtWebView2.pas"/>
+        <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DL_SPLASH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\delphilint_icon_48x48.bmp">
+            <ResourceType>BITMAP</ResourceType>
+            <ResourceId>DL_ICON</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\code_smell.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_CODESMELL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\blocker.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_BLOCKER</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\bug.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_BUG</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\critical.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_CRITICAL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\hotspot.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_HOTSPOT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\info.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_INFO</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\major.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MAJOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\severity\minor.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RS_MINOR</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\type\vulnerability.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_RT_VULNERABILITY</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARN</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_fail.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_FAIL</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESS</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_work.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WORK</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_disabled.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_DISABLED</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_success_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_SUCCESSOUT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\linticons\lint_warn_outdated.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_LINT_WARNOUT</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\high.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_HIGH</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\low.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_LOW</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\issueicons\impactseverity\medium.png">
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_IS_MEDIUM</ResourceId>
+        </RcItem>
+        <RcItem Include="..\assets\rulehtml.css">
+            <ContainerId>ResourceItem</ContainerId>
+            <ResourceType>RCDATA</ResourceType>
+            <ResourceId>DL_HTML_CSS</ResourceId>
+        </RcItem>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">DelphiLintClient280.dpk</Source>
+                </Source>
+                <Excluded_Packages/>
+            </Delphi.Personality>
+            <Deployment Version="4">
+                <DeployFile LocalName="target\280\Debug\DelphiLintClient280.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>DelphiLintClient280.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DebugSymbols">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyFramework">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Required="true" Name="DependencyPackage">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.bpl</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="File">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Required="true" Name="ProjectOutput">
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectUWPManifest">
+                    <Platform Name="Win32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="UWP_DelphiLogo150">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="UWP_DelphiLogo44">
+                    <Platform Name="Win32">
+                        <RemoteDir>Assets</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
+            </Deployment>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>copy dlversion.inc.orig dlversion.inc&amp;del dlversion.inc.orig</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+</Project>

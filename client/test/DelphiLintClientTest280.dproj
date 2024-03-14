@@ -4,7 +4,7 @@
         <AppType>Console</AppType>
         <Config Condition="'$(Config)'==''">GUI</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>DelphiLintClientTest.dpr</MainSource>
+        <MainSource>DelphiLintClientTest280.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{602BACA7-000B-4E3A-AD44-97865D89E115}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
@@ -65,17 +65,17 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>DelphiLintClientTest</SanitizedProjectName>
-        <DCC_DcpOutput>.\target\$(Platform)\$(Config)</DCC_DcpOutput>
-        <DCC_DcuOutput>.\target\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
-        <DCC_ExeOutput>.\target\$(Platform)\$(Config)</DCC_ExeOutput>
+        <SanitizedProjectName>DelphiLintClientTest280</SanitizedProjectName>
+        <DCC_DcpOutput>.\target\280\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\280\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_ExeOutput>.\target\280\$(Config)</DCC_ExeOutput>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UnitSearchPath>$(DUnitX);..\source;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <PreBuildEvent>
-            <![CDATA[powershell -NoProfile -File ..\BuildAdditionalResources.ps1 "$(PROJECTNAME)"
+            <![CDATA[powershell -NoProfile -File ..\BuildAdditionalResources.ps1 "DelphiLintClientTest"
 $(PreBuildEvent)]]>
         </PreBuildEvent>
         <UsingDelphiRTL>true</UsingDelphiRTL>
@@ -94,7 +94,6 @@ $(PreBuildEvent)]]>
         <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
         <DCC_UsePackage>dxPSdxSpreadSheetLnkRS28;vclwinx;fmx;vclie;DbxCommonDriver;bindengine;VCLRESTComponents;FireDACCommonODBC;cxGridEMFRS28;cxExportRS28;FireDACCommonDriver;dxPSPrVwRibbonRS28;appanalytics;IndyProtocols;vclx;dbxcds;vcledge;dxCloudServiceLibraryRS28;cxLibraryRS28;bindcompvclwinx;FmxTeeUI;dxGDIPlusRS28;bindcompfmx;dxCoreRS28;inetdb;dxSpreadSheetCoreRS28;dxPSCoreRS28;FireDACSqliteDriver;DbxClientDriver;dxSpreadSheetRS28;dxTabbedMDIRS28;Tee;soapmidas;dxBarRS28;vclactnband;TeeUI;dxWizardControlRS28;fmxFireDAC;dbexpress;dxADOServerModeRS28;Jcl;CEF4DelphiVCLRTL;DBXMySQLDriver;VclSmp;inet;sbridge280;dxServerModeRS28;dxPSdxLCLnkRS28;vcltouch;fmxase;cxTreeListRS28;dxBarDBNavRS28;dbrtl;dxPSLnksRS28;omDDControlsAlex;fmxdae;TeeDB;dxPScxCommonRS28;omUtilsAlex;FireDACMSAccDriver;AdRockSuiteAlex;CustomIPTransport;dxNavBarRS28;omIDEWizardsAlex;CEF4DelphiFMXRTL;dxSpreadSheetReportDesignerRS28;vcldsnap;dxComnRS28;DBXInterBaseDriver;IndySystem;dxSpreadSheetConditionalFormattingDialogsRS28;vcldb;dxDBXServerModeRS28;dxPSDBTeeChartRS28;dxmdsRS28;dxPsPrVwAdvRS28;dxRibbonRS28;VirtualTreesR;dxPScxExtCommonRS28;vclFireDAC;omWebComponentsAlex;bindcomp;FireDACCommon;dxPScxGridLnkRS28;IndyCore;RESTBackendComponents;dxRibbonCustomizationFormRS28;dxBarExtDBItemsRS28;bindcompdbx;cxTreeListdxBarPopupMenuRS28;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;RichViewActionsD11;DBXSqliteDriver;vcl;dsnapxml;adortl;dsnapcon;dxBarExtItemsRS28;dxPSTeeChartRS28;dxSpreadSheetCoreConditionalFormattingDialogsRS28;RVHunSpellPkgD11;cxGridRS28;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;dxEMFRS28;CloudService;dxPScxTLLnkRS28;fmxobj;bindcompvclsmp;FMXTee;dxPScxPCProdRS28;RVPkgD11;soaprtl;Spring.Data;Markdown;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
         <Manifest_File>(None)</Manifest_File>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -268,7 +267,7 @@ $(PreBuildEvent)]]>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">DelphiLintClientTest.dpr</Source>
+                    <Source Name="MainSource">DelphiLintClientTest280.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
@@ -675,31 +674,31 @@ $(PreBuildEvent)]]>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="target\Win32\CI\DelphiLintClientTest.exe" Configuration="CI" Class="ProjectOutput">
+                <DeployFile LocalName="target\280\CI\DelphiLintClientTest.exe" Configuration="CI" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="target\Win32\Debug\DelphiLintClientTest.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="target\280\Debug\DelphiLintClientTest.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="target\Win32\GUI - Debug\DelphiLintClientTest.exe" Configuration="GUI - Debug" Class="ProjectOutput">
+                <DeployFile LocalName="target\280\GUI - Debug\DelphiLintClientTest.exe" Configuration="GUI - Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="target\Win32\GUI\DelphiLintClientTest.exe" Configuration="GUI" Class="ProjectOutput">
+                <DeployFile LocalName="target\280\GUI\DelphiLintClientTest.exe" Configuration="GUI" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="target\Win32\TestInsight\DelphiLintClientTest.exe" Configuration="TestInsight" Class="ProjectOutput">
+                <DeployFile LocalName="target\280\TestInsight\DelphiLintClientTest.exe" Configuration="TestInsight" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>DelphiLintClientTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -772,7 +771,7 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='GUI' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;$(PROJECTNAME)&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -780,7 +779,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='TestInsight' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;$(PROJECTNAME)&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -788,7 +787,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Console' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;$(PROJECTNAME)&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -796,7 +795,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='CI' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;$(PROJECTNAME)&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>

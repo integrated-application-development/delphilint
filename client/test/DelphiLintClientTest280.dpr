@@ -1,4 +1,4 @@
-program DelphiLintClientTest;
+program DelphiLintClientTest280;
 
 {$R *.res}
 {$R *.dres}
@@ -33,7 +33,7 @@ uses
   DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas',
   DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas';
 
-{$R *Additional.res}
+{$R DelphiLintClientTestAdditional.res}
 
 {$IFDEF TESTINSIGHT}
 begin
