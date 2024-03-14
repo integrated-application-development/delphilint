@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Support for the `requiredForLanguages` plugin metadata property when in Connected Mode to SonarQube 10.4 and above,
   ensuring all Delphi-related plugins are reliably included in analysis
+* The latest [SonarDelphi](https://github.com/integrated-application-development/sonar-delphi) release is now
+  automatically downloaded when run in Standalone Mode
 
 ### Changed
 

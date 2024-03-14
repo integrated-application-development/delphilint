@@ -3,6 +3,9 @@ package au.com.integradev.delphilint.server;
 import au.com.integradev.delphilint.analysis.AnalysisOrchestrator;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
 import au.com.integradev.delphilint.analysis.SonarDelphiUtils;
+import au.com.integradev.delphilint.maintenance.FallbackPluginProvider;
+import au.com.integradev.delphilint.maintenance.FallbackPluginProviderException;
+import au.com.integradev.delphilint.maintenance.SonarDelphiDownloader;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
@@ -41,11 +44,13 @@ public class AnalysisServer {
   private static final Logger LOG = LogManager.getLogger(AnalysisServer.class);
   private AnalysisOrchestrator orchestrator;
   private final CachingPluginDownloader pluginDownloader;
+  private final FallbackPluginProvider fallbackPluginProvider;
   private Set<DownloadedPlugin> pluginGroup;
 
   public AnalysisServer(Path pluginsPath) {
     orchestrator = null;
     pluginDownloader = new CachingPluginDownloader(pluginsPath);
+    fallbackPluginProvider = new FallbackPluginProvider(pluginsPath, new SonarDelphiDownloader());
     pluginGroup = null;
   }
 
@@ -162,15 +167,20 @@ public class AnalysisServer {
         pluginGroup = desiredPluginGroup;
         LOG.info("Starting analysis engine with new plugins");
 
+        Set<Path> pluginPaths;
+
+        if (pluginGroup == null) {
+          pluginPaths = Set.of(fallbackPluginProvider.getPlugin());
+        } else {
+          pluginPaths =
+              pluginGroup.stream().map(DownloadedPlugin::getPath).collect(Collectors.toSet());
+        }
+
         var delphiConfig =
             new EngineStartupConfiguration(
                 requestInitialize.getBdsPath(),
                 requestInitialize.getCompilerVersion(),
-                pluginGroup == null
-                    ? Set.of(Path.of(requestInitialize.getDefaultSonarDelphiJarPath()))
-                    : pluginGroup.stream()
-                        .map(DownloadedPlugin::getPath)
-                        .collect(Collectors.toSet()));
+                pluginPaths);
 
         orchestrator = new AnalysisOrchestrator(delphiConfig);
       }
@@ -180,18 +190,24 @@ public class AnalysisServer {
       sendMessage.accept(
           LintMessage.initializeError(
               "Authorization is required to access the configured SonarQube instance. Please"
-                  + " provide an appropriate authorization token."));
+                  + " provide an appropriate authorization token"));
     } catch (SonarHostConnectException e) {
       LOG.warn("API could not be accessed", e);
       sendMessage.accept(
           LintMessage.initializeError(
               "Could not connect to the configured SonarQube instance. Please confirm that the URL"
-                  + " is correct and the instance is running."));
+                  + " is correct and the instance is running"));
     } catch (SonarHostException | UncheckedSonarHostException e) {
       LOG.warn("API returned an unexpected response", e);
       sendMessage.accept(
           LintMessage.initializeError(
               "The configured SonarQube instance could not be accessed: " + e));
+    } catch (FallbackPluginProviderException e) {
+      LOG.error("Fallback provider could not provide plugin", e);
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "SonarDelphi could not be retrieved from GitHub. Please check your internet"
+                  + " connection and try again"));
     } catch (Exception e) {
       LOG.error("Unknown error during analysis", e);
       sendMessage.accept(

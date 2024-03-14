@@ -441,7 +441,7 @@ begin
   end;
 
   TimeWaitStarted := Now;
-  while TTimeSpan.Subtract(Now, TimeWaitStarted).TotalSeconds < 3 do begin
+  while TTimeSpan.Subtract(Now, TimeWaitStarted).TotalSeconds < 20 do begin
     Process;
 
     if InitializeCompleted or (ErrorMsg <> '') then begin
@@ -628,7 +628,7 @@ function TLintServer.StartExtServer(
     CreationFlags: Cardinal;
     ErrorCode: Integer;
   begin
-    CommandLine := Format(' -jar "%s" "%s"', [Jar, PortFile]);
+    CommandLine := Format(' -Djava.net.useSystemProxies=true -jar "%s" "%s"', [Jar, PortFile]);
 
     ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
     StartupInfo.cb := SizeOf(TStartupInfo);
