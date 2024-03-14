@@ -54,13 +54,19 @@ function Assert-ClientVersion([string]$Version, [string]$Message) {
   }
 }
 
+function New-BatchScript([string]$Path, [string]$PSScriptPath) {
+  $BatchScript = @(
+    '@echo off',
+    "powershell -ExecutionPolicy Bypass -File $PSScriptPath",
+    'pause'
+  )
+
+  Set-Content -Path $Path -Value $BatchScript
+}
+
 function New-SetupScript([string]$Path, [string]$Version) {
   $SetupScript = @(
     '#! powershell -File',
-    'param(',
-    '  [Parameter(Mandatory)]',
-    '  [string]$SonarDelphiJarLocation',
-    ')',
     '',
     '$ErrorActionPreference = "Stop"',
     '$ProgressPreference = "SilentlyContinue"',
@@ -85,10 +91,6 @@ function New-SetupScript([string]$Path, [string]$Version) {
     '  Copy-Item -Path (Join-Path $PSScriptRoot $_) -Destination (Join-Path $DelphiLintFolder $_) -Force',
     '}',
     'Write-Host "Copied resources."',
-    '',
-    '$SonarDelphiJar = Resolve-Path $SonarDelphiJarLocation',
-    'Copy-Item -Path $SonarDelphiJar -Destination (Join-Path $DelphiLintFolder "sonar-delphi-plugin.jar") -Force',
-    'Write-Host "Copied SonarDelphi."',
     '',
     '$WebViewZip = (Join-Path $TempFolder "webview.zip")',
     '',
@@ -116,7 +118,7 @@ function New-SetupScript([string]$Path, [string]$Version) {
     '}',
     '',
     'Remove-Item $TempFolder -Recurse -Force -ErrorAction Continue',
-    'Write-Host "Setup completed for DelphiLint $Version."'
+    'Write-Host "Install completed for DelphiLint $Version."'
   )
 
   Set-Content -Path $Path -Value $SetupScript
@@ -164,7 +166,10 @@ function New-PackageFolder([hashtable]$Artifacts) {
   $Artifacts.GetEnumerator() | ForEach-Object {
     Copy-Item -Path $_.Key -Destination (Join-Path $PackageDir $_.Value)
   }
-  New-SetupScript -Path (Join-Path $PackageDir "setup.ps1") -Version $Version
+
+  $InstallScriptPath = (Join-Path $PackageDir "install.ps1")
+  New-SetupScript -Path $InstallScriptPath -Version $Version
+  New-BatchScript -Path (Join-Path $PackageDir "install.bat") -PSScriptPath $InstallScriptPath
 }
 
 function Invoke-Project([hashtable]$Project) {

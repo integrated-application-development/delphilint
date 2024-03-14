@@ -31,16 +31,14 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 System requirements:
 
 * Microsoft Edge 79.0.309 or above installed
-* PowerShell execution policy set to `Unrestricted` (see [MSDN](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts?view=powershell-7.4#how-to-run-a-script))
 * [RAD Studio for Delphi 11 or above](https://www.embarcadero.com/products/delphi) installed
 * [Java 11 or above](https://adoptium.net/temurin/releases/?package=jre&version=17) installed
 
 Installation steps:
 
 1. Download the packaged zip for your Delphi version from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest), or [build from source](#building-from-source).
-2. Download or compile the latest SonarDelphi release from the [SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi).
-3. Unzip the DelphiLint package folder from step 1, then run `./setup.ps1 -SonarDelphiJarLocation <path>` inside it.
-4. In RAD Studio, install DelphiLint by going to Components > Install Packages and selecting the client .bpl in `%APPDATA%\DelphiLint`.
+2. Unzip the folder and run the included `install.bat` script.
+3. In RAD Studio, install DelphiLint by going to Components > Install Packages and selecting the installed client .bpl in `%APPDATA%\DelphiLint`.
 
 ### Installing the VS Code companion
 
@@ -63,10 +61,11 @@ Prerequisites:
 * PowerShell
 * npm
 * Microsoft Edge 79.0.309 or above
+* PowerShell execution policy set to `Unrestricted` (see [MSDN](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts?view=powershell-7.4#how-to-run-a-script))
 
-1. Clone the repository at the latest release.
-2. Build the project by running `/scripts/build.ps1 -DelphiBin <path/to/bin>`, where `<path/to/bin>` is the
-   path to your Delphi IDE installation's `bin` directory (e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
+After cloning, DelphiLint can be built by running `scripts/build.ps1 -DelphiBin <path/to/bin>`, where
+`<path/to/bin>` is the path to your Delphi IDE installation's `bin` directory
+(e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
 
 ## Usage
 
