@@ -17,15 +17,25 @@ public class FallbackPluginProvider {
   private static final Logger LOG = LogManager.getLogger(FallbackPluginProvider.class);
   private final Path jarsDir;
   private final SonarDelphiDownloader downloader;
+  private Path pluginPath;
 
   public FallbackPluginProvider(Path jarsDir, SonarDelphiDownloader downloader) {
     this.jarsDir = jarsDir;
     this.downloader = downloader;
+    this.pluginPath = null;
   }
 
   public Path getPlugin() throws FallbackPluginProviderException {
+    if (pluginPath == null) {
+      pluginPath = resolvePluginPath();
+    }
+
+    return pluginPath;
+  }
+
+  private Path resolvePluginPath() throws FallbackPluginProviderException {
     try {
-      LOG.info("Getting SonarDelphi fallback plugin using cache dir {}", jarsDir);
+      LOG.info("Resolving SonarDelphi fallback plugin using cache dir {}", jarsDir);
       Files.createDirectories(jarsDir);
 
       Optional<ReleaseInfo> latestRelease = downloader.getLatestRelease();
@@ -38,6 +48,7 @@ public class FallbackPluginProvider {
           LOG.warn(
               "Could not retrieve latest SonarDelphi release, using local fallback {}",
               localVersion);
+          return localJar.get();
         } else if (latestRelease.get().getVersion().compareTo(localVersion) <= 0) {
           LOG.info(
               "Local SonarDelphi fallback is the latest version {} (latest remote release is {})",
