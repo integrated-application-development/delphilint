@@ -62,6 +62,7 @@ type
 //______________________________________________________________________________________________________________________
 
   TResponseAction = reference to procedure (const Message: TLintMessage);
+  TInitializeResultAction = reference to procedure;
   TAnalyzeResultAction = reference to procedure(Issues: TObjectList<TLintIssue>);
   TRuleRetrieveResultAction = reference to procedure(Rules: TObjectDictionary<string, TRule>);
   TErrorAction = reference to procedure(Message: string);
@@ -127,7 +128,6 @@ type
     ['{6D976C9C-8CEE-452C-9DC9-1F3BBD97415A}']
 
     function Process: Boolean;
-    procedure Initialize(HostOptions: TSonarHostOptions; DownloadPlugin: Boolean);
     procedure Analyze(
       Options: TAnalyzeOptions;
       OnResult: TAnalyzeResultAction;
@@ -178,7 +178,12 @@ type
 
     function Process: Boolean;
 
-    procedure Initialize(HostOptions: TSonarHostOptions; DownloadPlugin: Boolean);
+    procedure Initialize(
+      HostOptions: TSonarHostOptions;
+      DownloadPlugin: Boolean;
+      OnResult: TInitializeResultAction;
+      OnError: TErrorAction
+    );
     procedure Analyze(
       Options: TAnalyzeOptions;
       OnResult: TAnalyzeResultAction;
@@ -397,18 +402,21 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintServer.Initialize(HostOptions: TSonarHostOptions; DownloadPlugin: Boolean);
+procedure TLintServer.Initialize(
+  HostOptions: TSonarHostOptions;
+  DownloadPlugin: Boolean;
+  OnResult: TInitializeResultAction;
+  OnError: TErrorAction
+);
 var
   InitializeOptions: TInitializeOptions;
   InitializeMsg: TLintMessage;
-  InitializeCompleted: Boolean;
-  ErrorMsg: string;
-  TimeWaitStarted: TDateTime;
 begin
   Log.Debug('Requesting initialization');
 
   if not LintContext.ValidateSetup then begin
-    raise ELintServerMisconfigured.Create('DelphiLint external resources are misconfigured');
+    OnError('DelphiLint external resources are misconfigured');
+    Exit;
   end;
 
   InitializeOptions := TInitializeOptions.Create(
@@ -423,44 +431,26 @@ begin
 
   try
     InitializeMsg := TLintMessage.Initialize(InitializeOptions);
-    InitializeCompleted := False;
 
     SendMessage(
       InitializeMsg,
-      procedure(const Response: TLintMessage) begin
+      procedure(const Response: TLintMessage)
+      var
+        ErrorMsg: string;
+      begin
         if Response.Category = C_Initialized then begin
-          InitializeCompleted := True;
+          Log.Debug('Initialized successfully');
+          OnResult;
         end
         else begin
           ErrorMsg := Response.Data.Value;
           Log.Warn('Initialize error (%d): %s', [Response.Category, ErrorMsg]);
+          OnError(ErrorMsg);
         end;
       end);
   finally
     FreeAndNil(InitializeMsg);
   end;
-
-  TimeWaitStarted := Now;
-  while TTimeSpan.Subtract(Now, TimeWaitStarted).TotalSeconds < 20 do begin
-    Process;
-
-    if InitializeCompleted or (ErrorMsg <> '') then begin
-      Break;
-    end;
-  end;
-
-  if not InitializeCompleted then begin
-    Log.Warn('Initialize was not successful');
-
-    if (ErrorMsg <> '') then begin
-      raise ELintServerFailed.Create(ErrorMsg);
-    end
-    else begin
-      raise ELintServerTimedOut.Create('Initialize timed out');
-    end;
-  end;
-
-  Log.Debug('Initialized successfully');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -473,26 +463,23 @@ procedure TLintServer.Analyze(
 var
   AnalyzeMsg: TLintMessage;
 begin
-  try
-    Initialize(Options.Sonar.Host, DownloadPlugin);
-  except
-    on E: ELintServerError do begin
-      OnError(E.Message);
-      Exit;
-    end;
-  end;
-
-  Log.Debug('Sending analysis request to server');
-  AnalyzeMsg := TLintMessage.Analyze(Options);
-  try
-    SendMessage(
-      AnalyzeMsg,
-      procedure (const Response: TLintMessage) begin
-        OnAnalyzeResponse(Response, OnResult, OnError);
-      end);
-  finally
-    FreeAndNil(AnalyzeMsg);
-  end;
+  Initialize(
+    Options.Sonar.Host,
+    DownloadPlugin,
+    procedure begin
+      Log.Debug('Sending analysis request to server');
+      AnalyzeMsg := TLintMessage.Analyze(Options);
+      try
+        SendMessage(
+          AnalyzeMsg,
+          procedure (const Response: TLintMessage) begin
+            OnAnalyzeResponse(Response, OnResult, OnError);
+          end);
+      finally
+        FreeAndNil(AnalyzeMsg);
+      end;
+    end,
+    OnError);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -541,28 +528,27 @@ procedure TLintServer.RetrieveRules(
   OnError: TErrorAction;
   DownloadPlugin: Boolean = True
 );
-var RuleRetrieveMsg: TLintMessage;
 begin
-  try
-    Initialize(SonarOptions.Host, DownloadPlugin);
-  except
-    on E: ELintServerError do begin
-      OnError(E.Message);
-      Exit;
-    end;
-  end;
+  Initialize(
+    SonarOptions.Host,
+    DownloadPlugin,
+    procedure
+    var
+      RuleRetrieveMsg: TLintMessage;
+    begin
+      RuleRetrieveMsg := TLintMessage.RuleRetrieve(SonarOptions);
 
-  RuleRetrieveMsg := TLintMessage.RuleRetrieve(SonarOptions);
-
-  try
-    SendMessage(
-      RuleRetrieveMsg,
-      procedure (const Response: TLintMessage) begin
-        OnRuleRetrieveResponse(Response, OnResult, OnError);
-      end);
-  finally
-    FreeAndNil(RuleRetrieveMsg);
-  end;
+      try
+        SendMessage(
+          RuleRetrieveMsg,
+          procedure (const Response: TLintMessage) begin
+            OnRuleRetrieveResponse(Response, OnResult, OnError);
+          end);
+      finally
+        FreeAndNil(RuleRetrieveMsg);
+      end;
+    end,
+    OnError);
 end;
 
 //______________________________________________________________________________________________________________________

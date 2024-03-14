@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuration files to be safely checked into source control
 * SonarQube API fields that are deprecated in 10.2 and above are no longer used for those versions
 * Logs are now periodically cleaned up
+* The server is now initialized asynchronously, instead of synchronously on the main IDE thread
 
 ### Fixed
 
