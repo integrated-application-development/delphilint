@@ -20,7 +20,6 @@ type LintSettingsIni = {
   Resources?: {
     JavaExeOverride?: string;
     ServerJarOverride?: string;
-    SonarDelphiJarOverride?: string;
   };
   SonarHost?: {
     Tokens?: string;
@@ -35,14 +34,6 @@ function getSettings(path: string): LintSettingsIni {
 
 function getVscodeConfig(section: string): string {
   return vscode.workspace.getConfiguration().get(section) as string;
-}
-
-export function getSonarDelphiJar(): string {
-  const settings = getSettings(SETTINGS_FILE);
-  return (
-    settings?.Resources?.SonarDelphiJarOverride ||
-    path.join(SETTINGS_DIR, "sonar-delphi-plugin.jar")
-  );
 }
 
 export function getServerJar(): string {

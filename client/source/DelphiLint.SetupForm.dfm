@@ -47,12 +47,12 @@ object LintSetupForm: TLintSetupForm
         'DelphiLint integrates a Delphi code analyzer into the Delphi IDE ' +
         'to provide on-the-fly linting.'#13#10#13#10'There are three primary components ' +
         'to DelphiLint: the IDE plugin itself, a companion Java server that ' +
-        'runs in the background, and the IntegraDev SonarDelphi plugin, which ' +
-        'the server uses to carry out analysis.'#13#10#13#10'To run, DelphiLint requires ' +
-        'both the server and SonarDelphi, as well as a Java 11 or above executable. ' +
-        'Please ensure all resources have been installed.'#13#10#13#10'For more detailed ' +
-        'installation instructions, please refer to the DelphiLint README ' +
-        'on GitHub.'
+        'runs in the background, and the SonarDelphi plugin, which the server ' +
+        'uses to carry out analysis.'#13#10#13#10'While SonarDelphi is automatically ' +
+        'downloaded, the server and a Java 11 or above executable must be ' +
+        'manually installed.'#13#10#13#10'Please ensure all resources are installed ' +
+        'and configured correctly. For more detailed installation instructions, ' +
+        'please refer to the DelphiLint README on GitHub.'
       WordWrap = True
     end
   end
@@ -72,22 +72,9 @@ object LintSetupForm: TLintSetupForm
     DesignSize = (
       519
       333)
-    object SonarDelphiJarLabel: TLabel
-      Left = 32
-      Top = 187
-      Width = 122
-      Height = 15
-      Caption = 'SonarDelphi plugin jar'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Segoe UI'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
     object JavaExeLabel: TLabel
       Left = 32
-      Top = 16
+      Top = 48
       Width = 114
       Height = 30
       Caption = 'Java 11+ executable'#13#10
@@ -100,7 +87,7 @@ object LintSetupForm: TLintSetupForm
     end
     object ServerJarLabel: TLabel
       Left = 32
-      Top = 127
+      Top = 159
       Width = 113
       Height = 15
       Caption = 'DelphiLint server jar'
@@ -113,7 +100,7 @@ object LintSetupForm: TLintSetupForm
     end
     object Label7: TLabel
       Left = 32
-      Top = 34
+      Top = 66
       Width = 444
       Height = 15
       Caption = 
@@ -128,27 +115,27 @@ object LintSetupForm: TLintSetupForm
     end
     object OkButton: TButton
       Left = 32
-      Top = 283
-      Width = 453
+      Top = 251
+      Width = 409
       Height = 35
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Apply this configuration'
-      TabOrder = 5
+      TabOrder = 4
       OnClick = OkButtonClick
     end
     object RefreshButton: TButton
       Left = 32
-      Top = 253
-      Width = 453
+      Top = 221
+      Width = 409
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Refresh'
-      TabOrder = 4
+      TabOrder = 3
       OnClick = RefreshButtonClick
     end
     object JavaExeBrowseButton: TButton
       Left = 32
-      Top = 90
+      Top = 122
       Width = 97
       Height = 21
       Caption = 'Select override'
@@ -157,8 +144,8 @@ object LintSetupForm: TLintSetupForm
     end
     object ServerJarIndicator: TPanel
       Left = 32
-      Top = 145
-      Width = 453
+      Top = 177
+      Width = 409
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -170,25 +157,10 @@ object LintSetupForm: TLintSetupForm
       TabOrder = 2
       StyleElements = []
     end
-    object SonarDelphiJarIndicator: TPanel
-      Left = 32
-      Top = 205
-      Width = 453
-      Height = 30
-      Alignment = taLeftJustify
-      Anchors = [akLeft, akTop, akRight]
-      BevelOuter = bvNone
-      BorderWidth = 1
-      Caption = 'SonarDelphiJarIndicator'
-      Color = clLime
-      ParentBackground = False
-      TabOrder = 3
-      StyleElements = []
-    end
     object JavaExeIndicator: TPanel
       Left = 32
-      Top = 54
-      Width = 453
+      Top = 86
+      Width = 409
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -202,11 +174,11 @@ object LintSetupForm: TLintSetupForm
     end
     object JavaExeClearButton: TButton
       Left = 135
-      Top = 90
+      Top = 122
       Width = 186
       Height = 21
       Caption = 'Clear override (use JAVA_HOME)'
-      TabOrder = 6
+      TabOrder = 5
       OnClick = JavaExeClearButtonClick
     end
   end

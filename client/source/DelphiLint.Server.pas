@@ -228,7 +228,6 @@ uses
   , Winapi.Windows
   , IdStack
   , System.IOUtils
-  , System.TimeSpan
   , DelphiLint.Utils
   , DelphiLint.Context
   ;
@@ -269,7 +268,6 @@ begin
   Json := TJSONObject.Create;
   Json.AddPair('bdsPath', Options.BdsPath);
   Json.AddPair('compilerVersion', Options.CompilerVersion);
-  Json.AddPair('defaultSonarDelphiJarPath', Options.DefaultSonarDelphiJarPath);
   Json.AddPair('sonarHostUrl', Options.SonarHost.Url);
   Json.AddPair('apiToken', Options.SonarHost.Token);
 
@@ -421,8 +419,7 @@ begin
 
   InitializeOptions := TInitializeOptions.Create(
     LintContext.IDEServices.GetRootDirectory,
-    GetDelphiVersion,
-    LintContext.Settings.SonarDelphiJar
+    GetDelphiVersion
   );
 
   if DownloadPlugin then begin

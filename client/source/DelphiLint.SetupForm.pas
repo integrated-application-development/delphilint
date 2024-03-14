@@ -35,13 +35,11 @@ type
     ExeOpenDialog: TOpenDialog;
     LeftPanel: TPanel;
     RightPanel: TPanel;
-    SonarDelphiJarLabel: TLabel;
     RefreshButton: TButton;
     JavaExeBrowseButton: TButton;
     JavaExeLabel: TLabel;
     ServerJarLabel: TLabel;
     ServerJarIndicator: TPanel;
-    SonarDelphiJarIndicator: TPanel;
     JavaExeIndicator: TPanel;
     JavaExeClearButton: TButton;
     Label7: TLabel;
@@ -88,8 +86,7 @@ class function TLintSetupForm.IsSetupValid: Boolean;
 begin
   LintContext.Settings.Load;
   Result := IsValidValue(LintContext.Settings.JavaExe)
-    and IsValidValue(LintContext.Settings.ServerJar)
-    and IsValidValue(LintContext.Settings.SonarDelphiJar);
+    and IsValidValue(LintContext.Settings.ServerJar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -188,8 +185,7 @@ end;
 function TLintSetupForm.IsAllValid: Boolean;
 begin
   Result := IsValidValue(GetEffectiveJavaExe)
-    and IsValidValue(LintContext.Settings.ServerJar)
-    and IsValidValue(LintContext.Settings.SonarDelphiJar);
+    and IsValidValue(LintContext.Settings.ServerJar);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -234,10 +230,8 @@ begin
 
   JavaExeIndicator.Caption := GetJavaExeCaption;
   ServerJarIndicator.Caption := LintContext.Settings.ServerJar;
-  SonarDelphiJarIndicator.Caption := LintContext.Settings.SonarDelphiJar;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
   UpdateValidState(ServerJarIndicator, IsValidValue(LintContext.Settings.ServerJar));
-  UpdateValidState(SonarDelphiJarIndicator, IsValidValue(LintContext.Settings.SonarDelphiJar));
 end;
 
 //______________________________________________________________________________________________________________________

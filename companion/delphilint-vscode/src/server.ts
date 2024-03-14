@@ -23,7 +23,6 @@ export enum LintMessageType {
 export type RequestInitialize = {
   bdsPath: string;
   compilerVersion: string;
-  defaultSonarDelphiJarPath: string;
   sonarHostUrl: string;
   apiToken: string;
 };

@@ -44,10 +44,9 @@ type
   TInitializeOptions = record
     BdsPath: string;
     CompilerVersion: string;
-    DefaultSonarDelphiJarPath: string;
     SonarHost: TSonarHostOptions;
 
-    constructor Create(BdsPath: string; CompilerVersion: string; DefaultSonarDelphiJarPath: string);
+    constructor Create(BdsPath: string; CompilerVersion: string);
   end;
 
   TAnalyzeOptions = record
@@ -654,11 +653,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TInitializeOptions.Create(BdsPath: string; CompilerVersion: string; DefaultSonarDelphiJarPath: string);
+constructor TInitializeOptions.Create(BdsPath: string; CompilerVersion: string);
 begin
   Self.BdsPath := BdsPath;
   Self.CompilerVersion := CompilerVersion;
-  Self.DefaultSonarDelphiJarPath := DefaultSonarDelphiJarPath;
 end;
 
 //______________________________________________________________________________________________________________________

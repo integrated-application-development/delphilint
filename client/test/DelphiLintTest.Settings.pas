@@ -26,8 +26,6 @@ type
     [Test]
     procedure TestServerJarOverride;
     [Test]
-    procedure TestSonarDelphiJarOverride;
-    [Test]
     procedure TestJavaExeOverride;
     [Test]
     procedure TestShowConsole;
@@ -39,8 +37,6 @@ type
     procedure TestSaveBeforeAnalysis;
     [Test]
     procedure TestGetServerJarDefault;
-    [Test]
-    procedure TestGetSonarDelphiJarDefault;
     [Test]
     procedure TestGetJavaExeDefault;
     [Test]
@@ -172,18 +168,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TSettingsTest.TestGetSonarDelphiJarDefault;
-begin
-  Assert.AreEqual(
-    TPath.Combine(FSettings.SettingsDirectory, 'sonar-delphi-plugin.jar'),
-    FSettings.SonarDelphiJar);
-
-  FSettings.ServerSonarDelphiJarOverride := 'abcd';
-  Assert.AreEqual('abcd', FSettings.SonarDelphiJar);
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TSettingsTest.TestJavaExeOverride;
 const
   CCategory = 'Resources';
@@ -282,24 +266,6 @@ begin
   FSettings.DebugShowConsole := False;
   FSettings.Save;
   Assert.AreEqual('0', GetSetting(CCategory, CName));
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TSettingsTest.TestSonarDelphiJarOverride;
-const
-  CCategory = 'Resources';
-  CName = 'SonarDelphiJarOverride';
-begin
-  Assert.AreEqual(FSettings.ServerSonarDelphiJarOverride, '');
-
-  SetSetting(CCategory, CName, 'abcdefg');
-  FSettings.Load;
-  Assert.AreEqual(FSettings.ServerSonarDelphiJarOverride, 'abcdefg');
-
-  FSettings.ServerSonarDelphiJarOverride := 'efgh';
-  FSettings.Save;
-  Assert.AreEqual('efgh', GetSetting(CCategory, CName));
 end;
 
 //______________________________________________________________________________________________________________________

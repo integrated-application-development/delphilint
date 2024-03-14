@@ -156,7 +156,6 @@ async function analyzeFiles(
       bdsPath: settings.getBdsPath(),
       apiToken,
       compilerVersion: settings.getCompilerVersion(),
-      defaultSonarDelphiJarPath: settings.getSonarDelphiJar(),
       sonarHostUrl,
     });
 

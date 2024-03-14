@@ -20,7 +20,6 @@ package au.com.integradev.delphilint.server.message;
 public class RequestInitialize {
   private String bdsPath;
   private String compilerVersion;
-  private String defaultSonarDelphiJarPath;
   private String sonarHostUrl;
   private String apiToken;
 
@@ -30,10 +29,6 @@ public class RequestInitialize {
 
   public String getCompilerVersion() {
     return compilerVersion;
-  }
-
-  public String getDefaultSonarDelphiJarPath() {
-    return defaultSonarDelphiJarPath;
   }
 
   public String getSonarHostUrl() {

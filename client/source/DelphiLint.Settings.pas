@@ -37,7 +37,6 @@ type
     FTokensMap: TDictionary<TSonarProjectIdentifier, string>;
 
     function GetServerJar(Index: Integer): string;
-    function GetSonarDelphiJar(Index: Integer): string;
     function GetJavaExe(Index: Integer): string;
     function GetDefaultJavaExe: string;
     procedure SyncTokenMap;
@@ -45,7 +44,7 @@ type
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
 
-    property SonarHostTokens: string index 7 read GetValueStr write SetValueStr;
+    property SonarHostTokens: string index 6 read GetValueStr write SetValueStr;
   public
     constructor Create(Path: string);
     destructor Destroy; override;
@@ -56,16 +55,14 @@ type
     function GetSonarHostToken(Host: string; ProjectKey: string): string;
 
     property ServerJarOverride: string index 0 read GetValueStr write SetValueStr;
-    property ServerSonarDelphiJarOverride: string index 1 read GetValueStr write SetValueStr;
-    property ServerJavaExeOverride: string index 2 read GetValueStr write SetValueStr;
-    property DebugShowConsole: Boolean index 3 read GetValueBool write SetValueBool;
-    property DebugExternalServer: Boolean index 4 read GetValueBool write SetValueBool;
-    property ClientAutoShowToolWindow: Boolean index 5 read GetValueBool write SetValueBool;
-    property ClientSaveBeforeAnalysis: Boolean index 6 read GetValueBool write SetValueBool;
+    property ServerJavaExeOverride: string index 1 read GetValueStr write SetValueStr;
+    property DebugShowConsole: Boolean index 2 read GetValueBool write SetValueBool;
+    property DebugExternalServer: Boolean index 3 read GetValueBool write SetValueBool;
+    property ClientAutoShowToolWindow: Boolean index 4 read GetValueBool write SetValueBool;
+    property ClientSaveBeforeAnalysis: Boolean index 5 read GetValueBool write SetValueBool;
 
     property ServerJar: string index 0 read GetServerJar;
-    property SonarDelphiJar: string index 1 read GetSonarDelphiJar;
-    property JavaExe: string index 2 read GetJavaExe;
+    property JavaExe: string index 1 read GetJavaExe;
     property DefaultJavaExe: string read GetDefaultJavaExe;
     property SettingsDirectory: string read FSettingsDir;
     property SonarHostTokensMap: TDictionary<TSonarProjectIdentifier, string> read FTokensMap;
@@ -110,18 +107,16 @@ begin
     // 0
     TStringPropField.Create('Resources', 'ServerJarOverride', ''),
     // 1
-    TStringPropField.Create('Resources', 'SonarDelphiJarOverride', ''),
-    // 2
     TStringPropField.Create('Resources', 'JavaExeOverride', ''),
-    // 3
+    // 2
     TBoolPropField.Create('Debug', 'ShowConsole', False),
-    // 4
+    // 3
     TBoolPropField.Create('Debug', 'ExternalServer', False),
-    // 5
+    // 4
     TBoolPropField.Create('Client', 'AutoShowToolWindow', True),
-    // 6
+    // 5
     TBoolPropField.Create('Client', 'SaveBeforeAnalysis', True),
-    // 7
+    // 6
     TStringPropField.Create('SonarHost', 'Tokens', True)
   ];
 end;
@@ -133,16 +128,6 @@ begin
   Result := GetValueStr(Index);
   if Result = '' then begin
     Result := TPath.Combine(FSettingsDir, Format('delphilint-server-%s.jar', [DelphiLintVersion]));
-  end;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TLintSettings.GetSonarDelphiJar(Index: Integer): string;
-begin
-  Result := GetValueStr(Index);
-  if Result = '' then begin
-    Result := TPath.Combine(FSettingsDir, 'sonar-delphi-plugin.jar');
   end;
 end;
 
