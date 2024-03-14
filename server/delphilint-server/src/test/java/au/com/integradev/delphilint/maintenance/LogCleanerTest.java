@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.logclean;
+package au.com.integradev.delphilint.maintenance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -17,7 +17,7 @@
  */
 package au.com.integradev.delphilint;
 
-import au.com.integradev.delphilint.logclean.LogCleaner;
+import au.com.integradev.delphilint.maintenance.LogCleaner;
 import au.com.integradev.delphilint.server.AnalysisServer;
 import au.com.integradev.delphilint.server.TlvConnection;
 import java.io.IOException;

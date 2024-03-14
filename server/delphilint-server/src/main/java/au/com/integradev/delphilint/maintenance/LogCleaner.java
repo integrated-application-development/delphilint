@@ -1,4 +1,4 @@
-package au.com.integradev.delphilint.logclean;
+package au.com.integradev.delphilint.maintenance;
 
 import java.io.IOException;
 import java.nio.file.Files;
