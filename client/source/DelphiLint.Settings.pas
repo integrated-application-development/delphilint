@@ -209,9 +209,25 @@ procedure TLintSettings.SyncTokenString;
 var
   Ident: TSonarProjectIdentifier;
   TokenStr: string;
+  SortedIdents: TArray<TSonarProjectIdentifier>;
 begin
   TokenStr := '';
-  for Ident in FTokensMap.Keys do begin
+
+  SortedIdents := FTokensMap.Keys.ToArray;
+  TArray.Sort<TSonarProjectIdentifier>(
+    SortedIdents,
+    TComparer<TSonarProjectIdentifier>.Construct(
+      function(const Left: TSonarProjectIdentifier; const Right: TSonarProjectIdentifier): Integer
+      begin
+        if Left.ProjectKey <> Right.ProjectKey then begin
+          Result := TComparer<string>.Default.Compare(Left.ProjectKey, Right.ProjectKey);
+        end
+        else begin
+          Result := TComparer<string>.Default.Compare(Left.Host, Right.Host);
+        end;
+      end));
+
+  for Ident in SortedIdents do begin
     TokenStr := Format('%s%s%s@%s=%s', [
       TokenStr,
       IfThen(TokenStr = '', '', ','),
