@@ -53,16 +53,16 @@ class DelphiVersion {
 
 class DelphiInstall {
   [DelphiVersion]$Version
-  [string]$BinPath
+  [string]$InstallationPath
 
   DelphiInstall([string]$PackageVersion) {
     $this.Version = $Global:DelphiVersionMap[$PackageVersion]
-    $this.BinPath = "C:\Program Files (x86)\Embarcadero\Studio\$($this.Version.RegistryVersion)\bin"
+    $this.InstallationPath = "C:\Program Files (x86)\Embarcadero\Studio\$($this.Version.RegistryVersion)"
   }
 
-  DelphiInstall([string]$PackageVersion, [string]$BinPath) {
+  DelphiInstall([string]$PackageVersion, [string]$InstallationPath) {
     $this.PackageVersion = $PackageVersion
-    $this.BinPath = $BinPath
+    $this.InstallationPath = $InstallationPath
   }
 }
 
@@ -160,7 +160,7 @@ function Assert-ClientVersion([string]$Version, [string]$Message) {
 function Invoke-ClientCompile([PackagingConfig]$Config) {
   Push-Location (Join-Path $PSScriptRoot ..\client\source)
   try {
-    & cmd /c "`"$($Config.Delphi.BinPath)\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`""
+    & cmd /c "`"$($Config.Delphi.InstallationPath)\\bin\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`""
   }
   finally {
     Pop-Location
@@ -196,7 +196,7 @@ function Clear-TargetFolder {
 function New-BatchScript([string]$Path, [string]$PSScriptPath) {
   $BatchScript = @(
     '@echo off',
-    "powershell -ExecutionPolicy Bypass -File $PSScriptPath",
+    "powershell -ExecutionPolicy Bypass -File `"%~dp0\$PSScriptPath`"",
     'pause'
   )
 
@@ -274,7 +274,7 @@ $Projects = @(
     "Name" = "Build client"
     "Prerequisite" = {
       Assert-ClientVersion -Version $Version
-      $PackagingConfigs | ForEach-Object { Assert-Exists $_.Delphi.BinPath }
+      $PackagingConfigs | ForEach-Object { Assert-Exists $_.Delphi.InstallationPath }
     }
     "Build" = {
       $PackagingConfigs | ForEach-Object {
