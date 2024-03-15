@@ -203,8 +203,8 @@ function New-BatchScript([string]$Path, [string]$PSScriptPath) {
   Set-Content -Path $Path -Value $BatchScript
 }
 
-function New-SetupScript([string]$Path, [string]$Version, [string]$PackageVersion) {
-  $MacroContents = "`$Version = '$Version'`n`$PackageVersion = '$PackageVersion'`n"
+function New-SetupScript([string]$Path, [PackagingConfig]$Config) {
+  $MacroContents = "`$Version = '$($Config.Version)'`n`$PackageVersion = '$($Config.Delphi.Version.PackageVersion)'`n`$RegistryVersion = '$($Config.Delphi.Version.RegistryVersion)'`n"
 
   Copy-Item (Join-Path $PSScriptRoot TEMPLATE_install.ps1) $Path
   $Content = Get-Content -Raw $Path
@@ -221,7 +221,7 @@ function New-PackageFolder([PackagingConfig]$Config, [hashtable]$Artifacts) {
   }
 
   $InstallScriptPath = (Join-Path $Path "install.ps1")
-  New-SetupScript -Path $InstallScriptPath -Version $Version -PackageVersion $Config.Delphi.Version.PackageVersion
+  New-SetupScript -Path $InstallScriptPath -Config $Config
   New-BatchScript -Path (Join-Path $Path "install.bat") -PSScriptPath "install.ps1"
 }
 

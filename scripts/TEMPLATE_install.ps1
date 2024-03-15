@@ -15,6 +15,16 @@ function New-AppDataPath {
   Write-Host "Created DelphiLint folder."
 }
 
+function Clear-RegistryEntry {
+  Get-ChildItem $DelphiLintFolder -Filter "*.bpl" | ForEach-Object {
+    Remove-ItemProperty -Path "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages" `
+      -Name $_.FullName `
+      -ErrorAction Ignore
+  }
+
+  Write-Host "Cleaned existing Delphi IDE registry entries."
+}
+
 function Clear-AppDataPath {
   Remove-Item (Join-Path $DelphiLintFolder "DelphiLintClient*.bpl") -ErrorAction Continue
   Remove-Item (Join-Path $DelphiLintFolder "delphilint-server*.jar") -ErrorAction Continue
@@ -60,19 +70,22 @@ function Get-WebView2 {
   Remove-Item $TempFolder -Recurse -Force -ErrorAction Continue
 }
 
+function Add-RegistryEntry {
+  $BplName = "DelphiLintClient-$Version-$PackageVersion.bpl"
+  $BplPath = Join-Path $DelphiLintFolder $BplName
+  New-ItemProperty -Path "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages" `
+    -Name $BplPath `
+    -Value 'DelphiLint' `
+    -PropertyType String | Out-Null
+
+  Write-Host "Added Delphi IDE registry entry for $BplName."
+}
+
 Write-Host "Setting up DelphiLint $Version."
 New-AppDataPath
+Clear-RegistryEntry
 Clear-AppDataPath
 Copy-BuildArtifacts
 Get-WebView2
-Write-Host "Install completed for DelphiLint $Version."
-
-@(
-  "",
-  "Almost there! DelphiLint's files are now installed at:"
-  "  $env:APPDATA\DelphiLint"
-  "",
-  "Add the plugin bpl (below) to your IDE via Components > Install Packages:",
-  "  $env:APPDATA\DelphiLint\DelphiLintClient-$Version-$PackageVersion.bpl",
-  ""
-) | Write-Host -ForegroundColor Green
+Add-RegistryEntry
+Write-Host -ForegroundColor Green "Install completed for DelphiLint $Version."

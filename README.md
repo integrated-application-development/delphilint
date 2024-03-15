@@ -38,7 +38,7 @@ Installation steps:
 
 1. Download the packaged zip for your Delphi version from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest), or [build from source](#building-from-source).
 2. Unzip the folder and run the included `install.bat` script.
-3. In RAD Studio, install DelphiLint by going to Components > Install Packages and selecting the installed client .bpl in `%APPDATA%\DelphiLint`.
+3. Done!
 
 ### Installing the VS Code companion
 
