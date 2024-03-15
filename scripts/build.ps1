@@ -1,4 +1,29 @@
-#! powershell -File
+#!/usr/bin/env -S powershell -File
+
+<#
+.SYNOPSIS
+  Builds and packages all DelphiLint projects.
+.DESCRIPTION
+  Builds all DelphiLint projects:
+  * DelphiLintClient (Delphi and JavaScript)
+  * delphilint-server (Java)
+  * delphilint-vscode (TypeScript)
+
+  The built artifacts are then packaged into versioned folders and zip files.
+.PARAMETER ShowOutput
+  Display detailed output.
+.PARAMETER SkipCompanion
+  Skip building the VSCode companion extension.
+.PARAMETER DelphiVersions
+  Any number of Delphi package versions, optionally specifying an installation path.
+.EXAMPLE
+  build.ps1 280
+  Build and package all DelphiLint projects using a standard Delphi 11 Alexandria installation.
+.EXAMPLE
+  build.ps1 "290=C:\Custom Path\Embarcadero\23.0"
+  Build and package all DelphiLint projects using a non-standard Delphi 12 Athens installation.
+#>
+
 param(
   [switch]$ShowOutput,
   [switch]$SkipCompanion,
@@ -162,7 +187,6 @@ function Invoke-VscCompanionCompile {
     Pop-Location
   }
 }
-
 
 function Clear-TargetFolder {
   New-Item -ItemType Directory $TargetDir -Force | Out-Null
