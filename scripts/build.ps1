@@ -1,26 +1,104 @@
 #! powershell -File
 param(
-  [Parameter(Mandatory)]
-  [string]$DelphiBin,
   [switch]$ShowOutput,
-  [switch]$SkipCompanion
+  [switch]$SkipCompanion,
+  [Parameter(ValueFromRemainingArguments)]
+  [string[]]$DelphiVersions
 )
 
 $ErrorActionPreference = "Stop"
 Import-Module "$PSScriptRoot/common" -Force
 
+$Global:DelphiVersionMap = @{
+  "280" = [DelphiVersion]::new("11 Alexandria", "280", "22.0")
+  "290" = [DelphiVersion]::new("12 Athens", "290", "23.0")
+}
+
+class DelphiVersion {
+  [string]$Name
+  [string]$PackageVersion
+  [string]$RegistryVersion
+
+  DelphiVersion([string]$Name, [string]$PackageVersion, [string]$RegistryVersion) {
+    $this.Name = $Name
+    $this.PackageVersion = $PackageVersion
+    $this.RegistryVersion = $RegistryVersion
+  }
+}
+
+class DelphiInstall {
+  [DelphiVersion]$Version
+  [string]$BinPath
+
+  DelphiInstall([string]$PackageVersion) {
+    $this.Version = $Global:DelphiVersionMap[$PackageVersion]
+    $this.BinPath = "C:\Program Files (x86)\Embarcadero\Studio\$($this.Version.RegistryVersion)\bin"
+  }
+
+  DelphiInstall([string]$PackageVersion, [string]$BinPath) {
+    $this.PackageVersion = $PackageVersion
+    $this.BinPath = $BinPath
+  }
+}
+
+class PackagingConfig {
+  [DelphiInstall]$Delphi
+  [Hashtable]$Artifacts
+  [string]$Version
+
+  PackagingConfig([DelphiInstall]$Delphi) {
+    $this.Delphi = $Delphi
+    $this.Artifacts = @{}
+    $this.Version = Get-Version
+  }
+
+  [string] GetOutputBplName() {
+    return "DelphiLintClient-$($this.Version)-$($this.Delphi.Version.PackageVersion).bpl"
+  }
+
+  [string] GetInputBplPath() {
+    $Ver = $this.Delphi.Version.PackageVersion
+    return Join-Path $PSScriptRoot "../client/source/target/$Ver/Release/DelphiLintClient$Ver.bpl"
+  }
+
+  [string] GetPackageFolderName() {
+    return "DelphiLint-$($this.Version)-$($this.Delphi.Version.PackageVersion)"
+  }
+}
+
+$DelphiInstalls = $DelphiVersions `
+  | ForEach-Object { ,($_ -split '=') } `
+  | Where-Object {
+      $SupportedVersion = $DelphiVersionMap.ContainsKey($_[0])
+
+      if(-not $SupportedVersion) {
+        Write-Host "Delphi version '$($_[0])' is not compatible with DelphiLint, ignoring."
+      }
+
+      return $SupportedVersion
+    } `
+  | ForEach-Object {
+      if($_.Length -gt 1) {
+        return [DelphiInstall]::new($_[0], $_[1])
+      } else {
+        return [DelphiInstall]::new($_[0])
+      }
+    }
+
+if ($DelphiInstalls.Length -eq 0) {
+  Write-Problem "Please supply at least one version to build for."
+  Exit
+}
+
 $Version = Get-Version
 $StaticVersion = $Version -replace "\+dev.*$","+dev"
-$BuildConfig = "Release"
 
-$ClientBpl = Join-Path $PSScriptRoot "../client/source/target/Win32/$BuildConfig/DelphiLintClient.bpl"
 $ServerJar = Join-Path $PSScriptRoot "../server/delphilint-server/target/delphilint-server-$Version.jar"
 $CompanionVsix = Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphilint-vscode-$StaticVersion.vsix"
 
 $TargetDir = Join-Path $PSScriptRoot "../target"
-$PackageDir = Join-Path $TargetDir "DelphiLint-$Version"
 
-function Assert-BuildArtifact([string]$Path, [string]$Message) {
+function Assert-Exists([string]$Path) {
   if(Test-Path $Path) {
     Write-Status -Status Success "$(Resolve-PathToRoot $Path) exists."
   } else {
@@ -54,80 +132,10 @@ function Assert-ClientVersion([string]$Version, [string]$Message) {
   }
 }
 
-function New-BatchScript([string]$Path, [string]$PSScriptPath) {
-  $BatchScript = @(
-    '@echo off',
-    "powershell -ExecutionPolicy Bypass -File $PSScriptPath",
-    'pause'
-  )
-
-  Set-Content -Path $Path -Value $BatchScript
-}
-
-function New-SetupScript([string]$Path, [string]$Version) {
-  $SetupScript = @(
-    '#! powershell -File',
-    '',
-    '$ErrorActionPreference = "Stop"',
-    '$ProgressPreference = "SilentlyContinue"',
-    '',
-    '$Version = ' + "'$Version'",
-    '',
-    '$DelphiLintFolder = Join-Path $env:APPDATA "DelphiLint"',
-    '$BinFolder = (Join-Path $DelphiLintFolder "bin")',
-    '$TempFolder = (Join-Path $DelphiLintFolder "tmp")',
-    '',
-    'Write-Host "Setting up DelphiLint $Version."',
-    'New-Item -Path $DelphiLintFolder -ItemType Directory -ErrorAction Ignore | Out-Null',
-    'New-Item -ItemType Directory $BinFolder -Force -ErrorAction Ignore | Out-Null',
-    'New-Item -ItemType Directory $TempFolder -Force -ErrorAction Ignore | Out-Null',
-    'Write-Host "Created DelphiLint folder."',
-    '',
-    'Remove-Item (Join-Path $DelphiLintFolder "DelphiLintClient*.bpl") -ErrorAction Continue',
-    'Remove-Item (Join-Path $DelphiLintFolder "delphilint-server*.jar") -ErrorAction Continue',
-    'Write-Host "Deleted any existing build artifacts."',
-    '',
-    '@("DelphiLintClient-$Version.bpl", "delphilint-server-$Version.jar") | ForEach-Object {',
-    '  Copy-Item -Path (Join-Path $PSScriptRoot $_) -Destination (Join-Path $DelphiLintFolder $_) -Force',
-    '}',
-    'Write-Host "Copied resources."',
-    '',
-    '$WebViewZip = (Join-Path $TempFolder "webview.zip")',
-    '',
-    'Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2210.55" -OutFile $WebViewZip',
-    '',
-    'Add-Type -Assembly System.IO.Compression.FileSystem',
-    '$Archive = [System.IO.Compression.ZipFile]::OpenRead($WebViewZip)',
-    'try {',
-    '  $Archive.Entries |',
-    '    Where-Object { $_.FullName -eq "build/native/x86/WebView2Loader.dll" } |',
-    '    ForEach-Object {',
-    '      [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, (Join-Path $BinFolder "WebView2Loader.dll"), $true)',
-    '      Write-Host "Downloaded $($_.Name) from NuGet."',
-    '    }',
-    '} finally {',
-    '  $Archive.Dispose()',
-    '}',
-    '',
-    '$DirsOnPath = $env:Path -split ";"',
-    'if($DirsOnPath -icontains $BinFolder) {',
-    '  Write-Host "Bin directory is already on user path."',
-    '} else {',
-    '  [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$BinFolder", [System.EnvironmentVariableTarget]::User)',
-    '  Write-Host "Added bin directory to user path."',
-    '}',
-    '',
-    'Remove-Item $TempFolder -Recurse -Force -ErrorAction Continue',
-    'Write-Host "Install completed for DelphiLint $Version."'
-  )
-
-  Set-Content -Path $Path -Value $SetupScript
-}
-
-function Invoke-ClientCompile([string]$DelphiBin, [string]$BuildConfig) {
+function Invoke-ClientCompile([PackagingConfig]$Config) {
   Push-Location (Join-Path $PSScriptRoot ..\client\source)
   try {
-    & cmd /c "`"$DelphiBin\\rsvars.bat`" && msbuild /p:config=`"$BuildConfig`""
+    & cmd /c "`"$($Config.Delphi.BinPath)\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`""
   }
   finally {
     Pop-Location
@@ -155,21 +163,46 @@ function Invoke-VscCompanionCompile {
   }
 }
 
+
 function Clear-TargetFolder {
   New-Item -ItemType Directory $TargetDir -Force | Out-Null
   Get-ChildItem -Path $TargetDir -Recurse | Remove-Item -Force -Recurse
 }
 
-function New-PackageFolder([hashtable]$Artifacts) {
-  New-Item -ItemType Directory $PackageDir -Force
+function New-BatchScript([string]$Path, [string]$PSScriptPath) {
+  $BatchScript = @(
+    '@echo off',
+    "powershell -ExecutionPolicy Bypass -File $PSScriptPath",
+    'pause'
+  )
+
+  Set-Content -Path $Path -Value $BatchScript
+}
+
+function New-SetupScript([string]$Path, [string]$Version, [string]$PackageVersion) {
+  $MacroContents = "`$Version = '$Version'`n`$PackageVersion = '$PackageVersion'`n"
+
+  Copy-Item (Join-Path $PSScriptRoot TEMPLATE_install.ps1) $Path
+  $Content = Get-Content -Raw $Path
+  $Content = $Content -replace "##\{STARTREPLACE\}##(.|\n)*##\{ENDREPLACE\}##",$MacroContents
+  Set-Content -Path $Path -Value $Content
+}
+
+function New-PackageFolder([PackagingConfig]$Config, [hashtable]$Artifacts) {
+  $Path = (Join-Path $TargetDir $Config.GetPackageFolderName())
+  New-Item -ItemType Directory $Path -Force
 
   $Artifacts.GetEnumerator() | ForEach-Object {
-    Copy-Item -Path $_.Key -Destination (Join-Path $PackageDir $_.Value)
+    Copy-Item -Path $_.Key -Destination (Join-Path $Path $_.Value)
   }
 
-  $InstallScriptPath = (Join-Path $PackageDir "install.ps1")
-  New-SetupScript -Path $InstallScriptPath -Version $Version
-  New-BatchScript -Path (Join-Path $PackageDir "install.bat") -PSScriptPath $InstallScriptPath
+  $InstallScriptPath = (Join-Path $Path "install.ps1")
+  New-SetupScript -Path $InstallScriptPath -Version $Version -PackageVersion $Config.Delphi.Version.PackageVersion
+  New-BatchScript -Path (Join-Path $Path "install.bat") -PSScriptPath "install.ps1"
+}
+
+function Get-PackageFolder([string]$DelphiVersion) {
+  return Join-Path $TargetDir "DelphiLint-$Version-$($_.Install.DelphiVersion)"
 }
 
 function Invoke-Project([hashtable]$Project) {
@@ -208,20 +241,28 @@ function Invoke-Project([hashtable]$Project) {
 #-----------------------------------------------------------------------------------------------------------------------
 
 $StandaloneArtifacts = @{}
-$PackagedArtifacts = @{}
+$CommonArtifacts = @{}
+
+$PackagingConfigs = $DelphiInstalls | ForEach-Object { [PackagingConfig]::new($_) }
 
 $Projects = @(
   @{
     "Name" = "Build client"
     "Prerequisite" = {
       Assert-ClientVersion -Version $Version
+      $PackagingConfigs | ForEach-Object { Assert-Exists $_.Delphi.BinPath }
     }
     "Build" = {
-      Invoke-ClientCompile -DelphiBin $DelphiBin -BuildConfig $BuildConfig
-      $PackagedArtifacts.Add($ClientBpl, "DelphiLintClient-$Version.bpl");
+      $PackagingConfigs | ForEach-Object {
+        Invoke-ClientCompile -Config $_
+        $_.Artifacts.Add($_.GetInputBplPath(), $_.GetOutputBplName())
+        Write-Host "Built for Delphi $($_.Delphi.Version.Name) ($($_.Delphi.Version.PackageVersion))."
+      }
     }
     "Postrequisite" = {
-      Assert-BuildArtifact $ClientBpl
+      $PackagingConfigs | ForEach-Object {
+        Assert-Exists $_.GetInputBplPath()
+      }
     }
   },
   @{
@@ -229,10 +270,10 @@ $Projects = @(
     "Build" = {
       Invoke-ServerCompile
       $StandaloneArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
-      $PackagedArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
+      $CommonArtifacts.Add($ServerJar, "delphilint-server-$Version.jar");
     }
     "Postrequisite" = {
-      Assert-BuildArtifact $ServerJar
+      Assert-Exists $ServerJar
     }
   },
   @{
@@ -247,7 +288,7 @@ $Projects = @(
     }
     "Postrequisite" = {
       if(-not $SkipCompanion) {
-        Assert-BuildArtifact $CompanionVsix
+        Assert-Exists $CompanionVsix
       }
     }
   },
@@ -258,26 +299,42 @@ $Projects = @(
       $StandaloneArtifacts.GetEnumerator() | ForEach-Object {
         Copy-Item -Path $_.Key -Destination (Join-Path $TargetDir $_.Value)
       }
-      New-PackageFolder $PackagedArtifacts
+      $PackagingConfigs | ForEach-Object {
+        New-PackageFolder -Config $_ -Artifacts ($CommonArtifacts + $_.Artifacts)
+      }
     }
     "Postrequisite" = {
       $StandaloneArtifacts.Values | ForEach-Object {
-        Assert-BuildArtifact (Join-Path $TargetDir $_)
+        Assert-Exists (Join-Path $TargetDir $_)
       }
-      $PackagedArtifacts.Values | ForEach-Object {
-        Assert-BuildArtifact (Join-Path $PackageDir $_)
+
+      $PackagingConfigs | ForEach-Object {
+        $PackageFolder = (Join-Path $TargetDir $_.GetPackageFolderName())
+
+        $CommonArtifacts.Values | ForEach-Object {
+          Assert-Exists (Join-Path $PackageFolder $_)
+        }
+
+        $_.Artifacts.Values | ForEach-Object {
+          Assert-Exists (Join-Path $PackageFolder $_)
+        }
       }
     }
   },
   @{
     "Name" = "Zip build artifacts"
     "Build" = {
-      $ZippedPackage = Join-Path $TargetDir "DelphiLint-$Version.zip"
-      Compress-Archive $PackageDir -DestinationPath $ZippedPackage -Force
+      $PackagingConfigs | ForEach-Object {
+        $PackageFolder = Join-Path $TargetDir $_.GetPackageFolderName()
+        $ZippedPackage = "${PackageFolder}.zip"
+        Compress-Archive $PackageFolder -DestinationPath $ZippedPackage -Force
+      }
     }
     "Postrequisite" = {
-      $ZippedPackage = Join-Path $TargetDir "DelphiLint-$Version.zip"
-      Assert-BuildArtifact $ZippedPackage
+      $PackagingConfigs | ForEach-Object {
+        $ZippedPackage = "$($_.GetPackageFolderName()).zip"
+        Assert-Exists (Join-Path $TargetDir $ZippedPackage)
+      }
     }
   }
 );

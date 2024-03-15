@@ -63,9 +63,17 @@ Prerequisites:
 * Microsoft Edge 79.0.309 or above
 * PowerShell execution policy set to `Unrestricted` (see [MSDN](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts?view=powershell-7.4#how-to-run-a-script))
 
-After cloning, DelphiLint can be built by running `scripts/build.ps1 -DelphiBin <path/to/bin>`, where
-`<path/to/bin>` is the path to your Delphi IDE installation's `bin` directory
-(e.g. `C:\Program Files (x86)\Embarcadero\Studio\<version>\bin`).
+To build DelphiLint, use `scripts/build.ps1`:
+
+* `scripts/build.ps1 280` to build for Delphi 11 Alexandria
+* `scripts/build.ps1 290` to build for Delphi 12 Athens
+
+This creates a `target/DelphiLint-<version>-` folder containing all built artifacts.
+
+> [!NOTE]
+> `build.ps1` looks for a Delphi installation in the default location for the given version.
+> If your installation is elsewhere, supply the location as part of the version parameter, e.g.
+> `scripts/build.ps1 280=/my/custom/location`.
 
 ## Usage
 
