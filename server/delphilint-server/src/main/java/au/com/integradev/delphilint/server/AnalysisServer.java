@@ -13,6 +13,7 @@ import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
 import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import au.com.integradev.delphilint.remote.sonarqube.HttpSonarApi;
 import au.com.integradev.delphilint.remote.sonarqube.SonarQubeHost;
+import au.com.integradev.delphilint.remote.sonarqube.Version;
 import au.com.integradev.delphilint.remote.standalone.StandaloneSonarHost;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
 import au.com.integradev.delphilint.server.message.RequestInitialize;
@@ -170,7 +171,8 @@ public class AnalysisServer {
         Set<Path> pluginPaths;
 
         if (pluginGroup == null) {
-          pluginPaths = Set.of(fallbackPluginProvider.getPlugin());
+          Version fallbackVersion = new Version(requestInitialize.getSonarDelphiVersion());
+          pluginPaths = Set.of(fallbackPluginProvider.getPlugin(fallbackVersion));
         } else {
           pluginPaths =
               pluginGroup.stream().map(DownloadedPlugin::getPath).collect(Collectors.toSet());
@@ -209,10 +211,10 @@ public class AnalysisServer {
               "SonarDelphi could not be retrieved from GitHub. Please check your internet"
                   + " connection and try again"));
     } catch (Exception e) {
-      LOG.error("Unknown error during analysis", e);
+      LOG.error("Unknown error during initialization", e);
       sendMessage.accept(
           LintMessage.initializeError(
-              "Unknown error during analysis: "
+              "Unknown error during initialization: "
                   + e.getMessage()
                   + " ("
                   + e.getClass().getSimpleName()

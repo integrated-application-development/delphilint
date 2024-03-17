@@ -135,6 +135,7 @@ type
       DownloadPlugin: Boolean = True);
     procedure RetrieveRules(
       SonarOptions: TSonarProjectOptions;
+      SonarDelphiVersion: string;
       OnResult: TRuleRetrieveResultAction;
       OnError: TErrorAction;
       DownloadPlugin: Boolean = True);
@@ -180,6 +181,7 @@ type
 
     procedure Initialize(
       HostOptions: TSonarHostOptions;
+      SonarDelphiVersion: string;
       DownloadPlugin: Boolean;
       OnResult: TInitializeResultAction;
       OnError: TErrorAction
@@ -191,6 +193,7 @@ type
       DownloadPlugin: Boolean = True);
     procedure RetrieveRules(
       SonarOptions: TSonarProjectOptions;
+      SonarDelphiVersion: string;
       OnResult: TRuleRetrieveResultAction;
       OnError: TErrorAction;
       DownloadPlugin: Boolean = True);
@@ -270,6 +273,7 @@ begin
   Json.AddPair('compilerVersion', Options.CompilerVersion);
   Json.AddPair('sonarHostUrl', Options.SonarHost.Url);
   Json.AddPair('apiToken', Options.SonarHost.Token);
+  Json.AddPair('sonarDelphiVersion', Options.SonarDelphiVersion);
 
   Result := TLintMessage.Create(C_Initialize, Json);
 end;
@@ -402,6 +406,7 @@ end;
 
 procedure TLintServer.Initialize(
   HostOptions: TSonarHostOptions;
+  SonarDelphiVersion: string;
   DownloadPlugin: Boolean;
   OnResult: TInitializeResultAction;
   OnError: TErrorAction
@@ -419,7 +424,8 @@ begin
 
   InitializeOptions := TInitializeOptions.Create(
     LintContext.IDEServices.GetRootDirectory,
-    GetDelphiVersion
+    GetDelphiVersion,
+    SonarDelphiVersion
   );
 
   if DownloadPlugin then begin
@@ -462,6 +468,7 @@ var
 begin
   Initialize(
     Options.Sonar.Host,
+    Options.SonarDelphiVersion,
     DownloadPlugin,
     procedure begin
       Log.Debug('Sending analysis request to server');
@@ -521,6 +528,7 @@ end;
 
 procedure TLintServer.RetrieveRules(
   SonarOptions: TSonarProjectOptions;
+  SonarDelphiVersion: string;
   OnResult: TRuleRetrieveResultAction;
   OnError: TErrorAction;
   DownloadPlugin: Boolean = True
@@ -528,6 +536,7 @@ procedure TLintServer.RetrieveRules(
 begin
   Initialize(
     SonarOptions.Host,
+    SonarDelphiVersion,
     DownloadPlugin,
     procedure
     var

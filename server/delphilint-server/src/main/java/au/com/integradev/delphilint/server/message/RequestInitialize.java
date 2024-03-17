@@ -22,6 +22,7 @@ public class RequestInitialize {
   private String compilerVersion;
   private String sonarHostUrl;
   private String apiToken;
+  private String sonarDelphiVersion;
 
   public String getBdsPath() {
     return bdsPath;
@@ -37,5 +38,9 @@ public class RequestInitialize {
 
   public String getApiToken() {
     return apiToken;
+  }
+
+  public String getSonarDelphiVersion() {
+    return sonarDelphiVersion;
   }
 }

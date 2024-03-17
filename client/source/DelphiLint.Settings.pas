@@ -39,6 +39,8 @@ type
     function GetServerJar(Index: Integer): string;
     function GetJavaExe(Index: Integer): string;
     function GetDefaultJavaExe: string;
+    function GetSonarDelphiVersion(Index: Integer): string;
+    function GetDefaultSonarDelphiVersion: string;
     procedure SyncTokenMap;
     procedure SyncTokenString;
   protected
@@ -60,10 +62,14 @@ type
     property DebugExternalServer: Boolean index 3 read GetValueBool write SetValueBool;
     property ClientAutoShowToolWindow: Boolean index 4 read GetValueBool write SetValueBool;
     property ClientSaveBeforeAnalysis: Boolean index 5 read GetValueBool write SetValueBool;
+    // SonarHostTokens index 6
+    property ServerSonarDelphiVersionOverride: string index 7 read GetValueStr write SetValueStr;
 
     property ServerJar: string index 0 read GetServerJar;
     property JavaExe: string index 1 read GetJavaExe;
     property DefaultJavaExe: string read GetDefaultJavaExe;
+    property SonarDelphiVersion: string index 7 read GetSonarDelphiVersion;
+    property DefaultSonarDelphiVersion: string read GetDefaultSonarDelphiVersion;
     property SettingsDirectory: string read FSettingsDir;
     property SonarHostTokensMap: TDictionary<TSonarProjectIdentifier, string> read FTokensMap;
   end;
@@ -117,7 +123,9 @@ begin
     // 5
     TBoolPropField.Create('Client', 'SaveBeforeAnalysis', True),
     // 6
-    TStringPropField.Create('SonarHost', 'Tokens', True)
+    TStringPropField.Create('SonarHost', 'Tokens', True),
+    // 7
+    TStringPropField.Create('Server', 'SonarDelphiVersionOverride', '')
   ];
 end;
 
@@ -150,6 +158,23 @@ begin
   Result := GetValueStr(Index);
   if Result = '' then begin
     Result := GetDefaultJavaExe;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetDefaultSonarDelphiVersion: string;
+begin
+  Result := '1.3.0';
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetSonarDelphiVersion(Index: Integer): string;
+begin
+  Result := GetValueStr(Index);
+  if Result = '' then begin
+    Result := GetDefaultSonarDelphiVersion;
   end;
 end;
 

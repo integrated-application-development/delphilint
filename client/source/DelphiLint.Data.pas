@@ -45,17 +45,19 @@ type
     BdsPath: string;
     CompilerVersion: string;
     SonarHost: TSonarHostOptions;
+    SonarDelphiVersion: string;
 
-    constructor Create(BdsPath: string; CompilerVersion: string);
+    constructor Create(BdsPath: string; CompilerVersion: string; SonarDelphiVersion: string);
   end;
 
   TAnalyzeOptions = record
     BaseDir: string;
     InputFiles: TArray<string>;
+    SonarDelphiVersion: string;
     ProjectPropertiesPath: string;
     Sonar: TSonarProjectOptions;
 
-    constructor Create(BaseDir: string; InputFiles: TArray<string>);
+    constructor Create(BaseDir: string; InputFiles: TArray<string>; SonarDelphiVersion: string);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -645,18 +647,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TAnalyzeOptions.Create(BaseDir: string; InputFiles: TArray<string>);
+constructor TAnalyzeOptions.Create(BaseDir: string; InputFiles: TArray<string>; SonarDelphiVersion: string);
 begin
   Self.BaseDir := BaseDir;
   Self.InputFiles := InputFiles;
+  Self.SonarDelphiVersion := SonarDelphiVersion;
 end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TInitializeOptions.Create(BdsPath: string; CompilerVersion: string);
+constructor TInitializeOptions.Create(BdsPath: string; CompilerVersion: string; SonarDelphiVersion: string);
 begin
   Self.BdsPath := BdsPath;
   Self.CompilerVersion := CompilerVersion;
+  Self.SonarDelphiVersion := SonarDelphiVersion;
 end;
 
 //______________________________________________________________________________________________________________________

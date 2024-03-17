@@ -200,7 +200,8 @@ begin
         ProjectOptions.AnalysisBaseDir <> '',
         ProjectOptions.AnalysisBaseDirAbsolute,
         TPath.GetDirectoryName(ProjectFile)),
-      Files
+      Files,
+      LintContext.Settings.SonarDelphiVersion
     );
     AnalyzeOptions.ProjectPropertiesPath := ProjectOptions.ProjectPropertiesPath;
 
@@ -693,6 +694,7 @@ begin
       procedure(Server: ILintServer) begin
         Server.RetrieveRules(
           SonarOptions,
+          LintContext.Settings.SonarDelphiVersion,
           procedure(Rules: TObjectDictionary<string, TRule>)
           begin
             if not TimedOut then begin
