@@ -1,10 +1,10 @@
 object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
-  Width = 586
-  Height = 628
-  Constraints.MinHeight = 170
-  Constraints.MinWidth = 586
+  Width = 550
+  Height = 565
+  Constraints.MinHeight = 565
+  Constraints.MinWidth = 550
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBtnText
   Font.Height = -12
@@ -13,12 +13,12 @@ object LintSettingsFrame: TLintSettingsFrame
   ParentFont = False
   TabOrder = 0
   DesignSize = (
-    586
-    628)
+    550
+    565)
   object ComponentsGroupBox: TGroupBox
-    Left = 12
-    Top = 521
-    Width = 560
+    Left = 3
+    Top = 489
+    Width = 537
     Height = 65
     Anchors = [akLeft, akTop, akRight]
     Caption = 'External resources'
@@ -48,9 +48,9 @@ object LintSettingsFrame: TLintSettingsFrame
     end
   end
   object ClientConfigGroupBox: TGroupBox
-    Left = 12
-    Top = 9
-    Width = 560
+    Left = 3
+    Top = 3
+    Width = 537
     Height = 81
     Anchors = [akLeft, akTop, akRight]
     Caption = 'IDE configuration'
@@ -79,9 +79,9 @@ object LintSettingsFrame: TLintSettingsFrame
     end
   end
   object TokensGroupBox: TGroupBox
-    Left = 12
-    Top = 280
-    Width = 560
+    Left = 3
+    Top = 247
+    Width = 537
     Height = 226
     Anchors = [akLeft, akTop, akRight]
     Caption = 'SonarQube tokens'
@@ -89,7 +89,7 @@ object LintSettingsFrame: TLintSettingsFrame
     object TokensGrid: TDBGrid
       Left = 38
       Top = 32
-      Width = 507
+      Width = 491
       Height = 177
       DataSource = TokensDataSource
       Options = [dgEditing, dgTitles, dgIndicator, dgRowLines, dgTabs, dgCancelOnExit]
@@ -139,40 +139,32 @@ object LintSettingsFrame: TLintSettingsFrame
     end
   end
   object ServerConfigGroupBox: TGroupBox
-    Left = 12
-    Top = 109
-    Width = 560
-    Height = 148
+    Left = 3
+    Top = 98
+    Width = 537
+    Height = 132
+    Anchors = [akLeft, akTop, akRight]
     Caption = 'SonarDelphi version configuration'
     TabOrder = 3
     object Label1: TLabel
       Left = 12
-      Top = 28
-      Width = 434
+      Top = 29
+      Width = 404
       Height = 15
       Caption = 
-        'DelphiLint falls back to an automatically downloaded version of SonarDelphi ' +
-        'when'
-    end
-    object Label2: TLabel
-      Left = 12
-      Top = 44
-      Width = 397
-      Height = 15
-      Caption = 
-        'in standalone mode, or when "Use server'#39's SonarDelphi version" is ' +
-        'disabled.'
+        'Configure the SonarDelphi version to use when running in standalone ' +
+        'mode.'
     end
     object SonarDelphiVersionComboBox: TComboBox
       Left = 39
-      Top = 117
+      Top = 96
       Width = 195
       Height = 23
       TabOrder = 0
     end
     object SonarDelphiVersionRadioGroup: TRadioGroup
       Left = 12
-      Top = 68
+      Top = 47
       Width = 453
       Height = 49
       DefaultHeaderFont = False
@@ -184,8 +176,8 @@ object LintSettingsFrame: TLintSettingsFrame
       HeaderFont.Style = []
       ItemIndex = 0
       Items.Strings = (
-        'Use default SonarDelphi version'
-        'Use specific SonarDelphi version')
+        'Use the default version'
+        'Use a specific version')
       ParentDoubleBuffered = False
       ShowFrame = False
       TabOrder = 1

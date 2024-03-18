@@ -49,7 +49,6 @@ type
     SonarDelphiVersionComboBox: TComboBox;
     SonarDelphiVersionRadioGroup: TRadioGroup;
     Label1: TLabel;
-    Label2: TLabel;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
   private
@@ -131,7 +130,7 @@ begin
   ClientSaveBeforeAnalysisCheckBox.Checked := LintContext.Settings.ClientSaveBeforeAnalysis;
 
   SonarDelphiVersionRadioGroup.Items[0] := Format(
-    'Use default SonarDelphi version (%s)',
+    'Use the default version (%s)',
     [LintContext.Settings.DefaultSonarDelphiVersion]);
   if LintContext.Settings.ServerSonarDelphiVersionOverride <> '' then begin
     SonarDelphiVersionRadioGroup.ItemIndex := 1;
