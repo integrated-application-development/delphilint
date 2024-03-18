@@ -2,7 +2,7 @@ object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
   Width = 586
-  Height = 431
+  Height = 628
   Constraints.MinHeight = 170
   Constraints.MinWidth = 586
   Font.Charset = DEFAULT_CHARSET
@@ -14,10 +14,10 @@ object LintSettingsFrame: TLintSettingsFrame
   TabOrder = 0
   DesignSize = (
     586
-    431)
+    628)
   object ComponentsGroupBox: TGroupBox
     Left = 12
-    Top = 352
+    Top = 521
     Width = 560
     Height = 65
     Anchors = [akLeft, akTop, akRight]
@@ -49,7 +49,7 @@ object LintSettingsFrame: TLintSettingsFrame
   end
   object ClientConfigGroupBox: TGroupBox
     Left = 12
-    Top = 16
+    Top = 9
     Width = 560
     Height = 81
     Anchors = [akLeft, akTop, akRight]
@@ -80,7 +80,7 @@ object LintSettingsFrame: TLintSettingsFrame
   end
   object TokensGroupBox: TGroupBox
     Left = 12
-    Top = 111
+    Top = 280
     Width = 560
     Height = 226
     Anchors = [akLeft, akTop, akRight]
@@ -122,26 +122,80 @@ object LintSettingsFrame: TLintSettingsFrame
           Visible = True
         end>
     end
+    object DBNavigator1: TDBNavigator
+      Left = 7
+      Top = 32
+      Width = 25
+      Height = 60
+      DataSource = TokensDataSource
+      VisibleButtons = [nbInsert, nbDelete]
+      Hints.Strings = (
+        'Add record'
+        'Remove record'
+        '')
+      Kind = dbnVertical
+      ConfirmDelete = False
+      TabOrder = 1
+    end
   end
-  object DBNavigator1: TDBNavigator
-    Left = 19
-    Top = 143
-    Width = 25
-    Height = 60
-    DataSource = TokensDataSource
-    VisibleButtons = [nbInsert, nbDelete]
-    Hints.Strings = (
-      'Add record'
-      'Remove record'
-      '')
-    Kind = dbnVertical
-    ConfirmDelete = False
+  object ServerConfigGroupBox: TGroupBox
+    Left = 12
+    Top = 109
+    Width = 560
+    Height = 148
+    Caption = 'SonarDelphi version configuration'
     TabOrder = 3
+    object Label1: TLabel
+      Left = 12
+      Top = 28
+      Width = 434
+      Height = 15
+      Caption = 
+        'DelphiLint falls back to an automatically downloaded version of SonarDelphi ' +
+        'when'
+    end
+    object Label2: TLabel
+      Left = 12
+      Top = 44
+      Width = 397
+      Height = 15
+      Caption = 
+        'in standalone mode, or when "Use server'#39's SonarDelphi version" is ' +
+        'disabled.'
+    end
+    object SonarDelphiVersionComboBox: TComboBox
+      Left = 39
+      Top = 117
+      Width = 195
+      Height = 23
+      TabOrder = 0
+    end
+    object SonarDelphiVersionRadioGroup: TRadioGroup
+      Left = 12
+      Top = 68
+      Width = 453
+      Height = 49
+      DefaultHeaderFont = False
+      DoubleBuffered = False
+      HeaderFont.Charset = DEFAULT_CHARSET
+      HeaderFont.Color = clBtnText
+      HeaderFont.Height = -1
+      HeaderFont.Name = 'Segoe UI'
+      HeaderFont.Style = []
+      ItemIndex = 0
+      Items.Strings = (
+        'Use default SonarDelphi version'
+        'Use specific SonarDelphi version')
+      ParentDoubleBuffered = False
+      ShowFrame = False
+      TabOrder = 1
+      OnClick = SonarDelphiVersionRadioGroupClick
+    end
   end
   object TokensDataSource: TDataSource
     DataSet = TokensDataSet
-    Left = 284
-    Top = 223
+    Left = 276
+    Top = 402
   end
   object TokensDataSet: TClientDataSet
     Aggregates = <>
@@ -167,7 +221,7 @@ object LintSettingsFrame: TLintSettingsFrame
     IndexDefs = <>
     Params = <>
     StoreDefs = True
-    Left = 236
-    Top = 223
+    Left = 228
+    Top = 402
   end
 end
