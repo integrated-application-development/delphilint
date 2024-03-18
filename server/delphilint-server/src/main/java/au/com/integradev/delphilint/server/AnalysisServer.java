@@ -158,25 +158,31 @@ public class AnalysisServer {
    * @param sendMessage a callback to send a message back to the client.
    */
   public void initialize(RequestInitialize requestInitialize, Consumer<LintMessage> sendMessage) {
+    Version fallbackVersion;
+    try {
+      fallbackVersion = new Version(requestInitialize.getSonarDelphiVersion());
+    } catch (NumberFormatException e) {
+      LOG.error("Client gave an invalid version", e);
+      sendMessage.accept(
+          LintMessage.initializeError(
+              "The configured fallback SonarDelphi version is badly formatted"));
+      return;
+    }
+
     try {
       SonarHost host =
           getSonarHost(requestInitialize.getSonarHostUrl(), "", requestInitialize.getApiToken());
       Set<DownloadedPlugin> desiredPluginGroup =
-          pluginDownloader.getRemotePluginJars(host).orElse(null);
+          pluginDownloader
+              .getRemotePluginJars(host)
+              .orElseGet(() -> Set.of(fallbackPluginProvider.getPlugin(fallbackVersion)));
 
       if (!Objects.equals(pluginGroup, desiredPluginGroup) || orchestrator == null) {
         pluginGroup = desiredPluginGroup;
         LOG.info("Starting analysis engine with new plugins");
 
-        Set<Path> pluginPaths;
-
-        if (pluginGroup == null) {
-          Version fallbackVersion = new Version(requestInitialize.getSonarDelphiVersion());
-          pluginPaths = Set.of(fallbackPluginProvider.getPlugin(fallbackVersion));
-        } else {
-          pluginPaths =
-              pluginGroup.stream().map(DownloadedPlugin::getPath).collect(Collectors.toSet());
-        }
+        Set<Path> pluginPaths =
+            pluginGroup.stream().map(DownloadedPlugin::getPath).collect(Collectors.toSet());
 
         var delphiConfig =
             new EngineStartupConfiguration(

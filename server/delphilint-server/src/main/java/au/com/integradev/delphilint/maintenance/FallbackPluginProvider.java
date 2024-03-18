@@ -1,6 +1,7 @@
 package au.com.integradev.delphilint.maintenance;
 
 import au.com.integradev.delphilint.remote.sonarqube.Version;
+import au.com.integradev.delphilint.server.plugin.DownloadedPlugin;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -12,24 +13,18 @@ public class FallbackPluginProvider {
   private static final Logger LOG = LogManager.getLogger(FallbackPluginProvider.class);
   private final Path jarsDir;
   private final SonarDelphiDownloader downloader;
-  private FallbackPlugin plugin;
 
   public FallbackPluginProvider(Path jarsDir, SonarDelphiDownloader downloader) {
     this.jarsDir = jarsDir;
     this.downloader = downloader;
-    this.plugin = null;
   }
 
-  public Path getPlugin(Version version) throws FallbackPluginProviderException {
-    if (plugin == null) {
-      plugin = acquirePlugin(version);
-    }
-
-    return plugin.getPath();
+  public DownloadedPlugin getPlugin(Version version) {
+    FallbackPlugin plugin = acquirePlugin(version);
+    return new DownloadedPlugin(plugin.getPath(), plugin.getPath().getFileName().toString());
   }
 
-  private FallbackPlugin acquirePlugin(Version targetVersion)
-      throws FallbackPluginProviderException {
+  private FallbackPlugin acquirePlugin(Version targetVersion) {
     try {
       LOG.info("Resolving SonarDelphi fallback plugin using cache dir {}", jarsDir);
       Files.createDirectories(jarsDir);

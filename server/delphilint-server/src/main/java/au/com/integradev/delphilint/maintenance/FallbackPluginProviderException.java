@@ -1,6 +1,6 @@
 package au.com.integradev.delphilint.maintenance;
 
-public class FallbackPluginProviderException extends Exception {
+public class FallbackPluginProviderException extends RuntimeException {
   public FallbackPluginProviderException(String message) {
     super(message);
   }
