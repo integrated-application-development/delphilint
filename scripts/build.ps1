@@ -61,7 +61,7 @@ class DelphiInstall {
   }
 
   DelphiInstall([string]$PackageVersion, [string]$InstallationPath) {
-    $this.PackageVersion = $PackageVersion
+    $this.Version = $Global:DelphiVersionMap[$PackageVersion]
     $this.InstallationPath = $InstallationPath
   }
 }
