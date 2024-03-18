@@ -9,7 +9,7 @@ function Expand-CommitMacro {
     $Commit = (& git rev-parse --short HEAD)
 
     $IncContents = Get-Content -Raw $IncFile
-    Set-Content -Path $IncFile -Value ($IncContents -replace "{COMMIT}[^{]*{\/COMMIT}","'$Commit'")
+    Set-Content -Path $IncFile -Value ($IncContents -replace "{COMMIT}[^{]*{\/COMMIT}","'$Commit'") -NoNewline
     Write-Output "Commit macro expanded."
   } else {
     Write-Output "Not in a Git repository - macro not expanded."
