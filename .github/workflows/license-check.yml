@@ -1,0 +1,27 @@
+name: License Check
+
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - '.github/workflows/license-check.yml'
+      - 'scripts/license.ps1'
+      - 'server/delphilint-server/**/*.java'
+      - 'client/**/*.pas'
+      - 'companion/delphilint-vscode/src/**'
+  pull_request:
+    paths:
+      - '.github/workflows/license-check.yml'
+      - 'scripts/license.ps1'
+      - 'server/delphilint-server/**/*.java'
+      - 'client/**/*.pas'
+      - 'companion/delphilint-vscode/src/**'
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check License Headers
+        shell: pwsh
+        run: scripts/license.ps1 -Check
