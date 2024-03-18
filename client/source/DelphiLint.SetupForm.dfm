@@ -2,6 +2,7 @@ object LintSetupForm: TLintSetupForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
   Caption = 'DelphiLint External Resources Setup'
   ClientHeight = 333
   ClientWidth = 864
@@ -11,6 +12,7 @@ object LintSetupForm: TLintSetupForm
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  FormStyle = fsStayOnTop
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   TextHeight = 15
@@ -116,7 +118,7 @@ object LintSetupForm: TLintSetupForm
     object OkButton: TButton
       Left = 32
       Top = 251
-      Width = 409
+      Width = 405
       Height = 35
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Apply this configuration'
@@ -126,7 +128,7 @@ object LintSetupForm: TLintSetupForm
     object RefreshButton: TButton
       Left = 32
       Top = 221
-      Width = 409
+      Width = 405
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Refresh'
@@ -145,7 +147,7 @@ object LintSetupForm: TLintSetupForm
     object ServerJarIndicator: TPanel
       Left = 32
       Top = 177
-      Width = 409
+      Width = 405
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -160,7 +162,7 @@ object LintSetupForm: TLintSetupForm
     object JavaExeIndicator: TPanel
       Left = 32
       Top = 86
-      Width = 409
+      Width = 405
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
