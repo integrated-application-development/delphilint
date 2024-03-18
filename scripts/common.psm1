@@ -8,7 +8,7 @@ function Wait-Prompt([string]$Message, [switch]$ExitOnNo) {
   while(-not $Done) {
     $Response = Read-Host -Prompt "$Message (y/n)"
     $Done = Test-PromptConfirmed $Response
-    if($ExitOnNo -and -not ($Done)) {
+    if ($ExitOnNo -and -not ($Done)) {
       Exit
     }
   }
@@ -21,7 +21,7 @@ function Get-Version {
 }
 
 function Split-Version([string]$Version) {
-  if(-not ($Version -match "^(\d)\.(\d)\.(\d)(\+dev)?")) {
+  if (-not ($Version -match "^(\d)\.(\d)\.(\d)(\+dev)?")) {
     Write-Error "Invalid version format: $Version"
     Exit
   }
@@ -65,7 +65,7 @@ function Write-Status(
   [string]$Status
 ) {
   Write-Host "[" -NoNewline
-  if($Status -eq "Success") {
+  if ($Status -eq "Success") {
     Write-Host -ForegroundColor Green "/" -NoNewline
   } elseif ($Status -eq "Problem") {
     Write-Host -ForegroundColor Red "X" -NoNewline

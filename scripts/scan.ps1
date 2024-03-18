@@ -12,7 +12,7 @@ Import-Module "$PSScriptRoot/common" -Force
 
 function Get-SonarArgs {
   $SonarArgs = $RemainingArgs
-  if($HostUrl) { $SonarArgs += @("-Dsonar.host.url=" + $HostUrl) }
+  if ($HostUrl) { $SonarArgs += @("-Dsonar.host.url=" + $HostUrl) }
   return $SonarArgs
 }
 

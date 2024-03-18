@@ -47,7 +47,7 @@ function Get-DelphiLicenseHeader {
 $CheckFailures = [System.Collections.Generic.List[string]]::new()
 
 function Add-LicenseHeader([string]$Path, [string]$License) {
-  if($Check) {
+  if ($Check) {
     $CheckFailures.Add((Resolve-Path -Relative $Path))
   } else {
     $Content = Get-Content -Raw -Path $Path
@@ -56,7 +56,7 @@ function Add-LicenseHeader([string]$Path, [string]$License) {
 }
 
 function Remove-LicenseHeader([string]$Path, [string]$Pattern) {
-  if(-not $Check) {
+  if (-not $Check) {
     $Content = Get-Content -Raw -Path $Path
     $Content = $Content -replace $Pattern,""
     Set-Content -Path $Path $Content -NoNewline
@@ -95,8 +95,8 @@ try {
   Pop-Location
 }
 
-if($Check) {
-  if($CheckFailures) {
+if ($Check) {
+  if ($CheckFailures) {
     Write-Host -ForegroundColor Red "No header detected in $($CheckFailures.Count) files:"
     $CheckFailures | ForEach-Object { Write-Host -ForegroundColor Red "  $_" }
     exit 1

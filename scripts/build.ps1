@@ -96,14 +96,14 @@ $DelphiInstalls = $DelphiVersions `
   | Where-Object {
       $SupportedVersion = $DelphiVersionMap.ContainsKey($_[0])
 
-      if(-not $SupportedVersion) {
+      if (-not $SupportedVersion) {
         Write-Host "Delphi version '$($_[0])' is not compatible with DelphiLint, ignoring."
       }
 
       return $SupportedVersion
     } `
   | ForEach-Object {
-      if($_.Length -gt 1) {
+      if ($_.Length -gt 1) {
         return [DelphiInstall]::new($_[0], $_[1])
       } else {
         return [DelphiInstall]::new($_[0])
@@ -124,7 +124,7 @@ $CompanionVsix = Join-Path $PSScriptRoot "../companion/delphilint-vscode/delphil
 $TargetDir = Join-Path $PSScriptRoot "../target"
 
 function Assert-Exists([string]$Path) {
-  if(Test-Path $Path) {
+  if (Test-Path $Path) {
     Write-Status -Status Success "$(Resolve-PathToRoot $Path) exists."
   } else {
     Write-Status -Status Problem "$Path does not exist."
@@ -135,7 +135,7 @@ function Assert-Exists([string]$Path) {
 function Test-ClientVersion([string]$Path, [string]$Version) {
   $Split = Split-Version $Version
 
-  $DevVersionStr = if($Split.Dev) { "True" } else { "False" }
+  $DevVersionStr = if ($Split.Dev) { "True" } else { "False" }
 
   $DlVersionContent = Get-Content $Path -Raw
   $MatchMajor = $DlVersionContent -imatch ".*{MAJOR}$($Split.Major){\/MAJOR}.*"
@@ -149,7 +149,7 @@ function Test-ClientVersion([string]$Path, [string]$Version) {
 function Assert-ClientVersion([string]$Version, [string]$Message) {
   $Path = (Join-Path $PSScriptRoot "../client/source/dlversion.inc")
 
-  if(Test-ClientVersion -Path $Path -Version $Version) {
+  if (Test-ClientVersion -Path $Path -Version $Version) {
     Write-Status -Status Success "Version is set correctly as $Version in dlversion.inc."
   } else {
     Write-Status -Status Problem "Version is not set correctly as $Version in dlversion.inc."
@@ -230,7 +230,7 @@ function Get-PackageFolder([string]$DelphiVersion) {
 }
 
 function Invoke-Project([hashtable]$Project) {
-  if($Project.Prerequisite) {
+  if ($Project.Prerequisite) {
     Write-Host -ForegroundColor Yellow "Preconditions:"
     & $Project.Prerequisite
     Write-Host
@@ -239,13 +239,13 @@ function Invoke-Project([hashtable]$Project) {
   $Time = Measure-Command {
     $Output = ""
 
-    if($ShowOutput) {
+    if ($ShowOutput) {
       & $Project.Build | ForEach-Object { Write-Host $_ }
     } else {
       $Output = (& $Project.Build)
     }
 
-    if($LASTEXITCODE -eq 0) {
+    if ($LASTEXITCODE -eq 0) {
       Write-Host -ForegroundColor Green "Succeeded" -NoNewline
     } else {
       $Output | ForEach-Object { Write-Host $_ }
@@ -255,7 +255,7 @@ function Invoke-Project([hashtable]$Project) {
   }
   Write-Host -ForegroundColor Green " in $($Time.TotalSeconds) seconds."
 
-  if($Project.Postrequisite) {
+  if ($Project.Postrequisite) {
     Write-Host
     Write-Host -ForegroundColor Yellow "Postconditions:"
     & $Project.Postrequisite
@@ -303,7 +303,7 @@ $Projects = @(
   @{
     "Name" = "Build VS Code companion"
     "Build" = {
-      if($SkipCompanion) {
+      if ($SkipCompanion) {
         Write-Host -ForegroundColor Yellow "-SkipCompanion flag passed - skipping build."
       } else {
         Invoke-VscCompanionCompile
@@ -311,7 +311,7 @@ $Projects = @(
       }
     }
     "Postrequisite" = {
-      if(-not $SkipCompanion) {
+      if (-not $SkipCompanion) {
         Assert-Exists $CompanionVsix
       }
     }

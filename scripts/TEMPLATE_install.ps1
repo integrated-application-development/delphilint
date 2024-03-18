@@ -60,7 +60,7 @@ function Get-WebView2 {
   }
 
   $DirsOnPath = $env:Path -split ";"
-  if($DirsOnPath -icontains $BinFolder) {
+  if ($DirsOnPath -icontains $BinFolder) {
     Write-Host "Bin directory is already on user path."
   } else {
     [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$BinFolder", [System.EnvironmentVariableTarget]::User)

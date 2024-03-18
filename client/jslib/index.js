@@ -18,7 +18,7 @@ function getExampleElements() {
   for(const pre of pres) {
     const id = pre.dataset.diffId;
 
-    if(pre.dataset.diffType == "compliant") {
+    if (pre.dataset.diffType == "compliant") {
       compliants[id] = pre;
     } else if (pre.dataset.diffType == "noncompliant") {
       noncompliants[id] = pre;
@@ -31,7 +31,7 @@ function getExampleElements() {
   let examplePairs = [];
 
   for(const key of Object.keys(noncompliants)) {
-    if(compliants[key] == undefined) {
+    if (compliants[key] == undefined) {
       continue;
     }
 
@@ -54,12 +54,12 @@ function generateExampleDiffs() {
     let compliantCode = "";
 
     for(const hunk of hunks) {
-      if(!hunk.added && !hunk.removed) {
+      if (!hunk.added && !hunk.removed) {
         noncompliantCode += hunk.value;
         compliantCode += hunk.value;
-      } else if(hunk.added) {
+      } else if (hunk.added) {
         compliantCode += `<div class="code-added">${hunk.value}</div>`;
-      } else if(hunk.removed) {
+      } else if (hunk.removed) {
         noncompliantCode += `<div class="code-removed">${hunk.value}</div>`;
       }
     }
