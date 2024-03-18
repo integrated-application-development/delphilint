@@ -30,9 +30,9 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 
 System requirements:
 
-* Microsoft Edge 79.0.309 or above
-* [RAD Studio for Delphi 11 or above](https://www.embarcadero.com/products/delphi)
-* [Java 11 or above](https://adoptium.net/temurin/releases/?package=jre&version=17)
+* Microsoft Edge 79.0.309+
+* [Delphi 11+](https://www.embarcadero.com/products/delphi)
+* [Java 11+](https://adoptium.net/temurin/releases/?package=jre&version=17)
 
 Installation steps:
 
@@ -55,11 +55,11 @@ Installation steps:
 
 Prerequisites:
 
-* [RAD Studio for Delphi 11 or above](https://www.embarcadero.com/products/delphi)
-* [JDK 11 or above](https://adoptium.net/temurin/releases/?package=jdk&version=17)
-* [Maven 3.5 or above](https://maven.apache.org/)
+* [Delphi 11+](https://www.embarcadero.com/products/delphi)
+* [JDK 11+](https://adoptium.net/temurin/releases/?package=jdk&version=17)
+* [Maven 3.5+](https://maven.apache.org/)
 * [npm](https://www.npmjs.com/)
-* Microsoft Edge 79.0.309 or above
+* Microsoft Edge 79.0.309+
 * PowerShell execution policy set to `Unrestricted` (see [MSDN](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts?view=powershell-7.4#how-to-run-a-script))
 
 To build DelphiLint, use `scripts/build.ps1`:
