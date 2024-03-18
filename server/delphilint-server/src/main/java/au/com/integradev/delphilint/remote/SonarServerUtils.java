@@ -1,6 +1,6 @@
 /*
  * DelphiLint Server
- * Copyright (C) 2023 Integrated Application Development
+ * Copyright (C) 2024 Integrated Application Development
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

@@ -28,7 +28,7 @@ function Get-JavaLicenseHeader {
     Get-LicenseHeaderLines "DelphiLint Server" | ForEach-Object { " * $_".TrimEnd() }
   ) + @(" */")
 
-  return ($Lines -join "`n") + "`n"
+  return ($Lines -join "`r`n") + "`r`n"
 }
 
 function Get-JSLicenseHeader {
@@ -36,12 +36,12 @@ function Get-JSLicenseHeader {
     Get-LicenseHeaderLines "DelphiLint VSCode" | ForEach-Object { " * $_".TrimEnd() }
   ) + @(" */")
 
-  return ($Lines -join "`n") + "`n"
+  return ($Lines -join "`r`n") + "`r`n"
 }
 
 function Get-DelphiLicenseHeader {
   $Lines = @("{") + (Get-LicenseHeaderLines "DelphiLint Client" | ForEach-Object { $_.TrimEnd() }) + @("}")
-  return ($Lines -join "`n") + "`n"
+  return ($Lines -join "`r`n") + "`r`n"
 }
 
 $CheckFailures = [System.Collections.Generic.List[string]]::new()
