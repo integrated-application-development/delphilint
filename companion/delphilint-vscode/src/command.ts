@@ -157,6 +157,7 @@ async function analyzeFiles(
       apiToken,
       compilerVersion: settings.getCompilerVersion(),
       sonarHostUrl,
+      sonarDelphiVersion: settings.getSonarDelphiVersion(),
     });
 
     statusItem.setAction("Analyzing...");

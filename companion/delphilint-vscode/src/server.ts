@@ -25,6 +25,7 @@ export type RequestInitialize = {
   compilerVersion: string;
   sonarHostUrl: string;
   apiToken: string;
+  sonarDelphiVersion: string;
 };
 
 export type RequestAnalyze = {

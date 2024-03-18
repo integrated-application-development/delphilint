@@ -24,6 +24,9 @@ type LintSettingsIni = {
   SonarHost?: {
     Tokens?: string;
   };
+  Server?: {
+    SonarDelphiVersionOverride?: string;
+  };
 };
 
 function getSettings(path: string): LintSettingsIni {
@@ -101,6 +104,16 @@ export function getJavaExe(): string {
     return "";
   } else {
     return path.join(javaHome, "bin", "java.exe");
+  }
+}
+
+export function getSonarDelphiVersion(): string {
+  const override =
+    getSettings(SETTINGS_FILE).Server?.SonarDelphiVersionOverride;
+  if (override) {
+    return override;
+  } else {
+    return "1.3.0";
   }
 }
 
