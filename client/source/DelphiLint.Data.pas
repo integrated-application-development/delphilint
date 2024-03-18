@@ -410,11 +410,11 @@ end;
 
 constructor TRuleCleanCode.CreateFromJson(Json: TJSONObject);
 const
-  C_Attributes: array of string = ['FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
+  CAttributes: array of string = ['FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
     'COMPLETE', 'EFFICIENT', 'FOCUSED', 'DISTINCT', 'MODULAR', 'TESTED', 'LAWFUL', 'TRUSTWORTHY', 'RESPECTFUL'];
-  C_Categories: array of string = ['CONSISTENT', 'INTENTIONAL', 'ADAPTABLE', 'RESPONSIBLE'];
-  C_SoftwareQualities: array of string = ['SECURITY', 'RELIABILITY', 'MAINTAINABILITY'];
-  C_ImpactSeverities: array of string = ['LOW', 'MEDIUM', 'HIGH'];
+  CCategories: array of string = ['CONSISTENT', 'INTENTIONAL', 'ADAPTABLE', 'RESPONSIBLE'];
+  CSoftwareQualities: array of string = ['SECURITY', 'RELIABILITY', 'MAINTAINABILITY'];
+  CImpactSeverities: array of string = ['LOW', 'MEDIUM', 'HIGH'];
 var
   Impacts: TJSONObject;
   Index: Integer;
@@ -423,14 +423,14 @@ var
 begin
   inherited Create;
 
-  FAttribute := TCleanCodeAttribute(IndexStr(Json.GetValue<string>('attribute'), C_Attributes));
-  FCategory := TCleanCodeAttributeCategory(IndexStr(Json.GetValue<string>('category'), C_Categories));
+  FAttribute := TCleanCodeAttribute(IndexStr(Json.GetValue<string>('attribute'), CAttributes));
+  FCategory := TCleanCodeAttributeCategory(IndexStr(Json.GetValue<string>('category'), CCategories));
   FImpacts := TDictionary<TSoftwareQuality, TImpactSeverity>.Create;
 
   Impacts := Json.GetValue<TJSONObject>('impacts');
   for Index := 0 to Impacts.Count - 1 do begin
-    Quality := TSoftwareQuality(IndexStr(Impacts.Pairs[Index].JsonString.Value, C_SoftwareQualities));
-    Severity := TImpactSeverity(IndexStr(Impacts.Pairs[Index].JsonValue.Value, C_ImpactSeverities));
+    Quality := TSoftwareQuality(IndexStr(Impacts.Pairs[Index].JsonString.Value, CSoftwareQualities));
+    Severity := TImpactSeverity(IndexStr(Impacts.Pairs[Index].JsonValue.Value, CImpactSeverities));
     FImpacts.Add(Quality, Severity);
   end;
 end;
@@ -468,8 +468,8 @@ end;
 
 constructor TRule.CreateFromJson(Json: TJSONObject);
 const
-  C_Severities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
-  C_RuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
+  CSeverities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
+  CRuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
 var
   CleanCodeJson: TJSONObject;
 begin
@@ -478,8 +478,8 @@ begin
   FRuleKey := Json.GetValue<string>('key');
   FName := Json.GetValue<string>('name');
   FDesc := Json.GetValue<string>('desc');
-  FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), C_Severities));
-  FType := TRuleType(IndexStr(Json.GetValue<string>('type'), C_RuleTypes));
+  FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), CSeverities));
+  FType := TRuleType(IndexStr(Json.GetValue<string>('type'), CRuleTypes));
   FCleanCode := nil;
 
   if Json.TryGetValue<TJSONObject>('cleanCode', CleanCodeJson) and Assigned(CleanCodeJson) then begin
@@ -509,7 +509,7 @@ end;
 
 constructor TIssueMetadata.CreateFromJson(Json: TJSONObject);
 const
-  C_Statuses: array of string = [
+  CStatuses: array of string = [
     'OPEN',
     'CONFIRMED',
     'REOPENED',
@@ -524,7 +524,7 @@ begin
 
   FAssignee := Json.GetValue<string>('assignee');
   FCreationDate := Json.GetValue<string>('creationDate');
-  FStatus := TIssueStatus(IndexStr(Json.GetValue<string>('status'), C_Statuses));
+  FStatus := TIssueStatus(IndexStr(Json.GetValue<string>('status'), CStatuses));
 end;
 
 //______________________________________________________________________________________________________________________

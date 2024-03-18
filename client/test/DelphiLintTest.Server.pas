@@ -132,11 +132,11 @@ begin
       end);
 
     Connection := TLintServerTcpConnection.Create(CLocalhost, MockServer.Port);
-    Msg := TTaggedMessage.Create(TLintMessage.Create(C_Ping, TJSONString.Create('ab£c def')), 95);
+    Msg := TTaggedMessage.Create(TLintMessage.Create(CPing, TJSONString.Create('ab£c def')), 95);
     Connection.SendMessage(Msg);
 
     Assert.AreEqual(wrSignaled, Event.WaitFor(1000), FailReason);
-    Assert.AreEqual(C_Ping, Integer(ReceivedCategory));
+    Assert.AreEqual(CPing, Integer(ReceivedCategory));
     Assert.AreEqual(95, ReceivedId);
     Assert.AreEqual(11, ReceivedLength);
     Assert.AreEqual('"ab£c def"', ReceivedDecodedStr);
@@ -210,13 +210,13 @@ begin
       var
         Buffer: TBytes;
       begin
-        Handler.Write(Byte(C_Ping));
+        Handler.Write(Byte(CPing));
         Handler.Write(Integer(1234));
         Handler.Write(Integer(14));
         Buffer := TEncoding.UTF8.GetBytes('"hi£jk lmnop"');
         Handler.Write(TIdBytes(Buffer));
 
-        Handler.Write(Byte(C_Pong));
+        Handler.Write(Byte(CPong));
         Handler.Write(Integer(5678));
         Handler.Write(Integer(14));
         Buffer := TEncoding.UTF8.GetBytes('"     xyz    "');
@@ -228,7 +228,7 @@ begin
     Msg := Connection.ReceiveMessageWithTimeout(1000);
 
     Assert.IsNotNull(Msg);
-    Assert.AreEqual(C_Ping, Integer(Msg.Message.Category));
+    Assert.AreEqual(CPing, Integer(Msg.Message.Category));
     Assert.AreEqual(1234, Msg.Id);
     Assert.AreEqual('"hi£jk lmnop"', Msg.Message.Data.ToString);
     Assert.AreEqual('hi£jk lmnop', Msg.Message.Data.Value);
@@ -237,7 +237,7 @@ begin
     Msg := Connection.ReceiveMessageWithTimeout(1000);
 
     Assert.IsNotNull(Msg);
-    Assert.AreEqual(C_Pong, Integer(Msg.Message.Category));
+    Assert.AreEqual(CPong, Integer(Msg.Message.Category));
     Assert.AreEqual(5678, Msg.Id);
     Assert.AreEqual('"     xyz    "', Msg.Message.Data.ToString);
     Assert.AreEqual('     xyz    ', Msg.Message.Data.Value);
@@ -263,7 +263,7 @@ begin
       var
         Buffer: TBytes;
       begin
-        Handler.Write(Byte(C_Ping));
+        Handler.Write(Byte(CPing));
         Handler.Write(Integer(1234));
         Handler.Write(Integer(14));
         Buffer := TEncoding.UTF8.GetBytes('"hi£jk lmnop"');
@@ -275,7 +275,7 @@ begin
     Msg := Connection.ReceiveMessageWithTimeout(1000);
 
     Assert.IsNotNull(Msg);
-    Assert.AreEqual(C_Ping, Integer(Msg.Message.Category));
+    Assert.AreEqual(CPing, Integer(Msg.Message.Category));
     Assert.AreEqual(1234, Msg.Id);
     Assert.AreEqual('"hi£jk lmnop"', Msg.Message.Data.ToString);
     Assert.AreEqual('hi£jk lmnop', Msg.Message.Data.Value);

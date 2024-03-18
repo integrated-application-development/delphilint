@@ -29,15 +29,15 @@ uses
   ;
 
 const
-  C_Ping = 1;
-  C_Pong = 5;
-  C_Quit = 15;
-  C_Initialize = 20;
-  C_Analyze = 30;
-  C_AnalyzeResult = 35;
-  C_RuleRetrieve = 40;
-  C_RuleRetrieveResult = 45;
-  C_Initialized = 25;
+  CPing = 1;
+  CPong = 5;
+  CQuit = 15;
+  CInitialize = 20;
+  CAnalyze = 30;
+  CAnalyzeResult = 35;
+  CRuleRetrieve = 40;
+  CRuleRetrieveResult = 45;
+  CInitialized = 25;
 
 type
 
@@ -275,7 +275,7 @@ begin
   Json.AddPair('apiToken', Options.SonarHost.Token);
   Json.AddPair('sonarDelphiVersion', Options.SonarDelphiVersion);
 
-  Result := TLintMessage.Create(C_Initialize, Json);
+  Result := TLintMessage.Create(CInitialize, Json);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -300,7 +300,7 @@ begin
   Json.AddPair('projectKey', Options.Sonar.ProjectKey);
   Json.AddPair('apiToken', Options.Sonar.Host.Token);
 
-  Result := TLintMessage.Create(C_Analyze, Json);
+  Result := TLintMessage.Create(CAnalyze, Json);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -315,14 +315,14 @@ begin
   Json.AddPair('projectKey', Options.ProjectKey);
   Json.AddPair('apiToken', Options.Host.Token);
 
-  Result := TLintMessage.Create(C_RuleRetrieve, Json);
+  Result := TLintMessage.Create(CRuleRetrieve, Json);
 end;
 
 //______________________________________________________________________________________________________________________
 
 class function TLintMessage.Quit: TLintMessage;
 begin
-  Result := TLintMessage.Create(C_Quit);
+  Result := TLintMessage.Create(CQuit);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -441,7 +441,7 @@ begin
       var
         ErrorMsg: string;
       begin
-        if Response.Category = C_Initialized then begin
+        if Response.Category = CInitialized then begin
           Log.Debug('Initialized successfully');
           OnResult;
         end
@@ -509,7 +509,7 @@ var
   ErrorMsg: string;
   ErrorCat: Byte;
 begin
-  if Response.Category <> C_AnalyzeResult then begin
+  if Response.Category <> CAnalyzeResult then begin
     ErrorMsg := Response.Data.Value;
     ErrorCat := Response.Category;
 
@@ -580,7 +580,7 @@ var
   ErrorCat: Byte;
   Rules: TObjectDictionary<string, TRule>;
 begin
-  if Response.Category <> C_RuleRetrieveResult then begin
+  if Response.Category <> CRuleRetrieveResult then begin
     ErrorMsg := Response.Data.AsType<string>;
     ErrorCat := Response.Category;
 

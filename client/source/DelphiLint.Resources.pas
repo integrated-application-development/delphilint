@@ -121,7 +121,7 @@ end;
 
 function TLintResources.RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
 const
-  C_RuleSeverityResourceNames: array[TRuleSeverity] of string = (
+  CRuleSeverityResourceNames: array[TRuleSeverity] of string = (
     'DL_RS_INFO',
     'DL_RS_MINOR',
     'DL_RS_MAJOR',
@@ -129,34 +129,34 @@ const
     'DL_RS_BLOCKER'
   );
 begin
-  Result := LoadPng(C_RuleSeverityResourceNames[RuleType]);
+  Result := LoadPng(CRuleSeverityResourceNames[RuleType]);
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.RuleTypeIcon(RuleType: TRuleType): TGraphic;
 const
-  C_RuleTypeResourceNames: array[TRuleType] of string = (
+  CRuleTypeResourceNames: array[TRuleType] of string = (
     'DL_RT_CODESMELL',
     'DL_RT_BUG',
     'DL_RT_VULNERABILITY',
     'DL_RT_HOTSPOT'
   );
 begin
-  Result := LoadPng(C_RuleTypeResourceNames[RuleType]);
+  Result := LoadPng(CRuleTypeResourceNames[RuleType]);
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
 const
-  C_ImpactSeverityResourceNames: array[TImpactSeverity] of string = (
+  CImpactSeverityResourceNames: array[TImpactSeverity] of string = (
     'DL_IS_LOW',
     'DL_IS_MEDIUM',
     'DL_IS_HIGH'
   );
 begin
-  Result := LoadPng(C_ImpactSeverityResourceNames[Severity]);
+  Result := LoadPng(CImpactSeverityResourceNames[Severity]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -170,7 +170,7 @@ end;
 
 function TLintResources.LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
 const
-  C_FileStatusResourceNames: array[TCurrentFileStatus] of string = (
+  CFileStatusResourceNames: array[TCurrentFileStatus] of string = (
     'DL_LINT_DISABLED',
     'DL_LINT_DISABLED',
     'DL_LINT_WORK',
@@ -181,7 +181,7 @@ const
     'DL_LINT_WARNOUT'
   );
 begin
-  Result := LoadPng(C_FileStatusResourceNames[FileStatus]);
+  Result := LoadPng(CFileStatusResourceNames[FileStatus]);
 end;
 
 //______________________________________________________________________________________________________________________

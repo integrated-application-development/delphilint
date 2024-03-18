@@ -82,7 +82,7 @@ type
     procedure RuleBrowserNewWindowRequested(Sender: TCustomEdgeBrowser; Args: TNewWindowRequestedEventArgs);
     procedure RuleBrowserCreateWebViewCompleted(Sender: TCustomEdgeBrowser; AResult: HRESULT);
   private const
-    C_IssueStatusStrs: array[TIssueStatus] of string = (
+    CIssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
       'Confirmed',
       'Reopened',
@@ -92,8 +92,8 @@ type
       'To review',
       'Reviewed (acknowledged)'
     );
-    C_IssueIconWidth = 16;
-    C_IssuePadding = 4;
+    CIssueIconWidth = 16;
+    CIssuePadding = 4;
   private
     FResizing: Boolean;
     FDragStartX: Integer;
@@ -486,7 +486,7 @@ begin
 
       MetadataText := Format('%s • %s • %s', [
         TimeSpanToAgoString(TimeSinceCreation),
-        C_IssueStatusStrs[Issue.Status],
+        CIssueStatusStrs[Issue.Status],
         IfThen(Issue.Assignee <> '', 'Assigned to ' + Issue.Assignee, 'Unassigned')
       ]);
     end
@@ -516,11 +516,11 @@ begin
 
   Rect := TRect.Empty;
   Rect.Left := Rect.Left
-    + C_IssuePadding
-    + 2 * C_IssueIconWidth
+    + CIssuePadding
+    + 2 * CIssueIconWidth
     + ListBox.Canvas.TextWidth(LocationText);
-  Rect.Right := ListBox.ClientRect.Right - C_IssuePadding;
-  Rect.Top := Rect.Top + C_IssuePadding;
+  Rect.Right := ListBox.ClientRect.Right - CIssuePadding;
+  Rect.Top := Rect.Top + CIssuePadding;
   Rect.Height := 0;
 
   DrawText(
@@ -530,7 +530,7 @@ begin
     Rect,
     DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
 
-  Height := Rect.Height + C_IssuePadding + ListBox.Canvas.TextHeight(MetadataText) + C_IssuePadding;
+  Height := Rect.Height + CIssuePadding + ListBox.Canvas.TextHeight(MetadataText) + CIssuePadding;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -575,28 +575,28 @@ begin
     MaxImpactSeverity := TArrayUtils.Max<TImpactSeverity>(Rule.CleanCode.Impacts.Values.ToArray, imsMedium);
 
     Canvas.Draw(
-      Rect.Left + C_IssuePadding,
-      Rect.Top + C_IssuePadding + 1,
+      Rect.Left + CIssuePadding,
+      Rect.Top + CIssuePadding + 1,
       LintResources.ImpactSeverityIcon(MaxImpactSeverity));
 
-    TextLeft := Rect.Left + C_IssuePadding + C_IssueIconWidth;
+    TextLeft := Rect.Left + CIssuePadding + CIssueIconWidth;
   end
   else begin
     IssueType := Rule.RuleType;
     IssueSeverity := Rule.Severity;
 
     Canvas.Draw(
-      Rect.Left + C_IssuePadding,
-      Rect.Top + C_IssuePadding + 1,
+      Rect.Left + CIssuePadding,
+      Rect.Top + CIssuePadding + 1,
       LintResources.RuleTypeIcon(IssueType));
-    TextLeft := Rect.Left + C_IssuePadding + C_IssueIconWidth;
+    TextLeft := Rect.Left + CIssuePadding + CIssueIconWidth;
 
     if IssueType <> rtSecurityHotspot then begin
       Canvas.Draw(
-        Rect.Left + C_IssuePadding + C_IssueIconWidth,
-        Rect.Top + C_IssuePadding + 1,
+        Rect.Left + CIssuePadding + CIssueIconWidth,
+        Rect.Top + CIssuePadding + 1,
         LintResources.RuleSeverityIcon(IssueSeverity));
-      TextLeft := TextLeft + C_IssueIconWidth;
+      TextLeft := TextLeft + CIssueIconWidth;
     end;
   end;
 
@@ -607,16 +607,16 @@ begin
   LocationWidth := Canvas.TextWidth(LocationText);
   Canvas.TextOut(
     TextLeft,
-    Rect.Top + C_IssuePadding,
+    Rect.Top + CIssuePadding,
     LocationText);
 
   Canvas.Font.Style := [fsBold];
 
   MessageRect := TRect.Empty;
   MessageRect.Left := TextLeft + LocationWidth;
-  MessageRect.Right := Rect.Right - C_IssuePadding;
-  MessageRect.Top := Rect.Top + C_IssuePadding;
-  MessageRect.Bottom := Rect.Bottom - C_IssuePadding - Canvas.TextHeight(MetadataText);
+  MessageRect.Right := Rect.Right - CIssuePadding;
+  MessageRect.Top := Rect.Top + CIssuePadding;
+  MessageRect.Bottom := Rect.Bottom - CIssuePadding - Canvas.TextHeight(MetadataText);
 
   DrawText(
     ListBox.Canvas.Handle,
@@ -627,7 +627,7 @@ begin
 
   Canvas.Font.Style := [];
 
-  Canvas.TextOut(Rect.Left + C_IssuePadding, MessageRect.Bottom, MetadataText);
+  Canvas.TextOut(Rect.Left + CIssuePadding, MessageRect.Bottom, MetadataText);
 end;
 
 //______________________________________________________________________________________________________________________
