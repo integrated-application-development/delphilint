@@ -89,11 +89,10 @@ To analyze all files that are open in the IDE, use `DelphiLint > Analyze All Ope
 
 ## Gallery
 
-![A screenshot of the DelphiLint window displaying the description for the "Imports should be moved to the implementation section" rule, and corresponding issues inline in the code](docs/images/gallery-code-view-light.png)
-
-![A screenshot of the DelphiLint window displaying the description for the "Single overloads of the standard math functions should not be used" rule, and corresponding issues inline in the code](docs/images/gallery-code-view-dark.png)
-
-![A screenshot of the DelphiLint window displaying the description for the "IfThen should not be used like a short-circuit operator" rule, and corresponding issues inline in the code](docs/images/gallery-code-view-mountain-mist.png)
+| ![](docs/images/multi_file_issues.gif) | ![](docs/images/gallery-code-view-dark.png) |
+| ----- | ----- |
+| ![](docs/images/gallery-code-view-light.png) | ![](docs/images/fix_issues.gif) |
+| ![](docs/images/issue_scroll.gif) | ![](docs/images/gallery-code-view-mountain-mist.png) |
 
 ## Contributing
 
