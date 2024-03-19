@@ -184,6 +184,8 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintSettingsFrame.RetrieveReleases;
+const
+  CApiUrl = 'https://api.github.com/repos/integrated-application-development/sonar-delphi/releases';
 var
   Http: THTTPClient;
   Response: IHTTPResponse;
@@ -195,7 +197,15 @@ begin
 
   Http := THTTPClient.Create;
   try
-    Response := Http.Get('https://api.github.com/repos/integrated-application-development/sonar-delphi/releases');
+    try
+      Response := Http.Get(CApiUrl);
+    except
+      on E: ENetHTTPClientException do begin
+        Log.Warn('Could not retrieve SonarDelphi releases from %s: %s', [CApiUrl, E.Message]);
+        Exit;
+      end;
+    end;
+
     if Response.StatusCode = 200 then begin
       Json := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
       try
@@ -249,11 +259,14 @@ begin
 
   LintContext.Settings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
   LintContext.Settings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
-  LintContext.Settings.ServerSonarDelphiVersionOverride := IfThen(
-    (SonarDelphiVersionRadioGroup.ItemIndex = 1) and (SonarDelphiVersionComboBox.ItemIndex <> -1),
-    SonarDelphiVersionComboBox.Items[SonarDelphiVersionComboBox.ItemIndex],
-    ''
-  );
+
+  if FRetrievedReleases or (SonarDelphiVersionRadioGroup.ItemIndex = 0) then begin
+    LintContext.Settings.ServerSonarDelphiVersionOverride := IfThen(
+      (SonarDelphiVersionRadioGroup.ItemIndex = 1) and (SonarDelphiVersionComboBox.ItemIndex <> -1),
+      SonarDelphiVersionComboBox.Items[SonarDelphiVersionComboBox.ItemIndex],
+      ''
+    );
+  end;
   LintContext.Settings.Save;
 end;
 
