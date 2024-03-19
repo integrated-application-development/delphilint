@@ -43,7 +43,7 @@ Installation steps:
 > [!WARNING]
 > Unfortunately, Delphi Community Edition is not supported.
 >
-> See the [SonarDelphi README](https://github.com/integrated-application-development/sonar-delphi) for more information.
+> See the [FAQ](docs/FAQ.md) for more information.
 
 ### Installing the VS Code companion
 

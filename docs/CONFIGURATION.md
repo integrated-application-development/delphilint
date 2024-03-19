@@ -7,7 +7,7 @@ The DelphiLint menu has a number of options:
 | Show DelphiLint        | Show the main DelphiLint window. This window shows analysis status and results, including issues in the active file.                                          |
 | Analyze This File      | Run an analysis on the file that is currently visible in the editor.                                                                                          |
 | Analyze All Open Files | Run an analysis on all project files that are currently open in the IDE.                                                                                      |
-| Project Options...     | [Configure settings](#configuration) for the current Delphi project, including analysis root and SonarQube connection information.            |
+| Project Options...     | Configure settings for the current Delphi project, including analysis root and SonarQube connection information.                                              |
 | Settings...            | Configure settings for the tool in general.                                                                                                                   |
 | Restart Server         | Terminate the background analysis server and start a new instance. This can be used if the server is unresponsive.                                            |
 
@@ -18,7 +18,7 @@ next to the Delphi project (`.dproj`) file.
 
 | Option                                                       | Description                                                                                                                                              |
 |--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Analysis mode                                                | The analysis mode to run in. See [Features](#features) for more details.                                                                                 |
+| Analysis mode                                                | The analysis mode to run in.                                                                                                                             |
 | Analysis settings > Base directory                           | The root directory for the analysis. Only files in this directory or subdirectories will be analyzable.                                                  |
 | Analysis settings > Read sonar-project.properties if present | Whether to read a sonar-project.properties file if one is found in the base directory.                                                                   |
 | SonarQube connection > Server URL                            | The URL of the SonarQube host to connect to when in connected mode.                                                                                      |
