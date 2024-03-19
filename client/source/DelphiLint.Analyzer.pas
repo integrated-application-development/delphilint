@@ -547,6 +547,31 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TAnalyzerImpl.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
+
+  function GetDelphiFileLines(FilePath: string): TArray<string>;
+  var
+    FileBytes: TBytes;
+    Encoding: TEncoding;
+    Preamble: Integer;
+    FileStr: string;
+    StringList: TStringList;
+  begin
+    FileBytes := TFile.ReadAllBytes(FilePath);
+    Encoding := nil;
+    Preamble := TEncoding.GetBufferEncoding(FileBytes, Encoding, TEncoding.Default);
+    FileStr := Encoding.GetString(FileBytes, Preamble, Length(FileBytes) - Preamble);
+
+    Log.Info('Detected encoding %s for file %s', [Encoding.EncodingName, FilePath]);
+
+    StringList := TStringList.Create;
+    try
+      StringList.Text := FileStr;
+      Result := StringList.ToStringArray;
+    finally
+      FreeAndNil(StringList);
+    end;
+  end;
+
 var
   Issue: TLintIssue;
   LiveIssue: TLiveIssue;
@@ -567,8 +592,7 @@ begin
       SanitizedPath := NormalizePath(Issue.FilePath);
       if not NewIssues.ContainsKey(SanitizedPath) then begin
         NewIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
-        // TODO: Improve encoding handling
-        FileContents.Add(SanitizedPath, TFile.ReadAllLines(Issue.FilePath, TEncoding.ANSI));
+        FileContents.Add(SanitizedPath, GetDelphiFileLines(Issue.FilePath));
       end;
 
       if Assigned(Issue.Range) then begin

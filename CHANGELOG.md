@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * The rule description HTML embed no longer has an arbitrary maximum width
 * Issues are now correctly matched on lines with non-ASCII characters
+* Issues are no longer incorrectly discarded on ANSI and UTF-16 files
 
 ## [0.7.0] - 2024-01-24
 

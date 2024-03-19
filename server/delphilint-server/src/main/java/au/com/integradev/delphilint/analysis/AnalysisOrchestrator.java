@@ -22,7 +22,6 @@ import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
 import au.com.integradev.delphilint.remote.SonarServerUtils;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -111,7 +110,7 @@ public class AnalysisOrchestrator implements AutoCloseable {
     if (properties.containsKey("sonar.encoding")) {
       return Charset.forName(properties.get("sonar.encoding"));
     } else {
-      return StandardCharsets.UTF_8;
+      return Charset.defaultCharset();
     }
   }
 

@@ -803,7 +803,7 @@ var
 begin
   Context.View := TToolsApiEditView.Create(View);
   Context.LineNumber := LineNumber;
-  Context.LineText := string(LineText);
+  Context.LineText := UTF8ToUnicodeString(LineText);
   Context.Canvas := Canvas;
   Context.TextRect := TextRect;
   Context.LineRect := LineRect;
