@@ -19,9 +19,17 @@ body:
           required: true
   - type: input
     attributes:
+      label: Delphi IDE version
+      description: >
+        Specify your Delphi IDE version.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    attributes:
       label: DelphiLint version
       description: >
-        Specify the DelphiLint version.
+        Specify your DelphiLint version.
         If you use a development build, please test if your issue is reproducible in a release version too.
       placeholder: "1.0.0"
     validations:
@@ -30,8 +38,11 @@ body:
     attributes:
       label: SonarDelphi version
       description: >
-        Specify the SonarDelphi version, including the Git commit hash if using a development build.
-        If you use a development build, please test if your issue is reproducible in a release version too.
+        Specify the SonarDelphi version DelphiLint is using.
+
+        In Standalone mode, this can be seen at DelphiLint > Settings > SonarDelphi version configuration.
+
+        In Connected mode, this is usually the version of SonarDelphi on your SonarQube instance.
       placeholder: "1.0.0"
     validations:
       required: true
