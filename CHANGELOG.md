@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-03-19
+
 ### Added
 
 * Support for the [`requiredForLanguages` plugin metadata property](https://community.sonarsource.com/t/the-sonarscanners-download-only-required-3rd-party-plugins/108156)
@@ -190,7 +192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval.
 * Support for reading `sonar-project.properties`.
 
-[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v0.7.0...HEAD
+[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/integrated-application-development/delphilint/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/integrated-application-development/delphilint/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/integrated-application-development/delphilint/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/integrated-application-development/delphilint/compare/v0.4.1...v0.5.0
