@@ -40,6 +40,11 @@ Installation steps:
 2. Unzip the folder and run the included `install.bat` script.
 3. Done!
 
+> [!WARNING]
+> Unfortunately, Delphi Community Edition is not supported.
+>
+> See the [SonarDelphi README](https://github.com/integrated-application-development/sonar-delphi) for more information.
+
 ### Installing the VS Code companion
 
 1. Download the .vsix extension file from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest),
