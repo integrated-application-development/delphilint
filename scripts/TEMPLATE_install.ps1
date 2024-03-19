@@ -16,19 +16,17 @@ function New-AppDataPath {
 }
 
 function Clear-RegistryEntry {
-  Get-ChildItem $DelphiLintFolder -Filter "*.bpl" | ForEach-Object {
-    Remove-ItemProperty -Path "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages" `
-      -Name $_.FullName `
-      -ErrorAction Ignore
-  }
+  $RegistryPath = "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages"
 
-  Write-Host "Cleaned existing Delphi IDE registry entries."
-}
-
-function Clear-AppDataPath {
-  Remove-Item (Join-Path $DelphiLintFolder "DelphiLintClient*.bpl") -ErrorAction Continue
-  Remove-Item (Join-Path $DelphiLintFolder "delphilint-server*.jar") -ErrorAction Continue
-  Write-Host "Deleted any existing build artifacts."
+  (Get-ItemProperty -Path $RegistryPath).PSObject.Properties `
+    | Where-Object { $_.Value -eq "DelphiLint" } `
+    | ForEach-Object {
+      Remove-Item $_.Name -ErrorAction Continue
+      Remove-ItemProperty -Path $RegistryPath -Name $_.Name -ErrorAction Continue
+      if($?) {
+        Write-Host "Removed existing DelphiLint install at $($_.Name)."
+      }
+    }
 }
 
 function Copy-BuildArtifacts {
@@ -84,7 +82,6 @@ function Add-RegistryEntry {
 Write-Host "Setting up DelphiLint $Version."
 New-AppDataPath
 Clear-RegistryEntry
-Clear-AppDataPath
 Copy-BuildArtifacts
 Get-WebView2
 Add-RegistryEntry
