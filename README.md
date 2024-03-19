@@ -51,6 +51,28 @@ Installation steps:
 >
 > The VS Code companion is **not** required for the Delphi IDE plugin to function.
 
+## Usage
+
+To analyze a file:
+
+1. Open a Delphi project in the IDE.
+2. Open the Delphi source file you want to analyze.
+3. Click the `DelphiLint > Analyze This File` menu option.
+
+It's as easy as that! The DelphiLint window will then pop up, showing the current state of analysis and any issues
+that are raised. Please note that when the file has a lot of imports the analysis could take thirty seconds or so.
+
+To analyze all files that are open in the IDE, use `DelphiLint > Analyze All Open Files` instead.
+
+For more information, the [FAQ](docs/FAQ.md) contains details on how to resolve some common issues.
+
+## Gallery
+
+| ![](docs/images/multi_file_issues.gif) | ![](docs/images/gallery-code-view-dark.png) |
+| ----- | ----- |
+| ![](docs/images/gallery-code-view-light.png) | ![](docs/images/fix_issues.gif) |
+| ![](docs/images/issue_scroll.gif) | ![](docs/images/gallery-code-view-mountain-mist.png) |
+
 ## Building from source
 
 Prerequisites:
@@ -73,26 +95,6 @@ This creates a `target/DelphiLint-<version>-` folder containing all built artifa
 > `build.ps1` looks for a Delphi installation in the default location for the given version.
 > If your installation is elsewhere, supply the location as part of the version parameter, e.g.
 > `scripts/build.ps1 280=/my/custom/location`.
-
-## Usage
-
-To analyze a file:
-
-1. Open a Delphi project in the IDE.
-2. Open the Delphi source file you want to analyze.
-3. Click the `DelphiLint > Analyze This File` menu option.
-
-It's as easy as that! The DelphiLint window will then pop up, showing the current state of analysis and any issues
-that are raised. Please note that when the file has a lot of imports the analysis could take thirty seconds or so.
-
-To analyze all files that are open in the IDE, use `DelphiLint > Analyze All Open Files` instead.
-
-## Gallery
-
-| ![](docs/images/multi_file_issues.gif) | ![](docs/images/gallery-code-view-dark.png) |
-| ----- | ----- |
-| ![](docs/images/gallery-code-view-light.png) | ![](docs/images/fix_issues.gif) |
-| ![](docs/images/issue_scroll.gif) | ![](docs/images/gallery-code-view-mountain-mist.png) |
 
 ## Contributing
 
