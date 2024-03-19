@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-* Support for the `requiredForLanguages` plugin metadata property when in Connected Mode to SonarQube 10.4 and above,
-  ensuring all Delphi-related plugins are reliably included in analysis
-* The latest [SonarDelphi](https://github.com/integrated-application-development/sonar-delphi) release is now
-  automatically downloaded when run in Standalone Mode
+* Support for the [`requiredForLanguages` plugin metadata property](https://community.sonarsource.com/t/the-sonarscanners-download-only-required-3rd-party-plugins/108156)
+  when connected to a SonarQube 10.4+ server
+* [SonarDelphi](https://github.com/integrated-application-development/sonar-delphi) is now automatically downloaded
+  when run in Standalone Mode
+* "SonarDelphi Version Override" settings option, which overrides the default SonarDelphi version with a particular
+  GitHub release
 
 ### Changed
 
@@ -21,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * SonarQube API fields that are deprecated in 10.2 and above are no longer used for those versions
 * Logs are now periodically cleaned up
 * The server is now initialized asynchronously, instead of synchronously on the main IDE thread
+
+### Removed
+
+* "SonarDelphi Jar Override" settings option
 
 ### Fixed
 
