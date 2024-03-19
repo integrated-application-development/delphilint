@@ -30,7 +30,7 @@ function Clear-RegistryEntry {
 }
 
 function Copy-BuildArtifacts {
-  @("DelphiLintClient-$Version-$PackageVersion.bpl", "delphilint-server-$Version.jar") | ForEach-Object {
+  @("DelphiLintClient-$Version-$VersionName.bpl", "delphilint-server-$Version.jar") | ForEach-Object {
     Copy-Item -Path (Join-Path $PSScriptRoot $_) -Destination (Join-Path $DelphiLintFolder $_) -Force
   }
   Write-Host "Copied resources."
@@ -69,7 +69,7 @@ function Get-WebView2 {
 }
 
 function Add-RegistryEntry {
-  $BplName = "DelphiLintClient-$Version-$PackageVersion.bpl"
+  $BplName = "DelphiLintClient-$Version-$VersionName.bpl"
   $BplPath = Join-Path $DelphiLintFolder $BplName
   New-ItemProperty -Path "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages" `
     -Name $BplPath `

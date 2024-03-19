@@ -35,16 +35,18 @@ $ErrorActionPreference = "Stop"
 Import-Module "$PSScriptRoot/common" -Force
 
 $Global:DelphiVersionMap = @{
-  "280" = [DelphiVersion]::new("11 Alexandria", "280", "22.0")
-  "290" = [DelphiVersion]::new("12 Athens", "290", "23.0")
+  "280" = [DelphiVersion]::new("11", "Alexandria", "280", "22.0")
+  "290" = [DelphiVersion]::new("12", "Athens", "290", "23.0")
 }
 
 class DelphiVersion {
+  [string]$ProductVersion
   [string]$Name
   [string]$PackageVersion
   [string]$RegistryVersion
 
-  DelphiVersion([string]$Name, [string]$PackageVersion, [string]$RegistryVersion) {
+  DelphiVersion([string]$ProductVersion, [string]$Name, [string]$PackageVersion, [string]$RegistryVersion) {
+    $this.ProductVersion = $ProductVersion
     $this.Name = $Name
     $this.PackageVersion = $PackageVersion
     $this.RegistryVersion = $RegistryVersion
@@ -78,7 +80,7 @@ class PackagingConfig {
   }
 
   [string] GetOutputBplName() {
-    return "DelphiLintClient-$($this.Version)-$($this.Delphi.Version.PackageVersion).bpl"
+    return "DelphiLintClient-$($this.Version)-$($this.Delphi.Version.Name).bpl"
   }
 
   [string] GetInputBplPath() {
@@ -87,7 +89,7 @@ class PackagingConfig {
   }
 
   [string] GetPackageFolderName() {
-    return "DelphiLint-$($this.Version)-$($this.Delphi.Version.PackageVersion)"
+    return "DelphiLint-$($this.Version)-$($this.Delphi.Version.Name)"
   }
 }
 
@@ -204,7 +206,7 @@ function New-BatchScript([string]$Path, [string]$PSScriptPath) {
 }
 
 function New-SetupScript([string]$Path, [PackagingConfig]$Config) {
-  $MacroContents = "`$Version = '$($Config.Version)'`n`$PackageVersion = '$($Config.Delphi.Version.PackageVersion)'`n`$RegistryVersion = '$($Config.Delphi.Version.RegistryVersion)'`n"
+  $MacroContents = "`$Version = '$($Config.Version)'`n`$VersionName = '$($Config.Delphi.Version.Name)'`n`$RegistryVersion = '$($Config.Delphi.Version.RegistryVersion)'`n"
 
   Copy-Item (Join-Path $PSScriptRoot TEMPLATE_install.ps1) $Path
   $Content = Get-Content -Raw $Path
