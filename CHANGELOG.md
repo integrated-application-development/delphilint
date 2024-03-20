@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+* DelphiLint now passes SonarDelphi the correct Delphi installation path and compiler version when running in Delphi 12.
+
 ## [1.0.0] - 2024-03-19
 
 ### Added
