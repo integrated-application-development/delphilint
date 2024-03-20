@@ -621,7 +621,8 @@ function TLintServer.StartExtServer(
     CreationFlags: Cardinal;
     ErrorCode: Integer;
   begin
-    CommandLine := Format(' -Djava.net.useSystemProxies=true -jar "%s" "%s"', [Jar, PortFile]);
+    CommandLine := Format(' %s -jar "%s" "%s"', [LintContext.Settings.ServerJvmOptions, Jar, PortFile]);
+    Log.Info('Starting external server with command: %s%s', [JavaExe, CommandLine]);
 
     ZeroMemory(@StartupInfo, SizeOf(TStartupInfo));
     StartupInfo.cb := SizeOf(TStartupInfo);

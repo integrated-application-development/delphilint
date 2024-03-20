@@ -59,6 +59,12 @@ type
     [Test]
     procedure TestSonarHostTokens;
     [Test]
+    procedure TestServerJvmOptions;
+    [Test]
+    procedure TestDefaultServerJvmOptionsUseSystemProxies;
+    [Test]
+    procedure TestDefaultServerJvmOptionsUseSystemVm;
+    [Test]
     procedure TestSaveAndLoad;
   end;
 
@@ -68,6 +74,7 @@ uses
     System.IOUtils
   , System.SysUtils
   , System.IniFiles
+  , System.StrUtils
   , Winapi.Windows
   , DelphiLint.Version
   ;
@@ -258,6 +265,36 @@ begin
   FSettings.ServerJarOverride := 'efgh';
   FSettings.Save;
   Assert.AreEqual('efgh', GetSetting(CCategory, CName));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestServerJvmOptions;
+const
+  CCategory = 'Server';
+  CName = 'JvmOptions';
+begin
+  SetSetting(CCategory, CName, 'abcdefg');
+  FSettings.Load;
+  Assert.AreEqual(FSettings.ServerJvmOptions, 'abcdefg');
+
+  FSettings.ServerJvmOptions := 'efgh';
+  FSettings.Save;
+  Assert.AreEqual('efgh', GetSetting(CCategory, CName));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestDefaultServerJvmOptionsUseSystemProxies;
+begin
+  Assert.Contains<string>(SplitString(FSettings.ServerJvmOptions, ' '), '-Djava.net.useSystemProxies=true');
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestDefaultServerJvmOptionsUseSystemVm;
+begin
+  Assert.Contains<string>(SplitString(FSettings.ServerJvmOptions, ' '), '-server');
 end;
 
 //______________________________________________________________________________________________________________________

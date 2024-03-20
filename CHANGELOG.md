@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* The arguments passed to the server JVM can now be customized via the `Server.JvmOptions` setting.
+
+### Changed
+
+* The server JVM is now initialized in `-server` mode.
+
 ### Fixed
 
 * DelphiLint now passes SonarDelphi the correct Delphi installation path and compiler version when running in Delphi 12.
