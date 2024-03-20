@@ -65,6 +65,7 @@ type
     property ClientSaveBeforeAnalysis: Boolean index 5 read GetValueBool write SetValueBool;
     // SonarHostTokens index 6
     property ServerSonarDelphiVersionOverride: string index 7 read GetValueStr write SetValueStr;
+    property ServerJvmOptions: string index 8 read GetValueStr write SetValueStr;
 
     property ServerJar: string index 0 read GetServerJar;
     property JavaExe: string index 1 read GetJavaExe;
@@ -126,7 +127,9 @@ begin
     // 6
     TStringPropField.Create('SonarHost', 'Tokens', True),
     // 7
-    TStringPropField.Create('Server', 'SonarDelphiVersionOverride', '')
+    TStringPropField.Create('Server', 'SonarDelphiVersionOverride', ''),
+    // 8
+    TStringPropField.Create('Server', 'JvmOptions', '-server -Djava.net.useSystemProxies=true')
   ];
 end;
 
