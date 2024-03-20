@@ -8,7 +8,7 @@
     "url": "https://www.integradev.com.au/"
   },
   "license": "LGPL-3.0-or-later",
-  "version": "1.0.1",
+  "version": "1.0.1+dev",
   "preview": true,
   "engines": {
     "vscode": "^1.54.0"
