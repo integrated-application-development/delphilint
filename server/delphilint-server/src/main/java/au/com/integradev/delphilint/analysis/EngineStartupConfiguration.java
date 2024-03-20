@@ -38,7 +38,7 @@ public class EngineStartupConfiguration {
 
   public Map<String, String> getBaseProperties() {
     return Map.of(
-        "sonar.delphi.bds.path", bdsPath,
-        "sonar.delphi.compiler.version", compilerVersion);
+        "sonar.delphi.installationPath", bdsPath,
+        "sonar.delphi.compilerVersion", compilerVersion);
   }
 }
