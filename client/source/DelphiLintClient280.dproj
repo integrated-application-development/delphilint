@@ -42,6 +42,7 @@
         <DCC_DcuOutput>.\target\280\$(Config)\dcu</DCC_DcuOutput>
         <DCC_Define>TOOLSAPI;$(DCC_Define)</DCC_Define>
         <DCC_ExeOutput>.\280\$(Config)</DCC_ExeOutput>
+        <DCC_Warnings>error</DCC_Warnings>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
