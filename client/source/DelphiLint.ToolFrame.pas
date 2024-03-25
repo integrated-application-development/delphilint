@@ -151,6 +151,8 @@ uses
   , System.TimeSpan
   , System.StrUtils
   , System.IOUtils
+  , System.Types
+  , System.UITypes
   , Vcl.Graphics
   , System.Win.ComObj
   , Winapi.ShellAPI
