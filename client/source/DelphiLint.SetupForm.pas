@@ -76,6 +76,7 @@ implementation
 uses
     System.StrUtils
   , System.SysUtils
+  , System.UITypes
   , Vcl.Graphics
   , Vcl.Themes
   , DelphiLint.Context
