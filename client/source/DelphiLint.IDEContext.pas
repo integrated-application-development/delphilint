@@ -569,9 +569,14 @@ begin
 end;
 
 procedure TToolsApiEditView.GoToPosition(const Line: Integer; const Column: Integer);
+var
+  ScrollLine: Integer;
 begin
   FRaw.Buffer.EditPosition.GotoLine(Line);
-  FRaw.Buffer.EditPosition.Column;
+  FRaw.Buffer.EditPosition.MoveRelative(0, Column);
+
+  ScrollLine := Line - (FRaw.ViewSize.Height div 2);
+  FRaw.SetTopLeft(ScrollLine, 0);
 end;
 
 procedure TToolsApiEditView.Paint;
