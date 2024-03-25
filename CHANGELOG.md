@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Double clicking an issue in the issue view now centers the relevant line in the editor.
+
 ## [1.0.1] - 2024-03-20
 
 ### Added
