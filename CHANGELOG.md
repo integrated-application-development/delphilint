@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Double clicking an issue in the issue view now centers the relevant line in the editor.
+* The default SonarDelphi version is now [1.4.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.4.0).
 
 ### Fixed
 

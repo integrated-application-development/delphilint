@@ -169,7 +169,7 @@ end;
 
 function TLintSettings.GetDefaultSonarDelphiVersion: string;
 begin
-  Result := '1.3.0';
+  Result := '1.4.0';
 end;
 
 //______________________________________________________________________________________________________________________
