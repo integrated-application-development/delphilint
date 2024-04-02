@@ -203,6 +203,7 @@ type
   TLintServerThread = class(TThread)
   private
     FLock: TMutex;
+    FServerStartedEvent: TEvent;
     FServer: ILintServer;
     FServerDone: Boolean;
 
@@ -844,6 +845,7 @@ begin
   end;
 
   FServer := CreateNewServerInstance;
+  FServerStartedEvent.SetEvent;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -859,6 +861,7 @@ constructor TLintServerThread.Create;
 begin
   inherited;
   FLock := TMutex.Create;
+  FServerStartedEvent := TEvent.Create;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -874,6 +877,7 @@ destructor TLintServerThread.Destroy;
 begin
   FServer := nil;
   FreeAndNil(FLock);
+  FreeAndNil(FServerStartedEvent);
   inherited;
 end;
 
@@ -887,6 +891,7 @@ begin
     OnTerminate(Self);
   end;
 
+  FServerStartedEvent.SetEvent;
   Log.Debug('Server thread terminated');
 end;
 
@@ -897,16 +902,24 @@ begin
   inherited;
   Log.Debug('Server thread started');
 
-  while not Terminated do begin
-    AcquireServerPossibleUninit;
-    try
-      if not Terminated then begin
-        if Assigned(FServer) and not FServer.Process then begin
+  while (not Terminated) and (FServerStartedEvent.WaitFor(INFINITE) = wrSignaled) do begin
+    if Terminated then begin
+      Break;
+    end;
+
+    FServerStartedEvent.ResetEvent;
+    Log.Debug('External server communication loop started');
+
+    while not Terminated do begin
+      AcquireServerPossibleUninit;
+      try
+        if Assigned(FServer) and (not Terminated) and not (FServer.Process) then begin
           FServer := nil;
+          Break;
         end;
+      finally
+        ReleaseServer;
       end;
-    finally
-      ReleaseServer;
     end;
   end;
 
