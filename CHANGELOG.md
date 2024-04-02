@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2024-04-02
+
 ### Changed
 
 * Double clicking an issue in the issue view now centers the relevant line in the editor.
@@ -215,7 +217,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval.
 * Support for reading `sonar-project.properties`.
 
-[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/integrated-application-development/delphilint/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/integrated-application-development/delphilint/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/integrated-application-development/delphilint/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/integrated-application-development/delphilint/compare/v0.6.0...v0.7.0
