@@ -1,17 +1,6 @@
-# Advanced usage
+# Configuration
 
-The DelphiLint menu has a number of options:
-
-| Menu item              | Description                                                                                                                                                   |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Show DelphiLint        | Show the main DelphiLint window. This window shows analysis status and results, including issues in the active file.                                          |
-| Analyze This File      | Run an analysis on the file that is currently visible in the editor.                                                                                          |
-| Analyze All Open Files | Run an analysis on all project files that are currently open in the IDE.                                                                                      |
-| Project Options...     | Configure settings for the current Delphi project, including analysis root and SonarQube connection information.                                              |
-| Settings...            | Configure settings for the tool in general.                                                                                                                   |
-| Restart Server         | Terminate the background analysis server and start a new instance. This can be used if the server is unresponsive.                                            |
-
-## Configuration
+## Project configuration
 
 Project-level options can be configured via `DelphiLint > Project Options...` and are stored in a `.delphilint` file
 next to the Delphi project (`.dproj`) file.
@@ -28,3 +17,8 @@ next to the Delphi project (`.dproj`) file.
 
 The default DelphiLint project configuration is Standalone, with the base directory as the directory containing the
 Delphi project file. SonarQube settings are ignored when in standalone mode.
+
+## User configuration
+
+User settings can be configured via `DelphiLint > Settings...` and are stored in `%APPDATA\DelphiLint\delphilint.ini`.
+(This file should not be edited directly unless you know what you're doing.)

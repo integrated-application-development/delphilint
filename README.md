@@ -69,7 +69,10 @@ that are raised. Please note that when the file has a lot of imports the analysi
 
 To analyze all files that are open in the IDE, use `DelphiLint > Analyze All Open Files` instead.
 
-For more information, the [FAQ](docs/FAQ.md) contains details on how to resolve some common issues.
+For more information:
+
+* See [Configuration](docs/CONFIGURATION.md) for details on project configuration settings.
+* See the [FAQ](docs/FAQ.md) for answers to common questions and problems.
 
 ## Gallery
 
