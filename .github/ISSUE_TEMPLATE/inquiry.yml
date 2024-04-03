@@ -15,8 +15,6 @@ body:
       options:
         - label: This question has not already been answered.
           required: true
-        - label: This question is about DelphiLint, not SonarDelphi, SonarQube, or Delphi.
-          required: true
   - type: textarea
     attributes:
       label: Inquiry

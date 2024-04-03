@@ -13,16 +13,20 @@ body:
       description: |
         Please check the following before filing a bug report.
       options:
-        - label: This bug is in DelphiLint, not SonarDelphi, SonarQube, or my Delphi code.
+        - label: This bug is in DelphiLint, not SonarQube or the Delphi IDE.
           required: true
         - label: This bug has not already been reported.
+          required: true
+        - label: >
+            This bug is not a problem related to analysis quality (e.g. parsing errors, false positive issues), which
+            should be raised on the [SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi/issues).
           required: true
   - type: input
     attributes:
       label: Delphi IDE version
       description: >
-        Specify your Delphi IDE version.
-      placeholder: "1.0.0"
+        Specify your Delphi IDE version and edition.
+      placeholder: "Delphi 12 Version 29.0.51511.6924 (Professional)"
     validations:
       required: true
   - type: input

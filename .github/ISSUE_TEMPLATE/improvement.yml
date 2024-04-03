@@ -17,6 +17,10 @@ body:
           required: true
         - label: This improvement would be generally useful, not specific to my code or setup.
           required: true
+        - label: >
+            This improvement is not related to analysis quality (e.g. new rules, improvements to existing rules), which
+            should be raised on the [SonarDelphi repository](https://github.com/integrated-application-development/sonar-delphi/issues).
+          required: true
   - type: dropdown
     attributes:
       label: Engine area
