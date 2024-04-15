@@ -73,7 +73,7 @@ uses
 procedure TLiveIssueTest.TestTransfersMetadataWhenHasMetadata;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create(
     'rk1',
@@ -86,7 +86,7 @@ begin
       'creationdate'
     ));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], True);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abc'], True);
     Assert.IsTrue(LiveIssue.HasMetadata);
     Assert.AreEqual(LiveIssue.Assignee, 'myassignee');
     Assert.AreEqual(LiveIssue.Status, issReopened);
@@ -102,7 +102,7 @@ end;
 procedure TLiveIssueTest.TestTransfersMetadataWhenNotHasMetadata;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create(
     'rk1',
@@ -115,7 +115,7 @@ begin
       'creationdate'
     ));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], False);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abc'], False);
     Assert.IsFalse(LiveIssue.HasMetadata);
     Assert.AreEqual(LiveIssue.Assignee, 'myassignee');
     Assert.AreEqual(LiveIssue.Status, issReopened);
@@ -131,11 +131,11 @@ end;
 procedure TLiveIssueTest.TestCannotRetether;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQr__u');
     Assert.IsFalse(LiveIssue.Tethered);
@@ -152,11 +152,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnChangedLineIsUntethered;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQr__u');
     Assert.IsFalse(LiveIssue.Tethered);
@@ -171,11 +171,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnChangedLineIsUntetheredMultiline;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 7, 2));
   try
-    LiveIssue := TLiveIssue.Create(
+    LiveIssue := TLiveIssueImpl.Create(
       IssueData,
       [
         'abcdEFGH',
@@ -197,11 +197,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnChangedRangeIsUntethered;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(5, 'abcdEFGH_KLMNOPQrstu');
     Assert.IsFalse(LiveIssue.Tethered);
@@ -216,11 +216,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnChangedRangeIsUntetheredMultiline;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 7, 2));
   try
-    LiveIssue := TLiveIssue.Create(
+    LiveIssue := TLiveIssueImpl.Create(
       IssueData,
       [
         'abcdEFGH',
@@ -242,11 +242,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnChangedWhitespaceIsUntethered;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abcd  GHJ LMN PQrstu']);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcd  GHJ LMN PQrstu']);
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(5, 'abcd    GHJ  LMNPQrstu');
     Assert.IsFalse(LiveIssue.Tethered);
@@ -261,11 +261,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnUnchangedLineStaysTethered;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
     Assert.IsTrue(LiveIssue.Tethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQrstu');
     Assert.IsTrue(LiveIssue.Tethered);
@@ -280,11 +280,11 @@ end;
 procedure TLiveIssueTest.TestUpdateTetherOnUnchangedLineStaysTetheredMultiline;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 7, 2));
   try
-    LiveIssue := TLiveIssue.Create(
+    LiveIssue := TLiveIssueImpl.Create(
       IssueData,
       [
         'abcdEFGH',
@@ -311,7 +311,7 @@ begin
   try
     Assert.WillRaise(
       procedure begin
-        FreeAndNil(TLiveIssue.Create(IssueData, ['abc', 'def'], False));
+        FreeAndNil(TLiveIssueImpl.Create(IssueData, ['abc', 'def'], False));
       end
     );
   finally
@@ -324,11 +324,11 @@ end;
 procedure TLiveIssueTest.TestIssueWithNoRangeIsSetToEntireFirstLine;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', nil);
   try
-    LiveIssue := TLiveIssue.Create(IssueData, ['abc'], False);
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abc'], False);
     Assert.AreEqual(LiveIssue.StartLine, 1);
     Assert.AreEqual(LiveIssue.EndLine, 1);
     Assert.AreEqual(LiveIssue.StartLineOffset, 0);
@@ -344,11 +344,11 @@ end;
 procedure TLiveIssueTest.TestMoveLine(Delta: Integer);
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 7, 2));
   try
-    LiveIssue := TLiveIssue.Create(
+    LiveIssue := TLiveIssueImpl.Create(
       IssueData,
       [
         'abcdEFGH',
@@ -383,11 +383,11 @@ end;
 procedure TLiveIssueTest.TestNewLineMoveSession;
 var
   IssueData: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 7, 2));
   try
-    LiveIssue := TLiveIssue.Create(
+    LiveIssue := TLiveIssueImpl.Create(
       IssueData,
       [
         'abcdEFGH',

@@ -37,7 +37,7 @@ type
     TServerCallback = reference to procedure(Server: ILintServer);
   private
     FServerThread: TLintServerThread;
-    FActiveIssues: TObjectDictionary<string, TObjectList<TLiveIssue>>;
+    FActiveIssues: TObjectDictionary<string, TList<ILiveIssue>>;
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FRules: TObjectDictionary<string, TRule>;
     FCurrentAnalysis: TCurrentAnalysis;
@@ -71,7 +71,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
@@ -287,7 +287,7 @@ end;
 constructor TAnalyzerImpl.Create;
 begin
   inherited;
-  FActiveIssues := TObjectDictionary<string, TObjectList<TLiveIssue>>.Create;
+  FActiveIssues := TObjectDictionary<string, TList<ILiveIssue>>.Create;
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
   FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
@@ -355,7 +355,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function OrderIssuesByRange(const Left: TLiveIssue; const Right: TLiveIssue): Integer;
+function OrderIssuesByRange(const Left: ILiveIssue; const Right: ILiveIssue): Integer;
 begin
   Result := TComparer<Integer>.Default.Compare(Left.OriginalStartLine, Right.OriginalStartLine);
   if Result = 0 then begin
@@ -406,20 +406,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzerImpl.GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+function TAnalyzerImpl.GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
 var
   SanitizedName: string;
-  Issue: TLiveIssue;
-  ResultList: TList<TLiveIssue>;
+  Issue: ILiveIssue;
+  ResultList: TList<ILiveIssue>;
 begin
   SanitizedName := NormalizePath(FileName);
   if FActiveIssues.ContainsKey(SanitizedName) then begin
     if Line = -1 then begin
       Result := FActiveIssues[SanitizedName].ToArray;
-      TArray.Sort<TLiveIssue>(Result, TComparer<TLiveIssue>.Construct(OrderIssuesByRange));
+      TArray.Sort<ILiveIssue>(Result, TComparer<ILiveIssue>.Construct(OrderIssuesByRange));
     end
     else begin
-      ResultList := TList<TLiveIssue>.Create;
+      ResultList := TList<ILiveIssue>.Create;
       try
         for Issue in FActiveIssues[SanitizedName] do begin
           if (Line >= Issue.StartLine) and (Line <= Issue.EndLine) then begin
@@ -427,7 +427,7 @@ begin
           end;
         end;
 
-        ResultList.Sort(TComparer<TLiveIssue>.Construct(OrderIssuesByRange));
+        ResultList.Sort(TComparer<ILiveIssue>.Construct(OrderIssuesByRange));
         Result := ResultList.ToArray;
       finally
         FreeAndNil(ResultList);
@@ -575,24 +575,24 @@ procedure TAnalyzerImpl.SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMe
 
 var
   Issue: TLintIssue;
-  LiveIssue: TLiveIssue;
+  LiveIssue: ILiveIssue;
   SanitizedPath: string;
-  NewIssues: TDictionary<string, TObjectList<TLiveIssue>>;
+  NewIssues: TDictionary<string, TList<ILiveIssue>>;
   FileContents: TDictionary<string, TArray<string>>;
   RelevantLines: TArray<string>;
   Path: string;
-  NewIssuesForFile: TObjectList<TLiveIssue>;
+  NewIssuesForFile: TList<ILiveIssue>;
   IssueCount: Integer;
 begin
   try
     FileContents := TDictionary<string, TArray<string>>.Create;
-    NewIssues := TDictionary<string, TObjectList<TLiveIssue>>.Create;
+    NewIssues := TDictionary<string, TList<ILiveIssue>>.Create;
 
     // Split issues by file and convert to live issues
     for Issue in Issues do begin
       SanitizedPath := NormalizePath(Issue.FilePath);
       if not NewIssues.ContainsKey(SanitizedPath) then begin
-        NewIssues.Add(SanitizedPath, TObjectList<TLiveIssue>.Create);
+        NewIssues.Add(SanitizedPath, TList<ILiveIssue>.Create);
         FileContents.Add(SanitizedPath, GetDelphiFileLines(Issue.FilePath));
       end;
 
@@ -606,7 +606,7 @@ begin
         RelevantLines := Copy(FileContents[SanitizedPath], 0, 1);
       end;
 
-      LiveIssue := TLiveIssue.Create(Issue, RelevantLines, IssuesHaveMetadata);
+      LiveIssue := TLiveIssueImpl.Create(Issue, RelevantLines, IssuesHaveMetadata);
       NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 
@@ -656,7 +656,7 @@ end;
 procedure TAnalyzerImpl.UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 var
   SanitizedPath: string;
-  Issue: TLiveIssue;
+  Issue: ILiveIssue;
   Delta: Integer;
   Index: Integer;
 begin

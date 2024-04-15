@@ -55,6 +55,17 @@ type
     class function Max<X>(Arr: TArray<X>; DefaultValue: X): X; overload; static;
   end;
 
+type
+  TWrapper<T> = class(TObject)
+  private
+    FRaw: T;
+  public
+    constructor Create(Raw: T);
+    function Get: T;
+
+    class function WrapArray(Arr: TArray<T>): TArray<TWrapper<T>>;
+  end;
+
 implementation
 
 uses
@@ -361,6 +372,33 @@ begin
   end
   else begin
     Result := Ago(TimeSpan.TotalDays / 365, 'year');
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TWrapper<T>.Create(Raw: T);
+begin
+  FRaw := Raw;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TWrapper<T>.Get: T;
+begin
+  Result := FRaw;
+end;
+
+//______________________________________________________________________________________________________________________
+
+class function TWrapper<T>.WrapArray(Arr: TArray<T>): TArray<TWrapper<T>>;
+var
+  Index: Integer;
+begin
+  SetLength(Result, Length(Arr));
+
+  for Index := 0 to Length(Arr) - 1 do begin
+    Result[Index] := TWrapper<T>.Create(Arr[Index]);
   end;
 end;
 

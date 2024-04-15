@@ -56,7 +56,7 @@ type
     function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);

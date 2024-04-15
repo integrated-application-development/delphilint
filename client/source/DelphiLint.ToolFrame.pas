@@ -33,6 +33,7 @@ uses
   , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
   , DelphiLint.HtmlGen
+  , DelphiLint.Utils
   , Vcl.Edge
   , Winapi.WebView2
   , Winapi.ActiveX
@@ -100,19 +101,20 @@ type
     FResizing: Boolean;
     FDragStartX: Integer;
     FCurrentPath: string;
-    FIssues: TArray<TLiveIssue>;
+    FIssues: TObjectList<TWrapper<ILiveIssue>>;
     FRuleHtmls: TDictionary<string, string>;
     FVisibleRule: string;
     FNavigationAllowed: Boolean;
     FRuleHtmlGenerator: TRuleHtmlGenerator;
 
+    function GetSelectedIssue: ILiveIssue;
     procedure UpdateFileNameLabel(NewText: string = '');
 
     procedure RefreshIssueView;
     procedure RepaintIssueView;
     procedure GetIssueItemText(
       ListBox: TListBox;
-      Issue: TLiveIssue;
+      Issue: ILiveIssue;
       out LocationText: string;
       out MessageText: string;
       out MetadataText: string);
@@ -158,7 +160,6 @@ uses
   , System.Win.ComObj
   , Winapi.ShellAPI
   , Winapi.Messages
-  , DelphiLint.Utils
   , DelphiLint.Resources
   , DelphiLint.Context
   , DelphiLint.ExtWebView2
@@ -177,6 +178,7 @@ begin
   FNavigationAllowed := False;
   FRuleHtmls := TDictionary<string, string>.Create;
   FRuleHtmlGenerator := TRuleHtmlGenerator.Create;
+  FIssues := TObjectList<TWrapper<ILiveIssue>>.Create;
 
   Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
 
@@ -219,6 +221,7 @@ destructor TLintToolFrame.Destroy;
 begin
   FreeAndNil(FRuleHtmls);
   FreeAndNil(FRuleHtmlGenerator);
+  FreeAndNil(FIssues);
   inherited;
 end;
 
@@ -433,6 +436,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TLintToolFrame.GetSelectedIssue: ILiveIssue;
+var
+  SelectedIndex: Integer;
+begin
+  Result := nil;
+  SelectedIndex := IssueListBox.ItemIndex;
+
+  if SelectedIndex <> -1 then begin
+    Result := TWrapper<ILiveIssue>(IssueListBox.Items.Objects[SelectedIndex]).Get;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TLintToolFrame.GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
 begin
   case Status of
@@ -466,7 +483,7 @@ end;
 
 procedure TLintToolFrame.GetIssueItemText(
   ListBox: TListBox;
-  Issue: TLiveIssue;
+  Issue: ILiveIssue;
   out LocationText: string;
   out MessageText: string;
   out MetadataText: string);
@@ -474,7 +491,7 @@ var
   CreationDateTime: TDateTime;
   TimeSinceCreation: TTimeSpan;
 begin
-  if Issue.Tethered then begin
+  if Issue.IsTethered then begin
     LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
   end
   else begin
@@ -508,13 +525,13 @@ var
   LocationText: string;
   MessageText: string;
   MetadataText: string;
-  Issue: TLiveIssue;
+  Issue: ILiveIssue;
   Rect: TRect;
 begin
   ListBox := Control as TListBox;
   // For some reason, OnMeasureItem is called after a string is added to the listbox, but before its corresponding
   // object is added. This means we have to maintain a separate list to be able to retrieve them by index here.
-  Issue := FIssues[Index];
+  Issue := FIssues[Index].Get;
 
   GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
 
@@ -542,7 +559,7 @@ end;
 procedure TLintToolFrame.OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
 var
   Canvas: TCanvas;
-  Issue: TLiveIssue;
+  Issue: ILiveIssue;
   ListBox: TListBox;
   LocationText: string;
   MessageText: string;
@@ -558,11 +575,11 @@ var
 begin
   ListBox := Control as TListBox;
 
-  if (Index < 0) or (Index >= Length(FIssues)) then begin
+  if (Index < 0) or (Index >= FIssues.Count) then begin
     Exit;
   end;
 
-  Issue := FIssues[Index];
+  Issue := FIssues[Index].Get;
   GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
 
   Canvas := ListBox.Canvas;
@@ -604,7 +621,7 @@ begin
     end;
   end;
 
-  if not Issue.Tethered then begin
+  if not Issue.IsTethered then begin
     Canvas.Font.Color := clGrayText;
   end;
 
@@ -639,7 +656,7 @@ end;
 procedure TLintToolFrame.OnIssueDoubleClicked(Sender: TObject);
 var
   SelectedIndex: Integer;
-  SelectedIssue: TLiveIssue;
+  SelectedIssue: ILiveIssue;
   Editor: IIDESourceEditor;
 begin
   SelectedIndex := IssueListBox.ItemIndex;
@@ -649,7 +666,11 @@ begin
     Exit;
   end;
 
-  SelectedIssue := TLiveIssue(IssueListBox.Items.Objects[SelectedIndex]);
+  SelectedIssue := GetSelectedIssue;
+  if not Assigned(SelectedIssue) then begin
+    Log.Warn('Nonexistent issue double clicked');
+    Exit;
+  end;
 
   // Issue line has been removed
   if SelectedIssue.StartLine = -1 then begin
@@ -681,7 +702,8 @@ end;
 procedure TLintToolFrame.RefreshIssueView;
 begin
   if FCurrentPath <> '' then begin
-    FIssues := Analyzer.GetIssues(FCurrentPath);
+    FIssues.Clear;
+    FIssues.AddRange(TWrapper<ILiveIssue>.WrapArray(Analyzer.GetIssues(FCurrentPath)));
   end;
 
   RepaintIssueView;
@@ -692,15 +714,17 @@ end;
 
 procedure TLintToolFrame.RepaintIssueView;
 var
-  Issue: TLiveIssue;
+  IssueWrapper: TWrapper<ILiveIssue>;
+  Issue: ILiveIssue;
   Selected: Integer;
 begin
   Selected := IssueListBox.ItemIndex;
   IssueListBox.ClearSelection;
   IssueListBox.Clear;
 
-  for Issue in FIssues do begin
-    IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), Issue);
+  for IssueWrapper in FIssues do begin
+    Issue := IssueWrapper.Get;
+    IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), IssueWrapper);
   end;
 
   if IssueListBox.Items.Count > Selected then begin
@@ -777,17 +801,15 @@ end;
 
 procedure TLintToolFrame.RefreshRuleView;
 var
-  SelectedIndex: Integer;
-  SelectedIssue: TLiveIssue;
+  SelectedIssue: ILiveIssue;
   Rule: TRule;
   WasVisible: Boolean;
 begin
   WasVisible := RulePanel.Visible;
 
-  SelectedIndex := IssueListBox.ItemIndex;
+  SelectedIssue := GetSelectedIssue;
 
-  if SelectedIndex <> -1 then begin
-    SelectedIssue := TLiveIssue(IssueListBox.Items.Objects[SelectedIndex]);
+  if Assigned(SelectedIssue) then begin
     Rule := Analyzer.GetRule(SelectedIssue.RuleKey);
     RulePanel.Visible := True;
     SplitPanel.Visible := True;
