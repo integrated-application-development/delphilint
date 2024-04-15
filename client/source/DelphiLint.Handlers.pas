@@ -125,7 +125,7 @@ type
     FUnderlineColor: TColor;
 
     procedure DrawUnderline(
-      const Issue: TLiveIssue;
+      const Issue: ILiveIssue;
       const Context: TLinePaintContext
     );
     procedure DrawTag(
@@ -138,7 +138,7 @@ type
     ): Integer;
   public
     procedure PaintLine(
-      const Issues: TArray<TLiveIssue>;
+      const Issues: TArray<ILiveIssue>;
       const Context: TLinePaintContext
     );
 
@@ -351,8 +351,8 @@ procedure TEditorHandler.InitView(const View: IIDEEditView);
   procedure InitTracker;
   var
     Tracker: TLineTracker;
-    FileIssues: TArray<TLiveIssue>;
-    Issue: TLiveIssue;
+    FileIssues: TArray<ILiveIssue>;
+    Issue: ILiveIssue;
   begin
     Tracker := TLineTracker.Create(View.GetLineTracker);
     FTrackers.Add(Tracker);
@@ -407,8 +407,8 @@ end;
 procedure TEditorHandler.OnAnalysisComplete(const Paths: TArray<string>);
 var
   Tracker: TLineTracker;
-  FileIssues: TArray<TLiveIssue>;
-  Issue: TLiveIssue;
+  FileIssues: TArray<ILiveIssue>;
+  Issue: ILiveIssue;
   SourceEditor: IIDESourceEditor;
 begin
   for Tracker in FTrackers do begin
@@ -487,7 +487,7 @@ end;
 
 procedure TViewHandler.OnPaintLine(const Context: TLinePaintContext);
 var
-  Issues: TArray<TLiveIssue>;
+  Issues: TArray<ILiveIssue>;
 begin
   Issues := Analyzer.GetIssues(Context.View.FileName, Context.LineNumber);
 
@@ -555,7 +555,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintLinePainter.DrawUnderline(
-  const Issue: TLiveIssue;
+  const Issue: ILiveIssue;
   const Context: TLinePaintContext
 );
 var
@@ -592,11 +592,11 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintLinePainter.PaintLine(
-  const Issues: TArray<TLiveIssue>;
+  const Issues: TArray<ILiveIssue>;
   const Context: TLinePaintContext
 );
 var
-  Issue: TLiveIssue;
+  Issue: ILiveIssue;
   Msg: string;
   NumIssuesOnLine: Integer;
 begin
@@ -604,7 +604,7 @@ begin
 
   for Issue in Issues do begin
     Issue.UpdateTether(Context.LineNumber, Context.LineText);
-    if not Issue.Tethered then begin
+    if not Issue.IsTethered then begin
       Continue;
     end;
 

@@ -56,7 +56,7 @@ type
 
     FFileHistories: TDictionary<string, TFileAnalysisHistory>;
     FFileStatuses: TDictionary<string, TFileAnalysisStatus>;
-    FIssues: TObjectDictionary<string, TObjectDictionary<Integer, TLiveIssue>>;
+    FIssues: TObjectDictionary<string, TDictionary<Integer, ILiveIssue>>;
     FRules: TObjectDictionary<string, TRule>;
     FCurrentAnalysis: TCurrentAnalysis;
   public
@@ -64,9 +64,9 @@ type
     destructor Destroy; override;
 
     procedure MockFileHistory(Path: string; History: TFileAnalysisHistory);
-    procedure MockFileIssues(Path: string; Issues: TArray<TLiveIssue>); overload;
-    procedure MockFileIssues(Path: string; Issues: TObjectDictionary<Integer, TLiveIssue>); overload;
-    procedure MockFileIssue(Path: string; Line: Integer; Issue: TLiveIssue); overload;
+    procedure MockFileIssues(Path: string; Issues: TArray<ILiveIssue>); overload;
+    procedure MockFileIssues(Path: string; Issues: TObjectDictionary<Integer, ILiveIssue>); overload;
+    procedure MockFileIssue(Path: string; Line: Integer; Issue: ILiveIssue); overload;
     procedure MockFileStatus(Path: string; Status: TFileAnalysisStatus);
     procedure MockRule(RuleKey: string; Rule: TRule);
     procedure MockCurrentAnalysis(CurrentAnalysis: TCurrentAnalysis);
@@ -76,7 +76,7 @@ type
     function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<TLiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
@@ -397,7 +397,7 @@ begin
 
   FFileHistories := TDictionary<string, TFileAnalysisHistory>.Create;
   FFileStatuses := TDictionary<string, TFileAnalysisStatus>.Create;
-  FIssues := TObjectDictionary<string, TObjectDictionary<Integer, TLiveIssue>>.Create;
+  FIssues := TObjectDictionary<string, TDictionary<Integer, ILiveIssue>>.Create;
   FRules := TObjectDictionary<string, TRule>.Create;
 end;
 
@@ -459,15 +459,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TMockAnalyzer.GetIssues(FileName: string; Line: Integer): TArray<TLiveIssue>;
+function TMockAnalyzer.GetIssues(FileName: string; Line: Integer): TArray<ILiveIssue>;
 var
-  ReturnIssues: TList<TLiveIssue>;
+  ReturnIssues: TList<ILiveIssue>;
   LineNum: Integer;
 begin
   FileName := NormalizePath(FileName);
 
   if FIssues.ContainsKey(FileName) then begin
-    ReturnIssues := TList<TLiveIssue>.Create;
+    ReturnIssues := TList<ILiveIssue>.Create;
     try
       if Line = -1 then begin
         for LineNum in FIssues[FileName].Keys do begin
@@ -535,22 +535,22 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.MockFileIssue(Path: string; Line: Integer; Issue: TLiveIssue);
+procedure TMockAnalyzer.MockFileIssue(Path: string; Line: Integer; Issue: ILiveIssue);
 begin
   Path := NormalizePath(Path);
   FIssues.AddOrSetValue(
     Path,
-    TObjectDictionary<Integer, TLiveIssue>.Create([TPair<Integer, TLiveIssue>.Create(Line, Issue)]));
+    TObjectDictionary<Integer, ILiveIssue>.Create([TPair<Integer, ILiveIssue>.Create(Line, Issue)]));
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TArray<TLiveIssue>);
+procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TArray<ILiveIssue>);
 var
   I: Integer;
 begin
   Path := NormalizePath(Path);
-  FIssues.AddOrSetValue(Path, TObjectDictionary<Integer, TLiveIssue>.Create);
+  FIssues.AddOrSetValue(Path, TObjectDictionary<Integer, ILiveIssue>.Create);
 
   for I := 0 to Length(Issues) - 1 do begin
     FIssues[Path].AddOrSetValue(Issues[I].StartLine, Issues[I]);
@@ -559,7 +559,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TObjectDictionary<Integer, TLiveIssue>);
+procedure TMockAnalyzer.MockFileIssues(Path: string; Issues: TObjectDictionary<Integer, ILiveIssue>);
 begin
   Path := NormalizePath(Path);
   FIssues.AddOrSetValue(Path, Issues);

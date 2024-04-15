@@ -25,9 +25,36 @@ uses
   ;
 
 type
+
+  ILiveIssue = interface
+    ['{AC60181F-D4C3-46B2-8B02-02FDD1D511D6}']
+    function RuleKey: string;
+    function Message: string;
+    function FilePath: string;
+    function Assignee: string;
+    function CreationDate: string;
+    function Status: TIssueStatus;
+    function HasMetadata: Boolean;
+    function StartLine: Integer;
+    function EndLine: Integer;
+    function OriginalStartLine: Integer;
+    function OriginalEndLine: Integer;
+    function StartLineOffset: Integer;
+    function EndLineOffset: Integer;
+    function IsTethered: Boolean;
+    function GetLinesMoved: Integer;
+    procedure SetLinesMoved(NewStartLine: Integer);
+
+    procedure NewLineMoveSession;
+    procedure UpdateTether(LineNum: Integer; LineText: string);
+    procedure Untether;
+
+    property LinesMoved: Integer read GetLinesMoved write SetLinesMoved;
+  end;
+
 //______________________________________________________________________________________________________________________
 
-  TLiveIssue = class(TObject)
+  TLiveIssueImpl = class(TInterfacedObject, ILiveIssue)
   private
     FRuleKey: string;
     FMessage: string;
@@ -43,9 +70,6 @@ type
     FLinesMoved: Integer;
     FTethered: Boolean;
     FLines: TArray<string>;
-
-    function GetStartLine: Integer;
-    function GetEndLine: Integer;
   public
     constructor Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
 
@@ -53,22 +77,26 @@ type
     procedure UpdateTether(LineNum: Integer; LineText: string);
     procedure Untether;
 
-    property RuleKey: string read FRuleKey;
-    property Message: string read FMessage;
-    property FilePath: string read FFilePath write FFilePath;
-    property Assignee: string read FAssignee;
-    property CreationDate: string read FCreationDate;
-    property Status: TIssueStatus read FStatus;
-    property HasMetadata: Boolean read FHasMetadata;
+    function RuleKey: string;
+    function Message: string;
+    function FilePath: string;
+    function Assignee: string;
+    function CreationDate: string;
+    function Status: TIssueStatus;
+    function HasMetadata: Boolean;
 
-    property OriginalStartLine: Integer read FStartLine;
-    property OriginalEndLine: Integer read FEndLine;
-    property StartLine: Integer read GetStartLine;
-    property EndLine: Integer read GetEndLine;
-    property StartLineOffset: Integer read FStartLineOffset;
-    property EndLineOffset: Integer read FEndLineOffset;
-    property LinesMoved: Integer read FLinesMoved write FLinesMoved;
-    property Tethered: Boolean read FTethered;
+    function StartLine: Integer;
+    function EndLine: Integer;
+    function OriginalStartLine: Integer;
+    function OriginalEndLine: Integer;
+    function StartLineOffset: Integer;
+    function EndLineOffset: Integer;
+
+    function GetLinesMoved: Integer;
+    procedure SetLinesMoved(NewStartLine: Integer);
+
+    function IsTethered: Boolean;
+
   end;
 
 //______________________________________________________________________________________________________________________
@@ -82,7 +110,7 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-constructor TLiveIssue.Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
+constructor TLiveIssueImpl.Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
 begin
   inherited Create;
 
@@ -128,18 +156,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssue.Untether;
+procedure TLiveIssueImpl.Untether;
 begin
   FTethered := False;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssue.UpdateTether(LineNum: Integer; LineText: string);
+procedure TLiveIssueImpl.UpdateTether(LineNum: Integer; LineText: string);
 var
   Delta: Integer;
 begin
-  if not Tethered then begin
+  if not FTethered then begin
     Exit;
   end;
 
@@ -153,28 +181,113 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLiveIssue.GetStartLine: Integer;
+function TLiveIssueImpl.Assignee: string;
 begin
-  Result := FStartLine + LinesMoved;
+  Result := FAssignee;
 end;
 
 //______________________________________________________________________________________________________________________
 
-function TLiveIssue.GetEndLine: Integer;
+function TLiveIssueImpl.StartLine: Integer;
 begin
-  Result := FEndLine + LinesMoved;
+  Result := FStartLine + FLinesMoved;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssue.NewLineMoveSession;
+function TLiveIssueImpl.StartLineOffset: Integer;
+begin
+  Result := FStartLineOffset;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.Status: TIssueStatus;
+begin
+  Result := FStatus;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.CreationDate: string;
+begin
+  Result := FCreationDate;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.EndLine: Integer;
+begin
+  Result := FEndLine + FLinesMoved;
+end;
+
+function TLiveIssueImpl.EndLineOffset: Integer;
+begin
+  Result := FEndLineOffset;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.FilePath: string;
+begin
+  Result := FFilePath;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueImpl.SetLinesMoved(NewStartLine: Integer);
+begin
+  FLinesMoved := NewStartLine;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.GetLinesMoved: Integer;
+begin
+  Result := FLinesMoved;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.HasMetadata: Boolean;
+begin
+  Result := FHasMetadata;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.IsTethered: Boolean;
+begin
+  Result := FTethered;
+end;
+
+function TLiveIssueImpl.Message: string;
+begin
+  Result := FMessage;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveIssueImpl.NewLineMoveSession;
 begin
   FStartLine := StartLine;
   FEndLine := EndLine;
   FLinesMoved := 0;
 end;
 
-//______________________________________________________________________________________________________________________
+function TLiveIssueImpl.OriginalEndLine: Integer;
+begin
+  Result := FEndLine;
+end;
 
+function TLiveIssueImpl.OriginalStartLine: Integer;
+begin
+  Result := FStartLine;
+end;
+
+function TLiveIssueImpl.RuleKey: string;
+begin
+  Result := FRuleKey;
+end;
 
 end.

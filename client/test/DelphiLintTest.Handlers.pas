@@ -67,7 +67,7 @@ type
       Range: TRange;
       IssueLines: TArray<string>;
       LinesMoved: Integer = 0
-    ): TLiveIssue;
+    ): ILiveIssue;
   public
     [Test]
     procedure TestIssueLineUpdatedWhenTrackedLineChanged;
@@ -373,13 +373,13 @@ function TEditorHandlerTest.BuildLiveIssue(
   Range: TRange;
   IssueLines: TArray<string>;
   LinesMoved: Integer = 0
-): TLiveIssue;
+): ILiveIssue;
 var
   IssueData: TLintIssue;
 begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', Range);
   try
-  Result := TLiveIssue.Create(IssueData, IssueLines);
+  Result := TLiveIssueImpl.Create(IssueData, IssueLines);
   Result.LinesMoved := LinesMoved;
   finally
     FreeAndNil(IssueData);
