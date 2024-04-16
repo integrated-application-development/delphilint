@@ -42,6 +42,10 @@
       {
         "command": "delphilint-vscode.analyzeAllOpenFiles",
         "title": "DelphiLint: Analyze All Open Files"
+      },
+      {
+        "command": "delphilint-vscode.clearThisFile",
+        "title": "DelphiLint: Clear Issues For This File"
       }
     ],
     "configuration": {

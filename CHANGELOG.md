@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* VS Code companion: Clear Issues For This File command, which removes any outstanding issues on the current file.
+
 ### Fixed
 
 * VS Code companion: Re-analyzing a file that previously had issues will now clear the old issues when there are no new

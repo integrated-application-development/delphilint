@@ -293,3 +293,12 @@ export async function chooseActiveProject() {
     resource.setActiveProject(activeProject);
   });
 }
+
+export async function clearThisFile(
+  issueCollection: vscode.DiagnosticCollection
+) {
+  const activeTextEditor = vscode.window.activeTextEditor;
+  if (activeTextEditor) {
+    issueCollection.set(activeTextEditor.document.uri, undefined);
+  }
+}
