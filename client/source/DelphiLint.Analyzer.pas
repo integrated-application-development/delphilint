@@ -41,9 +41,7 @@ type
     FFileAnalyses: TDictionary<string, TFileAnalysisHistory>;
     FRules: TObjectDictionary<string, TRule>;
     FCurrentAnalysis: TCurrentAnalysis;
-    FOnAnalysisStarted: TEventNotifier<TArray<string>>;
-    FOnAnalysisComplete: TEventNotifier<TArray<string>>;
-    FOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    FOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     FServerTerminateEvent: TEvent;
 
     procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
@@ -56,15 +54,12 @@ type
 
     function FilterNonProjectFiles(const InFiles: TArray<string>; const BaseDir: string): TArray<string>;
 
-    procedure AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
-    procedure AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+    procedure DoAnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
 
     procedure ExecuteWithServer(Callback: TServerCallback; OnError: TErrorAction);
 
   protected
-    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
   public
@@ -75,8 +70,7 @@ type
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
-    procedure AnalyzeActiveFile;
-    procedure AnalyzeOpenFiles;
+    procedure AnalyzeFiles(const Files: TArray<string>; const ProjectFile: string);
 
     procedure RestartServer;
 
@@ -190,7 +184,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzerImpl.AnalyzeFilesWithProjectOptions(const Files: TArray<string>; const ProjectFile: string);
+procedure TAnalyzerImpl.AnalyzeFiles(const Files: TArray<string>; const ProjectFile: string);
 var
   ProjectOptions: TLintProjectOptions;
   AnalyzeOptions: TAnalyzeOptions;
@@ -218,7 +212,7 @@ begin
       );
     end;
 
-    AnalyzeFiles(AnalyzeOptions, ProjectOptions.SonarHostDownloadPlugin);
+    DoAnalyzeFiles(AnalyzeOptions, ProjectOptions.SonarHostDownloadPlugin);
   finally
     FreeAndNil(ProjectOptions);
   end;
@@ -226,7 +220,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzerImpl.AnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
+procedure TAnalyzerImpl.DoAnalyzeFiles(Options: TAnalyzeOptions; const DownloadPlugin: Boolean = True);
+var
+  StateChange: TAnalysisStateChangeContext;
 begin
   if GetInAnalysis then begin
     Log.Info('An analysis has been requested, but it will be ignored as there is another in progress');
@@ -235,7 +231,10 @@ begin
 
   Options.InputFiles := FilterNonProjectFiles(Options.InputFiles, Options.BaseDir);
   FCurrentAnalysis := TCurrentAnalysis.Create(Options.InputFiles);
-  FOnAnalysisStarted.Notify(Options.InputFiles);
+
+  StateChange.Files := Options.InputFiles;
+  StateChange.Change := ascStarted;
+  FOnAnalysisStateChanged.Notify(StateChange);
 
   ExecuteWithServer(
     procedure(Server: ILintServer) begin
@@ -290,9 +289,7 @@ begin
   FActiveIssues := TObjectDictionary<string, TList<ILiveIssue>>.Create;
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
-  FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
-  FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
-  FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
+  FOnAnalysisStateChanged := TEventNotifier<TAnalysisStateChangeContext>.Create;
   FRules := TObjectDictionary<string, TRule>.Create;
   FServerThread := TLintServerThread.Create;
   FServerThread.FreeOnTerminate := False;
@@ -326,9 +323,7 @@ begin
   FreeAndNil(FRules);
   FreeAndNil(FActiveIssues);
   FreeAndNil(FFileAnalyses);
-  FreeAndNil(FOnAnalysisStarted);
-  FreeAndNil(FOnAnalysisComplete);
-  FreeAndNil(FOnAnalysisFailed);
+  FreeAndNil(FOnAnalysisStateChanged);
   FreeAndNil(FCurrentAnalysis);
   inherited;
 end;
@@ -378,23 +373,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzerImpl.GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
+function TAnalyzerImpl.GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
 begin
-  Result := FOnAnalysisComplete;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TAnalyzerImpl.GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
-begin
-  Result := FOnAnalysisFailed;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TAnalyzerImpl.GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
-begin
-  Result := FOnAnalysisStarted;
+  Result := FOnAnalysisStateChanged;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -468,15 +449,16 @@ begin
     procedure
     var
       Path: string;
-      Paths: TArray<string>;
+      StateChange: TAnalysisStateChangeContext;
     begin
       for Path in FCurrentAnalysis.Paths do begin
         RecordAnalysis(Path, False, 0);
       end;
 
-      Paths := FCurrentAnalysis.Paths;
+      StateChange.Files := FCurrentAnalysis.Paths;
+      StateChange.Change := ascFailed;
       FreeAndNil(FCurrentAnalysis);
-      FOnAnalysisFailed.Notify(Paths);
+      FOnAnalysisStateChanged.Notify(StateChange);
 
       if Message <> '' then begin
         TaskMessageDlg('DelphiLint encountered a problem during analysis.', Message + '.', mtWarning, [mbOK], 0);
@@ -506,7 +488,7 @@ begin
     TThread.Current,
     procedure
     var
-      Paths: TArray<string>;
+      StateChange: TAnalysisStateChangeContext;
     begin
       try
         SaveIssues(Issues, HasMetadata);
@@ -514,9 +496,10 @@ begin
         FreeAndNil(Issues);
       end;
 
-      Paths := FCurrentAnalysis.Paths;
+      StateChange.Files := FCurrentAnalysis.Paths;
+      StateChange.Change := ascSucceeded;
       FreeAndNil(FCurrentAnalysis);
-      FOnAnalysisComplete.Notify(Paths);
+      FOnAnalysisStateChanged.Notify(StateChange);
     end);
 end;
 

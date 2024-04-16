@@ -121,6 +121,7 @@ type
 
     procedure SetRuleView(Rule: TRule);
 
+    procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
 
@@ -180,17 +181,7 @@ begin
   FRuleHtmlGenerator := TRuleHtmlGenerator.Create;
   FIssues := TObjectList<TWrapper<ILiveIssue>>.Create;
 
-  Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
-
-  Analyzer.OnAnalysisComplete.AddListener(
-    procedure(const Paths: TArray<string>) begin
-      OnAnalysisFinished(Paths, True);
-    end);
-
-  Analyzer.OnAnalysisFailed.AddListener(
-    procedure(const Paths: TArray<string>) begin
-      OnAnalysisFinished(Paths, False);
-    end);
+  Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 
   if TryGetCurrentSourceEditor(Editor) then begin
     ChangeActiveFile(Editor.FileName);
@@ -276,6 +267,26 @@ begin
   end;
 
   RefreshActiveFile;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
+begin
+  case StateChange.Change of
+    ascStarted: begin
+      OnAnalysisStarted(StateChange.Files);
+    end;
+    ascSucceeded: begin
+      OnAnalysisFinished(StateChange.Files, True);
+    end;
+    ascFailed: begin
+      OnAnalysisFinished(StateChange.Files, False);
+    end;
+    ascCleared: begin
+      ChangeActiveFile(FCurrentPath);
+    end;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

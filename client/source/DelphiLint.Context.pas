@@ -49,11 +49,21 @@ type
     procedure Warn(const Msg: string; const Args: array of const); overload;
   end;
 
+  TAnalysisStateChange = (
+    ascStarted,
+    ascSucceeded,
+    ascFailed,
+    ascCleared
+  );
+
+  TAnalysisStateChangeContext = record
+    Files: TArray<string>;
+    Change: TAnalysisStateChange;
+  end;
+
   IAnalyzer = interface
     ['{F6ECFABE-D0AE-40F2-B0D6-B3B67947D7DE}']
-    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
     function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
@@ -61,16 +71,13 @@ type
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
-    procedure AnalyzeActiveFile;
-    procedure AnalyzeOpenFiles;
+    procedure AnalyzeFiles(const Files: TArray<string>; const ProjectFile: string);
     procedure RestartServer;
 
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
     function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 
-    property OnAnalysisStarted: TEventNotifier<TArray<string>> read GetOnAnalysisStarted;
-    property OnAnalysisComplete: TEventNotifier<TArray<string>> read GetOnAnalysisComplete;
-    property OnAnalysisFailed: TEventNotifier<TArray<string>> read GetOnAnalysisFailed;
+    property OnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext> read GetOnAnalysisStateChanged;
     property CurrentAnalysis: TCurrentAnalysis read GetCurrentAnalysis;
     property InAnalysis: Boolean read GetInAnalysis;
   end;

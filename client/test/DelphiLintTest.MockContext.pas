@@ -42,17 +42,14 @@ uses
 
 type
   TAnalyzerCallType = (
-    azcAnalyzeActiveFile,
-    azcAnalyzeOpenFiles,
+    azcAnalyzeFiles,
     azcRestartServer,
     azcUpdateIssueLine
   );
 
   TMockAnalyzer = class(THookedObject<TAnalyzerCallType>, IAnalyzer)
   private
-    FOnAnalysisStarted: TEventNotifier<TArray<string>>;
-    FOnAnalysisComplete: TEventNotifier<TArray<string>>;
-    FOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    FOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
 
     FFileHistories: TDictionary<string, TFileAnalysisHistory>;
     FFileStatuses: TDictionary<string, TFileAnalysisStatus>;
@@ -71,9 +68,7 @@ type
     procedure MockRule(RuleKey: string; Rule: TRule);
     procedure MockCurrentAnalysis(CurrentAnalysis: TCurrentAnalysis);
 
-    function GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
-    function GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
+    function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
     function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
@@ -81,8 +76,7 @@ type
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
-    procedure AnalyzeActiveFile;
-    procedure AnalyzeOpenFiles;
+    procedure AnalyzeFiles(const Paths: TArray<string>; const ProjectFile: string);
     procedure RestartServer;
 
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
@@ -391,9 +385,7 @@ end;
 constructor TMockAnalyzer.Create;
 begin
   inherited;
-  FOnAnalysisStarted := TEventNotifier<TArray<string>>.Create;
-  FOnAnalysisComplete := TEventNotifier<TArray<string>>.Create;
-  FOnAnalysisFailed := TEventNotifier<TArray<string>>.Create;
+  FOnAnalysisStateChanged := TEventNotifier<TAnalysisStateChangeContext>.Create;
 
   FFileHistories := TDictionary<string, TFileAnalysisHistory>.Create;
   FFileStatuses := TDictionary<string, TFileAnalysisStatus>.Create;
@@ -405,9 +397,7 @@ end;
 
 destructor TMockAnalyzer.Destroy;
 begin
-  FreeAndNil(FOnAnalysisStarted);
-  FreeAndNil(FOnAnalysisComplete);
-  FreeAndNil(FOnAnalysisFailed);
+  FreeAndNil(FOnAnalysisStateChanged);
   FreeAndNil(FFileHistories);
   FreeAndNil(FFileStatuses);
   FreeAndNil(FIssues);
@@ -419,16 +409,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockAnalyzer.AnalyzeActiveFile;
+procedure TMockAnalyzer.AnalyzeFiles(const Paths: TArray<string>; const ProjectFile: string);
 begin
-  NotifyEvent(azcAnalyzeActiveFile, []);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TMockAnalyzer.AnalyzeOpenFiles;
-begin
-  NotifyEvent(azcAnalyzeOpenFiles, []);
+  NotifyEvent(azcAnalyzeFiles, [Paths, ProjectFile]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -487,23 +470,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TMockAnalyzer.GetOnAnalysisComplete: TEventNotifier<TArray<string>>;
+function TMockAnalyzer.GetOnAnalysisStateChanged: DelphiLint.Events.TEventNotifier<TAnalysisStateChangeContext>;
 begin
-  Result := FOnAnalysisComplete;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TMockAnalyzer.GetOnAnalysisFailed: TEventNotifier<TArray<string>>;
-begin
-  Result := FOnAnalysisFailed;
-end;
-
-//______________________________________________________________________________________________________________________
-
-function TMockAnalyzer.GetOnAnalysisStarted: TEventNotifier<TArray<string>>;
-begin
-  Result := FOnAnalysisStarted;
+  Result := FOnAnalysisStateChanged;
 end;
 
 //______________________________________________________________________________________________________________________
