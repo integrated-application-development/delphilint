@@ -105,6 +105,11 @@ async function doAnalyze(
   statusUpdate(analyzingMsg);
 
   const issues = await server.analyze(msg);
+
+  for (const filePath of sourceFiles) {
+    issueCollection.set(vscode.Uri.file(filePath), undefined);
+  }
+
   display.showIssues(issues, issueCollection);
 
   const issueWord = issues.length === 1 ? "issue" : "issues";
