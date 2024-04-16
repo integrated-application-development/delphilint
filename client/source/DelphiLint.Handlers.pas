@@ -106,7 +106,7 @@ type
 
     procedure InitView(const View: IIDEEditView);
     function IsViewInited(const View: IIDEEditView): Boolean;
-    procedure OnAnalysisComplete(const Paths: TArray<string>);
+    procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
   public
     constructor Create;
     destructor Destroy; override;
@@ -151,7 +151,7 @@ type
   private
     FRepaint: Boolean;
     FLinePainter: TLintLinePainter;
-    procedure OnAnalysisComplete(const Paths: TArray<string>);
+    procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
   public
     constructor Create;
     destructor Destroy; override;
@@ -302,7 +302,7 @@ begin
   FInitedViews := TList<IInterface>.Create;
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
-  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -316,7 +316,7 @@ begin
   end;
 
   if ContextValid then begin
-    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+    Analyzer.OnAnalysisStateChanged.RemoveListener(OnAnalysisStateChanged);
   end;
 
   FreeAndNil(FTrackers);
@@ -404,13 +404,18 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditorHandler.OnAnalysisComplete(const Paths: TArray<string>);
+procedure TEditorHandler.OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
 var
   Tracker: TLineTracker;
   FileIssues: TArray<ILiveIssue>;
   Issue: ILiveIssue;
   SourceEditor: IIDESourceEditor;
 begin
+  if StateChange.Change = ascStarted then begin
+    // Editor should not change at all when an analysis is started
+    Exit;
+  end;
+
   for Tracker in FTrackers do begin
     Tracker.ClearTracking;
 
@@ -452,7 +457,7 @@ begin
 
   FLinePainter := TLintLinePainter.Create(CTextColor, CBgColor, CBgColor);
   FRepaint := False;
-  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisComplete);
+  Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -460,7 +465,7 @@ end;
 destructor TViewHandler.Destroy;
 begin
   if ContextValid then begin
-    Analyzer.OnAnalysisComplete.RemoveListener(OnAnalysisComplete);
+    Analyzer.OnAnalysisStateChanged.RemoveListener(OnAnalysisStateChanged);
   end;
   FreeAndNil(FLinePainter);
   inherited;
@@ -468,9 +473,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TViewHandler.OnAnalysisComplete(const Paths: TArray<string>);
+procedure TViewHandler.OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
 begin
-  FRepaint := True;
+  if StateChange.Change <> ascStarted then begin
+    FRepaint := True;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

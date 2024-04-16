@@ -71,8 +71,7 @@ type
     procedure CreateMainMenu;
     procedure InitPluginInfo(IDEServices: IIDEServices);
 
-    procedure OnAnalysisStarted(const Paths: TArray<string>);
-    procedure OnAnalysisEnded(const Paths: TArray<string>);
+    procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
     procedure OnActiveFileChanged(const Path: string);
 
     procedure SetAnalysisActionsEnabled(Value: Boolean);
@@ -116,7 +115,9 @@ implementation
 
 uses
     System.SysUtils
+  , System.UITypes
   , Vcl.ComCtrls
+  , Vcl.Dialogs
   , Winapi.Windows
   , DelphiLint.Utils
   , DelphiLint.SetupForm
@@ -128,21 +129,97 @@ uses
 //______________________________________________________________________________________________________________________
 
 procedure TPluginCore.ActionAnalyzeActiveFileExecute(Sender: TObject);
+var
+  ProjectFile: string;
+  SourceEditor: IIDESourceEditor;
 begin
   if LintContext.Settings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
-  Analyzer.AnalyzeActiveFile;
+
+  if not TryGetProjectFile(ProjectFile) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze the active file.',
+      'There is no open Delphi project.',
+      mtWarning,
+      [mbOK],
+      0);
+  end
+  else if not TryGetCurrentSourceEditor(SourceEditor) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze the active file.',
+      'There are no open files that can be analyzed.',
+      mtWarning,
+      [mbOK],
+      0);
+  end
+  else begin
+    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
+      Log.Debug('Saving file before analysis');
+      SourceEditor.Module.Save(True);
+    end;
+    Analyzer.AnalyzeFiles([SourceEditor.FileName, ProjectFile], ProjectFile);
+    Exit;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TPluginCore.ActionAnalyzeOpenFilesExecute(Sender: TObject);
+var
+  ProjectFile: string;
+  Modules: TArray<IIDEModule>;
+  Files: TArray<string>;
+  Module: IIDEModule;
 begin
   if LintContext.Settings.ClientAutoShowToolWindow then begin
     ShowToolWindow;
   end;
-  Analyzer.AnalyzeOpenFiles;
+
+  if TryGetProjectFile(ProjectFile) then begin
+    Modules := DelphiLint.Utils.GetOpenSourceModules;
+
+    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
+      for Module in Modules do begin
+        try
+          Module.Save(True);
+        except
+          on E: Exception do begin
+            Log.Warn('Module %s could not be saved', [Module.FileName]);
+          end;
+        end;
+      end;
+    end;
+
+    Files := TArrayUtils.Map<IIDEModule, string>(
+      Modules,
+      function(Module: IIDEModule): string
+      begin
+        Result := Module.FileName;
+      end);
+    SetLength(Files, Length(Files) + 1);
+    Files[Length(Files) - 1] := ProjectFile;
+
+    if Length(Files) = 1 then begin
+      TaskMessageDlg(
+        'DelphiLint cannot analyze all open files.',
+        'There are no open files that can be analyzed.',
+        mtWarning,
+        [mbOK],
+        0);
+      Exit;
+    end;
+
+    Analyzer.AnalyzeFiles(Files, ProjectFile);
+  end
+  else begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze all open files.',
+      'There is no open Delphi project.',
+      mtWarning,
+      [mbOK],
+      0);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -231,9 +308,7 @@ begin
   CreateMainMenu;
 
   // Analysis callbacks
-  Analyzer.OnAnalysisStarted.AddListener(OnAnalysisStarted);
-  Analyzer.OnAnalysisComplete.AddListener(OnAnalysisEnded);
-  Analyzer.OnAnalysisFailed.AddListener(OnAnalysisEnded);
+  Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 
   // Enable actions
   AnalysisActionsEnabled := True;
@@ -272,14 +347,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TPluginCore.OnAnalysisStarted(const Paths: TArray<string>);
-begin
-  RefreshAnalysisActions;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TPluginCore.OnAnalysisEnded(const Paths: TArray<string>);
+procedure TPluginCore.OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
 begin
   RefreshAnalysisActions;
 end;
