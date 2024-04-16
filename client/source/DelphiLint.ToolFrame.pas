@@ -34,6 +34,7 @@ uses
   , DelphiLint.IDEBaseTypes
   , DelphiLint.HtmlGen
   , DelphiLint.Utils
+  , DelphiLint.Context
   , Vcl.Edge
   , Winapi.WebView2
   , Winapi.ActiveX
@@ -73,6 +74,8 @@ type
     ProgLabel: TLabel;
     ResizeIndicatorPanel: TPanel;
     RuleBrowser: TEdgeBrowser;
+    ActionClearActiveFile1: TMenuItem;
+    Separator1: TMenuItem;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -162,7 +165,6 @@ uses
   , Winapi.ShellAPI
   , Winapi.Messages
   , DelphiLint.Resources
-  , DelphiLint.Context
   , DelphiLint.ExtWebView2
   ;
 

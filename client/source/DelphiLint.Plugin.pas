@@ -47,12 +47,14 @@ type
     ActionOpenSettings: TAction;
     ActionAnalyzeOpenFiles: TAction;
     ActionRestartServer: TAction;
+    ActionClearActiveFile: TAction;
     procedure ActionShowToolWindowExecute(Sender: TObject);
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
     procedure ActionRestartServerExecute(Sender: TObject);
     procedure ActionAnalyzeOpenFilesExecute(Sender: TObject);
     procedure ActionOpenSettingsExecute(Sender: TObject);
     procedure ActionOpenProjectOptionsExecute(Sender: TObject);
+    procedure ActionClearActiveFileExecute(Sender: TObject);
   private
     FEditor: TEditorHandler;
     FEditorNotifier: Integer;
@@ -224,6 +226,17 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TPluginCore.ActionClearActiveFileExecute(Sender: TObject);
+var
+  SourceEditor: IIDESourceEditor;
+begin
+  if TryGetCurrentSourceEditor(SourceEditor) then begin
+    Analyzer.ClearFile(SourceEditor.FileName);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TPluginCore.ActionOpenProjectOptionsExecute(Sender: TObject);
 begin
   if not Assigned(FOptionsForm) then begin
@@ -386,6 +399,8 @@ begin
   AddItem(ActionAnalyzeActiveFile);
   AddItem(ActionAnalyzeOpenFiles);
   AddSeparator;
+  AddItem(ActionClearActiveFile);
+  AddSeparator;
   AddItem(ActionOpenProjectOptions);
   AddItem(ActionOpenSettings);
   AddItem(ActionRestartServer);
@@ -436,21 +451,24 @@ end;
 procedure TPluginCore.RefreshAnalysisActions;
 var
   Index: Integer;
+  SourceEditor: IIDESourceEditor;
 begin
   for Index := 0 to LintActions.ActionCount - 1 do begin
     LintActions[Index].Enabled := PluginEnabled;
   end;
 
-
   if FAnalysisActionsEnabled and (not Analyzer.InAnalysis) and PluginEnabled then begin
     ActionAnalyzeActiveFile.Enabled := True;
     ActionAnalyzeShort.Enabled := True;
     ActionAnalyzeOpenFiles.Enabled := True;
+    ActionClearActiveFile.Enabled := TryGetCurrentSourceEditor(SourceEditor)
+      and (Length(Analyzer.GetIssues(SourceEditor.FileName)) > 0);
   end
   else begin
     ActionAnalyzeActiveFile.Enabled := False;
     ActionAnalyzeShort.Enabled := False;
     ActionAnalyzeOpenFiles.Enabled := False;
+    ActionClearActiveFile.Enabled := False;
   end;
 end;
 

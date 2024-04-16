@@ -301,7 +301,7 @@ begin
   try
     Plugin.Init;
     Assert.AreEqual(1, IDEServices.IDE.IDEInsightActions.Count);
-    Assert.AreEqual(7, IDEServices.IDE.IDEInsightActions[0].ActionCount);
+    Assert.AreEqual(8, IDEServices.IDE.IDEInsightActions[0].ActionCount);
   finally
     Plugin.Deinit(IDEServices);
   end;

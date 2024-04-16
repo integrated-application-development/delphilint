@@ -222,5 +222,11 @@ object LintToolFrame: TLintToolFrame
     object AnalyzeOpenFiles1: TMenuItem
       Action = PluginCore.ActionAnalyzeOpenFiles
     end
+    object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object ActionClearActiveFile1: TMenuItem
+      Action = PluginCore.ActionClearActiveFile
+    end
   end
 end
