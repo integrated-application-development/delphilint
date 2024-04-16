@@ -71,6 +71,7 @@ type
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
     procedure AnalyzeFiles(const Files: TArray<string>; const ProjectFile: string);
+    procedure ClearFile(const FileName: string);
 
     procedure RestartServer;
 
@@ -96,90 +97,28 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzerImpl.AnalyzeActiveFile;
+procedure TAnalyzerImpl.ClearFile(const FileName: string);
 var
-  ProjectFile: string;
-  SourceEditor: IIDESourceEditor;
+  NormalizedName: string;
+  Issue: ILiveIssue;
+  StateChange: TAnalysisStateChangeContext;
 begin
-  if not TryGetProjectFile(ProjectFile) then begin
-    TaskMessageDlg(
-      'DelphiLint cannot analyze the active file.',
-      'There is no open Delphi project.',
-      mtWarning,
-      [mbOK],
-      0);
-  end
-  else if not TryGetCurrentSourceEditor(SourceEditor) then begin
-    TaskMessageDlg(
-      'DelphiLint cannot analyze the active file.',
-      'There are no open files that can be analyzed.',
-      mtWarning,
-      [mbOK],
-      0);
-  end
-  else begin
-    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
-      Log.Debug('Saving file before analysis');
-      SourceEditor.Module.Save(True);
-    end;
-    AnalyzeFilesWithProjectOptions([SourceEditor.FileName, ProjectFile], ProjectFile);
-    Exit;
+  NormalizedName := NormalizePath(FileName);
+
+  if FFileAnalyses.ContainsKey(NormalizedName) then begin
+    FFileAnalyses.Remove(NormalizedName);
   end;
-end;
 
-//______________________________________________________________________________________________________________________
-
-procedure TAnalyzerImpl.AnalyzeOpenFiles;
-var
-  ProjectFile: string;
-  Modules: TArray<IIDEModule>;
-  Files: TArray<string>;
-  Module: IIDEModule;
-begin
-  if TryGetProjectFile(ProjectFile) then begin
-    Modules := DelphiLint.Utils.GetOpenSourceModules;
-
-    if LintContext.Settings.ClientSaveBeforeAnalysis then begin
-      for Module in Modules do begin
-        try
-          Module.Save(True);
-        except
-          on E: Exception do begin
-            Log.Warn('Module %s could not be saved', [Module.FileName]);
-          end;
-        end;
-      end;
+  if FActiveIssues.ContainsKey(NormalizedName) then begin
+    for Issue in FActiveIssues[NormalizedName] do begin
+      Issue.Untether;
     end;
-
-    Files := TArrayUtils.Map<IIDEModule, string>(
-      Modules,
-      function(Module: IIDEModule): string
-      begin
-        Result := Module.FileName;
-      end);
-    SetLength(Files, Length(Files) + 1);
-    Files[Length(Files) - 1] := ProjectFile;
-
-    if Length(Files) = 1 then begin
-      TaskMessageDlg(
-        'DelphiLint cannot analyze all open files.',
-        'There are no open files that can be analyzed.',
-        mtWarning,
-        [mbOK],
-        0);
-      Exit;
-    end;
-
-    AnalyzeFilesWithProjectOptions(Files, ProjectFile);
-  end
-  else begin
-    TaskMessageDlg(
-      'DelphiLint cannot analyze all open files.',
-      'There is no open Delphi project.',
-      mtWarning,
-      [mbOK],
-      0);
+    FActiveIssues.Remove(NormalizedName);
   end;
+
+  StateChange.Change := ascCleared;
+  StateChange.Files := [FileName];
+  FOnAnalysisStateChanged.Notify(StateChange);
 end;
 
 //______________________________________________________________________________________________________________________

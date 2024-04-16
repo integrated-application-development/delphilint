@@ -44,7 +44,8 @@ type
   TAnalyzerCallType = (
     azcAnalyzeFiles,
     azcRestartServer,
-    azcUpdateIssueLine
+    azcUpdateIssueLine,
+    azcClearFile
   );
 
   TMockAnalyzer = class(THookedObject<TAnalyzerCallType>, IAnalyzer)
@@ -77,6 +78,7 @@ type
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
     procedure AnalyzeFiles(const Paths: TArray<string>; const ProjectFile: string);
+    procedure ClearFile(const FileName: string);
     procedure RestartServer;
 
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
@@ -378,6 +380,13 @@ uses
 function MockContext: TMockLintContext;
 begin
   Result := TMockLintContext(LintContext);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TMockAnalyzer.ClearFile(const FileName: string);
+begin
+  NotifyEvent(azcClearFile, [FileName]);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* Clear Active File menu item, which clears all issues from the active file.
 * VS Code companion: Clear Issues For This File command, which removes any outstanding issues on the current file.
 
 ### Fixed

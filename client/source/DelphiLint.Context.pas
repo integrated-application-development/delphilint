@@ -72,6 +72,7 @@ type
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
     procedure AnalyzeFiles(const Files: TArray<string>; const ProjectFile: string);
+    procedure ClearFile(const FileName: string);
     procedure RestartServer;
 
     function GetAnalysisStatus(Path: string): TFileAnalysisStatus;
