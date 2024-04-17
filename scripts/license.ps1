@@ -3,6 +3,9 @@ param(
   [switch]$Force
 )
 
+# Text files are configured to use system newlines
+$NL = [System.Environment]::NewLine
+
 function Get-LicenseHeaderLines([string]$Software) {
   return @(
     $Software,
@@ -28,7 +31,7 @@ function Get-JavaLicenseHeader {
     Get-LicenseHeaderLines "DelphiLint Server" | ForEach-Object { " * $_".TrimEnd() }
   ) + @(" */")
 
-  return ($Lines -join "`r`n") + "`r`n"
+  return ($Lines -join $NL) + $NL
 }
 
 function Get-JSLicenseHeader {
@@ -36,12 +39,12 @@ function Get-JSLicenseHeader {
     Get-LicenseHeaderLines "DelphiLint VSCode" | ForEach-Object { " * $_".TrimEnd() }
   ) + @(" */")
 
-  return ($Lines -join "`r`n") + "`r`n"
+  return ($Lines -join $NL) + $NL
 }
 
 function Get-DelphiLicenseHeader {
   $Lines = @("{") + (Get-LicenseHeaderLines "DelphiLint Client" | ForEach-Object { $_.TrimEnd() }) + @("}")
-  return ($Lines -join "`r`n") + "`r`n"
+  return ($Lines -join $NL) + $NL
 }
 
 $CheckFailures = [System.Collections.Generic.List[string]]::new()
