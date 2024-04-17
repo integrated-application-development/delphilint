@@ -1,0 +1,5 @@
+* text
+*.png -text
+*.gif -text
+*.dproj -text
+server/delphilint-server/src/test/resources/au/com/integradev/delphilint/analysis/charsetDetection/* -text
