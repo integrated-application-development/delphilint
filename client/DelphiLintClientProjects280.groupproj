@@ -27,7 +27,7 @@
         <MSBuild Projects="source\DelphiLintClient280.dproj" Targets="Make"/>
     </Target>
     <Target Name="DelphiLintClientTest280">
-        <MSBuild Projects="test\DelphiLintClient280Test280.dproj"/>
+        <MSBuild Projects="test\DelphiLintClientTest280.dproj"/>
     </Target>
     <Target Name="DelphiLintClientTest280:Clean">
         <MSBuild Projects="test\DelphiLintClientTest280.dproj" Targets="Clean"/>
