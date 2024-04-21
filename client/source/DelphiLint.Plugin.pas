@@ -125,7 +125,6 @@ uses
   , DelphiLint.SetupForm
   , DelphiLint.Version
   , DelphiLint.Resources
-  , DelphiLint.LiveData
   ;
 
 //______________________________________________________________________________________________________________________

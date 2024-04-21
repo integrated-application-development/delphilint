@@ -24,7 +24,6 @@ uses
   , Vcl.Graphics
   , DelphiLint.Events
   , DelphiLint.Context
-  , DelphiLint.Data
   , DelphiLint.LiveData
   ;
 
