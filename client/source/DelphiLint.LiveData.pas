@@ -21,7 +21,6 @@ interface
 
 uses
     DelphiLint.Data
-  , System.Generics.Collections
   ;
 
 type

@@ -21,8 +21,6 @@ interface
 
 uses
     DUnitX.TestFramework
-  , DelphiLint.Data
-  , System.JSON
   ;
 
 type
@@ -66,6 +64,7 @@ implementation
 uses
     System.SysUtils
   , DelphiLint.LiveData
+  , DelphiLint.Data
   ;
 
 //______________________________________________________________________________________________________________________
