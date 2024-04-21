@@ -45,6 +45,7 @@ function GetDelphiVersion: string;
 
 // General utils
 function TimeSpanToAgoString(TimeSpan: TTimeSpan): string;
+
 type
   TArrayUtils = class(TObject)
   public
@@ -55,7 +56,6 @@ type
     class function Max<X>(Arr: TArray<X>; DefaultValue: X): X; overload; static;
   end;
 
-type
   TWrapper<T> = class(TObject)
   private
     FRaw: T;
