@@ -84,6 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
     "delphilint-vscode.clearThisFile",
     () => clearThisFile(lintIssueCollection)
   );
+  context.subscriptions.push(clearThisFileCommand);
 
   const chooseActiveProjectCommand = vscode.commands.registerCommand(
     "delphilint-vscode.chooseActiveProject",

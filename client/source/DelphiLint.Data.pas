@@ -334,7 +334,7 @@ begin
 
   MetadataJson := Json.GetValue<TJSONValue>('metadata', nil);
   if Assigned(MetadataJson) and (MetadataJson is TJSONObject) then begin
-    FMetadata := TIssueMetadata.CreateFromJson(MetadataJson as TJSONObject);;
+    FMetadata := TIssueMetadata.CreateFromJson(MetadataJson as TJSONObject);
   end;
 end;
 
