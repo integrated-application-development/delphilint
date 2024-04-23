@@ -581,9 +581,11 @@ begin
   end;
 
   StartX := Max(ColumnToPx(StartLineOffset, Context), Context.TextRect.Left);
-  EndX := Max(ColumnToPx(EndLineOffset, Context), Context.TextRect.Left);
-  if EndX = -1 then begin
+  if EndLineOffset = -1 then begin
     EndX := Context.TextRect.Right;
+  end
+  else begin
+    EndX := Max(ColumnToPx(EndLineOffset, Context), Context.TextRect.Left);
   end;
 
   Context.Canvas.Pen.Color := FUnderlineColor;
