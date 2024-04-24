@@ -27,6 +27,7 @@ uses
   , Vcl.ComCtrls
   , Vcl.ExtCtrls
   , Vcl.StdCtrls
+  , Vcl.Graphics
   , Vcl.Menus
   , Vcl.ToolWin
   , Winapi.Windows
@@ -38,7 +39,7 @@ uses
   , Vcl.Edge
   , Winapi.WebView2
   , Winapi.ActiveX
-  , DelphiLint.LiveData
+  , DelphiLint.LiveData, Vcl.ControlList
   ;
 
 type
@@ -59,7 +60,6 @@ type
     ProgBar: TProgressBar;
     FileNameLabel: TLabel;
     ProgImage: TImage;
-    IssueListBox: TListBox;
     LintButtonPanel: TPanel;
     RulePanel: TPanel;
     ContentPanel: TPanel;
@@ -76,17 +76,20 @@ type
     RuleBrowser: TEdgeBrowser;
     ActionClearActiveFile1: TMenuItem;
     Separator1: TMenuItem;
+    IssueControlList: TControlList;
+    IssueMessageLabel: TLabel;
+    IssueImage: TImage;
+    IssueMetaLabel: TLabel;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
-    procedure FrameResize(Sender: TObject);
-    procedure OnIssueSelected(Sender: TObject);
-    procedure OnIssueDoubleClicked(Sender: TObject);
-    procedure OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-    procedure OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
     procedure RuleBrowserNavigationStarting(Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
     procedure RuleBrowserNewWindowRequested(Sender: TCustomEdgeBrowser; Args: TNewWindowRequestedEventArgs);
     procedure RuleBrowserCreateWebViewCompleted(Sender: TCustomEdgeBrowser; AResult: HRESULT);
+    procedure IssueControlListBeforeDrawItem(AIndex: Integer; ACanvas: TCanvas; ARect: TRect; AState: TOwnerDrawState);
+    procedure FrameResize(Sender: TObject);
+    procedure IssueControlListItemClick(Sender: TObject);
+    procedure IssueControlListItemDblClick(Sender: TObject);
   private const
     CIssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -114,13 +117,7 @@ type
     procedure UpdateFileNameLabel(NewText: string = '');
 
     procedure RefreshIssueView;
-    procedure RepaintIssueView;
-    procedure GetIssueItemText(
-      ListBox: TListBox;
-      Issue: ILiveIssue;
-      out LocationText: string;
-      out MessageText: string;
-      out MetadataText: string);
+    function GetIssueMetadataText(Issue: ILiveIssue): string;
 
     procedure SetRuleView(Rule: TRule);
 
@@ -160,10 +157,8 @@ uses
   , System.IOUtils
   , System.Types
   , System.UITypes
-  , Vcl.Graphics
   , System.Win.ComObj
   , Winapi.ShellAPI
-  , Winapi.Messages
   , DelphiLint.Resources
   , DelphiLint.ExtWebView2
   ;
@@ -222,7 +217,9 @@ end;
 
 procedure TLintToolFrame.FrameResize(Sender: TObject);
 begin
-  RepaintIssueView;
+  if RulePanel.Left < 10 then begin
+    RulePanel.Width := Width div 2;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -316,8 +313,6 @@ begin
   ResizeIndicatorPanel.Visible := True;
   ResizeIndicatorPanel.BoundsRect := SplitPanel.BoundsRect;
   ResizeIndicatorPanel.BringToFront;
-
-  SendMessage(IssueListBox.Handle, WM_SETREDRAW, 0, 0);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -325,6 +320,7 @@ end;
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
 begin
   ResizeIndicatorPanel.Left := SplitPanel.Left + X;
+  IssueControlList.Invalidate;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -339,15 +335,12 @@ var
   NewWidth: Integer;
 begin
   FResizing := False;
-  SendMessage(IssueListBox.Handle, WM_SETREDRAW, 1, 0);
   ResizeIndicatorPanel.Visible := False;
   NewWidth := RulePanel.Width - (X - FDragStartX);
 
   if (NewWidth < ContentPanel.Width - 10) then begin
     RulePanel.Width := NewWidth;
   end;
-
-  RepaintIssueView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -453,11 +446,17 @@ function TLintToolFrame.GetSelectedIssue: ILiveIssue;
 var
   SelectedIndex: Integer;
 begin
-  Result := nil;
-  SelectedIndex := IssueListBox.ItemIndex;
 
-  if SelectedIndex <> -1 then begin
-    Result := TWrapper<ILiveIssue>(IssueListBox.Items.Objects[SelectedIndex]).Get;
+  SelectedIndex := IssueControlList.ItemIndex;
+  if SelectedIndex = -1 then begin
+    Result := nil;
+  end
+  else if (SelectedIndex >= 0) and (SelectedIndex < FIssues.Count) then begin
+    Result := FIssues[SelectedIndex].Get;
+  end
+  else begin
+    Log.Warn('Issue %d was selected in control list, but there were only %d issues', [SelectedIndex, FIssues.Count]);
+    Result := nil;
   end;
 end;
 
@@ -494,194 +493,96 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.GetIssueItemText(
-  ListBox: TListBox;
-  Issue: ILiveIssue;
-  out LocationText: string;
-  out MessageText: string;
-  out MetadataText: string);
+function TLintToolFrame.GetIssueMetadataText(Issue: ILiveIssue): string;
 var
   CreationDateTime: TDateTime;
   TimeSinceCreation: TTimeSpan;
+  ExtraInfo: string;
 begin
-  if Issue.IsTethered then begin
-    LocationText := Format('(%d, %d) ', [Issue.StartLine, Issue.StartLineOffset]);
-  end
-  else begin
-    LocationText := '';
-  end;
-
-  MessageText := Issue.Message;
+  Result := Format('(%d, %d)', [Issue.StartLine, Issue.StartLineOffset]);
 
   if Issue.HasMetadata then begin
     if Issue.CreationDate <> '' then begin
       CreationDateTime := ISO8601ToDate(Issue.CreationDate, False);
       TimeSinceCreation := TTimeSpan.Subtract(Now, CreationDateTime);
 
-      MetadataText := Format('%s � %s � %s', [
+      ExtraInfo := Format('%s • %s • %s', [
         TimeSpanToAgoString(TimeSinceCreation),
         CIssueStatusStrs[Issue.Status],
         IfThen(Issue.Assignee <> '', 'Assigned to ' + Issue.Assignee, 'Unassigned')
       ]);
     end
     else begin
-      MetadataText := 'New issue';
+      ExtraInfo := 'New issue';
     end;
+  end
+  else begin
+    ExtraInfo := 'New issue';
+  end;
+
+  Result := Format('%s • %s', [Result, ExtraInfo]);
+
+  if not Issue.IsTethered then begin
+    Result := Format('%s • %s', [Result, 'Potentially resolved']);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.OnMeasureIssueItem(Control: TWinControl; Index: Integer; var Height: Integer);
+procedure TLintToolFrame.IssueControlListBeforeDrawItem(
+  AIndex: Integer;
+  ACanvas: TCanvas;
+  ARect: TRect;
+  AState: TOwnerDrawState
+);
 var
-  ListBox: TListBox;
-  LocationText: string;
-  MessageText: string;
-  MetadataText: string;
   Issue: ILiveIssue;
-  Rect: TRect;
-begin
-  ListBox := Control as TListBox;
-  // For some reason, OnMeasureItem is called after a string is added to the listbox, but before its corresponding
-  // object is added. This means we have to maintain a separate list to be able to retrieve them by index here.
-  Issue := FIssues[Index].Get;
-
-  GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
-
-  Rect := TRect.Empty;
-  Rect.Left := Rect.Left
-    + CIssuePadding
-    + 2 * CIssueIconWidth
-    + ListBox.Canvas.TextWidth(LocationText);
-  Rect.Right := ListBox.ClientRect.Right - CIssuePadding;
-  Rect.Top := Rect.Top + CIssuePadding;
-  Rect.Height := 0;
-
-  DrawText(
-    ListBox.Canvas.Handle,
-    PChar(MessageText),
-    Length(MessageText),
-    Rect,
-    DT_LEFT or DT_WORDBREAK or DT_CALCRECT);
-
-  Height := Rect.Height + CIssuePadding + ListBox.Canvas.TextHeight(MetadataText) + CIssuePadding;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.OnDrawIssueItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-var
-  Canvas: TCanvas;
-  Issue: ILiveIssue;
-  ListBox: TListBox;
-  LocationText: string;
-  MessageText: string;
-  MetadataText: string;
-  LocationWidth: Integer;
-  MessageRect: TRect;
-  TextLeft: Integer;
   Rule: TRule;
-  IssueType: TRuleType;
-  IssueSeverity: TRuleSeverity;
   MaxImpactSeverity: TImpactSeverity;
-  HasCleanCode: Boolean;
 begin
-  ListBox := Control as TListBox;
-
-  if (Index < 0) or (Index >= FIssues.Count) then begin
+  if AIndex >= FIssues.Count then begin
     Exit;
   end;
 
-  Issue := FIssues[Index].Get;
-  GetIssueItemText(ListBox, Issue, LocationText, MessageText, MetadataText);
+  Issue := FIssues[AIndex].Get;
+  IssueMessageLabel.Caption := Issue.Message;
+  IssueMessageLabel.Enabled := Issue.IsTethered;
 
-  Canvas := ListBox.Canvas;
-  Canvas.FillRect(Rect);
+  IssueMetaLabel.Caption := GetIssueMetadataText(Issue);
+  IssueMetaLabel.Enabled := Issue.IsTethered;
 
   Rule := Analyzer.GetRule(Issue.RuleKey);
   if not Assigned(Rule) then begin
     Log.Warn('Rule "%s" could not be drawn', [Issue.RuleKey]);
+    IssueImage.Picture.Graphic := nil;
     Exit;
   end;
 
-  HasCleanCode := Assigned(Rule.CleanCode);
-  if HasCleanCode then begin
+  if Assigned(Rule.CleanCode) then begin
     MaxImpactSeverity := TArrayUtils.Max<TImpactSeverity>(Rule.CleanCode.Impacts.Values.ToArray, imsMedium);
-
-    Canvas.Draw(
-      Rect.Left + CIssuePadding,
-      Rect.Top + CIssuePadding + 1,
-      LintResources.ImpactSeverityIcon(MaxImpactSeverity));
-
-    TextLeft := Rect.Left + CIssuePadding + CIssueIconWidth;
+    IssueImage.Picture.Graphic := LintResources.ImpactSeverityIcon(MaxImpactSeverity);
   end
   else begin
-    IssueType := Rule.RuleType;
-    IssueSeverity := Rule.Severity;
-
-    Canvas.Draw(
-      Rect.Left + CIssuePadding,
-      Rect.Top + CIssuePadding + 1,
-      LintResources.RuleTypeIcon(IssueType));
-    TextLeft := Rect.Left + CIssuePadding + CIssueIconWidth;
-
-    if IssueType <> rtSecurityHotspot then begin
-      Canvas.Draw(
-        Rect.Left + CIssuePadding + CIssueIconWidth,
-        Rect.Top + CIssuePadding + 1,
-        LintResources.RuleSeverityIcon(IssueSeverity));
-      TextLeft := TextLeft + CIssueIconWidth;
-    end;
+    IssueImage.Picture.Graphic := LintResources.RuleTypeIcon(Rule.RuleType);
   end;
-
-  if not Issue.IsTethered then begin
-    Canvas.Font.Color := clGrayText;
-  end;
-
-  LocationWidth := Canvas.TextWidth(LocationText);
-  Canvas.TextOut(
-    TextLeft,
-    Rect.Top + CIssuePadding,
-    LocationText);
-
-  Canvas.Font.Style := [fsBold];
-
-  MessageRect := TRect.Empty;
-  MessageRect.Left := TextLeft + LocationWidth;
-  MessageRect.Right := Rect.Right - CIssuePadding;
-  MessageRect.Top := Rect.Top + CIssuePadding;
-  MessageRect.Bottom := Rect.Bottom - CIssuePadding - Canvas.TextHeight(MetadataText);
-
-  DrawText(
-    ListBox.Canvas.Handle,
-    PChar(MessageText),
-    Length(MessageText),
-    MessageRect,
-    DT_LEFT or DT_WORDBREAK);
-
-  Canvas.Font.Style := [];
-
-  Canvas.TextOut(Rect.Left + CIssuePadding, MessageRect.Bottom, MetadataText);
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.OnIssueDoubleClicked(Sender: TObject);
+procedure TLintToolFrame.IssueControlListItemClick(Sender: TObject);
+begin
+  RefreshRuleView;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.IssueControlListItemDblClick(Sender: TObject);
 var
-  SelectedIndex: Integer;
   SelectedIssue: ILiveIssue;
   Editor: IIDESourceEditor;
 begin
-  SelectedIndex := IssueListBox.ItemIndex;
-
-  // No item selected
-  if SelectedIndex = -1 then begin
-    Exit;
-  end;
-
   SelectedIssue := GetSelectedIssue;
   if not Assigned(SelectedIssue) then begin
-    Log.Warn('Nonexistent issue double clicked');
     Exit;
   end;
 
@@ -698,13 +599,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLintToolFrame.OnIssueSelected(Sender: TObject);
-begin
-  RefreshRuleView;
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TLintToolFrame.RefreshActiveFile;
 begin
   ChangeActiveFile(FCurrentPath);
@@ -717,32 +611,11 @@ begin
   if FCurrentPath <> '' then begin
     FIssues.Clear;
     FIssues.AddRange(TWrapper<ILiveIssue>.WrapArray(Analyzer.GetIssues(FCurrentPath)));
+    IssueControlList.ItemCount := FIssues.Count;
+    IssueControlList.Repaint;
   end;
 
-  RepaintIssueView;
   RefreshRuleView;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.RepaintIssueView;
-var
-  IssueWrapper: TWrapper<ILiveIssue>;
-  Issue: ILiveIssue;
-  Selected: Integer;
-begin
-  Selected := IssueListBox.ItemIndex;
-  IssueListBox.ClearSelection;
-  IssueListBox.Clear;
-
-  for IssueWrapper in FIssues do begin
-    Issue := IssueWrapper.Get;
-    IssueListBox.AddItem(Format('%d: %s', [Issue.StartLine, Issue.Message]), IssueWrapper);
-  end;
-
-  if IssueListBox.Items.Count > Selected then begin
-    IssueListBox.ItemIndex := Selected;
-  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -816,10 +689,7 @@ procedure TLintToolFrame.RefreshRuleView;
 var
   SelectedIssue: ILiveIssue;
   Rule: TRule;
-  WasVisible: Boolean;
 begin
-  WasVisible := RulePanel.Visible;
-
   SelectedIssue := GetSelectedIssue;
 
   if Assigned(SelectedIssue) then begin
@@ -833,10 +703,6 @@ begin
   else begin
     SplitPanel.Visible := False;
     RulePanel.Visible := False;
-  end;
-
-  if WasVisible <> RulePanel.Visible then begin
-    RepaintIssueView;
   end;
 end;
 

@@ -26,7 +26,7 @@ object LintToolFrame: TLintToolFrame
       BevelOuter = bvNone
       Caption = 'RulePanel'
       ShowCaption = False
-      TabOrder = 3
+      TabOrder = 2
       object RuleBrowser: TEdgeBrowser
         Left = 0
         Top = 0
@@ -40,21 +40,6 @@ object LintToolFrame: TLintToolFrame
         OnNewWindowRequested = RuleBrowserNewWindowRequested
       end
     end
-    object IssueListBox: TListBox
-      Left = 0
-      Top = 0
-      Width = 435
-      Height = 294
-      Style = lbOwnerDrawVariable
-      Align = alClient
-      BorderStyle = bsNone
-      ItemHeight = 20
-      TabOrder = 0
-      OnClick = OnIssueSelected
-      OnDblClick = OnIssueDoubleClicked
-      OnDrawItem = OnDrawIssueItem
-      OnMeasureItem = OnMeasureIssueItem
-    end
     object SplitPanel: TPanel
       Left = 435
       Top = 0
@@ -66,7 +51,7 @@ object LintToolFrame: TLintToolFrame
       BorderWidth = 1
       Caption = 'SplitPanel'
       ShowCaption = False
-      TabOrder = 2
+      TabOrder = 1
       OnMouseDown = SplitPanelMouseDown
       OnMouseMove = SplitPanelMouseMove
       OnMouseUp = SplitPanelMouseUp
@@ -82,9 +67,59 @@ object LintToolFrame: TLintToolFrame
       UseDockManager = False
       ParentBackground = False
       ShowCaption = False
-      TabOrder = 1
+      TabOrder = 0
       Visible = False
       StyleElements = []
+    end
+    object IssueControlList: TControlList
+      Left = 0
+      Top = 0
+      Width = 435
+      Height = 294
+      Align = alClient
+      BorderStyle = bsNone
+      ItemHeight = 38
+      ItemMargins.Left = 0
+      ItemMargins.Top = 0
+      ItemMargins.Right = 0
+      ItemMargins.Bottom = 0
+      ItemSelectionOptions.SelectedColorAlpha = 240
+      ItemSelectionOptions.FocusedColorAlpha = 255
+      ItemSelectionOptions.SelectedFontColor = clHighlightText
+      ItemSelectionOptions.FocusedFontColor = clHighlightText
+      ItemSelectionOptions.UseFontColorForLabels = True
+      ParentColor = False
+      TabOrder = 3
+      OnBeforeDrawItem = IssueControlListBeforeDrawItem
+      OnItemClick = IssueControlListItemClick
+      OnItemDblClick = IssueControlListItemDblClick
+      object IssueMessageLabel: TLabel
+        Left = 24
+        Top = 4
+        Width = 97
+        Height = 13
+        Caption = 'Issue description'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWhite
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Transparent = True
+      end
+      object IssueImage: TImage
+        Left = 4
+        Top = 4
+        Width = 14
+        Height = 14
+      end
+      object IssueMetaLabel: TLabel
+        Left = 24
+        Top = 17
+        Width = 79
+        Height = 15
+        Caption = 'Issue metadata'
+      end
     end
   end
   object TopPanel: TPanel
