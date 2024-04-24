@@ -51,7 +51,7 @@ type
   public
     class function Map<X, Y>(Arr: TArray<X>; Mapper: TFunc<X, Y>): TArray<Y>; static;
     class function Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>): Y; overload; static;
-    class function Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; DefaultValue: Y): Y; overload; static;
+    class function Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; StartValue: Y): Y; overload; static;
     class function Max<X>(Arr: TArray<X>): X; overload; static;
     class function Max<X>(Arr: TArray<X>; DefaultValue: X): X; overload; static;
   end;
@@ -302,11 +302,11 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-class function TArrayUtils.Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; DefaultValue: Y): Y;
+class function TArrayUtils.Reduce<X, Y>(Arr: TArray<X>; Accumulator: TFunc<Y, X, Y>; StartValue: Y): Y;
 var
   I: Integer;
 begin
-  Result := DefaultValue;
+  Result := StartValue;
 
   for I := 0 to Length(Arr) - 1 do begin
     Result := Accumulator(Result, Arr[I]);
@@ -332,15 +332,20 @@ var
 begin
   Comparer := TComparer<X>.Default;
 
-  Result := Reduce<X, X>(
-    Arr,
-    function (Highest: X; Current: X): X begin
-      Result := Highest;
-      if Comparer.Compare(Current, Highest) > 0 then begin
-        Result := Current;
-      end;
-    end,
-    DefaultValue);
+  if Length(Arr) > 0 then begin
+    Result := Reduce<X, X>(
+      Arr,
+      function (Highest: X; Current: X): X begin
+        Result := Highest;
+        if Comparer.Compare(Current, Highest) > 0 then begin
+          Result := Current;
+        end;
+      end
+    );
+  end
+  else begin
+    Result := DefaultValue;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

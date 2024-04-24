@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+* Issues with low impact severities are no longer incorrectly displayed with the medium severity icon.
 * VS Code companion: Re-analyzing a file that previously had issues will now clear the old issues when there are no new
   issues reported.
 * Multiline issues now display their underlines correctly.

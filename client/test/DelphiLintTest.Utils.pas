@@ -102,6 +102,8 @@ type
     [Test]
     procedure TestMax;
     [Test]
+    procedure TestMaxWithDefault;
+    [Test]
     procedure TestReduceNoElementsRaisesException;
     [Test]
     procedure TestReduceNoElementsWithDefaultReturnsDefault;
@@ -471,6 +473,14 @@ procedure TArrayUtilsTest.TestMax;
 begin
   Assert.AreEqual(64, TArrayUtils.Max<Integer>([1,32,4,8,64,16,2]));
   Assert.AreEqual('dza', TArrayUtils.Max<string>(['aaa','bbb','dza','ccc','ddd']));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TArrayUtilsTest.TestMaxWithDefault;
+begin
+  Assert.AreEqual(4, TArrayUtils.Max<Integer>([1,2,4,3], 5));
+  Assert.AreEqual(5, TArrayUtils.Max<Integer>([], 5));
 end;
 
 //______________________________________________________________________________________________________________________
