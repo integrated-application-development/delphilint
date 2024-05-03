@@ -308,6 +308,10 @@ procedure TLintToolFrame.SplitPanelMouseDown(
   X: Integer;
   Y: Integer);
 begin
+  if Button <> mbLeft then begin
+    Exit;
+  end;
+
   FResizing := True;
   FDragStartX := X;
   ResizeIndicatorPanel.Visible := True;
@@ -319,6 +323,10 @@ end;
 
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
 begin
+  if Button <> mbLeft then begin
+    Exit;
+  end;
+
   ResizeIndicatorPanel.Left := SplitPanel.Left + X;
   IssueControlList.Invalidate;
 end;
@@ -334,6 +342,10 @@ procedure TLintToolFrame.SplitPanelMouseUp(
 var
   NewWidth: Integer;
 begin
+  if Button <> mbLeft then begin
+    Exit;
+  end;
+
   FResizing := False;
   ResizeIndicatorPanel.Visible := False;
   NewWidth := RulePanel.Width - (X - FDragStartX);
