@@ -65,7 +65,8 @@ contains
   DelphiLint.IDEContext in 'DelphiLint.IDEContext.pas',
   DelphiLint.HtmlGen in 'DelphiLint.HtmlGen.pas',
   DelphiLint.ExtWebView2 in 'DelphiLint.ExtWebView2.pas',
-  DelphiLint.LiveData in 'DelphiLint.LiveData.pas';
+  DelphiLint.LiveData in 'DelphiLint.LiveData.pas',
+  DelphiLint.IssueActions in 'DelphiLint.IssueActions.pas';
 
 {$R DelphiLintClientAdditional.res}
 
