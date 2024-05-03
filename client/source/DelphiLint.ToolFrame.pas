@@ -30,16 +30,17 @@ uses
   , Vcl.Graphics
   , Vcl.Menus
   , Vcl.ToolWin
+  , Vcl.ControlList
+  , Vcl.Edge
   , Winapi.Windows
+  , Winapi.WebView2
+  , Winapi.ActiveX
   , DelphiLint.Data
   , DelphiLint.IDEBaseTypes
   , DelphiLint.HtmlGen
   , DelphiLint.Utils
   , DelphiLint.Context
-  , Vcl.Edge
-  , Winapi.WebView2
-  , Winapi.ActiveX
-  , DelphiLint.LiveData, Vcl.ControlList
+  , DelphiLint.LiveData
   ;
 
 type
@@ -90,6 +91,7 @@ type
     procedure FrameResize(Sender: TObject);
     procedure IssueControlListItemClick(Sender: TObject);
     procedure IssueControlListItemDblClick(Sender: TObject);
+    procedure IssueControlListContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
   private const
     CIssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -131,6 +133,9 @@ type
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
     procedure UpdateAnalysisStatusForFile(const Path: string);
+
+    function CreateIssuePopup(Index: Integer): TPopupMenu;
+    procedure OnIssuePopupClosed(Sender: TObject);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -201,6 +206,50 @@ begin
     procedure begin
       RuleBrowser.CreateWebView;
     end);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintToolFrame.CreateIssuePopup(Index: Integer): TPopupMenu;
+
+  procedure AddItem(Caption: string);
+  var
+    MenuItem: TMenuItem;
+  begin
+    MenuItem := TMenuItem.Create(Result);
+    MenuItem.Caption := Caption;
+    Result.Items.Add(MenuItem);
+  end;
+
+  procedure AddSeparator;
+  var
+    MenuItem: TMenuItem;
+  begin
+    MenuItem := TMenuItem.Create(Result);
+    MenuItem.Caption := '-';
+    Result.Items.Add(MenuItem);
+  end;
+
+var
+  Issue: ILiveIssue;
+begin
+  if (Index < 0) or (Index >= FIssues.Count) then begin
+    Result := nil;
+    Exit;
+  end;
+
+  Issue := FIssues[Index].Get;
+
+  Result := TPopupMenu.Create(nil);
+  AddItem(Issue.Message);
+  Result.OnClose := OnIssuePopupClosed;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.OnIssuePopupClosed(Sender: TObject);
+begin
+  FreeAndNil(Sender);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -326,7 +375,7 @@ end;
 
 procedure TLintToolFrame.SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
 begin
-  if Button <> mbLeft then begin
+  if not FResizing then begin
     Exit;
   end;
 
@@ -345,7 +394,7 @@ procedure TLintToolFrame.SplitPanelMouseUp(
 var
   NewWidth: Integer;
 begin
-  if Button <> mbLeft then begin
+  if (Button <> mbLeft) or (not FResizing) then begin
     Exit;
   end;
 
@@ -579,6 +628,27 @@ begin
   end
   else begin
     IssueImage.Picture.Graphic := LintResources.RuleTypeIcon(Rule.RuleType);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.IssueControlListContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+var
+  HotIndex: Integer;
+  Popup: TPopupMenu;
+  Point: TPoint;
+begin
+
+  HotIndex := IssueControlList.HotItemIndex;
+  Handled := (HotIndex >= 0);
+
+  if Handled then begin
+    Popup := CreateIssuePopup(HotIndex);
+    if Assigned(Popup) then begin
+      Point := IssueControlList.ClientToScreen(MousePos);
+      Popup.Popup(Point.X, Point.Y);
+    end;
   end;
 end;
 
