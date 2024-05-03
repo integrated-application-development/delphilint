@@ -81,6 +81,7 @@ type
     IssueMessageLabel: TLabel;
     IssueImage: TImage;
     IssueMetaLabel: TLabel;
+    IssueContextMenu: TPopupMenu;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -135,7 +136,6 @@ type
     procedure UpdateAnalysisStatusForFile(const Path: string);
 
     function CreateIssuePopup(Index: Integer): TPopupMenu;
-    procedure OnIssuePopupClosed(Sender: TObject);
   public
     constructor Create(Owner: TComponent); override;
     destructor Destroy; override;
@@ -166,6 +166,7 @@ uses
   , Winapi.ShellAPI
   , DelphiLint.Resources
   , DelphiLint.ExtWebView2
+  , DelphiLint.IssueActions
   ;
 
 {$R *.dfm}
@@ -212,44 +213,36 @@ end;
 
 function TLintToolFrame.CreateIssuePopup(Index: Integer): TPopupMenu;
 
-  procedure AddItem(Caption: string);
-  var
-    MenuItem: TMenuItem;
+  function DummyMenuItem(Owner: TComponent): TMenuItem;
   begin
-    MenuItem := TMenuItem.Create(Result);
-    MenuItem.Caption := Caption;
-    Result.Items.Add(MenuItem);
-  end;
-
-  procedure AddSeparator;
-  var
-    MenuItem: TMenuItem;
-  begin
-    MenuItem := TMenuItem.Create(Result);
-    MenuItem.Caption := '-';
-    Result.Items.Add(MenuItem);
+    Result := TMenuItem.Create(Owner);
+    Result.Visible := False;
   end;
 
 var
   Issue: ILiveIssue;
+  MenuItemFactory: TIssueMenuItemFactory;
+  I: Integer;
 begin
   if (Index < 0) or (Index >= FIssues.Count) then begin
     Result := nil;
     Exit;
   end;
 
+  Result := IssueContextMenu;
+
+  for I := Result.Items.Count - 1 downto 0 do begin
+    Result.Items[I].Free;
+  end;
+
   Issue := FIssues[Index].Get;
-
-  Result := TPopupMenu.Create(nil);
-  AddItem(Issue.Message);
-  Result.OnClose := OnIssuePopupClosed;
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.OnIssuePopupClosed(Sender: TObject);
-begin
-  FreeAndNil(Sender);
+  MenuItemFactory := TIssueMenuItemFactory.Create(Issue);
+  try
+    Result.Items.Add(DummyMenuItem(Result));
+    Result.Items.Add(MenuItemFactory.HideIssue(Result));
+  finally
+    FreeAndNil(MenuItemFactory);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

@@ -265,4 +265,9 @@ object LintToolFrame: TLintToolFrame
       Action = PluginCore.ActionClearActiveFile
     end
   end
+  object IssueContextMenu: TPopupMenu
+    MenuAnimation = [maNone]
+    Left = 368
+    Top = 10
+  end
 end
