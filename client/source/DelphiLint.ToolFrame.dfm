@@ -91,6 +91,7 @@ object LintToolFrame: TLintToolFrame
       ParentColor = False
       TabOrder = 3
       OnBeforeDrawItem = IssueControlListBeforeDrawItem
+      OnContextPopup = IssueControlListContextPopup
       OnItemClick = IssueControlListItemClick
       OnItemDblClick = IssueControlListItemDblClick
       object IssueMessageLabel: TLabel
