@@ -72,7 +72,7 @@ type
     function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
@@ -451,7 +451,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TMockAnalyzer.GetIssues(FileName: string; Line: Integer): TArray<ILiveIssue>;
+function TMockAnalyzer.GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
 var
   ReturnIssues: TList<ILiveIssue>;
   LineNum: Integer;

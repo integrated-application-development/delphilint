@@ -21,6 +21,7 @@ interface
 
 uses
     DelphiLint.Data
+  , DelphiLint.Events
   ;
 
 type
@@ -48,7 +49,10 @@ type
     procedure UpdateTether(LineNum: Integer; LineText: string);
     procedure Untether;
 
+    function GetOnUntethered: TEventNotifier<Integer>;
+
     property LinesMoved: Integer read GetLinesMoved write SetLinesMoved;
+    property OnUntethered: TEventNotifier<Integer> read GetOnUntethered;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -68,9 +72,11 @@ type
     FEndLineOffset: Integer;
     FLinesMoved: Integer;
     FTethered: Boolean;
+    FOnUntethered: TEventNotifier<Integer>;
     FLines: TArray<string>;
   public
     constructor Create(Issue: TLintIssue; IssueLines: TArray<string>; HasMetadata: Boolean = False);
+    destructor Destroy; override;
 
     procedure NewLineMoveSession;
     procedure UpdateTether(LineNum: Integer; LineText: string);
@@ -90,6 +96,8 @@ type
     function OriginalEndLine: Integer;
     function StartLineOffset: Integer;
     function EndLineOffset: Integer;
+
+    function GetOnUntethered: TEventNotifier<Integer>;
 
     function GetLinesMoved: Integer;
     procedure SetLinesMoved(NewStartLine: Integer);
@@ -148,6 +156,8 @@ begin
     FStatus := Issue.Metadata.Status;
   end;
 
+  FOnUntethered := TEventNotifier<Integer>.Create;
+
   FLinesMoved := 0;
   FLines := IssueLines;
   FTethered := True;
@@ -155,9 +165,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+destructor TLiveIssueImpl.Destroy;
+begin
+  FreeAndNil(FOnUntethered);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLiveIssueImpl.Untether;
 begin
-  FTethered := False;
+  if FTethered then begin
+    FTethered := False;
+    FOnUntethered.Notify(StartLine);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -244,6 +265,13 @@ end;
 function TLiveIssueImpl.GetLinesMoved: Integer;
 begin
   Result := FLinesMoved;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLiveIssueImpl.GetOnUntethered: TEventNotifier<Integer>;
+begin
+  Result := FOnUntethered;
 end;
 
 //______________________________________________________________________________________________________________________

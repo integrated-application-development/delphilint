@@ -53,7 +53,8 @@ type
     ascStarted,
     ascSucceeded,
     ascFailed,
-    ascCleared
+    ascCleared,
+    ascUpdated
   );
 
   TAnalysisStateChangeContext = record

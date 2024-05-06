@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* Changes in issue validity are now immediately reflected across the UI.
 * The issue view has been redesigned for improved performance and utility.
 
 ### Fixed
