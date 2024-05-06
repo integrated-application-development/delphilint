@@ -222,6 +222,7 @@ function TLintToolFrame.CreateIssuePopup(Index: Integer): TPopupMenu;
 var
   Issue: ILiveIssue;
   MenuItemFactory: TIssueMenuItemFactory;
+  Item: TMenuItem;
   I: Integer;
 begin
   if (Index < 0) or (Index >= FIssues.Count) then begin
@@ -240,6 +241,11 @@ begin
   try
     Result.Items.Add(DummyMenuItem(Result));
     Result.Items.Add(MenuItemFactory.HideIssue(Result));
+
+    Item := MenuItemFactory.ApplyQuickFix(Result);
+    if Assigned(Item) then begin
+      Result.Items.Add(Item);
+    end;
   finally
     FreeAndNil(MenuItemFactory);
   end;

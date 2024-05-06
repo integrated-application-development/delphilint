@@ -72,8 +72,9 @@ type
     function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+    function GetQuickFixesAtPosition(FileName: string; Line: Integer; Column: Integer): TArray<TLiveQuickFix>;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
@@ -97,7 +98,8 @@ type
 
   TEditViewCallType = (
     evcPaint,
-    evcGoToPosition
+    evcGoToPosition,
+    evcReplaceText
   );
 
   TMockEditView = class(TMockIDEObject<TEditViewCallType>, IIDEEditView)
@@ -107,6 +109,9 @@ type
     FNotifiers: TDictionary<Integer, IIDEViewHandler>;
     FNextId: Integer;
     FLeftColumn: Integer;
+    FColumn: Integer;
+    FRow: Integer;
+    FContextMenu: TPopupMenu;
   public
     constructor Create;
     destructor Destroy; override;
@@ -118,11 +123,24 @@ type
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     function GetLeftColumn: Integer;
+    procedure ReplaceText(
+      Replacement: string;
+      StartLine: Integer;
+      StartColumn: Integer;
+      EndLine: Integer;
+      EndColumn: Integer
+    );
+    function GetColumn: Integer;
+    function GetRow: Integer;
+    function GetContextMenu: TPopupMenu;
 
     property MockedFileName: string read FFileName write FFileName;
     property MockedLineTracker: IIDEEditLineTracker read FLineTracker write FLineTracker;
     property MockedNotifiers: TDictionary<Integer, IIDEViewHandler> read FNotifiers write FNotifiers;
     property MockedLeftColumn: Integer read FLeftColumn write FLeftColumn;
+    property MockedRow: Integer read FRow write FRow;
+    property MockedColumn: Integer read FColumn write FColumn;
+    property MockedContextMenu: TPopupMenu read FContextMenu write FContextMenu;
   end;
 
   TMockSourceEditor = class(TMockIDEObject, IIDESourceEditor)
@@ -230,6 +248,7 @@ type
     FPluginLicenseStatus: string;
     FPluginRegistered: Boolean;
     FMainMenu: TMainMenu;
+    FTopEditWindow: TCustomForm;
   public
     constructor Create;
     destructor Destroy; override;
@@ -247,6 +266,7 @@ type
     property PluginRegistered: Boolean read FPluginRegistered write FPluginRegistered;
 
     property MainMenu: TMainMenu read FMainMenu write FMainMenu;
+    property TopEditWindow: TCustomForm read FTopEditWindow write FTopEditWindow;
   end;
 
   TMockIDEServices = class(THookedObject<TIDEServicesCallType>, IIDEServices)
@@ -261,6 +281,7 @@ type
     FActiveProject: IIDEProject;
     FCurrentModule: IIDEModule;
     FModules: TList<IIDEModule>;
+    FTopView: IIDEEditView;
   public
     constructor Create;
     destructor Destroy; override;
@@ -270,6 +291,7 @@ type
     procedure MockToolBar(Id: string; ToolBar: TToolBar);
     procedure MockActiveProject(Project: IIDEProject);
     procedure MockCurrentModule(Module: IIDEModule);
+    procedure MockTopView(TopView: IIDEEditView);
     procedure MockModules(Modules: TList<IIDEModule>);
 
     // From IOTAIDEThemingServices
@@ -323,6 +345,10 @@ type
     // From IOTAEditorServices
     function AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
+    function GetTopView: IIDEEditView;
+
+    // From INTAEditorServices
+    function GetTopEditWindow: TCustomForm;
 
     // From INTAEnvironmentOptionsServices
     procedure RegisterAddInOptions(const Options: TAddInOptionsBase);
@@ -451,7 +477,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TMockAnalyzer.GetIssues(FileName: string; Line: Integer): TArray<ILiveIssue>;
+function TMockAnalyzer.GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
 var
   ReturnIssues: TList<ILiveIssue>;
   LineNum: Integer;
@@ -482,6 +508,24 @@ end;
 function TMockAnalyzer.GetOnAnalysisStateChanged: DelphiLint.Events.TEventNotifier<TAnalysisStateChangeContext>;
 begin
   Result := FOnAnalysisStateChanged;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TMockAnalyzer.GetQuickFixesAtPosition(FileName: string; Line, Column: Integer): TArray<TLiveQuickFix>;
+var
+  Issues: TArray<ILiveIssue>;
+  Issue: ILiveIssue;
+  QuickFixes: TList<TLiveQuickFix>;
+begin
+  QuickFixes := TList<TLiveQuickFix>.Create;
+
+  Issues := GetIssues(FileName, Line, Column);
+  for Issue in Issues do begin
+    QuickFixes.AddRange(Issue.QuickFixes);
+  end;
+
+  Result := QuickFixes.ToArray;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -797,6 +841,13 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TMockIDEServices.MockTopView(TopView: IIDEEditView);
+begin
+  FTopView := TopView;
+end;
+
+//______________________________________________________________________________________________________________________
+
 constructor TMockIDEServices.Create;
 begin
   inherited;
@@ -998,6 +1049,20 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TMockIDEServices.GetTopEditWindow: TCustomForm;
+begin
+  Result := FIDE.TopEditWindow;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TMockIDEServices.GetTopView: IIDEEditView;
+begin
+  Result := FTopView;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TMockIDEServices.RegisterAddInOptions(const Options: TAddInOptionsBase);
 begin
   NotifyEvent(iscRegisterAddInOptions, [Options]);
@@ -1073,6 +1138,7 @@ begin
   FreeAndNil(FPluginInfos);
   FreeAndNil(FPluginIcon);
   FreeAndNil(FMainMenu);
+  FreeAndNil(FTopEditWindow);
   inherited;
 end;
 
@@ -1117,6 +1183,7 @@ end;
 destructor TMockEditView.Destroy;
 begin
   FreeAndNil(FNotifiers);
+  FreeAndNil(FContextMenu);
   inherited;
 end;
 
@@ -1125,6 +1192,16 @@ begin
   FNotifiers.Add(FNextId, Notifier);
   Result := FNextId;
   FNextId := FNextId + 1;
+end;
+
+function TMockEditView.GetColumn: Integer;
+begin
+  Result := FColumn;
+end;
+
+function TMockEditView.GetContextMenu: TPopupMenu;
+begin
+  Result := FContextMenu;
 end;
 
 function TMockEditView.GetFileName: string;
@@ -1142,6 +1219,11 @@ begin
   Result := FLineTracker;
 end;
 
+function TMockEditView.GetRow: Integer;
+begin
+  Result := FRow;
+end;
+
 procedure TMockEditView.GoToPosition(const Line: Integer; const Column: Integer);
 begin
   NotifyEvent(evcGoToPosition, [Line, Column]);
@@ -1155,6 +1237,11 @@ end;
 procedure TMockEditView.RemoveNotifier(Index: Integer);
 begin
   FNotifiers.Remove(Index);
+end;
+
+procedure TMockEditView.ReplaceText(Replacement: string; StartLine, StartColumn, EndLine, EndColumn: Integer);
+begin
+  NotifyEvent(evcReplaceText, [Replacement, StartLine, StartColumn, EndLine, EndColumn]);
 end;
 
 //______________________________________________________________________________________________________________________

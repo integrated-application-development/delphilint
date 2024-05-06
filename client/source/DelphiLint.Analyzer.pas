@@ -66,7 +66,7 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
@@ -326,7 +326,22 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TAnalyzerImpl.GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
+function TAnalyzerImpl.GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
+
+  function Matches(Issue: ILiveIssue): Boolean;
+  var
+    AfterStart: Boolean;
+    BeforeEnd: Boolean;
+  begin
+    Result := (Issue.StartLine <= Line) and (Issue.EndLine >= Line);
+
+    if Result and (Column <> -1) then begin
+      AfterStart := (Issue.StartLine < Line) or (Issue.StartLineOffset <= Column);
+      BeforeEnd := (Issue.EndLine > Line) or (Issue.EndLineOffset >= Column);
+      Result := AfterStart and BeforeEnd;
+    end;
+  end;
+
 var
   SanitizedName: string;
   Issue: ILiveIssue;
@@ -342,7 +357,7 @@ begin
       ResultList := TList<ILiveIssue>.Create;
       try
         for Issue in FActiveIssues[SanitizedName] do begin
-          if (Line >= Issue.StartLine) and (Line <= Issue.EndLine) then begin
+          if Matches(Issue) then begin
             ResultList.Add(Issue);
           end;
         end;

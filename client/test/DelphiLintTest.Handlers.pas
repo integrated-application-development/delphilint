@@ -82,6 +82,7 @@ implementation
 
 uses
     System.SysUtils
+  , Vcl.Menus
   , DelphiLint.Handlers
   , DelphiLint.Context
   , DelphiLintTest.MockContext
@@ -408,6 +409,7 @@ begin
   TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
   MockLineTracker.MockedFileName := CFileName;
   MockView.MockedLineTracker := MockLineTracker;
+  MockView.MockedContextMenu := TPopupMenu.Create(nil);
 
   Handler := TEditorHandler.Create;
   try
@@ -449,6 +451,7 @@ begin
   TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
   MockLineTracker.MockedFileName := CFileName;
   MockView.MockedLineTracker := MockLineTracker;
+  MockView.MockedContextMenu := TPopupMenu.Create(nil);
 
   Handler := TEditorHandler.Create;
   try
@@ -499,6 +502,7 @@ begin
   TMock.Construct<IIDEEditLineTracker, TMockEditLineTracker>(MockLineTracker);
   MockLineTracker.MockedFileName := 'abc.pas';
   MockView.MockedLineTracker := MockLineTracker;
+  MockView.MockedContextMenu := TPopupMenu.Create(nil);
 
   Handler := TEditorHandler.Create;
   try
