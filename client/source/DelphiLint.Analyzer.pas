@@ -529,6 +529,15 @@ begin
       end;
 
       LiveIssue := TLiveIssueImpl.Create(Issue, RelevantLines, IssuesHaveMetadata);
+      LiveIssue.OnUntethered.AddListener(
+        procedure(const Line: Integer)
+        var
+          StateChange: TAnalysisStateChangeContext;
+        begin
+          StateChange.Files := [SanitizedPath];
+          StateChange.Change := ascUpdated;
+          FOnAnalysisStateChanged.Notify(StateChange);
+        end);
       NewIssues[SanitizedPath].Add(LiveIssue);
     end;
 

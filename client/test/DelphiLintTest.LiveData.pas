@@ -50,6 +50,8 @@ type
     [Test]
     procedure TestCannotRetether;
     [Test]
+    procedure TestUntetherEventTrigger;
+    [Test]
     procedure TestUpdateTetherOnChangedWhitespaceIsUntethered;
     [TestCase('Down', '3')]
     [TestCase('Up', '-5')]
@@ -145,7 +147,39 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnChangedLineIsUntethered;
+procedure TLiveDataTest.TestUntetherEventTrigger;
+var
+  IssueData: TLintIssue;
+  LiveIssue: ILiveIssue;
+  Notified: Boolean;
+  NotifiedLine: Integer;
+begin
+  Notified := False;
+  NotifiedLine := -1;
+
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
+  try
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    LiveIssue.OnUntethered.AddListener(
+      procedure(const Line: Integer) begin
+        Notified := True;
+        NotifiedLine := Line;
+      end
+    );
+    Assert.IsTrue(LiveIssue.IsTethered);
+    Assert.IsFalse(Notified);
+
+    LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQr__u');
+    Assert.IsFalse(LiveIssue.IsTethered);
+    Assert.IsTrue(Notified);
+    Assert.AreEqual(5, NotifiedLine);
+  finally
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLiveDataTest.TestUpdateTetherOnChangedLineIsUntethered;
 var
   IssueData: TLintIssue;

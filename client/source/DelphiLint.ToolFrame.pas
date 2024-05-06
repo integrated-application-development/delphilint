@@ -285,6 +285,9 @@ begin
     ascCleared: begin
       ChangeActiveFile(FCurrentPath);
     end;
+    ascUpdated: begin
+      ChangeActiveFile(FCurrentPath);
+    end;
   end;
 end;
 
@@ -518,7 +521,7 @@ begin
       CreationDateTime := ISO8601ToDate(Issue.CreationDate, False);
       TimeSinceCreation := TTimeSpan.Subtract(Now, CreationDateTime);
 
-      ExtraInfo := Format('%s â€¢ %s â€¢ %s', [
+      ExtraInfo := Format('%s • %s • %s', [
         TimeSpanToAgoString(TimeSinceCreation),
         CIssueStatusStrs[Issue.Status],
         IfThen(Issue.Assignee <> '', 'Assigned to ' + Issue.Assignee, 'Unassigned')
@@ -532,10 +535,10 @@ begin
     ExtraInfo := 'New issue';
   end;
 
-  Result := Format('%s â€¢ %s', [Result, ExtraInfo]);
+  Result := Format('%s • %s', [Result, ExtraInfo]);
 
   if not Issue.IsTethered then begin
-    Result := Format('%s â€¢ %s', [Result, 'Potentially resolved']);
+    Result := Format('%s • %s', [Result, 'Potentially resolved']);
   end;
 end;
 
@@ -620,12 +623,14 @@ end;
 
 procedure TLintToolFrame.RefreshIssueView;
 begin
+  FIssues.Clear;
+
   if FCurrentPath <> '' then begin
-    FIssues.Clear;
     FIssues.AddRange(TWrapper<ILiveIssue>.WrapArray(Analyzer.GetIssues(FCurrentPath)));
-    IssueControlList.ItemCount := FIssues.Count;
-    IssueControlList.Repaint;
   end;
+
+  IssueControlList.ItemCount := FIssues.Count;
+  IssueControlList.Repaint;
 
   RefreshRuleView;
 end;
