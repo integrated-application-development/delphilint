@@ -94,6 +94,10 @@ type
     // From IOTAEditorServices
     function AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
+    function GetTopView: IIDEEditView;
+
+    // From INTAEditorServices
+    function GetTopEditWindow: TCustomForm;
 
     // From INTAEnvironmentOptionsServices
     procedure RegisterAddInOptions(const Options: TAddInOptionsBase);
@@ -155,6 +159,16 @@ type
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     function GetLeftColumn: Integer;
+    procedure ReplaceText(
+      Replacement: string;
+      StartLine: Integer;
+      StartColumn: Integer;
+      EndLine: Integer;
+      EndColumn: Integer
+    );
+    function GetColumn: Integer;
+    function GetRow: Integer;
+    function GetContextMenu: TPopupMenu;
   end;
 
   TToolsApiSourceEditor = class(TToolsApiWrapper<IOTASourceEditor>, IIDESourceEditor)
@@ -432,6 +446,34 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TToolsApiServices.GetTopEditWindow: TCustomForm;
+var
+  Window: INTAEditWindow;
+begin
+  Result := nil;
+
+  Window := (BorlandIDEServices as INTAEditorServices).GetTopEditWindow;
+  if Assigned(Window) then begin
+    Result := Window.GetForm;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TToolsApiServices.GetTopView: IIDEEditView;
+var
+  TopView: IOTAEditView;
+begin
+  TopView := (BorlandIDEServices as IOTAEditorServices).GetTopView;
+
+  Result := nil;
+  if Assigned(TopView) then begin
+    Result := TToolsApiEditView.Create(TopView);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TToolsApiServices.CreateDockableForm(const CustomForm: TCustomDockableFormBase): TCustomForm;
 begin
   Result := (BorlandIDEServices as INTAServices).CreateDockableForm(CustomForm);
@@ -568,6 +610,11 @@ begin
   Result := TToolsApiEditLineTracker.Create(FRaw.Buffer.GetEditLineTracker);
 end;
 
+function TToolsApiEditView.GetRow: Integer;
+begin
+  Result := FRaw.Buffer.EditPosition.Row;
+end;
+
 procedure TToolsApiEditView.GoToPosition(const Line: Integer; const Column: Integer);
 var
   ScrollLine: Integer;
@@ -592,6 +639,47 @@ end;
 procedure TToolsApiEditView.RemoveNotifier(Index: Integer);
 begin
   FRaw.RemoveNotifier(Index);
+end;
+
+procedure TToolsApiEditView.ReplaceText(Replacement: string; StartLine, StartColumn, EndLine, EndColumn: Integer);
+
+  procedure MoveCursor(const Line: Integer; const Column: Integer);
+  var
+    Pos: TOTAEditPos;
+  begin
+    Pos.Col := Column;
+    Pos.Line := Line;
+    FRaw.SetCursorPos(Pos);
+  end;
+
+begin
+  FRaw.Buffer.EditBlock.Reset;
+  MoveCursor(StartLine, StartColumn + 1);
+  FRaw.Buffer.EditBlock.BeginBlock;
+  MoveCursor(EndLine, EndColumn + 1);
+  FRaw.Buffer.EditBlock.EndBlock;
+
+  FRaw.Buffer.EditPosition.InsertText(Replacement);
+  MoveCursor(StartLine, StartColumn + 1);
+end;
+
+function TToolsApiEditView.GetColumn: Integer;
+begin
+  Result := FRaw.Buffer.EditPosition.Column;
+end;
+
+function TToolsApiEditView.GetContextMenu: TPopupMenu;
+var
+  Window: INTAEditWindow;
+begin
+  Window := FRaw.GetEditWindow;
+
+  if Assigned(Window) then begin
+    Result := Window.Form.FindComponent('EditorLocalMenu') as TPopupMenu;
+  end
+  else begin
+    Result := nil;
+  end;
 end;
 
 function TToolsApiEditView.GetFileName: string;

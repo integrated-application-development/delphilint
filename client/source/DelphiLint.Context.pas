@@ -67,7 +67,7 @@ type
     function GetOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     function GetCurrentAnalysis: TCurrentAnalysis;
     function GetInAnalysis: Boolean;
-    function GetIssues(FileName: string; Line: Integer = -1): TArray<ILiveIssue>;
+    function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
@@ -103,10 +103,22 @@ type
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
     function GetLeftColumn: Integer;
+    procedure ReplaceText(
+      Replacement: string;
+      StartLine: Integer;
+      StartColumn: Integer;
+      EndLine: Integer;
+      EndColumn: Integer
+    );
+    function GetColumn: Integer;
+    function GetRow: Integer;
+    function GetContextMenu: TPopupMenu;
     function Raw: IInterface; // IOTAEditView
 
     property FileName: string read GetFileName;
     property LeftColumn: Integer read GetLeftColumn;
+    property Column: Integer read GetColumn;
+    property Row: Integer read GetRow;
   end;
 
   IIDESourceEditor = interface
@@ -236,6 +248,10 @@ type
     // From IOTAEditorServices
     function AddEditorNotifier(Notifier: IIDEEditorHandler): Integer;
     procedure RemoveEditorNotifier(const Index: Integer);
+    function GetTopView: IIDEEditView;
+
+    // From INTAEditorServices
+    function GetTopEditWindow: TCustomForm;
 
     // From INTAEnvironmentOptionsServices
     procedure RegisterAddInOptions(const Options: TAddInOptionsBase);

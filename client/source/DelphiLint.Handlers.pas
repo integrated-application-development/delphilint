@@ -22,9 +22,11 @@ interface
 uses
     System.Generics.Collections
   , Vcl.Graphics
+  , Vcl.Menus
   , DelphiLint.Events
   , DelphiLint.Context
   , DelphiLint.LiveData
+  , DelphiLint.PopupHook
   ;
 
 type
@@ -97,6 +99,7 @@ type
   private
     FNotifiers: TList<IIDEHandler>;
     FTrackers: TObjectList<TLineTracker>;
+    FPopupHooks: TDictionary<TPopupMenu, TEditorPopupMenuHook>;
     FInitedViews: TList<IInterface>;
 
     FOnActiveFileChanged: TEventNotifier<string>;
@@ -106,6 +109,8 @@ type
     procedure InitView(const View: IIDEEditView);
     function IsViewInited(const View: IIDEEditView): Boolean;
     procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
+
+    procedure OnHookFreed(const Hook: TEditorPopupMenuHook);
   public
     constructor Create;
     destructor Destroy; override;
@@ -298,6 +303,8 @@ begin
   // Once registered with the IDE, notifiers are reference counted
   FNotifiers := TList<IIDEHandler>.Create;
   FTrackers := TObjectList<TLineTracker>.Create;
+  // These are components, nominally owned by the context menu
+  FPopupHooks := TDictionary<TPopupMenu, TEditorPopupMenuHook>.Create;
   FInitedViews := TList<IInterface>.Create;
   FOnActiveFileChanged := TEventNotifier<string>.Create;
 
@@ -309,10 +316,18 @@ end;
 destructor TEditorHandler.Destroy;
 var
   Notifier: IIDEHandler;
+  Hook: TEditorPopupMenuHook;
 begin
   for Notifier in FNotifiers do begin
     Notifier.Release;
   end;
+
+  // Although these hooks are owned by the context menu, we need to free them when the plugin is disabled
+  for Hook in FPopupHooks.Values do begin
+    Hook.OnFreed.RemoveListener(OnHookFreed);
+    FreeAndNil(Hook);
+  end;
+  FreeAndNil(FPopupHooks);
 
   if ContextValid then begin
     Analyzer.OnAnalysisStateChanged.RemoveListener(OnAnalysisStateChanged);
@@ -368,6 +383,19 @@ procedure TEditorHandler.InitView(const View: IIDEEditView);
     end;
   end;
 
+  procedure InitPopupHook;
+  var
+    PopupHook: TEditorPopupMenuHook;
+    ContextMenu: TPopupMenu;
+  begin
+    ContextMenu := View.GetContextMenu;
+    if not FPopupHooks.ContainsKey(ContextMenu) then begin
+      PopupHook := TEditorPopupMenuHook.Create(View.GetContextMenu);
+      PopupHook.OnFreed.AddListener(OnHookFreed);
+      FPopupHooks.Add(ContextMenu, PopupHook);
+    end;
+  end;
+
   procedure InitNotifier;
   var
     Notifier: TViewHandler;
@@ -391,6 +419,7 @@ procedure TEditorHandler.InitView(const View: IIDEEditView);
 begin
   InitTracker;
   InitNotifier;
+  InitPopupHook;
   FInitedViews.Add(View.Raw);
 end;
 
@@ -431,6 +460,19 @@ begin
       procedure begin
         SourceEditor.EditViews[0].Paint;
       end);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TEditorHandler.OnHookFreed(const Hook: TEditorPopupMenuHook);
+var
+  Menu: TPopupMenu;
+begin
+  for Menu in FPopupHooks.Keys do begin
+    if FPopupHooks[Menu] = Hook then begin
+      FPopupHooks.Remove(Menu);
+    end;
   end;
 end;
 
