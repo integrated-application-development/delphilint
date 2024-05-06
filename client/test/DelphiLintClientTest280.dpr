@@ -31,7 +31,8 @@ uses
   DelphiLintTest.Server in 'DelphiLintTest.Server.pas',
   DelphiLintTest.FileLogger in 'DelphiLintTest.FileLogger.pas',
   DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas',
-  DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas';
+  DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas',
+  DelphiLintTest.LiveData in 'DelphiLintTest.LiveData.pas';
 
 {$R DelphiLintClientTestAdditional.res}
 

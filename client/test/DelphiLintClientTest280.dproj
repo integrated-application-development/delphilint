@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Console</AppType>
@@ -148,6 +148,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLintTest.FileLogger.pas"/>
         <DCCReference Include="DelphiLintTest.HtmlGen.pas"/>
         <DCCReference Include="DelphiLintTest.Settings.pas"/>
+        <DCCReference Include="DelphiLintTest.LiveData.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
