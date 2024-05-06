@@ -25,7 +25,7 @@ uses
 
 type
   [TestFixture]
-  TLiveIssueTest = class(TObject)
+  TLiveDataTest = class(TObject)
   public
     [Test]
     procedure TestIssueWithNoRangeIsSetToEntireFirstLine;
@@ -51,9 +51,9 @@ type
     procedure TestCannotRetether;
     [Test]
     procedure TestUpdateTetherOnChangedWhitespaceIsUntethered;
-    [Test('Down', '3')]
-    [Test('Up', '-5')]
-    [Test('Zero', '0')]
+    [TestCase('Down', '3')]
+    [TestCase('Up', '-5')]
+    [TestCase('Zero', '0')]
     procedure TestMoveLine(Delta: Integer);
     [Test]
     procedure TestNewLineMoveSession;
@@ -69,7 +69,7 @@ uses
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestTransfersMetadataWhenHasMetadata;
+procedure TLiveDataTest.TestTransfersMetadataWhenHasMetadata;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -91,14 +91,13 @@ begin
     Assert.AreEqual(LiveIssue.Status, issReopened);
     Assert.AreEqual(LiveIssue.CreationDate, 'creationdate');
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestTransfersMetadataWhenNotHasMetadata;
+procedure TLiveDataTest.TestTransfersMetadataWhenNotHasMetadata;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -120,14 +119,13 @@ begin
     Assert.AreEqual(LiveIssue.Status, issReopened);
     Assert.AreEqual(LiveIssue.CreationDate, 'creationdate');
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestCannotRetether;
+procedure TLiveDataTest.TestCannotRetether;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -135,13 +133,12 @@ begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
     LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQr__u');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQrstu');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
@@ -149,6 +146,7 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLiveIssueTest.TestUpdateTetherOnChangedLineIsUntethered;
+procedure TLiveDataTest.TestUpdateTetherOnChangedLineIsUntethered;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -156,18 +154,17 @@ begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
     LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQr__u');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnChangedLineIsUntetheredMultiline;
+procedure TLiveDataTest.TestUpdateTetherOnChangedLineIsUntetheredMultiline;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -182,18 +179,17 @@ begin
         'QRstuvxy'
       ]
     );
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(7, 'QRst_____');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnChangedRangeIsUntethered;
+procedure TLiveDataTest.TestUpdateTetherOnChangedRangeIsUntethered;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -201,18 +197,17 @@ begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
     LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcdEFGH_KLMNOPQrstu');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnChangedRangeIsUntetheredMultiline;
+procedure TLiveDataTest.TestUpdateTetherOnChangedRangeIsUntetheredMultiline;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -227,18 +222,17 @@ begin
         'QRstuvxy'
       ]
     );
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(6, 'I  LM__P');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnChangedWhitespaceIsUntethered;
+procedure TLiveDataTest.TestUpdateTetherOnChangedWhitespaceIsUntethered;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -246,18 +240,17 @@ begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
     LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcd  GHJ LMN PQrstu']);
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcd    GHJ  LMNPQrstu');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnUnchangedLineStaysTethered;
+procedure TLiveDataTest.TestUpdateTetherOnUnchangedLineStaysTethered;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -265,18 +258,17 @@ begin
   IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16));
   try
     LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(5, 'abcdEFGHJKLMNOPQrstu');
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestUpdateTetherOnUnchangedLineStaysTetheredMultiline;
+procedure TLiveDataTest.TestUpdateTetherOnUnchangedLineStaysTetheredMultiline;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -291,18 +283,17 @@ begin
         'QRstuvxy'
       ]
     );
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(6, 'IJKLMNOP');
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestWrongNumberOfAssociatedLinesRaisesRangeError;
+procedure TLiveDataTest.TestWrongNumberOfAssociatedLinesRaisesRangeError;
 var
   IssueData: TLintIssue;
 begin
@@ -320,7 +311,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestIssueWithNoRangeIsSetToEntireFirstLine;
+procedure TLiveDataTest.TestIssueWithNoRangeIsSetToEntireFirstLine;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -333,14 +324,13 @@ begin
     Assert.AreEqual(LiveIssue.StartLineOffset, 0);
     Assert.AreEqual(LiveIssue.EndLineOffset, 0);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestMoveLine(Delta: Integer);
+procedure TLiveDataTest.TestMoveLine(Delta: Integer);
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -366,20 +356,19 @@ begin
     Assert.AreEqual(LiveIssue.OriginalStartLine, 5);
     Assert.AreEqual(LiveIssue.OriginalEndLine, 7);
 
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(6 + Delta, 'IJKLMNOP');
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(6 + Delta, 'abc');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLiveIssueTest.TestNewLineMoveSession;
+procedure TLiveDataTest.TestNewLineMoveSession;
 var
   IssueData: TLintIssue;
   LiveIssue: ILiveIssue;
@@ -406,13 +395,12 @@ begin
     Assert.AreEqual(LiveIssue.OriginalStartLine, 10);
     Assert.AreEqual(LiveIssue.OriginalEndLine, 12);
 
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(11, 'IJKLMNOP');
-    Assert.IsTrue(LiveIssue.Tethered);
+    Assert.IsTrue(LiveIssue.IsTethered);
     LiveIssue.UpdateTether(11, 'abc');
-    Assert.IsFalse(LiveIssue.Tethered);
+    Assert.IsFalse(LiveIssue.IsTethered);
   finally
-    FreeAndNil(LiveIssue);
     FreeAndNil(IssueData);
   end;
 end;
@@ -420,6 +408,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 initialization
-  TDUnitX.RegisterTestFixture(TLiveIssueTest);
+  TDUnitX.RegisterTestFixture(TLiveDataTest);
 
 end.
