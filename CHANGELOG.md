@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Clear Active File menu item, which clears all issues from the active file.
 * VS Code companion: Clear Issues For This File command, which removes any outstanding issues on the current file.
+* Support for "quick fixes" in the IDE - suggested fixes that can be applied automatically.
 
 ### Changed
 
