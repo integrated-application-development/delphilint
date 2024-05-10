@@ -92,6 +92,7 @@ type
 
   IIDEModule = interface;
   IIDEEditLineTracker = interface;
+  IIDEHandler = interface;
   IIDEViewHandler = interface;
 
   IIDEEditView = interface
@@ -102,6 +103,8 @@ type
     function GetLineTracker: IIDEEditLineTracker;
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
+    function AddBufferNotifier(Notifier: IIDEHandler): Integer;
+    procedure RemoveBufferNotifier(Index: Integer);
     function GetLeftColumn: Integer;
     procedure ReplaceText(
       Replacement: string;

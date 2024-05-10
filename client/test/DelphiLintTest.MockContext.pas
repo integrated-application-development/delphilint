@@ -107,6 +107,7 @@ type
     FFileName: string;
     FLineTracker: IIDEEditLineTracker;
     FNotifiers: TDictionary<Integer, IIDEViewHandler>;
+    FBufferNotifiers: TDictionary<Integer, IIDEHandler>;
     FNextId: Integer;
     FLeftColumn: Integer;
     FColumn: Integer;
@@ -122,6 +123,8 @@ type
     function GetLineTracker: IIDEEditLineTracker;
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
+    function AddBufferNotifier(Notifier: IIDEHandler): Integer;
+    procedure RemoveBufferNotifier(Index: Integer);
     function GetLeftColumn: Integer;
     procedure ReplaceText(
       Replacement: string;
@@ -137,6 +140,7 @@ type
     property MockedFileName: string read FFileName write FFileName;
     property MockedLineTracker: IIDEEditLineTracker read FLineTracker write FLineTracker;
     property MockedNotifiers: TDictionary<Integer, IIDEViewHandler> read FNotifiers write FNotifiers;
+    property MockedBufferNotifiers: TDictionary<Integer, IIDEHandler> read FBufferNotifiers write FBufferNotifiers;
     property MockedLeftColumn: Integer read FLeftColumn write FLeftColumn;
     property MockedRow: Integer read FRow write FRow;
     property MockedColumn: Integer read FColumn write FColumn;
@@ -1178,13 +1182,22 @@ constructor TMockEditView.Create;
 begin
   inherited;
   FNotifiers := TDictionary<Integer, IIDEViewHandler>.Create;
+  FBufferNotifiers := TDictionary<Integer, IIDEHandler>.Create;
 end;
 
 destructor TMockEditView.Destroy;
 begin
   FreeAndNil(FNotifiers);
+  FreeAndNil(FBufferNotifiers);
   FreeAndNil(FContextMenu);
   inherited;
+end;
+
+function TMockEditView.AddBufferNotifier(Notifier: IIDEHandler): Integer;
+begin
+  FBufferNotifiers.Add(FNextId, Notifier);
+  Result := FNextId;
+  FNextId := FNextId + 1;
 end;
 
 function TMockEditView.AddNotifier(Notifier: IIDEViewHandler): Integer;
@@ -1232,6 +1245,11 @@ end;
 procedure TMockEditView.Paint;
 begin
   NotifyEvent(evcPaint, []);
+end;
+
+procedure TMockEditView.RemoveBufferNotifier(Index: Integer);
+begin
+  FNotifiers.Remove(Index);
 end;
 
 procedure TMockEditView.RemoveNotifier(Index: Integer);

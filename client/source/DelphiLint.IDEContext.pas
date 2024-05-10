@@ -158,6 +158,8 @@ type
     function GetLineTracker: IIDEEditLineTracker;
     function AddNotifier(Notifier: IIDEViewHandler): Integer;
     procedure RemoveNotifier(Index: Integer);
+    function AddBufferNotifier(Notifier: IIDEHandler): Integer;
+    procedure RemoveBufferNotifier(Index: Integer);
     function GetLeftColumn: Integer;
     procedure ReplaceText(
       Replacement: string;
@@ -629,6 +631,16 @@ end;
 procedure TToolsApiEditView.Paint;
 begin
   FRaw.Paint;
+end;
+
+function TToolsApiEditView.AddBufferNotifier(Notifier: IIDEHandler): Integer;
+begin
+  Result := FRaw.Buffer.AddNotifier(TToolsApiNotifier<IIDEHandler>.Create(Notifier));
+end;
+
+procedure TToolsApiEditView.RemoveBufferNotifier(Index: Integer);
+begin
+  FRaw.Buffer.RemoveNotifier(Index);
 end;
 
 function TToolsApiEditView.AddNotifier(Notifier: IIDEViewHandler): Integer;

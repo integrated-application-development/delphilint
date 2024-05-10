@@ -73,8 +73,8 @@ type
     procedure TestIssueLineUpdatedWhenTrackedLineChanged;
     [Test]
     procedure TestActivatedViewDoesNotDoubleInitTracker;
-    [Test]
     [TestCase('OnViewActivated', 'activated')]
+    [TestCase('OnViewAdded', 'added')]
     procedure TestNewViewInitsTracker(NewType: string);
   end;
 
