@@ -59,12 +59,17 @@ type
     procedure TestMoveLine(Delta: Integer);
     [Test]
     procedure TestNewLineMoveSession;
+    [Test]
+    procedure TestIssueUntetherPropagatesToQuickFixes;
+    [Test]
+    procedure TestTransfersQuickFixes;
   end;
 
 implementation
 
 uses
     System.SysUtils
+  , System.Generics.Collections
   , DelphiLint.LiveData
   , DelphiLint.Data
   ;
@@ -120,6 +125,48 @@ begin
     Assert.AreEqual(LiveIssue.Assignee, 'myassignee');
     Assert.AreEqual(LiveIssue.Status, issReopened);
     Assert.AreEqual(LiveIssue.CreationDate, 'creationdate');
+  finally
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveDataTest.TestTransfersQuickFixes;
+
+  function BuildQuickFixes: TObjectList<TQuickFix>;
+  var
+    TextEdits: TObjectList<TQuickFixTextEdit>;
+  begin
+    Result := TObjectList<TQuickFix>.Create;
+
+    TextEdits := TObjectList<TQuickFixTextEdit>.Create;
+    TextEdits.Add(TQuickFixTextEdit.Create('foo replacement', TRange.Create(5, 4, 7, 9)));
+    Result.Add(TQuickFix.Create('qf1', TextEdits));
+  end;
+
+var
+  IssueData: TLintIssue;
+  LiveIssue: ILiveIssue;
+  QuickFix: TLiveQuickFix;
+  Edit: TLiveTextEdit;
+begin
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 0, 5, 12), nil, BuildQuickFixes);
+
+  try
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abc'], False);
+    Assert.AreEqual(1, LiveIssue.QuickFixes.Count);
+
+    QuickFix := LiveIssue.QuickFixes[0];
+    Assert.AreEqual('qf1', QuickFix.Message);
+    Assert.AreEqual(1, QuickFix.TextEdits.Count);
+
+    Edit := QuickFix.TextEdits[0];
+    Assert.AreEqual(Edit.Replacement, 'foo replacement');
+    Assert.AreEqual(0, Edit.RelativeStartLine);
+    Assert.AreEqual(2, Edit.RelativeEndLine);
+    Assert.AreEqual(4, Edit.StartLineOffset);
+    Assert.AreEqual(9, Edit.EndLineOffset);
   finally
     FreeAndNil(IssueData);
   end;
@@ -338,6 +385,27 @@ begin
         FreeAndNil(TLiveIssueImpl.Create(IssueData, ['abc', 'def'], False));
       end
     );
+  finally
+    FreeAndNil(IssueData);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLiveDataTest.TestIssueUntetherPropagatesToQuickFixes;
+var
+  IssueData: TLintIssue;
+  LiveIssue: ILiveIssue;
+  QuickFixes: TObjectList<TQuickFix>;
+begin
+  QuickFixes := TObjectList<TQuickFix>.Create;
+  QuickFixes.Add(TQuickFix.Create('qf1', TObjectList<TQuickFixTextEdit>.Create));
+  IssueData := TLintIssue.Create('rk1', 'msg', 'abc.pas', TRange.Create(5, 4, 5, 16), nil, QuickFixes);
+  try
+    LiveIssue := TLiveIssueImpl.Create(IssueData, ['abcdEFGHJKLMNOPQrstu']);
+    Assert.IsTrue(LiveIssue.QuickFixes[0].Tethered);
+    LiveIssue.UpdateTether(5, 'abcdEFGHJKPQrstu');
+    Assert.IsFalse(LiveIssue.QuickFixes[0].Tethered);
   finally
     FreeAndNil(IssueData);
   end;
