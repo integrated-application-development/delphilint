@@ -22,6 +22,7 @@ interface
 uses
     Vcl.Menus
   , System.Classes
+  , System.Generics.Collections
   , DelphiLint.LiveData
   ;
 
@@ -67,12 +68,6 @@ type
   private
     FIndex: Integer;
 
-    procedure CalculateReplacementMetrics(
-      TextEdit: TLiveTextEdit;
-      out AddedLines: Integer;
-      out AddedColumns: Integer
-    );
-    procedure OffsetTextEdits(QuickFix: TLiveQuickFix; EditIndex: Integer);
     function GetQuickFix: TLiveQuickFix;
   protected
     procedure DoOnClick(Sender: TObject); override;
@@ -83,11 +78,21 @@ type
 
 //______________________________________________________________________________________________________________________
 
+procedure ReflowQuickFixEdits(TextEdits: TList<TLiveTextEdit>; EditIndex: Integer);
+procedure CalculateQuickFixReflowMetrics(
+  TextEdit: TLiveTextEdit;
+  out AddedLines: Integer;
+  out AddedColumns: Integer
+);
+
+//______________________________________________________________________________________________________________________
+
 implementation
 
 uses
     System.SysUtils
   , DelphiLint.Context
+  , Vcl.Dialogs
   ;
 
 //______________________________________________________________________________________________________________________
@@ -219,7 +224,7 @@ begin
       TextEdit.EndLineOffset
     );
 
-    OffsetTextEdits(QuickFix, I);
+    ReflowQuickFixEdits(QuickFix.TextEdits, I);
   end;
 
   QuickFix.Untether;
@@ -238,74 +243,111 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TQuickFixMenuItem.CalculateReplacementMetrics(
+procedure CalculateQuickFixReflowMetrics(
   TextEdit: TLiveTextEdit;
   out AddedLines: Integer;
   out AddedColumns: Integer
 );
 var
-  RangeLength: Integer;
-  RangeHeight: Integer;
-  ReplacementLastLineLength: Integer;
-  Lines: TStringList;
+  OldEndOffset: Integer;
+  NewEndOffset: Integer;
+  OldLineHeight: Integer;
+  NewLineHeight: Integer;
+  ReplacementLines: TStringList;
 begin
-  if TextEdit.RelativeStartLine = TextEdit.RelativeEndLine then begin
-    RangeHeight := 1;
-    RangeLength := TextEdit.EndLineOffset - TextEdit.StartLineOffset;
-  end
-  else begin
-    RangeHeight := TextEdit.RelativeEndLine - TextEdit.RelativeStartLine;
-    RangeLength := TextEdit.EndLineOffset;
-  end;
+  // Determines the delta from the original range end to the new range end after the replacement is applied.
+  // This allows us to apply the delta to future text edits so they continue to work as expected.
 
-  Lines := TStringList.Create;
+  // Line height is always at least 1 - a zero-length range is modelled as height 1, width 0
+  OldLineHeight := 1 + TextEdit.RelativeEndLine - TextEdit.RelativeStartLine;
+  OldEndOffset := TextEdit.EndLineOffset;
+
+  ReplacementLines := TStringList.Create;
   try
-    Lines.Text := TextEdit.Replacement;
+    ReplacementLines.Text := TextEdit.Replacement;
+    NewLineHeight := ReplacementLines.Count;
 
-    if Lines.Count <> 0 then begin
-      ReplacementLastLineLength := Length(Lines[Lines.Count - 1]);
-      AddedColumns := ReplacementLastLineLength - RangeLength;
-      AddedLines := Lines.Count - RangeHeight;
+    if NewLineHeight = 0 then begin
+      // If this edit is just a deletion, then range end is the original range start
+      NewEndOffset := TextEdit.StartLineOffset;
+      NewLineHeight := 1;
     end
     else begin
-      AddedColumns := -RangeLength;
-      AddedLines := 0;
+      // Otherwise, the range end offset is the length from the left margin to the last replacement line
+      NewEndOffset := Length(ReplacementLines[ReplacementLines.Count - 1]);
+
+      if NewLineHeight = 1 then begin
+        // If there was no \n in the replacement, the length from the left margin must also include the start col
+        NewEndOffset := TextEdit.StartLineOffset + NewEndOffset;
+      end;
     end;
+
+    AddedColumns := NewEndOffset - OldEndOffset;
+    AddedLines := NewLineHeight - OldLineHeight;
   finally
-    FreeAndNil(Lines);
+    FreeAndNil(ReplacementLines);
   end;
 end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TQuickFixMenuItem.OffsetTextEdits(QuickFix: TLiveQuickFix; EditIndex: Integer);
+procedure ReflowQuickFixEdits(TextEdits: TList<TLiveTextEdit>; EditIndex: Integer);
 var
   AppliedEdit: TLiveTextEdit;
   I: Integer;
   LinesAdded: Integer;
   ColumnsAdded: Integer;
   SuccessorEdit: TLiveTextEdit;
+  AppliedLine: Integer;
+  AppliedLineOffset: Integer;
+  LineAfter: Boolean;
+  PositionAfter: Boolean;
 begin
-  AppliedEdit := QuickFix.TextEdits[EditIndex];
-  CalculateReplacementMetrics(AppliedEdit, LinesAdded, ColumnsAdded);
+  AppliedEdit := TextEdits[EditIndex];
+  AppliedLine := AppliedEdit.RelativeEndLine;
+  AppliedLineOffset := AppliedEdit.EndLineOffset;
+  CalculateQuickFixReflowMetrics(AppliedEdit, LinesAdded, ColumnsAdded);
 
-  for I := EditIndex + 1 to QuickFix.TextEdits.Count - 1 do begin
-    SuccessorEdit := QuickFix.TextEdits[I];
+  if (LinesAdded = 0) and (ColumnsAdded = 0) then begin
+    // Replacement is the same size as the original string - no action needed
+    Exit;
+  end;
 
-    if SuccessorEdit.RelativeStartLine >= AppliedEdit.RelativeEndLine then begin
-      if (SuccessorEdit.RelativeStartLine = AppliedEdit.RelativeEndLine)
-        and(SuccessorEdit.StartLineOffset > AppliedEdit.EndLineOffset)
-      then begin
+  for I := EditIndex + 1 to TextEdits.Count - 1 do begin
+    SuccessorEdit := TextEdits[I];
+
+    if SuccessorEdit.RelativeEndLine < AppliedLine then begin
+      // Higher edits don't need to be offset
+      Continue;
+    end;
+
+    LineAfter := SuccessorEdit.RelativeStartLine > AppliedLine;
+    PositionAfter := LineAfter or (
+      (SuccessorEdit.RelativeStartLine = AppliedLine) and (SuccessorEdit.StartLineOffset >= AppliedLineOffset)
+    );
+
+    if PositionAfter then begin
+      if not LineAfter then begin
+        // This edit starts after the applied edit on the same line, offset column
         SuccessorEdit.StartLineOffset := SuccessorEdit.StartLineOffset + ColumnsAdded;
       end;
 
-      if (SuccessorEdit.RelativeEndLine = AppliedEdit.RelativeEndLine)
-        and (SuccessorEdit.EndLineOffset > AppliedEdit.EndLineOffset)
-      then begin
+      // This edit starts after the applied edit, offset line
+      SuccessorEdit.RelativeStartLine := SuccessorEdit.RelativeStartLine + LinesAdded;
+    end;
+
+    LineAfter := SuccessorEdit.RelativeEndLine > AppliedLine;
+    PositionAfter := LineAfter or (
+      (SuccessorEdit.RelativeEndLine = AppliedLine) and (SuccessorEdit.EndLineOffset >= AppliedLineOffset)
+    );
+
+    if PositionAfter then begin
+      if not LineAfter then begin
+        // This edit after the applied edit on the same line, offset column
         SuccessorEdit.EndLineOffset := SuccessorEdit.EndLineOffset + ColumnsAdded;
       end;
 
-      SuccessorEdit.RelativeStartLine := SuccessorEdit.RelativeStartLine + LinesAdded;
+      // This edit ends after the applied edit, offset line
       SuccessorEdit.RelativeEndLine := SuccessorEdit.RelativeEndLine + LinesAdded;
     end;
   end;

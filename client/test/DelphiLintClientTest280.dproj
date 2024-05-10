@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Console</AppType>
@@ -149,6 +149,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLintTest.HtmlGen.pas"/>
         <DCCReference Include="DelphiLintTest.Settings.pas"/>
         <DCCReference Include="DelphiLintTest.LiveData.pas"/>
+        <DCCReference Include="DelphiLintTest.IssueActions.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>
@@ -284,7 +285,7 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='GUI' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -292,7 +293,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='TestInsight' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -300,7 +301,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Console' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -308,7 +309,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='CI' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File ..\BuildAdditionalResources.ps1 &quot;DelphiLintClientTest&quot;</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
