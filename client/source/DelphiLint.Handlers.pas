@@ -31,7 +31,7 @@ uses
 
 type
 
-  THandler = class abstract(TInterfacedObject, IIDEHandler)
+  THandler = class(TInterfacedObject, IIDEHandler)
   private
     FOnOwnerFreed: TEventNotifier<IIDEHandler>;
     FOnReleased: TEventNotifier<IIDEHandler>;
@@ -270,13 +270,7 @@ end;
 
 procedure TLineTracker.TrackLine(Line: Integer);
 begin
-  try
-    FTracker.AddLine(Line, Line);
-  except
-    on Err: EAccessViolation do begin
-      ShowException(Err, ReturnAddress);
-    end;
-  end;
+  FTracker.AddLine(Line, Line);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -367,6 +361,8 @@ procedure TEditorHandler.InitView(const View: IIDEEditView);
     Tracker: TLineTracker;
     FileIssues: TArray<ILiveIssue>;
     Issue: ILiveIssue;
+    BufferHandler: IIDEHandler;
+    BufferHandlerIndex: Integer;
   begin
     Tracker := TLineTracker.Create(View.GetLineTracker);
     FTrackers.Add(Tracker);
@@ -374,6 +370,19 @@ procedure TEditorHandler.InitView(const View: IIDEEditView);
     Tracker.OnEditorClosed.AddListener(
       procedure (const Trckr: TLineTracker) begin
         FTrackers.Remove(Trckr);
+      end);
+
+    BufferHandler := THandler.Create;
+    FNotifiers.Add(BufferHandler);
+    BufferHandlerIndex := View.AddBufferNotifier(BufferHandler);
+    BufferHandler.OnOwnerFreed.AddListener(
+      procedure (const Notf: IIDEHandler) begin
+        FTrackers.Remove(Tracker);
+        FNotifiers.Remove(Notf);
+      end);
+    BufferHandler.OnReleased.AddListener(
+      procedure (const Notf: IIDEHandler) begin
+        View.RemoveBufferNotifier(BufferHandlerIndex);
       end);
 
     FileIssues := Analyzer.GetIssues(Tracker.FilePath);

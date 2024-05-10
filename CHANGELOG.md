@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   issues reported.
 * Multiline issues now display their underlines correctly.
 * Right clicking the separator between the issue view and rule view no longer prevents the separator from being moved.
+* Issue line trackers are now invalidated when the backing IDE buffer is freed.
 
 ## [1.0.2] - 2024-04-02
 
