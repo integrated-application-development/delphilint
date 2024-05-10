@@ -104,8 +104,6 @@ type
       'To review',
       'Reviewed (acknowledged)'
     );
-    CIssueIconWidth = 16;
-    CIssuePadding = 4;
   private
     FResizing: Boolean;
     FDragStartX: Integer;
