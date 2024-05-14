@@ -118,7 +118,7 @@ object LintSetupForm: TLintSetupForm
     object OkButton: TButton
       Left = 32
       Top = 251
-      Width = 405
+      Width = 401
       Height = 35
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Apply this configuration'
@@ -128,7 +128,7 @@ object LintSetupForm: TLintSetupForm
     object RefreshButton: TButton
       Left = 32
       Top = 221
-      Width = 405
+      Width = 401
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Refresh'
@@ -138,16 +138,16 @@ object LintSetupForm: TLintSetupForm
     object JavaExeBrowseButton: TButton
       Left = 32
       Top = 122
-      Width = 97
+      Width = 65
       Height = 21
-      Caption = 'Select override'
+      Caption = 'Browse'
       TabOrder = 1
       OnClick = JavaExeBrowseButtonClick
     end
     object ServerJarIndicator: TPanel
       Left = 32
       Top = 177
-      Width = 405
+      Width = 401
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -162,7 +162,7 @@ object LintSetupForm: TLintSetupForm
     object JavaExeIndicator: TPanel
       Left = 32
       Top = 86
-      Width = 405
+      Width = 401
       Height = 30
       Alignment = taLeftJustify
       Anchors = [akLeft, akTop, akRight]
@@ -175,11 +175,11 @@ object LintSetupForm: TLintSetupForm
       StyleElements = []
     end
     object JavaExeClearButton: TButton
-      Left = 135
+      Left = 103
       Top = 122
-      Width = 186
+      Width = 146
       Height = 21
-      Caption = 'Clear override (use JAVA_HOME)'
+      Caption = 'Clear (use JAVA_HOME)'
       TabOrder = 5
       OnClick = JavaExeClearButtonClick
     end
