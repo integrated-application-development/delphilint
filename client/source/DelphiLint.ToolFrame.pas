@@ -205,6 +205,7 @@ begin
   TThread.ForceQueue(
     TThread.Current,
     procedure begin
+      RuleBrowser.UserDataFolder := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bds.exe.WebView2');
       RuleBrowser.CreateWebView;
     end);
 end;
