@@ -11,6 +11,8 @@
   - [Error: "Could not connect to the configured SonarQube instance."](#error-could-not-connect-to-the-configured-sonarqube-instance)
   - [Error: "SonarDelphi could not be retrieved from GitHub."](#error-sonardelphi-could-not-be-retrieved-from-github)
   - [Fixing invalid SSL certificates](#fixing-invalid-ssl-certificates)
+  - [DelphiLint fails, saying that the server failed to communicate the port.](#delphilint-fails-saying-that-the-server-failed-to-communicate-the-port)
+  - [DelphiLint can't find my Java executable / is using the wrong Java executable.](#delphilint-cant-find-my-java-executable--is-using-the-wrong-java-executable)
 
 ## General
 
@@ -105,3 +107,22 @@ trusted certificates). This can be done in two ways:
   ```
 
 For more information, see this [blog post](https://chancharles.medium.com/java-consultant-tip-ssl-certificates-and-man-in-the-middle-ssl-proxy-3867b81ee5f0).
+
+### DelphiLint fails, saying that the server failed to communicate the port.
+
+This is usually due to the server failing to start on the provided Java version. Please ensure that the version
+of Java that is being used is version 11 or higher, since DelphiLint uses Java 11 features and is compiled with
+Java 11.
+
+If multiple Java installations are installed and DelphiLint is choosing the wrong one, it is recommended to manually
+specify the path to the desired Java 11+ executable
+(see [below](#delphilint-cant-find-my-java-executable--is-using-the-wrong-java-executable)).
+
+### DelphiLint can't find my Java executable / is using the wrong Java executable.
+
+Most Java installations set the `JAVA_HOME` environment variable, which points to the root directory of the Java
+installation. If this variable is present, DelphiLint defaults to `%JAVA_HOME%\bin\java.exe`.
+
+It's also possible to manually specify the path to the Java executable if `JAVA_HOME` isn't present, or points to the
+wrong Java version. This can be done in the DelphiLint External Resources Setup window at
+`DelphiLint > Settings > Set up external resources`.
