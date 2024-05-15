@@ -21,6 +21,7 @@ interface
 
 uses
     System.Generics.Collections
+  , System.SyncObjs
   ;
 
 type
@@ -29,6 +30,19 @@ type
   TEventNotifier<T> = class(TObject)
   private
     FListeners: TList<TEventListener<T>>;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    procedure AddListener(Listener: TEventListener<T>);
+    procedure RemoveListener(Listener: TEventListener<T>);
+    procedure Notify(const Arg: T);
+  end;
+
+  TThreadSafeEventNotifier<T> = class(TObject)
+  private
+    FNotifier: TEventNotifier<T>;
+    FMutex: TMutex;
   public
     constructor Create;
     destructor Destroy; override;
@@ -52,21 +66,29 @@ begin
   FListeners := TList<TEventListener<T>>.Create;
 end;
 
+//______________________________________________________________________________________________________________________
+
 destructor TEventNotifier<T>.Destroy;
 begin
   FreeAndNil(FListeners);
   inherited;
 end;
 
+//______________________________________________________________________________________________________________________
+
 procedure TEventNotifier<T>.AddListener(Listener: TEventListener<T>);
 begin
   FListeners.Add(Listener);
 end;
 
+//______________________________________________________________________________________________________________________
+
 procedure TEventNotifier<T>.RemoveListener(Listener: TEventListener<T>);
 begin
   FListeners.Remove(Listener);
 end;
+
+//______________________________________________________________________________________________________________________
 
 procedure TEventNotifier<T>.Notify(const Arg: T);
 var
@@ -74,6 +96,61 @@ var
 begin
   for Listener in FListeners do begin
     Listener(Arg);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TThreadSafeEventNotifier<T>.Create;
+begin
+  inherited;
+  FNotifier := TEventNotifier<T>.Create;
+  FMutex := TMutex.Create;
+end;
+
+//______________________________________________________________________________________________________________________
+
+destructor TThreadSafeEventNotifier<T>.Destroy;
+begin
+  FMutex.Acquire;
+  FreeAndNil(FMutex);
+  FreeAndNil(FNotifier);
+  inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TThreadSafeEventNotifier<T>.AddListener(Listener: TEventListener<T>);
+begin
+  FMutex.Acquire;
+  try
+    FNotifier.AddListener(Listener);
+  finally
+    FMutex.Release;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TThreadSafeEventNotifier<T>.RemoveListener(Listener: TEventListener<T>);
+begin
+  FMutex.Acquire;
+  try
+    FNotifier.RemoveListener(Listener);
+  finally
+    FMutex.Release;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TThreadSafeEventNotifier<T>.Notify(const Arg: T);
+begin
+  FMutex.Acquire;
+  try
+    FNotifier.Notify(Arg);
+  finally
+    FMutex.Release;
   end;
 end;
 
