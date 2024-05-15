@@ -39,11 +39,22 @@ type
     procedure TestRemoveListener;
   end;
 
+  [TestFixture]
+  TThreadSafeEventNotifierTest = class(TObject)
+  public
+    [Test]
+    procedure TestSingleThreadedNotify;
+    [Test]
+    procedure TestNotifyAcrossThreads;
+  end;
+
 implementation
 
 uses
     DelphiLint.Events
   , System.SysUtils
+  , System.SyncObjs
+  , System.Classes
   ;
 
 //______________________________________________________________________________________________________________________
@@ -206,7 +217,88 @@ begin
   end;
 end;
 
+//______________________________________________________________________________________________________________________
+
+procedure TThreadSafeEventNotifierTest.TestNotifyAcrossThreads;
+const
+  CMessage = 'Hello world';
+var
+  Notifier: TThreadSafeEventNotifier<string>;
+  Listener: TEventListener<string>;
+  Notified: Boolean;
+  Thread: TThread;
+  ListenerSetupEvent: TEvent;
+  NotifiedEvent: TEvent;
+begin
+  Notified := False;
+  Listener := procedure(const Msg: string) begin
+    Notified := True;
+  end;
+
+  Notifier := TThreadSafeEventNotifier<string>.Create;
+  ListenerSetupEvent := TEvent.Create;
+  NotifiedEvent := TEvent.Create;
+  try
+    Thread := TThread.CreateAnonymousThread(
+      procedure begin
+        Assert.AreEqual(wrSignaled, ListenerSetupEvent.WaitFor(5000));
+        Notifier.Notify(CMessage);
+        NotifiedEvent.SetEvent;
+      end);
+    Thread.FreeOnTerminate := True;
+    Thread.Start;
+
+    Notifier.AddListener(Listener);
+    Assert.IsFalse(Notified);
+
+    ListenerSetupEvent.SetEvent;
+    Assert.AreEqual(wrSignaled, NotifiedEvent.WaitFor(5000));
+    Assert.IsTrue(Notified);
+  finally
+    FreeAndNil(Notifier);
+    FreeAndNil(ListenerSetupEvent);
+    FreeAndNil(NotifiedEvent);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TThreadSafeEventNotifierTest.TestSingleThreadedNotify;
+const
+  CMessage = 'Hello world';
+var
+  Notifier: TThreadSafeEventNotifier<string>;
+  Listener: TEventListener<string>;
+  Notified: Boolean;
+begin
+  Notified := False;
+  Listener := procedure(const Msg: string) begin
+    Notified := True;
+  end;
+
+  Notifier := TThreadSafeEventNotifier<string>.Create;
+  try
+    Notifier.AddListener(Listener);
+    Assert.IsFalse(Notified);
+
+    Notifier.Notify(CMessage);
+    Assert.IsTrue(Notified);
+
+    Notified := False;
+    Notifier.RemoveListener(Listener);
+    Assert.IsFalse(Notified);
+
+    Notifier.Notify(CMessage);
+    Assert.IsFalse(Notified);
+  finally
+    FreeAndNil(Notifier);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 initialization
   TDUnitX.RegisterTestFixture(TEventNotifierTest);
+  TDUnitX.RegisterTestFixture(TThreadSafeEventNotifierTest);
 
 end.
