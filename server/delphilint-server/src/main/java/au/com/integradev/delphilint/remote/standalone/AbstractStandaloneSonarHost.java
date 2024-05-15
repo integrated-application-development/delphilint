@@ -42,23 +42,25 @@ import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.rule.extractor.RulesDefinitionExtractor;
 import org.sonarsource.sonarlint.core.rule.extractor.SonarLintRuleDefinition;
 
-public class StandaloneSonarHost implements SonarHost {
+public abstract class AbstractStandaloneSonarHost implements SonarHost {
+  private Set<RemoteActiveRule> activeRules;
+  private final List<SonarLintRuleDefinition> ruleDefinitions;
   private final Set<RemoteRule> rules;
-  private final Set<RemoteActiveRule> activeRules;
 
-  public StandaloneSonarHost() {
-    this.rules = Collections.emptySet();
-    this.activeRules = Collections.emptySet();
+  protected AbstractStandaloneSonarHost() {
+    ruleDefinitions = Collections.emptyList();
+    rules = Collections.emptySet();
+    activeRules = Collections.emptySet();
   }
 
-  public StandaloneSonarHost(LoadedPlugins loadedPlugins) {
+  protected AbstractStandaloneSonarHost(LoadedPlugins loadedPlugins) {
     var rulesExtractor = new RulesDefinitionExtractor();
-    List<SonarLintRuleDefinition> ruleDefs =
+    ruleDefinitions =
         rulesExtractor.extractRules(
             loadedPlugins.getPluginInstancesByKeys(), Set.of(Language.DELPHI), true, false);
 
-    this.rules =
-        ruleDefs.stream()
+    rules =
+        ruleDefinitions.stream()
             .map(
                 ruleDef ->
                     new RemoteRule(
@@ -82,27 +84,33 @@ public class StandaloneSonarHost implements SonarHost {
                                                     e.getValue()))))
                             : null))
             .collect(Collectors.toSet());
-
-    this.activeRules =
-        ruleDefs.stream()
-            .filter(SonarLintRuleDefinition::isActiveByDefault)
-            .map(
-                ruleDef ->
-                    new RemoteActiveRule(
-                        ruleDef.getKey(),
-                        ruleDef.getLanguage().getLanguageKey(),
-                        null,
-                        ruleDef.getDefaultParams()))
-            .collect(Collectors.toSet());
   }
+
+  private Set<RemoteActiveRule> getOrComputeActiveRules() {
+    if (activeRules == null) {
+      activeRules =
+          ruleDefinitions.stream()
+              .filter(this::isActiveRule)
+              .map(
+                  ruleDef ->
+                      new RemoteActiveRule(
+                          ruleDef.getKey(),
+                          ruleDef.getLanguage().getLanguageKey(),
+                          null,
+                          ruleDef.getDefaultParams()))
+              .collect(Collectors.toSet());
+    }
+
+    return activeRules;
+  }
+
+  protected abstract boolean isActiveRule(SonarLintRuleDefinition ruleDef);
 
   public SonarCharacteristics getCharacteristics() {
     return SonarCharacteristics.latest();
   }
 
-  public String getName() {
-    return "Standalone";
-  }
+  public abstract String getName();
 
   @Override
   public Map<String, String> getRuleNamesByRuleKey() {
@@ -133,7 +141,7 @@ public class StandaloneSonarHost implements SonarHost {
 
   @Override
   public Set<RemoteActiveRule> getActiveRules() {
-    return activeRules;
+    return getOrComputeActiveRules();
   }
 
   @Override
