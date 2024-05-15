@@ -25,6 +25,7 @@ uses
   , Vcl.Forms
   , Vcl.StdCtrls
   , DelphiLint.IDEBaseTypes
+  , DelphiLint.Events
   , Vcl.ExtCtrls
   , Data.DB
   , Vcl.Grids
@@ -57,11 +58,16 @@ type
     GeneralPanel: TPanel;
     StandalonePanel: TPanel;
     Label2: TLabel;
+    VersionRefreshButton: TButton;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
+    procedure VersionRefreshButtonClick(Sender: TObject);
   private
-    FRetrievedReleases: Boolean;
+    FOnReleasesRetrieved: TThreadSafeEventNotifier<TArray<string>>;
+    FReleasesRetrieved: Boolean;
     procedure RetrieveReleases;
+    procedure PopulateSonarDelphiVersionConfig(const Releases: TArray<string>);
+    procedure UpdateSonarDelphiVersionEnabled;
   public
     procedure Init;
     procedure Save;
@@ -81,13 +87,13 @@ implementation
 
 uses
     System.SysUtils
-  , System.Generics.Collections
   , System.Net.HttpClient
   , System.JSON
   , System.StrUtils
   , DelphiLint.SetupForm
   , DelphiLint.Context
   , DelphiLint.Settings
+  , System.Generics.Collections
   ;
 
 {$R *.dfm}
@@ -130,7 +136,6 @@ end;
 procedure TLintSettingsFrame.Init;
 var
   Ident: TSonarProjectIdentifier;
-  SonarDelphiVersion: string;
 begin
   LintContext.Settings.Load;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
@@ -169,23 +174,49 @@ begin
 
   TokensDataSet.IndexFieldNames := 'ServerURL;ProjectKey';
 
-  RetrieveReleases;
-  SonarDelphiVersionComboBox.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and FRetrievedReleases;
-  if FRetrievedReleases then begin
-    SonarDelphiVersion := LintContext.Settings.ServerSonarDelphiVersionOverride;
-    if SonarDelphiVersionRadioGroup.ItemIndex = 1 then begin
-      SonarDelphiVersionComboBox.ItemIndex := SonarDelphiVersionComboBox.Items.IndexOf(SonarDelphiVersion);
-      SonarDelphiVersionComboBox.Text := SonarDelphiVersion;
-    end
-    else begin
-      if SonarDelphiVersionComboBox.Items.Count <> 0 then begin
-        SonarDelphiVersionComboBox.ItemIndex := 0;
-      end;
-    end;
+  FReleasesRetrieved := False;
+  UpdateSonarDelphiVersionEnabled;
+
+  SonarDelphiVersionComboBox.Text := LintContext.Settings.ServerSonarDelphiVersionOverride;
+
+  FOnReleasesRetrieved := TThreadSafeEventNotifier<TArray<string>>.Create;
+  FOnReleasesRetrieved.AddListener(
+    procedure(const Releases: TArray<string>) begin
+      Log.Info('%d releases retrieved', [Length(Releases)]);
+      TThread.Synchronize(
+        TThread.Current,
+        procedure begin
+          Log.Info('%d releases retrieved (sync)', [Length(Releases)]);
+          PopulateSonarDelphiVersionConfig(Releases);
+        end);
+    end);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.PopulateSonarDelphiVersionConfig(const Releases: TArray<string>);
+var
+  SonarDelphiVersion: string;
+begin
+  if Length(Releases) = 0 then begin
+    SonarDelphiVersionComboBox.Items.Clear;
+    SonarDelphiVersionComboBox.Text := 'Could not retrieve releases';
+    Exit;
+  end;
+
+  SonarDelphiVersionComboBox.Items.Clear;
+  SonarDelphiVersionComboBox.Items.AddStrings(Releases);
+
+  SonarDelphiVersion := LintContext.Settings.ServerSonarDelphiVersionOverride;
+  if SonarDelphiVersion = '' then begin
+    SonarDelphiVersionComboBox.ItemIndex := 0;
   end
   else begin
-    SonarDelphiVersionComboBox.Text := 'Could not retrieve releases';
+    SonarDelphiVersionComboBox.ItemIndex := SonarDelphiVersionComboBox.Items.IndexOf(SonarDelphiVersion);
   end;
+
+  FReleasesRetrieved := True;
+  UpdateSonarDelphiVersionEnabled;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -197,11 +228,10 @@ var
   Http: THTTPClient;
   Response: IHTTPResponse;
   Json: TJSONArray;
-  ReleaseJson: TJSONValue;
+  Index: Integer;
   ReleaseVersion: string;
+  Releases: TArray<string>;
 begin
-  FRetrievedReleases := False;
-
   Http := THTTPClient.Create;
   try
     try
@@ -209,6 +239,7 @@ begin
     except
       on E: ENetHTTPClientException do begin
         Log.Warn('Could not retrieve SonarDelphi releases from %s: %s', [CApiUrl, E.Message]);
+        FOnReleasesRetrieved.Notify([]);
         Exit;
       end;
     end;
@@ -216,20 +247,22 @@ begin
     if Response.StatusCode = 200 then begin
       Json := TJSONObject.ParseJSONValue(Response.ContentAsString) as TJSONArray;
       try
-        for ReleaseJson in Json do begin
-          ReleaseVersion := ReleaseJson.GetValue<string>('tag_name');
+        SetLength(Releases, Json.Count);
+
+        for Index := 0 to Json.Count - 1 do begin
+          ReleaseVersion := Json[Index].GetValue<string>('tag_name');
 
           if StartsStr('v', ReleaseVersion) and (Length(ReleaseVersion) > 1) then begin
             ReleaseVersion := Copy(ReleaseVersion, 2);
           end;
 
-          SonarDelphiVersionComboBox.Items.Add(ReleaseVersion);
+          Releases[Index] := ReleaseVersion;
         end;
       finally
         FreeAndNil(Json);
       end;
 
-      FRetrievedReleases := True;
+      FOnReleasesRetrieved.Notify(Releases);
     end;
   finally
     FreeAndNil(Http);
@@ -267,7 +300,7 @@ begin
   LintContext.Settings.ClientAutoShowToolWindow := ClientAutoShowToolWindowCheckBox.Checked;
   LintContext.Settings.ClientSaveBeforeAnalysis := ClientSaveBeforeAnalysisCheckBox.Checked;
 
-  if FRetrievedReleases or (SonarDelphiVersionRadioGroup.ItemIndex = 0) then begin
+  if FReleasesRetrieved or (SonarDelphiVersionRadioGroup.ItemIndex = 0) then begin
     LintContext.Settings.ServerSonarDelphiVersionOverride := IfThen(
       (SonarDelphiVersionRadioGroup.ItemIndex = 1) and (SonarDelphiVersionComboBox.ItemIndex <> -1),
       SonarDelphiVersionComboBox.Items[SonarDelphiVersionComboBox.ItemIndex],
@@ -281,7 +314,33 @@ end;
 
 procedure TLintSettingsFrame.SonarDelphiVersionRadioGroupClick(Sender: TObject);
 begin
-  SonarDelphiVersionComboBox.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and FRetrievedReleases;
+  UpdateSonarDelphiVersionEnabled;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.UpdateSonarDelphiVersionEnabled;
+begin
+  SonarDelphiVersionComboBox.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and FReleasesRetrieved;
+  VersionRefreshButton.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and not FReleasesRetrieved;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.VersionRefreshButtonClick(Sender: TObject);
+var
+  Thread: TThread;
+begin
+  if FReleasesRetrieved then begin
+    Exit;
+  end;
+
+  Thread := TThread.CreateAnonymousThread(
+    procedure begin
+      RetrieveReleases;
+    end);
+  Thread.FreeOnTerminate := True;
+  Thread.Start;
 end;
 
 //______________________________________________________________________________________________________________________
