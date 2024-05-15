@@ -57,6 +57,8 @@ type
     SonarDelphiVersion: string;
     ProjectPropertiesPath: string;
     Sonar: TSonarProjectOptions;
+    UseDefaultRules: Boolean;
+    DisabledRules: TArray<string>;
 
     constructor Create(BaseDir: string; InputFiles: TArray<string>; SonarDelphiVersion: string);
   end;
@@ -558,6 +560,7 @@ begin
   Self.BaseDir := BaseDir;
   Self.InputFiles := InputFiles;
   Self.SonarDelphiVersion := SonarDelphiVersion;
+  Self.UseDefaultRules := True;
 end;
 
 //______________________________________________________________________________________________________________________

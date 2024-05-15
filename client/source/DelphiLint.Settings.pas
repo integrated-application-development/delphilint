@@ -66,6 +66,8 @@ type
     // SonarHostTokens index 6
     property ServerSonarDelphiVersionOverride: string index 7 read GetValueStr write SetValueStr;
     property ServerJvmOptions: string index 8 read GetValueStr write SetValueStr;
+    property StandaloneUseDefaultRules: Boolean index 9 read GetValueBool write SetValueBool;
+    property StandaloneDisabledRules: string index 10 read GetValueStr write SetValueStr;
 
     property ServerJar: string index 0 read GetServerJar;
     property JavaExe: string index 1 read GetJavaExe;
@@ -129,7 +131,11 @@ begin
     // 7
     TStringPropField.Create('Server', 'SonarDelphiVersionOverride', ''),
     // 8
-    TStringPropField.Create('Server', 'JvmOptions', '-server -Djava.net.useSystemProxies=true')
+    TStringPropField.Create('Server', 'JvmOptions', '-server -Djava.net.useSystemProxies=true'),
+    // 9
+    TBoolPropField.Create('Standalone',  'UseDefaultRules', True),
+    // 10
+    TLongStringPropField.Create('Standalone',  'DisabledRules', '')
   ];
 end;
 

@@ -149,6 +149,10 @@ begin
         ),
         ProjectOptions.SonarHostProjectKey
       );
+    end
+    else if not LintContext.Settings.StandaloneUseDefaultRules then begin
+      AnalyzeOptions.UseDefaultRules := False;
+      AnalyzeOptions.DisabledRules := SplitString(LintContext.Settings.StandaloneDisabledRules, ',');
     end;
 
     DoAnalyzeFiles(AnalyzeOptions, ProjectOptions.SonarHostDownloadPlugin);
