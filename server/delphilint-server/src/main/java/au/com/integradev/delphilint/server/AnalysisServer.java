@@ -31,7 +31,9 @@ import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import au.com.integradev.delphilint.remote.sonarqube.HttpSonarApi;
 import au.com.integradev.delphilint.remote.sonarqube.SonarQubeHost;
 import au.com.integradev.delphilint.remote.sonarqube.Version;
-import au.com.integradev.delphilint.remote.standalone.StandaloneSonarHost;
+import au.com.integradev.delphilint.remote.standalone.ConfigurableStandaloneSonarHost;
+import au.com.integradev.delphilint.remote.standalone.DefaultStandaloneSonarHost;
+import au.com.integradev.delphilint.remote.standalone.StubSonarHost;
 import au.com.integradev.delphilint.server.message.RequestAnalyze;
 import au.com.integradev.delphilint.server.message.RequestInitialize;
 import au.com.integradev.delphilint.server.message.RequestRuleRetrieve;
@@ -97,7 +99,8 @@ public class AnalysisServer {
         getSonarHost(
             requestAnalyze.getSonarHostUrl(),
             requestAnalyze.getProjectKey(),
-            requestAnalyze.getApiToken());
+            requestAnalyze.getApiToken(),
+            requestAnalyze.getDisabledRules());
 
     Map<String, String> properties = Collections.emptyMap();
     if (!requestAnalyze.getProjectProperties().isEmpty()) {
@@ -279,13 +282,22 @@ public class AnalysisServer {
   }
 
   private SonarHost getSonarHost(String url, String projectKey, String apiToken) {
+    return getSonarHost(url, projectKey, apiToken, null);
+  }
+
+  private SonarHost getSonarHost(
+      String url, String projectKey, String apiToken, Set<String> disabledRules) {
     if (url.isEmpty()) {
       if (orchestrator == null) {
         LOG.info("Using stub standalone mode - analysis engine is not initialized");
-        return new StandaloneSonarHost();
+        return new StubSonarHost();
+      } else if (disabledRules != null) {
+        LOG.info("Using standalone mode with {} disabled rules:", disabledRules.size());
+        disabledRules.forEach(rule -> LOG.info("  X {}", rule));
+        return new ConfigurableStandaloneSonarHost(orchestrator.getLoadedPlugins(), disabledRules);
       } else {
-        LOG.info("Using standalone mode");
-        return new StandaloneSonarHost(orchestrator.getLoadedPlugins());
+        LOG.info("Using standalone mode with default rules");
+        return new DefaultStandaloneSonarHost(orchestrator.getLoadedPlugins());
       }
     } else {
       LOG.info("Using connected mode");

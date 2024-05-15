@@ -28,6 +28,7 @@ public class RequestAnalyze {
   @JsonProperty private String projectKey;
   @JsonProperty private String apiToken;
   @JsonProperty private String projectPropertiesPath;
+  @JsonProperty private Set<String> disabledRules;
 
   public Path getBaseDir() {
     return baseDir;
@@ -51,5 +52,9 @@ public class RequestAnalyze {
 
   public String getProjectProperties() {
     return projectPropertiesPath;
+  }
+
+  public Set<String> getDisabledRules() {
+    return disabledRules;
   }
 }
