@@ -53,6 +53,17 @@ type
     procedure Load(IniFile: TIniFile); override;
   end;
 
+  TLongStringPropField = class(TPropFieldBase)
+  private
+    function CountKey: string;
+    function PartKey(Index: Integer): string;
+  protected
+    function GetFallback: Variant; override;
+  public
+    procedure Save(IniFile: TIniFile); override;
+    procedure Load(IniFile: TIniFile); override;
+  end;
+
   TBoolPropField = class(TPropFieldBase)
   protected
     function GetFallback: Variant; override;
@@ -142,6 +153,89 @@ end;
 procedure TStringPropField.Save(IniFile: TIniFile);
 begin
   IniFile.WriteString(FSection, FKey, FValue);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLongStringPropField.CountKey: string;
+const
+  CCountSuffix = '_Size';
+begin
+  Result := FKey + CCountSuffix;
+end;
+
+function TLongStringPropField.PartKey(Index: Integer): string;
+begin
+  Result := Format('%s_%d', [FKey, Index]);
+end;
+
+function TLongStringPropField.GetFallback: Variant;
+begin
+  Result := '';
+end;
+
+procedure TLongStringPropField.Load(IniFile: TIniFile);
+var
+  NumEntries: Integer;
+  Index: Integer;
+begin
+  if IniFile.ValueExists(FSection, FKey) then begin
+    // This is for compat, allowing string fields to be "upgraded" to long string fields in future versions
+    FValue := IniFile.ReadString(FSection, FKey, GetDefault);
+    Exit;
+  end;
+
+  NumEntries := IniFile.ReadInteger(FSection, CountKey, -1);
+
+  if NumEntries = -1 then begin
+    // -1 is a sentinel value - should never appear unless key has never been written before
+    FValue := GetDefault;
+    Exit;
+  end;
+
+  FValue := '';
+  for Index := 0 to NumEntries - 1 do begin
+    FValue := FValue + IniFile.ReadString(FSection, PartKey(Index), '');
+  end;
+end;
+
+procedure TLongStringPropField.Save(IniFile: TIniFile);
+
+  procedure Cleanup;
+  var
+    OldEntryCount: Integer;
+    Index: Integer;
+  begin
+    if IniFile.ValueExists(FSection, FKey) then begin
+      IniFile.DeleteKey(FSection, FKey);
+    end;
+
+    OldEntryCount := IniFile.ReadInteger(FSection, CountKey, -1);
+    if OldEntryCount <> -1 then begin
+      for Index := 0 to OldEntryCount - 1 do begin
+        IniFile.DeleteKey(FSection, PartKey(Index));
+      end;
+    end;
+  end;
+
+const
+  CMaxSize = 1024;
+var
+  EntryCount: Integer;
+  Index: Integer;
+begin
+  Cleanup;
+
+  EntryCount := (Length(FValue) div CMaxSize) + 1;
+  IniFile.WriteInteger(FSection, CountKey, EntryCount);
+
+  for Index := 0 to EntryCount - 1 do begin
+    IniFile.WriteString(
+      FSection,
+      PartKey(Index),
+      Copy(FValue, Index * CMaxSize + 1, CMaxSize)
+    );
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -260,7 +354,5 @@ procedure TPropertiesFile.SetValueStr(Index: Integer; Value: string);
 begin
   SetValue(Index, Value);
 end;
-
-//______________________________________________________________________________________________________________________
 
 end.
