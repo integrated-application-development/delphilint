@@ -161,6 +161,15 @@ object LintSettingsFrame: TLintSettingsFrame
           TabOrder = 1
           OnClick = SonarDelphiVersionRadioGroupClick
         end
+        object VersionRefreshButton: TButton
+          Left = 238
+          Top = 75
+          Width = 43
+          Height = 23
+          Caption = 'Edit'
+          TabOrder = 2
+          OnClick = VersionRefreshButtonClick
+        end
       end
     end
     object ConnectedSheet: TTabSheet
@@ -180,9 +189,9 @@ object LintSettingsFrame: TLintSettingsFrame
         object Label3: TLabel
           Left = 14
           Top = 8
-          Width = 204
+          Width = 166
           Height = 15
-          Caption = 'SonarQube server authorization tokens'
+          Caption = 'SonarQube server authorization'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBtnText
           Font.Height = -12
@@ -194,7 +203,7 @@ object LintSettingsFrame: TLintSettingsFrame
           Left = 56
           Top = 32
           Width = 674
-          Height = 179
+          Height = 353
           Anchors = [akLeft, akTop, akRight, akBottom]
           DataSource = TokensDataSource
           Options = [dgEditing, dgTitles, dgIndicator, dgRowLines, dgTabs, dgCancelOnExit]
@@ -223,7 +232,7 @@ object LintSettingsFrame: TLintSettingsFrame
               Expanded = False
               FieldName = 'Token'
               Title.Caption = 'Authorization Token'
-              Width = 131
+              Width = 337
               Visible = True
             end>
         end
