@@ -31,25 +31,32 @@ uses
   , Vcl.DBGrids
   , Vcl.DBCtrls
   , Datasnap.DBClient
+  , Vcl.ComCtrls
   ;
 
 type
   TLintSettingsFrame = class(TFrame)
-    ComponentsGroupBox: TGroupBox;
     ComponentsButton: TButton;
     BrokenSetupWarningLabel: TLabel;
-    ClientConfigGroupBox: TGroupBox;
     ClientAutoShowToolWindowCheckBox: TCheckBox;
     ClientSaveBeforeAnalysisCheckBox: TCheckBox;
-    TokensGroupBox: TGroupBox;
     TokensGrid: TDBGrid;
     TokensDataSource: TDataSource;
     TokensDataSet: TClientDataSet;
     DBNavigator1: TDBNavigator;
-    ServerConfigGroupBox: TGroupBox;
     SonarDelphiVersionComboBox: TComboBox;
     SonarDelphiVersionRadioGroup: TRadioGroup;
     Label1: TLabel;
+    TopPageControl: TPageControl;
+    GeneralSheet: TTabSheet;
+    StandaloneSheet: TTabSheet;
+    ConnectedSheet: TTabSheet;
+    Label3: TLabel;
+    Label4: TLabel;
+    ConnectedPanel: TPanel;
+    GeneralPanel: TPanel;
+    StandalonePanel: TPanel;
+    Label2: TLabel;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
   private
