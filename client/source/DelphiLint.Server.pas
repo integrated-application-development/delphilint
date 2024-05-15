@@ -287,20 +287,32 @@ var
   InputFilesJson: TJSONArray;
   Json: TJSONObject;
   InputFile: string;
+  DisabledRulesJson: TJSONArray;
+  RuleKey: string;
 begin
+  Json := TJSONObject.Create;
+
   // JSON representation of au.com.integradev.delphilint.messaging.RequestAnalyze
   InputFilesJson := TJSONArray.Create;
   for InputFile in Options.InputFiles do begin
     InputFilesJson.Add(InputFile);
   end;
-
-  Json := TJSONObject.Create;
-  Json.AddPair('baseDir', Options.BaseDir);
   Json.AddPair('inputFiles', InputFilesJson);
+
+  Json.AddPair('baseDir', Options.BaseDir);
   Json.AddPair('projectPropertiesPath', Options.ProjectPropertiesPath);
   Json.AddPair('sonarHostUrl', Options.Sonar.Host.Url);
   Json.AddPair('projectKey', Options.Sonar.ProjectKey);
   Json.AddPair('apiToken', Options.Sonar.Host.Token);
+
+  if not Options.UseDefaultRules then begin
+    DisabledRulesJson := TJSONArray.Create;
+    for RuleKey in Options.DisabledRules do begin
+      DisabledRulesJson.Add(RuleKey);
+    end;
+
+    Json.AddPair('disabledRules', DisabledRulesJson);
+  end;
 
   Result := TLintMessage.Create(CAnalyze, Json);
 end;
