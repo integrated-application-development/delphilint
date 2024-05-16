@@ -38,9 +38,7 @@ type LintSettingsIni = {
     JavaExeOverride?: string;
     ServerJarOverride?: string;
   };
-  SonarHost?: {
-    Tokens?: string;
-  };
+  SonarHost?: { [key: string]: any };
   Server?: {
     SonarDelphiVersionOverride?: string;
   };
@@ -136,11 +134,35 @@ export function getSonarDelphiVersion(): string {
 
 type SonarTokensMap = { [key: string]: { [key: string]: string } };
 
-export function getSonarTokens(): SonarTokensMap {
-  const tokensStr = getSettings(SETTINGS_FILE).SonarHost?.Tokens;
-  if (tokensStr === undefined) {
-    return {};
+function getLongString(
+  section: { [key: string]: any },
+  key: string
+): string | undefined {
+  const oldStyleValue = section[key];
+  if (oldStyleValue !== undefined) {
+    return oldStyleValue;
   }
+
+  const count: number | undefined = section[`${key}_Size`];
+  if (count === undefined) {
+    return undefined;
+  }
+
+  let value = "";
+
+  for (let i = 0; i < count; i++) {
+    const part: string | undefined = section[`${key}_${i}`];
+    if (part !== undefined) {
+      value += part;
+    }
+  }
+
+  return value;
+}
+
+export function getSonarTokens(): SonarTokensMap {
+  const sonarHostSection = getSettings(SETTINGS_FILE).SonarHost ?? {};
+  const tokensStr = getLongString(sonarHostSection, "Tokens") ?? "";
 
   const kvps = tokensStr.split(",");
   const res: SonarTokensMap = {};

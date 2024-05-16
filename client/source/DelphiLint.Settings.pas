@@ -125,7 +125,7 @@ begin
     // 5
     TBoolPropField.Create('Client', 'SaveBeforeAnalysis', True),
     // 6
-    TStringPropField.Create('SonarHost', 'Tokens', True),
+    TLongStringPropField.Create('SonarHost', 'Tokens', ''),
     // 7
     TStringPropField.Create('Server', 'SonarDelphiVersionOverride', ''),
     // 8
