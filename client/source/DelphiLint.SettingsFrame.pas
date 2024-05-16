@@ -59,6 +59,8 @@ type
     StandalonePanel: TPanel;
     Label2: TLabel;
     VersionRefreshButton: TButton;
+    Panel2: TPanel;
+    Panel3: TPanel;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
     procedure VersionRefreshButtonClick(Sender: TObject);
