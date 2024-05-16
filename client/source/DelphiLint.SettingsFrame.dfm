@@ -119,55 +119,120 @@ object LintSettingsFrame: TLintSettingsFrame
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        object Label1: TLabel
-          Left = 14
-          Top = 8
-          Width = 167
-          Height = 15
-          Caption = 'Standalone SonarDelphi version'
+        object StandaloneRulesListBox: TCheckListBox
+          Left = 0
+          Top = 185
+          Width = 425
+          Height = 117
+          Align = alClient
+          ItemHeight = 15
+          PopupMenu = StandaloneRulesPopupMenu
+          TabOrder = 0
+        end
+        object Panel1: TPanel
+          Left = 0
+          Top = 0
+          Width = 425
+          Height = 185
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 1
+          object Label1: TLabel
+            Left = 13
+            Top = 8
+            Width = 167
+            Height = 15
+            Caption = 'Standalone SonarDelphi version'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBtnText
+            Font.Height = -12
+            Font.Name = 'Segoe UI'
+            Font.Style = []
+            ParentFont = False
+          end
+          object Label5: TLabel
+            Left = 13
+            Top = 112
+            Width = 87
+            Height = 15
+            Caption = 'Standalone rules'
+          end
+          object SonarDelphiVersionComboBox: TComboBox
+            Left = 36
+            Top = 75
+            Width = 116
+            Height = 23
+            TabOrder = 0
+          end
+          object SonarDelphiVersionRadioGroup: TRadioGroup
+            Left = 11
+            Top = 26
+            Width = 453
+            Height = 49
+            DefaultHeaderFont = False
+            DoubleBuffered = False
+            HeaderFont.Charset = DEFAULT_CHARSET
+            HeaderFont.Color = clBtnText
+            HeaderFont.Height = -1
+            HeaderFont.Name = 'Segoe UI'
+            HeaderFont.Style = []
+            ItemIndex = 0
+            Items.Strings = (
+              'Use the default version'
+              'Use a specific version')
+            ParentDoubleBuffered = False
+            ShowFrame = False
+            TabOrder = 1
+            OnClick = SonarDelphiVersionRadioGroupClick
+          end
+          object StandaloneRulesRadioGroup: TRadioGroup
+            Left = 11
+            Top = 130
+            Width = 221
+            Height = 49
+            DefaultHeaderFont = False
+            DoubleBuffered = False
+            HeaderFont.Charset = DEFAULT_CHARSET
+            HeaderFont.Color = clBtnText
+            HeaderFont.Height = -1
+            HeaderFont.Name = 'Segoe UI'
+            HeaderFont.Style = []
+            ItemIndex = 0
+            Items.Strings = (
+              'Use SonarDelphi'#39's default ruleset'
+              'Use a custom ruleset')
+            ParentDoubleBuffered = False
+            ShowFrame = False
+            TabOrder = 2
+            OnClick = StandaloneRulesRadioGroupClick
+          end
+          object VersionRefreshButton: TButton
+            Left = 158
+            Top = 75
+            Width = 43
+            Height = 23
+            Caption = 'Edit'
+            TabOrder = 3
+            OnClick = VersionRefreshButtonClick
+          end
+        end
+        object PlaceholderStandaloneRulesPanel: TPanel
+          Left = 0
+          Top = 185
+          Width = 425
+          Height = 117
+          Align = alClient
+          BevelOuter = bvNone
+          BorderStyle = bsSingle
+          Caption = 'Click to load ruleset'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBtnText
           Font.Height = -12
           Font.Name = 'Segoe UI'
           Font.Style = []
           ParentFont = False
-        end
-        object SonarDelphiVersionComboBox: TComboBox
-          Left = 39
-          Top = 75
-          Width = 195
-          Height = 23
-          TabOrder = 0
-        end
-        object SonarDelphiVersionRadioGroup: TRadioGroup
-          Left = 12
-          Top = 26
-          Width = 453
-          Height = 49
-          DefaultHeaderFont = False
-          DoubleBuffered = False
-          HeaderFont.Charset = DEFAULT_CHARSET
-          HeaderFont.Color = clBtnText
-          HeaderFont.Height = -1
-          HeaderFont.Name = 'Segoe UI'
-          HeaderFont.Style = []
-          ItemIndex = 0
-          Items.Strings = (
-            'Use the default version'
-            'Use a specific version')
-          ParentDoubleBuffered = False
-          ShowFrame = False
-          TabOrder = 1
-          OnClick = SonarDelphiVersionRadioGroupClick
-        end
-        object VersionRefreshButton: TButton
-          Left = 238
-          Top = 75
-          Width = 43
-          Height = 23
-          Caption = 'Edit'
           TabOrder = 2
-          OnClick = VersionRefreshButtonClick
+          OnClick = PlaceholderStandaloneRulesPanelClick
         end
       end
     end
@@ -299,5 +364,17 @@ object LintSettingsFrame: TLintSettingsFrame
     StoreDefs = True
     Left = 268
     Top = 146
+  end
+  object StandaloneRulesPopupMenu: TPopupMenu
+    Left = 359
+    Top = 165
+    object EnableAll: TMenuItem
+      Caption = 'Enable All'
+      OnClick = EnableAllClick
+    end
+    object DisableAll: TMenuItem
+      Caption = 'Disable All'
+      OnClick = DisableAllClick
+    end
   end
 end

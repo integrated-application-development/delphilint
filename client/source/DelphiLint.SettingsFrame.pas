@@ -21,11 +21,13 @@ interface
 
 uses
     System.Classes
+  , System.Generics.Collections
   , Vcl.Controls
   , Vcl.Forms
   , Vcl.StdCtrls
   , DelphiLint.IDEBaseTypes
   , DelphiLint.Events
+  , DelphiLint.Data
   , Vcl.ExtCtrls
   , Data.DB
   , Vcl.Grids
@@ -33,6 +35,8 @@ uses
   , Vcl.DBCtrls
   , Datasnap.DBClient
   , Vcl.ComCtrls
+  , Vcl.CheckLst
+  , Vcl.Menus
   ;
 
 type
@@ -61,18 +65,37 @@ type
     VersionRefreshButton: TButton;
     Panel2: TPanel;
     Panel3: TPanel;
+    Label5: TLabel;
+    StandaloneRulesRadioGroup: TRadioGroup;
+    StandaloneRulesListBox: TCheckListBox;
+    Panel1: TPanel;
+    StandaloneRulesPopupMenu: TPopupMenu;
+    EnableAll: TMenuItem;
+    DisableAll: TMenuItem;
+    PlaceholderStandaloneRulesPanel: TPanel;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
     procedure VersionRefreshButtonClick(Sender: TObject);
+    procedure StandaloneRulesRadioGroupClick(Sender: TObject);
+    procedure EnableAllClick(Sender: TObject);
+    procedure DisableAllClick(Sender: TObject);
+    procedure PlaceholderStandaloneRulesPanelClick(Sender: TObject);
   private
     FOnReleasesRetrieved: TThreadSafeEventNotifier<TArray<string>>;
     FReleasesRetrieved: Boolean;
+    FStandaloneRules: TObjectDictionary<string, TRule>;
+    FIniting: Boolean;
+
     procedure RetrieveReleases;
     procedure PopulateSonarDelphiVersionConfig(const Releases: TArray<string>);
     procedure UpdateSonarDelphiVersionEnabled;
+
+    procedure PopulateStandaloneRulesBox;
+    procedure UpdateStandaloneRulesEnabled;
   public
     procedure Init;
     procedure Save;
+    procedure Deinit;
   end;
 
   TLintAddInOptions = class(TAddInOptionsBase)
@@ -92,10 +115,11 @@ uses
   , System.Net.HttpClient
   , System.JSON
   , System.StrUtils
+  , System.Math
+  , System.Generics.Defaults
   , DelphiLint.SetupForm
   , DelphiLint.Context
   , DelphiLint.Settings
-  , System.Generics.Collections
   ;
 
 {$R *.dfm}
@@ -131,6 +155,29 @@ begin
   if Accepted then begin
     FFrame.Save;
   end;
+  FFrame.Deinit;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.Deinit;
+begin
+  FreeAndNil(FOnReleasesRetrieved);
+  FreeAndNil(FStandaloneRules);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.DisableAllClick(Sender: TObject);
+begin
+  StandaloneRulesListBox.CheckAll(cbUnchecked);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.EnableAllClick(Sender: TObject);
+begin
+  StandaloneRulesListBox.CheckAll(cbChecked);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -139,6 +186,8 @@ procedure TLintSettingsFrame.Init;
 var
   Ident: TSonarProjectIdentifier;
 begin
+  FIniting := True;
+
   LintContext.Settings.Load;
   BrokenSetupWarningLabel.Visible := not TLintSetupForm.IsSetupValid;
   ClientAutoShowToolWindowCheckBox.Checked := LintContext.Settings.ClientAutoShowToolWindow;
@@ -192,6 +241,24 @@ begin
           PopulateSonarDelphiVersionConfig(Releases);
         end);
     end);
+
+  StandaloneRulesRadioGroup.ItemIndex := IfThen(LintContext.Settings.StandaloneUseDefaultRules, 0, 1);
+  UpdateStandaloneRulesEnabled;
+  FStandaloneRules := nil;
+
+  FIniting := False;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.PlaceholderStandaloneRulesPanelClick(Sender: TObject);
+begin
+  if (StandaloneRulesRadioGroup.ItemIndex = 1) and not Assigned(FStandaloneRules) then begin
+    PopulateStandaloneRulesBox;
+  end
+  else begin
+    UpdateStandaloneRulesEnabled;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -219,6 +286,55 @@ begin
 
   FReleasesRetrieved := True;
   UpdateSonarDelphiVersionEnabled;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.PopulateStandaloneRulesBox;
+
+  function StripRepository(RuleKey: string): string;
+  const
+    CPrefix = 'community-delphi:';
+  begin
+    if StartsStr(CPrefix, RuleKey) then begin
+      Result := Copy(RuleKey, Length(CPrefix) + 1);
+    end
+    else begin
+      Result := RuleKey;
+    end;
+  end;
+
+var
+  SortedRules: TArray<TRule>;
+  Rule: TRule;
+  DisabledRules: TArray<string>;
+begin
+  if not Assigned(FStandaloneRules) then begin
+    FStandaloneRules := LintContext.Analyzer.GetStandaloneRules;
+  end;
+
+  if not Assigned(FStandaloneRules) then begin
+    StandaloneRulesListBox.Items.Clear;
+    StandaloneRulesListBox.Items.Add('Could not retrieve ruleset');
+    Exit;
+  end;
+
+  DisabledRules := SplitString(LintContext.Settings.StandaloneDisabledRules, ',');
+
+  SortedRules := FStandaloneRules.Values.ToArray;
+  TArray.Sort<TRule>(SortedRules, TComparer<TRule>.Construct(
+    function(const Left: TRule; const Right: TRule): Integer
+    begin
+      Result := TComparer<string>.Default.Compare(Left.RuleKey, Right.RuleKey);
+    end));
+
+  StandaloneRulesListBox.Items.Clear;
+  for Rule in SortedRules do begin
+    StandaloneRulesListBox.Items.AddObject(Format('%s (%s)', [Rule.Name, StripRepository(Rule.RuleKey)]), Rule);
+    StandaloneRulesListBox.Checked[StandaloneRulesListBox.Items.Count - 1] :=
+      (IndexStr(Rule.RuleKey, DisabledRules) = -1);
+  end;
+  UpdateStandaloneRulesEnabled;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -276,6 +392,8 @@ end;
 procedure TLintSettingsFrame.Save;
 var
   Tokens: TDictionary<TSonarProjectIdentifier, string>;
+  Index: Integer;
+  DisabledRules: TStringList;
 begin
   Tokens := LintContext.Settings.SonarHostTokensMap;
 
@@ -309,6 +427,24 @@ begin
       ''
     );
   end;
+
+  LintContext.Settings.StandaloneUseDefaultRules := (StandaloneRulesRadioGroup.ItemIndex = 0);
+
+  if Assigned(FStandaloneRules) then begin
+    DisabledRules := TStringList.Create;
+    try
+      for Index := 0 to StandaloneRulesListBox.Items.Count - 1 do begin
+        if not StandaloneRulesListBox.Checked[Index] then begin
+          DisabledRules.Add(TRule(StandaloneRulesListBox.Items.Objects[Index]).RuleKey);
+        end;
+      end;
+
+      LintContext.Settings.StandaloneDisabledRules := DisabledRules.CommaText;
+    finally
+      FreeAndNil(DisabledRules);
+    end;
+  end;
+
   LintContext.Settings.Save;
 end;
 
@@ -321,10 +457,45 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintSettingsFrame.StandaloneRulesRadioGroupClick(Sender: TObject);
+begin
+  if
+    (StandaloneRulesRadioGroup.ItemIndex = 1)
+    and not Assigned(FStandaloneRules)
+    and not FIniting
+  then begin
+    PopulateStandaloneRulesBox;
+  end
+  else begin
+    UpdateStandaloneRulesEnabled;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintSettingsFrame.UpdateSonarDelphiVersionEnabled;
 begin
   SonarDelphiVersionComboBox.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and FReleasesRetrieved;
   VersionRefreshButton.Enabled := (SonarDelphiVersionRadioGroup.ItemIndex = 1) and not FReleasesRetrieved;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintSettingsFrame.UpdateStandaloneRulesEnabled;
+var
+  SelectingRules: Boolean;
+  RulesRetrieved: Boolean;
+begin
+  SelectingRules := (StandaloneRulesRadioGroup.ItemIndex = 1);
+  RulesRetrieved := Assigned(FStandaloneRules);
+
+  StandaloneRulesListBox.Enabled := SelectingRules and RulesRetrieved;
+  StandaloneRulesListBox.Visible := RulesRetrieved;
+  PlaceholderStandaloneRulesPanel.Visible := not RulesRetrieved;
+
+  if PlaceholderStandaloneRulesPanel.Visible then begin
+    PlaceholderStandaloneRulesPanel.Caption := IfThen(SelectingRules, 'Click to load ruleset', '');
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
