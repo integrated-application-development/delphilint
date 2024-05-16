@@ -75,6 +75,7 @@ type
     function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
     function GetQuickFixesAtPosition(FileName: string; Line: Integer; Column: Integer): TArray<TLiveQuickFix>;
+    function GetStandaloneRules: TObjectDictionary<string, TRule>;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 
@@ -541,6 +542,13 @@ begin
   end;
 
   Result := FRules[RuleKey];
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TMockAnalyzer.GetStandaloneRules: TObjectDictionary<string, TRule>;
+begin
+  Result := FRules;
 end;
 
 //______________________________________________________________________________________________________________________
