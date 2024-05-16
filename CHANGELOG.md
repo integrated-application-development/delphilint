@@ -12,11 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Clear Active File menu item, which clears all issues from the active file.
 * VS Code companion: Clear Issues For This File command, which removes any outstanding issues on the current file.
 * Support for "quick fixes" in the IDE - suggested fixes that can be applied automatically.
+* Rule configuration in Standalone Mode.
 
 ### Changed
 
 * Changes in issue validity are now immediately reflected across the UI.
 * The issue view has been redesigned for improved performance and utility.
+* The settings interface has been redesigned, improving usability and reducing unnecessary network calls.
 * The default SonarDelphi version is now [1.5.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.5.0).
 * Phrasing around manually choosing a Java executable has been changed to "Browse" instead of "Select override".
 
@@ -30,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Issue line trackers are now invalidated when the backing IDE buffer is freed.
 * Blank rule view on Delphi versions before 11.2.
 * Warnings when opening the rule view on Delphi versions before 11.2.
+* Issue hotspot rule descriptions are now correctly retrieved in Standalone Mode.
+* Issues serializing SonarQube server authentication settings when a large number of tokens are configured.
 
 ## [1.0.2] - 2024-04-02
 
