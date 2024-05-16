@@ -590,6 +590,7 @@ end;
 
 constructor TQuickFixTextEdit.Create(Replacement: string; Range: TRange);
 begin
+  inherited Create;
   FReplacement := Replacement;
   FRange := Range;
 end;
@@ -598,6 +599,7 @@ end;
 
 constructor TQuickFixTextEdit.CreateFromJson(Json: TJSONObject);
 begin
+  inherited Create;
   FReplacement := Json.GetValue<string>('replacement');
   FRange := TRange.CreateFromJson(Json.GetValue<TJSONObject>('range'));
 end;
@@ -614,6 +616,7 @@ end;
 
 constructor TQuickFix.Create(Message: string; TextEdits: TObjectList<TQuickFixTextEdit>);
 begin
+  inherited Create;
   FMessage := Message;
   FTextEdits := TextEdits;
 end;
@@ -625,6 +628,7 @@ var
   EditsJson: TJSONArray;
   EditJson: TJSONValue;
 begin
+  inherited Create;
   FMessage := Json.GetValue<string>('message');
   FTextEdits := TObjectList<TQuickFixTextEdit>.Create;
 
