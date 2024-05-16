@@ -1,9 +1,9 @@
 object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
-  Width = 757
-  Height = 437
-  Constraints.MinHeight = 200
+  Width = 439
+  Height = 340
+  Constraints.MinHeight = 340
   Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBtnText
@@ -13,16 +13,15 @@ object LintSettingsFrame: TLintSettingsFrame
   ParentFont = False
   TabOrder = 0
   DesignSize = (
-    757
-    437)
+    439
+    340)
   object TopPageControl: TPageControl
     Left = 3
     Top = 3
-    Width = 751
-    Height = 430
+    Width = 433
+    Height = 332
     ActivePage = GeneralSheet
     Anchors = [akLeft, akTop, akRight, akBottom]
-    Constraints.MinHeight = 430
     RaggedRight = True
     TabOrder = 0
     StyleElements = [seFont, seClient]
@@ -31,8 +30,8 @@ object LintSettingsFrame: TLintSettingsFrame
       object GeneralPanel: TPanel
         Left = 0
         Top = 0
-        Width = 743
-        Height = 400
+        Width = 425
+        Height = 302
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
@@ -115,8 +114,8 @@ object LintSettingsFrame: TLintSettingsFrame
       object StandalonePanel: TPanel
         Left = 0
         Top = 0
-        Width = 743
-        Height = 400
+        Width = 425
+        Height = 302
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
@@ -178,33 +177,17 @@ object LintSettingsFrame: TLintSettingsFrame
       object ConnectedPanel: TPanel
         Left = 0
         Top = 0
-        Width = 743
-        Height = 400
+        Width = 425
+        Height = 302
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        DesignSize = (
-          743
-          400)
-        object Label3: TLabel
-          Left = 14
-          Top = 8
-          Width = 166
-          Height = 15
-          Caption = 'SonarQube server authorization'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBtnText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = []
-          ParentFont = False
-        end
         object TokensGrid: TDBGrid
-          Left = 56
-          Top = 32
-          Width = 674
-          Height = 353
-          Anchors = [akLeft, akTop, akRight, akBottom]
+          Left = 25
+          Top = 33
+          Width = 400
+          Height = 269
+          Align = alClient
           DataSource = TokensDataSource
           Options = [dgEditing, dgTitles, dgIndicator, dgRowLines, dgTabs, dgCancelOnExit]
           TabOrder = 0
@@ -236,28 +219,59 @@ object LintSettingsFrame: TLintSettingsFrame
               Visible = True
             end>
         end
-        object DBNavigator1: TDBNavigator
-          Left = 25
-          Top = 32
-          Width = 25
-          Height = 60
-          DataSource = TokensDataSource
-          VisibleButtons = [nbInsert, nbDelete]
-          Hints.Strings = (
-            'Add record'
-            'Remove record'
-            '')
-          Kind = dbnVertical
-          ConfirmDelete = False
+        object Panel2: TPanel
+          Left = 0
+          Top = 0
+          Width = 425
+          Height = 33
+          Align = alTop
+          BevelOuter = bvNone
           TabOrder = 1
+          object Label3: TLabel
+            Left = 13
+            Top = 8
+            Width = 166
+            Height = 15
+            Caption = 'SonarQube server authorization'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBtnText
+            Font.Height = -12
+            Font.Name = 'Segoe UI'
+            Font.Style = []
+            ParentFont = False
+          end
+        end
+        object Panel3: TPanel
+          Left = 0
+          Top = 33
+          Width = 25
+          Height = 269
+          Align = alLeft
+          BevelOuter = bvNone
+          TabOrder = 2
+          object DBNavigator1: TDBNavigator
+            Left = 1
+            Top = 0
+            Width = 20
+            Height = 50
+            DataSource = TokensDataSource
+            VisibleButtons = [nbInsert, nbDelete]
+            Hints.Strings = (
+              'Add record'
+              'Remove record'
+              '')
+            Kind = dbnVertical
+            ConfirmDelete = False
+            TabOrder = 0
+          end
         end
       end
     end
   end
   object TokensDataSource: TDataSource
     DataSet = TokensDataSet
-    Left = 484
-    Top = 98
+    Left = 268
+    Top = 74
   end
   object TokensDataSet: TClientDataSet
     Aggregates = <>
@@ -283,7 +297,7 @@ object LintSettingsFrame: TLintSettingsFrame
     IndexDefs = <>
     Params = <>
     StoreDefs = True
-    Left = 484
-    Top = 154
+    Left = 268
+    Top = 146
   end
 end
