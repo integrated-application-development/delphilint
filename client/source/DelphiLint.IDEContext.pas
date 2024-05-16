@@ -653,7 +653,13 @@ begin
   FRaw.RemoveNotifier(Index);
 end;
 
-procedure TToolsApiEditView.ReplaceText(Replacement: string; StartLine, StartColumn, EndLine, EndColumn: Integer);
+procedure TToolsApiEditView.ReplaceText(
+  Replacement: string;
+  StartLine: Integer;
+  StartColumn: Integer;
+  EndLine: Integer;
+  EndColumn: Integer
+);
 
   procedure MoveCursor(const Line: Integer; const Column: Integer);
   var

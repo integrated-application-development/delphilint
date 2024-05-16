@@ -291,7 +291,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-constructor TSonarProjectIdentifier.Create(Host, ProjectKey: string);
+constructor TSonarProjectIdentifier.Create(Host: string; ProjectKey: string);
 begin
   Self.Host := Host;
   Self.ProjectKey := ProjectKey;
@@ -299,7 +299,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TSonarProjectIdentifierComparer.Equals(const Left, Right: TSonarProjectIdentifier): Boolean;
+function TSonarProjectIdentifierComparer.Equals(
+  const Left: TSonarProjectIdentifier;
+  const Right: TSonarProjectIdentifier
+): Boolean;
 begin
   Result := (Left.Host = Right.Host) and (Left.ProjectKey = Right.ProjectKey);
 end;
