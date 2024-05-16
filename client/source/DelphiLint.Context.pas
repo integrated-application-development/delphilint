@@ -22,6 +22,7 @@ interface
 uses
     System.UITypes
   , System.Classes
+  , System.Generics.Collections
   , Winapi.Windows
   , Vcl.Themes
   , Vcl.Forms
@@ -69,6 +70,7 @@ type
     function GetInAnalysis: Boolean;
     function GetIssues(FileName: string; Line: Integer = -1; Column: Integer = -1): TArray<ILiveIssue>;
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+    function GetStandaloneRules: TObjectDictionary<string, TRule>;
 
     procedure UpdateIssueLine(FilePath: string; OriginalLine: Integer; NewLine: Integer);
 

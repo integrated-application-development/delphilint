@@ -48,6 +48,11 @@ type
     procedure OnAnalyzeError(Message: string);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
     function TryRefreshRules: Boolean;
+    function DoTryRetrieveRules(
+      Options: TSonarProjectOptions;
+      DownloadPlugin: Boolean;
+      out Rules: TObjectDictionary<string, TRule>
+    ): Boolean;
     procedure RecordAnalysis(Path: string; Success: Boolean; IssuesFound: Integer);
 
     procedure TriggerServerTerminateEvent(Sender: TObject);
@@ -79,6 +84,7 @@ type
     function TryGetAnalysisHistory(Path: string; out History: TFileAnalysisHistory): Boolean;
 
     function GetRule(RuleKey: string; AllowRefresh: Boolean = True): TRule;
+    function GetStandaloneRules: TObjectDictionary<string, TRule>;
   end;
 
 implementation
@@ -636,9 +642,9 @@ var
   ProjectFile: string;
   ProjectOptions: TLintProjectOptions;
   RulesRetrieved: TEvent;
-  TimedOut: Boolean;
   DownloadPlugin: Boolean;
   SonarOptions: TSonarProjectOptions;
+  TempRules: TObjectDictionary<string, TRule>;
 begin
   Log.Debug('Refreshing ruleset');
   Result := False;
@@ -651,7 +657,6 @@ begin
   try
     RulesRetrieved := TEvent.Create;
     ProjectOptions := LintContext.GetProjectOptions(ProjectFile);
-    TimedOut := False;
 
     DownloadPlugin := False;
     if ProjectOptions.AnalysisConnectedMode then begin
@@ -666,53 +671,9 @@ begin
       DownloadPlugin := ProjectOptions.SonarHostDownloadPlugin;
     end;
 
-    ExecuteWithServer(
-      procedure(Server: ILintServer) begin
-        Server.RetrieveRules(
-          SonarOptions,
-          LintContext.Settings.SonarDelphiVersion,
-          procedure(Rules: TObjectDictionary<string, TRule>)
-          begin
-            if not TimedOut then begin
-              // The main thread is blocked waiting for this, so FRules is guaranteed not to be accessed.
-              // If FRules is ever accessed by a third thread a mutex will be required.
-              FreeAndNil(FRules);
-              FRules := Rules;
-              RulesRetrieved.SetEvent;
-            end
-            else begin
-              Log.Warn('Server retrieved rules after timeout had expired');
-            end;
-          end,
-          procedure(ErrorMsg: string) begin
-            if not TimedOut then begin
-              RulesRetrieved.SetEvent;
-              Log.Warn('Error retrieving latest rules: ' + ErrorMsg);
-            end
-            else begin
-              Log.Warn('Server rule retrieval returned error after timeout had expired');
-            end;
-          end,
-          DownloadPlugin
-        );
-      end,
-      procedure(Msg: string) begin
-        TaskMessageDlg(
-          CServerAcquireErrorMsg,
-          Format('%s.', [Msg]),
-          mtError,
-          [mbOK],
-          0
-        );
-      end
-    );
-
-    if RulesRetrieved.WaitFor(3000) = TWaitResult.wrSignaled then begin
+    if DoTryRetrieveRules(SonarOptions, DownloadPlugin, TempRules) then begin
+      FRules := TempRules;
       Result := True;
-    end else begin
-      TimedOut := True;
-      Result := False;
-      Log.Warn('Rule retrieval timed out');
     end;
   finally
     FreeAndNil(ProjectOptions);
@@ -768,6 +729,85 @@ begin
     if TryRefreshRules then begin
       Result := GetRule(RuleKey, False);
     end;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.DoTryRetrieveRules(
+  Options: TSonarProjectOptions;
+  DownloadPlugin: Boolean;
+  out Rules: TObjectDictionary<string, TRule>
+): Boolean;
+var
+  RulesRetrievedEvent: TEvent;
+  TimedOut: Boolean;
+  FuncRules: TObjectDictionary<string, TRule>;
+begin
+  TimedOut := False;
+  RulesRetrievedEvent := TEvent.Create;
+  try
+    ExecuteWithServer(
+      procedure(Server: ILintServer) begin
+        Server.RetrieveRules(
+          Options,
+          LintContext.Settings.SonarDelphiVersion,
+          procedure(LocalRules: TObjectDictionary<string, TRule>)
+          begin
+            if not TimedOut then begin
+              FuncRules := LocalRules;
+              RulesRetrievedEvent.SetEvent;
+            end
+            else begin
+              Log.Warn('Server retrieved rules after timeout had expired');
+            end;
+          end,
+          procedure(ErrorMsg: string) begin
+            if not TimedOut then begin
+              RulesRetrievedEvent.SetEvent;
+              Log.Warn('Error retrieving latest rules: ' + ErrorMsg);
+            end
+            else begin
+              Log.Warn('Server rule retrieval returned error after timeout had expired');
+            end;
+          end,
+          DownloadPlugin
+        );
+      end,
+      procedure(Msg: string) begin
+        TaskMessageDlg(
+          CServerAcquireErrorMsg,
+          Format('%s.', [Msg]),
+          mtError,
+          [mbOK],
+          0
+        );
+      end
+    );
+
+    if RulesRetrievedEvent.WaitFor(10000) = TWaitResult.wrSignaled then begin
+      Rules := FuncRules;
+      Result := True;
+    end
+    else begin
+      TimedOut := True;
+      Rules := nil;
+      Result := False;
+      Log.Warn('Rule retrieval timed out');
+    end;
+  finally
+    FreeAndNil(RulesRetrievedEvent);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TAnalyzerImpl.GetStandaloneRules: TObjectDictionary<string, TRule>;
+var
+  SonarOptions: TSonarProjectOptions;
+begin
+  if not DoTryRetrieveRules(SonarOptions, False, Result) then begin
+    Result := nil;
   end;
 end;
 
