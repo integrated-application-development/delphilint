@@ -57,7 +57,7 @@ public abstract class AbstractStandaloneSonarHost implements SonarHost {
     var rulesExtractor = new RulesDefinitionExtractor();
     ruleDefinitions =
         rulesExtractor.extractRules(
-            loadedPlugins.getPluginInstancesByKeys(), Set.of(Language.DELPHI), true, false);
+            loadedPlugins.getPluginInstancesByKeys(), Set.of(Language.DELPHI), false, true);
 
     rules =
         ruleDefinitions.stream()
