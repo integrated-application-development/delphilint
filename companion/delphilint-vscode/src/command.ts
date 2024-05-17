@@ -190,6 +190,10 @@ async function analyzeFiles(
       projectPropertiesPath,
       sonarHostUrl,
       apiToken,
+      disabledRules:
+        sonarHostUrl === "" && !settings.getUseDefaultRules()
+          ? settings.getDisabledRules()
+          : undefined,
     });
   } finally {
     inAnalysis = false;

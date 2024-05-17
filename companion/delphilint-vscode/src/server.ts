@@ -52,6 +52,7 @@ export type RequestAnalyze = {
   projectKey: string;
   apiToken: string;
   projectPropertiesPath: string;
+  disabledRules: string[] | undefined;
 };
 
 export type LintIssue = {
