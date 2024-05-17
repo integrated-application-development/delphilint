@@ -42,6 +42,7 @@ type LintSettingsIni = {
   Server?: {
     SonarDelphiVersionOverride?: string;
   };
+  Standalone?: { [key: string]: any };
 };
 
 function getSettings(path: string): LintSettingsIni {
@@ -188,6 +189,18 @@ export function getSonarTokens(): SonarTokensMap {
   }
 
   return res;
+}
+
+export function getDisabledRules(): string[] {
+  const standaloneSection = getSettings(SETTINGS_FILE).Standalone ?? {};
+  const disabledRulesStr =
+    getLongString(standaloneSection, "DisabledRules") ?? "";
+
+  return disabledRulesStr.split(",");
+}
+
+export function getUseDefaultRules(): boolean {
+  return getSettings(SETTINGS_FILE).Standalone?.["UseDefaultRules"] === "1";
 }
 
 export function getBdsPath(): string {
