@@ -151,6 +151,7 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLintTest.Settings.pas"/>
         <DCCReference Include="DelphiLintTest.LiveData.pas"/>
         <DCCReference Include="DelphiLintTest.IssueActions.pas"/>
+        <DCCReference Include="DelphiLintTest.Properties.pas"/>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>

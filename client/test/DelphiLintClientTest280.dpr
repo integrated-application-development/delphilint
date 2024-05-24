@@ -33,7 +33,8 @@ uses
   DelphiLintTest.HtmlGen in 'DelphiLintTest.HtmlGen.pas',
   DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas',
   DelphiLintTest.LiveData in 'DelphiLintTest.LiveData.pas',
-  DelphiLintTest.IssueActions in 'DelphiLintTest.IssueActions.pas';
+  DelphiLintTest.IssueActions in 'DelphiLintTest.IssueActions.pas',
+  DelphiLintTest.Properties in 'DelphiLintTest.Properties.pas';
 
 {$R DelphiLintClientTestAdditional.res}
 

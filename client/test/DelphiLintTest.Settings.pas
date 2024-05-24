@@ -61,6 +61,8 @@ type
     [Test]
     procedure TestSonarHostTokensMigrationPath;
     [Test]
+    procedure TestDisabledRules;
+    [Test]
     procedure TestServerJvmOptions;
     [Test]
     procedure TestDefaultServerJvmOptionsUseSystemProxies;
@@ -389,6 +391,29 @@ begin
       'project2@https://sonar.foo.bar=token2,' +
       'project3@https://foo.sonar.baz=token3',
     GetSetting(CCategory, CName + '_0'));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestDisabledRules;
+const
+  CCategory = 'Standalone';
+  CName = 'DisabledRules';
+begin
+  Assert.AreEqual(0, FSettings.SonarHostTokensMap.Count);
+
+  SetSetting(CCategory, CName + '_Size', '1');
+  SetSetting(
+    CCategory,
+    CName + '_0',
+    'community-delphi:FooBar,community-delphi:BazBar');
+  FSettings.Load;
+  Assert.AreEqual('community-delphi:FooBar,community-delphi:BazBar', FSettings.StandaloneDisabledRules);
+
+  FSettings.StandaloneDisabledRules := 'community-delphi:FlimpFlarp';
+  FSettings.Save;
+  Assert.AreEqual('1', GetSetting(CCategory, CName + '_Size'));
+  Assert.AreEqual('community-delphi:FlimpFlarp', GetSetting(CCategory, CName + '_0'));
 end;
 
 //______________________________________________________________________________________________________________________
