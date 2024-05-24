@@ -59,6 +59,8 @@ type
     [Test]
     procedure TestSonarHostTokens;
     [Test]
+    procedure TestSonarHostTokensMigrationPath;
+    [Test]
     procedure TestServerJvmOptions;
     [Test]
     procedure TestDefaultServerJvmOptionsUseSystemProxies;
@@ -331,6 +333,41 @@ const
 begin
   Assert.AreEqual(0, FSettings.SonarHostTokensMap.Count);
 
+  SetSetting(CCategory, CName + '_Size', '1');
+  SetSetting(
+    CCategory,
+    CName + '_0',
+    'project1@https://sonar.example.com=token1,project2@https://sonar.foo.bar=token2');
+  FSettings.Load;
+  Assert.AreEqual(2, FSettings.SonarHostTokensMap.Count);
+  Assert.AreEqual(
+    'token1',
+    FSettings.SonarHostTokensMap[
+      TSonarProjectIdentifier.Create('https://sonar.example.com', 'project1')]);
+  Assert.AreEqual(
+    'token2',
+    FSettings.SonarHostTokensMap[
+      TSonarProjectIdentifier.Create('https://sonar.foo.bar', 'project2')]);
+
+  FSettings.SonarHostTokensMap.Add(TSonarProjectIdentifier.Create('https://foo.sonar.baz', 'project3'), 'token3');
+  FSettings.Save;
+  Assert.AreEqual('1', GetSetting(CCategory, CName + '_Size'));
+  Assert.AreEqual(
+    'project1@https://sonar.example.com=token1,' +
+      'project2@https://sonar.foo.bar=token2,' +
+      'project3@https://foo.sonar.baz=token3',
+    GetSetting(CCategory, CName + '_0'));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestSonarHostTokensMigrationPath;
+const
+  CCategory = 'SonarHost';
+  CName = 'Tokens';
+begin
+  Assert.AreEqual(0, FSettings.SonarHostTokensMap.Count);
+
   SetSetting(CCategory, CName, 'project1@https://sonar.example.com=token1,project2@https://sonar.foo.bar=token2');
   FSettings.Load;
   Assert.AreEqual(2, FSettings.SonarHostTokensMap.Count);
@@ -345,11 +382,13 @@ begin
 
   FSettings.SonarHostTokensMap.Add(TSonarProjectIdentifier.Create('https://foo.sonar.baz', 'project3'), 'token3');
   FSettings.Save;
+  Assert.AreEqual('', GetSetting(CCategory, CName));
+  Assert.AreEqual('1', GetSetting(CCategory, CName + '_Size'));
   Assert.AreEqual(
     'project1@https://sonar.example.com=token1,' +
-    'project2@https://sonar.foo.bar=token2,' +
-    'project3@https://foo.sonar.baz=token3',
-    GetSetting(CCategory, CName));
+      'project2@https://sonar.foo.bar=token2,' +
+      'project3@https://foo.sonar.baz=token3',
+    GetSetting(CCategory, CName + '_0'));
 end;
 
 //______________________________________________________________________________________________________________________
