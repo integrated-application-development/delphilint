@@ -22,3 +22,22 @@ Delphi project file. SonarQube settings are ignored when in standalone mode.
 
 User settings can be configured via `DelphiLint > Settings...` and are stored in `%APPDATA\DelphiLint\delphilint.ini`.
 (This file should not be edited directly unless you know what you're doing.)
+
+### Configuring rules in standalone mode
+
+> [!NOTE]
+> When in connected mode, SonarDelphi uses the project's configured quality profile. This includes which active rules
+> to apply, and the parameters provided to them.
+
+The ruleset used in standalone mode can be configured in `DelphiLint > Settings... > Standalone Mode`. By default,
+the "Use SonarDelphi's default ruleset" option is selected, meaning that SonarDelphi's default "Sonar way" profile
+will be enforced. The "Sonar way" profile does not include all of SonarDelphi's rules, but it is designed to provide
+a sensible default option for Delphi analysis.
+
+For greater control over the rules that are applied during analysis, by selecting the "Use a custom ruleset" option
+you can manually enable or disable rules to suit your coding style. You can also use the right click context menu to
+enable or disable *all* rules:
+
+![](images/standalone-rules-options.png)
+
+Please note that rule parameters cannot be configured in standalone mode.
