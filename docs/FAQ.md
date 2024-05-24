@@ -8,6 +8,8 @@
   - [When I go to analyze a file, it says "File not analyzable" and analysis is greyed out.](#when-i-go-to-analyze-a-file-it-says-file-not-analyzable-and-analysis-is-greyed-out)
   - ["Analyze All Open Files" does not analyze my `.dpr` or `.dpk` file, even though it is open.](#analyze-all-open-files-does-not-analyze-my-dpr-or-dpk-file-even-though-it-is-open)
   - [DelphiLint has been stuck in analysis for a long time.](#delphilint-has-been-stuck-in-analysis-for-a-long-time)
+  - [I don't see any quick fixes when I right click on my issues.](#i-dont-see-any-quick-fixes-when-i-right-click-on-my-issues)
+  - [I applied a quick fix and it broke my code.](#i-applied-a-quick-fix-and-it-broke-my-code)
   - [Error: "Could not connect to the configured SonarQube instance."](#error-could-not-connect-to-the-configured-sonarqube-instance)
   - [Error: "SonarDelphi could not be retrieved from GitHub."](#error-sonardelphi-could-not-be-retrieved-from-github)
   - [Fixing invalid SSL certificates](#fixing-invalid-ssl-certificates)
@@ -60,6 +62,27 @@ Generally speaking, DelphiLint analyses can take upwards of 30 seconds when deal
 has been a longer time, check the progress of the scan in the logs at
 `%APPDATA%\DelphiLint\logs\delphilint-server.log`. If a problem seems to have occurred, the server can be restarted
 with `DelphiLint > Restart Server`.
+
+### I don't see any quick fixes when I right click on my issues.
+
+The available quick fixes are dependent on the SonarDelphi version being used. The first quick fixes were implemented
+in SonarDelphi 1.5.0. If you are using a version older than 1.5.0, please upgrade to take advantage of quick fixes.
+
+In addition, please note that not all rules have quick fixes available.
+
+### I applied a quick fix and it broke my code.
+
+If the file has changed since the last analysis, quick fixes can easily become invalidated. Because they are based
+on replacing ranges of text within the file, if their offset from the originating issue becomes different than the
+"correct" offset, the quick fix may apply in the wrong area and provide unexpected results.
+
+Please note that this is a limitation of quick fixes in any tool and is not considered a "bug" per se. That being
+said, improving the experience around preserving and invalidating quick fixes as the file changes is an area of
+ongoing work - it is likely to improve in the future.
+
+If the quick fix is broken even if there have been no file changes since the last analysis, this is probably a
+legitimate bug in the implementation of the quick fix -
+in this case, [raise an issue](https://github.com/integrated-application-development/delphilint/issues).
 
 ### Error: "Could not connect to the configured SonarQube instance."
 
