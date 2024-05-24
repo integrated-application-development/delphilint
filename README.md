@@ -79,7 +79,7 @@ For more information:
 | ![](docs/images/multi_file_issues.gif) | ![](docs/images/gallery-code-view-dark.png) |
 | ----- | ----- |
 | ![](docs/images/gallery-code-view-light.png) | ![](docs/images/fix_issues.gif) |
-| ![](docs/images/issue_scroll.gif) | ![](docs/images/gallery-code-view-mountain-mist.png) |
+| ![](docs/images/gallery-quick-fix.png) | ![](docs/images/gallery-code-view-mountain-mist.png) |
 
 ## Building from source
 
