@@ -17,6 +17,7 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
   a static analyzer for Delphi with 100+ code analysis rules, to the Delphi IDE
 * Analyze one or more files on-the-fly, shortening the feedback loop so you can pick up and fix problems before they're even checked in
 * Detected issues, along with descriptions and rationale, displayed inline in the IDE
+* Automated quick fixes for common issues, available via right click
 * Two analysis modes:
    * Standalone - run analyses entirely locally with a default set of active rules
    * Connected - connect to a SonarQube instance, allowing for
@@ -67,7 +68,10 @@ To analyze a file:
 It's as easy as that! The DelphiLint window will then pop up, showing the current state of analysis and any issues
 that are raised. Please note that when the file has a lot of imports the analysis could take thirty seconds or so.
 
-To analyze all files that are open in the IDE, use `DelphiLint > Analyze All Open Files` instead.
+* To **analyze all files that are open in the IDE**, use `DelphiLint > Analyze All Open Files`.
+* To **clear a file of its analysis history**, use `DelphiLint > Clear Active File`.
+* To **apply quick fixes for an issue**, right click the issue range in the editor window or the issue item in the
+DelphiLint window, then select the quick fix. (Note that not all issues may have quick fixes available.)
 
 For more information:
 
