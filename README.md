@@ -19,7 +19,10 @@ DelphiLint is an IDE package for RAD Studio that provides on-the-fly code analys
 * Detected issues, along with descriptions and rationale, displayed inline in the IDE
 * Automated quick fixes for common issues, available via right click
 * Two analysis modes:
-   * Standalone - run analyses entirely locally with a default set of active rules
+   * Standalone - run analyses entirely locally
+     * No external servers or other tools required
+     * Apply a default ruleset of commonly accepted Delphi rules, or pick and choose your desired coding style from
+       the full list of SonarDelphi rules
    * Connected - connect to a SonarQube instance, allowing for
       * Fetching of active rules and configuration from the server's configured quality profiles
       * Suppression of issues that have been resolved in past analyses
