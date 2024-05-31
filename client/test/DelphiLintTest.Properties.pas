@@ -57,7 +57,7 @@ const
 var
   Field: TLongStringPropField;
   Ini: TIniFile;
-  Path: String;
+  Path: string;
 begin
   Path := TPath.GetTempFileName;
   TFile.WriteAllText(Path, '', TEncoding.ASCII); // Clear file
@@ -87,8 +87,8 @@ const
 var
   Field: TLongStringPropField;
   Ini: TIniFile;
-  Path: String;
-  Expected: String;
+  Path: string;
+  Expected: string;
 begin
   Path := TPath.GetTempFileName;
   TFile.WriteAllText(Path, '', TEncoding.ASCII); // Clear file
@@ -99,16 +99,16 @@ begin
     Ini.WriteString(CSection, CSizeKey, '1');
     Ini.WriteString(CSection, CKey + '_0', Expected);
     Field.Load(Ini);
-    Assert.AreEqual<String>(Expected, Field.Value);
+    Assert.AreEqual<string>(Expected, Field.Value);
 
     Ini.WriteString(CSection, CKey + '_1', StringOfChar('b', 1000));
     Field.Load(Ini);
-    Assert.AreEqual<String>(Expected, Field.Value);
+    Assert.AreEqual<string>(Expected, Field.Value);
 
     Ini.WriteString(CSection, CSizeKey, '2');
     Expected := Expected + StringOfChar('b', 1000);
     Field.Load(Ini);
-    Assert.AreEqual<String>(Expected, Field.Value);
+    Assert.AreEqual<string>(Expected, Field.Value);
 
     Field.Value := StringOfChar('c', 6000);
     Field.Save(Ini);
@@ -138,7 +138,7 @@ const
 var
   Field: TLongStringPropField;
   Ini: TIniFile;
-  Path: String;
+  Path: string;
 begin
   Path := TPath.GetTempFileName;
   TFile.WriteAllText(Path, '', TEncoding.ASCII); // Clear file
@@ -173,8 +173,8 @@ const
 var
   Field: TLongStringPropField;
   Ini: TIniFile;
-  Path: String;
-  Expected: String;
+  Path: string;
+  Expected: string;
 begin
   Path := TPath.GetTempFileName;
   TFile.WriteAllText(Path, '', TEncoding.ASCII); // Clear file
@@ -184,7 +184,7 @@ begin
     Expected := StringOfChar('a', 1000);
     Ini.WriteString(CSection, CKey, Expected);
     Field.Load(Ini);
-    Assert.AreEqual<String>(Expected, Field.Value);
+    Assert.AreEqual<string>(Expected, Field.Value);
 
     Field.Save(Ini);
     Assert.IsFalse(Ini.ValueExists(CSection, CKey));
