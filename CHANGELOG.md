@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Changes in issue validity are now immediately reflected across the UI.
 * The issue view has been redesigned for improved performance and utility.
 * The settings interface has been redesigned, improving usability and reducing unnecessary network calls.
-* The default SonarDelphi version is now [1.5.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.5.0).
+* The default SonarDelphi version is now [1.6.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.6.0).
 * Phrasing around manually choosing a Java executable has been changed to "Browse" instead of "Select override".
 
 ### Fixed
