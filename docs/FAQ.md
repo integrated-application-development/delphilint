@@ -1,7 +1,6 @@
 # FAQ
 
 - [General](#general)
-  - [Why is Delphi Community Edition not supported?](#why-is-delphi-community-edition-not-supported)
   - [How do I supply custom options to the Java Virtual Machine?](#how-do-i-supply-custom-options-to-the-java-virtual-machine)
   - [How do I uninstall DelphiLint?](#how-do-i-uninstall-delphilint)
 - [Troubleshooting](#troubleshooting)
@@ -17,12 +16,6 @@
   - [DelphiLint can't find my Java executable / is using the wrong Java executable.](#delphilint-cant-find-my-java-executable--is-using-the-wrong-java-executable)
 
 ## General
-
-### Why is Delphi Community Edition not supported?
-
-[SonarDelphi](https://github.com/integrated-application-development/sonar-delphi), which DelphiLint uses behind the
-scenes, requires source code for all dependencies. Delphi Community Edition does not provide source code for the
-standard library.
 
 ### How do I supply custom options to the Java Virtual Machine?
 
