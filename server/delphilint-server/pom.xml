@@ -8,7 +8,7 @@
   <parent>
       <groupId>au.com.integradev.delphilint</groupId>
       <artifactId>delphilint-parent</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.0+dev.${revision}</version>
       <relativePath>../pom.xml</relativePath>
   </parent>
   
