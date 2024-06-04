@@ -1,6 +1,6 @@
 const
   CDlMajorVersion: Integer = {MAJOR}1{/MAJOR};
-  CDlMinorVersion: Integer = {MINOR}0{/MINOR};
-  CDlPatchVersion: Integer = {PATCH}2{/PATCH};
-  CDlIsDevVersion: Boolean = {DEV}True{/DEV};
+  CDlMinorVersion: Integer = {MINOR}1{/MINOR};
+  CDlPatchVersion: Integer = {PATCH}0{/PATCH};
+  CDlIsDevVersion: Boolean = {DEV}False{/DEV};
   CDlCommit: string = {COMMIT}'unversioned'{/COMMIT};
