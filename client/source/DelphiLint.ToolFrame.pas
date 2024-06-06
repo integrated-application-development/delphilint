@@ -274,6 +274,10 @@ begin
   if RulePanel.Left < 10 then begin
     RulePanel.Width := Width div 2;
   end;
+
+  if not RuleBrowser.WebViewCreated then begin
+    RuleBrowser.ReinitializeWebView;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
