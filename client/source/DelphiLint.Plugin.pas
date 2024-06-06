@@ -118,6 +118,7 @@ implementation
 uses
     System.SysUtils
   , System.UITypes
+  , System.IOUtils
   , Vcl.ComCtrls
   , Vcl.Dialogs
   , Winapi.Windows
@@ -303,7 +304,12 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TPluginCore.OnRegister;
+var
+  NewPath: string;
 begin
+  NewPath := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bin') + ';' + GetEnvironmentVariable('PATH');
+  SetEnvironmentVariable(PWideChar('PATH'), PWideChar(NewPath));
+
   // Editor notifier
   FEditor := TEditorHandler.Create;
   FEditor.OnOwnerFreed.AddListener(
