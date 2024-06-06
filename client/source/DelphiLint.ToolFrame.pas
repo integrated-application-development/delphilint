@@ -1,4 +1,4 @@
-{
+ï»¿{
 DelphiLint Client
 Copyright (C) 2024 Integrated Application Development
 
@@ -568,7 +568,7 @@ begin
       CreationDateTime := ISO8601ToDate(Issue.CreationDate, False);
       TimeSinceCreation := TTimeSpan.Subtract(Now, CreationDateTime);
 
-      ExtraInfo := Format('%s • %s • %s', [
+      ExtraInfo := Format('%s â€¢ %s â€¢ %s', [
         TimeSpanToAgoString(TimeSinceCreation),
         CIssueStatusStrs[Issue.Status],
         IfThen(Issue.Assignee <> '', 'Assigned to ' + Issue.Assignee, 'Unassigned')
@@ -582,10 +582,10 @@ begin
     ExtraInfo := 'New issue';
   end;
 
-  Result := Format('%s • %s', [Result, ExtraInfo]);
+  Result := Format('%s â€¢ %s', [Result, ExtraInfo]);
 
   if not Issue.IsTethered then begin
-    Result := Format('%s • %s', [Result, 'Potentially resolved']);
+    Result := Format('%s â€¢ %s', [Result, 'Potentially resolved']);
   end;
 end;
 
