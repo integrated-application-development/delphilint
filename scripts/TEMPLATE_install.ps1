@@ -57,14 +57,6 @@ function Get-WebView2 {
     $Archive.Dispose()
   }
 
-  $DirsOnPath = $env:Path -split ";"
-  if ($DirsOnPath -icontains $BinFolder) {
-    Write-Host "Bin directory is already on user path."
-  } else {
-    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$BinFolder", [System.EnvironmentVariableTarget]::User)
-    Write-Host "Added bin directory to user path."
-  }
-
   Remove-Item $TempFolder -Recurse -Force -ErrorAction Continue
 }
 
