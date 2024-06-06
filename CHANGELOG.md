@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Error reporting has been improved around initialization of the rule view's Edge browser embed.
+
+### Fixed
+
+* Blank rule view when WebView2Loader.dll is not accessible from PATH.
+* Blank rule view when docked after being first initialized as a floating window.
+
 ## [1.1.0] - 2024-06-04
 
 ### Added
