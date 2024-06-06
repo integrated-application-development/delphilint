@@ -1,4 +1,4 @@
-{
+﻿{
 DelphiLint Client
 Copyright (C) 2024 Integrated Application Development
 
@@ -425,7 +425,7 @@ begin
   IDEServices.AddPluginInfo(
     'DelphiLint ' + VersionStr,
     'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
-    + #13#10#13#10'Copyright � 2023 Integrated Application Development',
+    + #13#10#13#10'Copyright © 2023 Integrated Application Development',
     LintResources.DelphiLintIcon);
 end;
 

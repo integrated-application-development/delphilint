@@ -1,4 +1,4 @@
-{
+﻿{
 DelphiLint Client
 Copyright (C) 2024 Integrated Application Development
 

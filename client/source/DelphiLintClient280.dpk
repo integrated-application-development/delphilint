@@ -1,4 +1,4 @@
-package DelphiLintClient280;
+﻿package DelphiLintClient280;
 
 {$R *.res}
 {$R *.dres}

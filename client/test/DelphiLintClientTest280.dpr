@@ -1,4 +1,4 @@
-program DelphiLintClientTest280;
+﻿program DelphiLintClientTest280;
 
 {$R *.res}
 {$R *.dres}
