@@ -113,6 +113,7 @@ type
     FVisibleRule: string;
     FNavigationAllowed: Boolean;
     FRuleHtmlGenerator: TRuleHtmlGenerator;
+    FWebViewNeverFailed: Boolean;
 
     function GetSelectedIssue: ILiveIssue;
     procedure UpdateFileNameLabel(NewText: string = '');
@@ -126,6 +127,7 @@ type
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
 
+    procedure SetupRuleView;
     procedure RefreshRuleView;
 
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
@@ -161,6 +163,7 @@ uses
   , System.Types
   , System.UITypes
   , System.Win.ComObj
+  , Vcl.Dialogs
   , Winapi.ShellAPI
   , DelphiLint.Resources
   , DelphiLint.ExtWebView2
@@ -181,6 +184,7 @@ begin
   FRuleHtmls := TDictionary<string, string>.Create;
   FRuleHtmlGenerator := TRuleHtmlGenerator.Create;
   FIssues := TObjectList<TWrapper<ILiveIssue>>.Create;
+  FWebViewNeverFailed := True;
 
   Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 
@@ -200,12 +204,15 @@ begin
 
   LintContext.Plugin.OnActiveFileChanged.AddListener(ChangeActiveFile);
 
-  TThread.ForceQueue(
-    TThread.Current,
-    procedure begin
-      RuleBrowser.UserDataFolder := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bds.exe.WebView2');
-      RuleBrowser.CreateWebView;
-    end);
+  TThread.ForceQueue(TThread.Current, SetupRuleView);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.SetupRuleView;
+begin
+  RuleBrowser.UserDataFolder := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bds.exe.WebView2');
+  RuleBrowser.CreateWebView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -712,8 +719,28 @@ var
   DelphiColor: Integer;
 begin
   if not RuleBrowser.WebViewCreated then begin
+    Log.Warn('Rule browser could not be initialized - result code %x', [AResult]);
+
+    if FWebViewNeverFailed then begin
+      TaskMessageDlg(
+        'DelphiLint''s embedded Edge view could not be initialized.',
+        Format(
+          'Please ensure that Microsoft Edge 79.0.309 or above is installed, and ' +
+          'WebView2Loader.dll exists in %s.'#13#10#13#10'Error code %x',
+          [TPath.Combine(LintContext.Settings.SettingsDirectory, 'bin'), AResult]
+        ),
+        mtError,
+        [mbOK],
+        0
+      );
+
+      FWebViewNeverFailed := False;
+    end;
+
     Exit;
   end;
+
+  Log.Info('Rule browser successfully initialized');
 
   RuleBrowser.SettingsInterface.Set_AreDevToolsEnabled({$IFDEF DEBUG}1{$ELSE}0{$ENDIF});
   RuleBrowser.SettingsInterface.Set_AreDefaultContextMenusEnabled(0);
