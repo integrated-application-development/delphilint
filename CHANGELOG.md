@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2024-06-11
+
 ### Changed
 
 * Error reporting has been improved around initialization of the rule view's Edge browser embed.
@@ -256,7 +258,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolved issue retrieval.
 * Support for reading `sonar-project.properties`.
 
-[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v1.1.0...HEAD
+[unreleased]: https://github.com/integrated-application-development/delphilint/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/integrated-application-development/delphilint/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/integrated-application-development/delphilint/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/integrated-application-development/delphilint/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/integrated-application-development/delphilint/compare/v1.0.0...v1.0.1
