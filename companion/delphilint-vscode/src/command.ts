@@ -116,6 +116,58 @@ async function doAnalyze(
   statusUpdate(`${issues.length} ${issueWord} found`);
 }
 
+type Configuration = {
+  apiToken: string;
+  sonarHostUrl: string;
+  projectKey: string;
+  baseDir: string;
+  projectPropertiesPath: string;
+};
+
+function getDefaultConfiguration(): Configuration {
+  return {
+    apiToken: "",
+    sonarHostUrl: "",
+    projectKey: "",
+    baseDir: "",
+    projectPropertiesPath: "",
+  };
+}
+
+async function retrieveEffectiveConfiguration(
+  projectFile: string
+): Promise<Configuration> {
+  let config = getDefaultConfiguration();
+
+  const projectOptions = getProjectOptions(projectFile);
+  if (projectOptions) {
+    config.baseDir = projectOptions.baseDir();
+    config.projectPropertiesPath = projectOptions.projectPropertiesPath();
+    if (projectOptions.connectedMode()) {
+      config.sonarHostUrl = projectOptions.sonarHostUrl();
+      config.projectKey = projectOptions.projectKey();
+      console.log(settings.getSonarTokens());
+      config.apiToken =
+        settings.getSonarTokens()?.[projectOptions.sonarHostUrl()]?.[
+          projectOptions.projectKey()
+        ] ?? "";
+    }
+  } else {
+    config.baseDir = path.dirname(projectFile);
+  }
+
+  return config;
+}
+
+async function selectProjectFile(
+  statusItem: LintStatusItem
+): Promise<string | null> {
+  statusItem.setAction("Selecting project...");
+  const projectChoice = await getOrPromptActiveProject();
+  statusItem.setActiveProject(projectChoice);
+  return projectChoice || null;
+}
+
 async function analyzeFiles(
   serverSupplier: ServerSupplier,
   issueCollection: vscode.DiagnosticCollection,
@@ -124,44 +176,20 @@ async function analyzeFiles(
 ) {
   inAnalysis = true;
   try {
-    statusItem.setAction("Selecting project...");
+    const projectFile = await selectProjectFile(statusItem);
 
-    let apiToken = "";
-    let sonarHostUrl = "";
-    let projectKey = "";
-    let baseDir: string | null = null;
-    let projectPropertiesPath = "";
-
-    const projectChoice = await getOrPromptActiveProject();
-    statusItem.setActiveProject(projectChoice);
-    const projectFile = projectChoice || null;
-
+    let config;
     if (projectFile) {
-      baseDir = path.dirname(projectFile);
-
-      const projectOptions = getProjectOptions(projectFile);
-      if (projectOptions) {
-        baseDir = projectOptions.baseDir();
-        projectPropertiesPath = projectOptions.projectPropertiesPath();
-        if (projectOptions.connectedMode()) {
-          sonarHostUrl = projectOptions.sonarHostUrl();
-          projectKey = projectOptions.projectKey();
-          console.log(settings.getSonarTokens());
-          apiToken =
-            settings.getSonarTokens()?.[projectOptions.sonarHostUrl()]?.[
-              projectOptions.projectKey()
-            ] ?? "";
-        }
-      }
+      config = await retrieveEffectiveConfiguration(projectFile);
     } else {
-      baseDir = getDefaultBaseDir(files);
+      config = getDefaultConfiguration();
+      config.baseDir = getDefaultBaseDir(files);
     }
 
     statusItem.setAction("Checking files...");
-
     const inputFiles = constructInputFiles(
       files,
-      baseDir,
+      config.baseDir,
       projectFile ?? undefined
     );
     if (!inputFiles) {
@@ -176,22 +204,22 @@ async function analyzeFiles(
     statusItem.setAction("Initializing server...");
     await server.initialize({
       bdsPath: settings.getBdsPath(),
-      apiToken,
+      apiToken: config.apiToken,
       compilerVersion: settings.getCompilerVersion(),
-      sonarHostUrl,
+      sonarHostUrl: config.sonarHostUrl,
       sonarDelphiVersion: settings.getSonarDelphiVersion(),
     });
 
     statusItem.setAction("Analyzing...");
     await doAnalyze(server, issueCollection, statusItem.setAction, {
-      baseDir,
+      baseDir: config.baseDir,
       inputFiles: projectFile ? [...inputFiles, projectFile] : inputFiles,
-      projectKey,
-      projectPropertiesPath,
-      sonarHostUrl,
-      apiToken,
+      projectKey: config.projectKey,
+      projectPropertiesPath: config.projectPropertiesPath,
+      sonarHostUrl: config.sonarHostUrl,
+      apiToken: config.apiToken,
       disabledRules:
-        sonarHostUrl === "" && !settings.getUseDefaultRules()
+        config.sonarHostUrl === "" && !settings.getUseDefaultRules()
           ? settings.getDisabledRules()
           : undefined,
     });
