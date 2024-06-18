@@ -110,8 +110,6 @@ public abstract class AbstractStandaloneSonarHost implements SonarHost {
     return SonarCharacteristics.latest();
   }
 
-  public abstract String getName();
-
   @Override
   public Map<String, String> getRuleNamesByRuleKey() {
     return getRules().stream().collect(Collectors.toMap(RemoteRule::getKey, RemoteRule::getName));
