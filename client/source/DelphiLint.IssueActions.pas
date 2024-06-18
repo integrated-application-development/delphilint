@@ -292,15 +292,38 @@ end;
 
 procedure ReflowQuickFixEdits(TextEdits: TList<TLiveTextEdit>; EditIndex: Integer);
 var
-  AppliedEdit: TLiveTextEdit;
-  I: Integer;
-  LinesAdded: Integer;
-  ColumnsAdded: Integer;
-  SuccessorEdit: TLiveTextEdit;
   AppliedLine: Integer;
   AppliedLineOffset: Integer;
-  LineAfter: Boolean;
-  PositionAfter: Boolean;
+  LinesAdded: Integer;
+  ColumnsAdded: Integer;
+
+  procedure OffsetPosition(var TargetLine: Integer; var TargetOffset: Integer);
+  var
+    LineAfter: Boolean;
+    PositionAfter: Boolean;
+  begin
+    LineAfter := TargetLine > AppliedLine;
+    PositionAfter := LineAfter or ((TargetLine = AppliedLine) and (TargetOffset >= AppliedLineOffset));
+
+    if PositionAfter then begin
+      if not LineAfter then begin
+        // This pos starts after the applied edit on the same line, offset column
+        TargetOffset := TargetOffset + ColumnsAdded;
+      end;
+
+      // This pos starts after the applied edit, offset line
+      TargetLine := TargetLine + LinesAdded;
+    end;
+  end;
+
+var
+  AppliedEdit: TLiveTextEdit;
+  CurrentEdit: TLiveTextEdit;
+  I: Integer;
+  StartLine: Integer;
+  StartLineOffset: Integer;
+  EndLine: Integer;
+  EndLineOffset: Integer;
 begin
   AppliedEdit := TextEdits[EditIndex];
   AppliedLine := AppliedEdit.RelativeEndLine;
@@ -313,42 +336,25 @@ begin
   end;
 
   for I := EditIndex + 1 to TextEdits.Count - 1 do begin
-    SuccessorEdit := TextEdits[I];
+    CurrentEdit := TextEdits[I];
 
-    if SuccessorEdit.RelativeEndLine < AppliedLine then begin
+    if CurrentEdit.RelativeEndLine < AppliedLine then begin
       // Higher edits don't need to be offset
       Continue;
     end;
 
-    LineAfter := SuccessorEdit.RelativeStartLine > AppliedLine;
-    PositionAfter := LineAfter or (
-      (SuccessorEdit.RelativeStartLine = AppliedLine) and (SuccessorEdit.StartLineOffset >= AppliedLineOffset)
-    );
+    StartLine := CurrentEdit.RelativeStartLine;
+    StartLineOffset := CurrentEdit.StartLineOffset;
+    EndLine := CurrentEdit.RelativeEndLine;
+    EndLineOffset := CurrentEdit.EndLineOffset;
 
-    if PositionAfter then begin
-      if not LineAfter then begin
-        // This edit starts after the applied edit on the same line, offset column
-        SuccessorEdit.StartLineOffset := SuccessorEdit.StartLineOffset + ColumnsAdded;
-      end;
+    OffsetPosition(StartLine, StartLineOffset);
+    OffsetPosition(EndLine, EndLineOffset);
 
-      // This edit starts after the applied edit, offset line
-      SuccessorEdit.RelativeStartLine := SuccessorEdit.RelativeStartLine + LinesAdded;
-    end;
-
-    LineAfter := SuccessorEdit.RelativeEndLine > AppliedLine;
-    PositionAfter := LineAfter or (
-      (SuccessorEdit.RelativeEndLine = AppliedLine) and (SuccessorEdit.EndLineOffset >= AppliedLineOffset)
-    );
-
-    if PositionAfter then begin
-      if not LineAfter then begin
-        // This edit after the applied edit on the same line, offset column
-        SuccessorEdit.EndLineOffset := SuccessorEdit.EndLineOffset + ColumnsAdded;
-      end;
-
-      // This edit ends after the applied edit, offset line
-      SuccessorEdit.RelativeEndLine := SuccessorEdit.RelativeEndLine + LinesAdded;
-    end;
+    CurrentEdit.RelativeStartLine := StartLine;
+    CurrentEdit.StartLineOffset := StartLineOffset;
+    CurrentEdit.RelativeEndLine := EndLine;
+    CurrentEdit.EndLineOffset := EndLineOffset;
   end;
 end;
 
