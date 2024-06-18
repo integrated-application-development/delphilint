@@ -31,8 +31,6 @@ type
     procedure MockAllToolBars(IDEServices: TMockIDEServices);
     procedure BuildMockedContext(out IDEServices: TMockIDEServices);
   public
-    [Setup]
-    procedure Setup;
     [TearDown]
     procedure TearDown;
 
@@ -73,13 +71,6 @@ uses
   , DelphiLint.SetupForm
   , DelphiLint.OptionsForm
   ;
-
-//______________________________________________________________________________________________________________________
-
-procedure TIDEPluginTest.Setup;
-begin
-  MockContext.Reset;
-end;
 
 //______________________________________________________________________________________________________________________
 

@@ -362,12 +362,15 @@ var
   IDEServices: TMockIDEServices;
   Project: TMockProject;
   ProjectDir: string;
-  ProjectOptions: TLintProjectOptions;
 begin
   MockIDEServices(IDEServices);
-  ProjectOptions := TLintProjectOptions.Create(CProjectOptionsFile, True);
-  MockContext.MockProjectOptions(CProjectFile, ProjectOptions);
-  ProjectOptions.AnalysisBaseDir := CProjectDirRelative;
+  MockContext.MockProjectOptions(
+    CProjectFile,
+    function: TLintProjectOptions
+    begin
+      Result := TLintProjectOptions.Create(CProjectOptionsFile, True);
+      Result.AnalysisBaseDir := CProjectDirRelative;
+    end);
 
   Project := TMockProject.Create;
   IDEServices.MockActiveProject(Project);

@@ -583,7 +583,7 @@ procedure TLintServer.OnRuleRetrieveResponse(
   var
     Pair: TJSONPair;
   begin
-    Result := TObjectDictionary<string, TRule>.Create;
+    Result := TObjectDictionary<string, TRule>.Create([doOwnsValues]);
     for Pair in Json do begin
       Result.Add(Pair.JsonString.Value, TRule.CreateFromJson(TJSONObject(Pair.JsonValue)));
     end;

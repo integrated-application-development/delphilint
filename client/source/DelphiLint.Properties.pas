@@ -72,7 +72,7 @@ type
     procedure Load(IniFile: TIniFile); override;
   end;
 
-  TPropertiesFile = class(TInterfacedObject)
+  TPropertiesFile = class(TObject)
   private
     FPath: string;
     FFields: TArray<TPropFieldBase>;
