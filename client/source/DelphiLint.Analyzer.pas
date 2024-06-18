@@ -235,11 +235,11 @@ end;
 constructor TAnalyzerImpl.Create;
 begin
   inherited;
-  FActiveIssues := TObjectDictionary<string, TList<ILiveIssue>>.Create;
+  FActiveIssues := TObjectDictionary<string, TList<ILiveIssue>>.Create([doOwnsValues]);
   FCurrentAnalysis := nil;
   FFileAnalyses := TDictionary<string, TFileAnalysisHistory>.Create;
   FOnAnalysisStateChanged := TEventNotifier<TAnalysisStateChangeContext>.Create;
-  FRules := TObjectDictionary<string, TRule>.Create;
+  FRules := TObjectDictionary<string, TRule>.Create([doOwnsValues]);
   FServerThread := TLintServerThread.Create;
   FServerThread.FreeOnTerminate := False;
 end;

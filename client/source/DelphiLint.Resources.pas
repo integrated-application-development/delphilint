@@ -82,8 +82,8 @@ constructor TLintResources.Create;
 begin
   inherited;
 
-  FLoadedPngs := TObjectDictionary<string, TPngImage>.Create;
-  FLoadedBitmaps := TObjectDictionary<string, TBitmap>.Create;
+  FLoadedPngs := TObjectDictionary<string, TPngImage>.Create([doOwnsValues]);
+  FLoadedBitmaps := TObjectDictionary<string, TBitmap>.Create([doOwnsValues]);
   FLoadedStrings := TDictionary<string, string>.Create;
 end;
 

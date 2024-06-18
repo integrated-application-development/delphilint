@@ -245,7 +245,7 @@ type
     FActions: TList<TCustomAction>;
     FIDEInsightActions: TList<TCustomActionList>;
     FEditorNotifiers: TDictionary<Integer, IIDEEditorHandler>;
-    FMenus: TObjectDictionary<string, TMenuItem>;
+    FMenus: TDictionary<string, TMenuItem>;
     FPluginInfos: TObjectDictionary<Integer, TMockPluginInfo>;
     FPluginTitle: string;
     FPluginIcon: TBitmap;
@@ -261,7 +261,7 @@ type
     property Actions: TList<TCustomAction> read FActions;
     property IDEInsightActions: TList<TCustomActionList> read FIDEInsightActions;
     property EditorNotifiers: TDictionary<Integer, IIDEEditorHandler> read FEditorNotifiers;
-    property Menus: TObjectDictionary<string, TMenuItem> read FMenus;
+    property Menus: TDictionary<string, TMenuItem> read FMenus;
     property PluginInfos: TObjectDictionary<Integer, TMockPluginInfo> read FPluginInfos;
 
     property PluginTitle: string read FPluginTitle write FPluginTitle;
@@ -362,15 +362,18 @@ type
     property IDE: TMockIDE read FIDE;
   end;
 
+  TProjectOptionsProvider = reference to function: TLintProjectOptions;
+
   TMockLintContext = class(TInterfacedObject, ILintContext)
   private
     FAnalyzer: IAnalyzer;
     FIDEServices: IIDEServices;
     FPlugin: IPlugin;
     FSettings: TLintSettings;
-    FProjectOptionsList: TObjectDictionary<string, TLintProjectOptions>;
+    FProjectOptionsProviders: TDictionary<string, TProjectOptionsProvider>;
     FSetupValid: Boolean;
     FTempSettingsFile: string;
+    FInited: Boolean;
 
     procedure Init;
     procedure Deinit;
@@ -387,7 +390,7 @@ type
     procedure MockPlugin(Plugin: IPlugin);
     procedure MockSettings; overload;
     procedure MockSettings(Settings: TLintSettings); overload;
-    procedure MockProjectOptions(ProjectFile: string; ProjectOptions: TLintProjectOptions);
+    procedure MockProjectOptions(ProjectFile: string; Provider: TProjectOptionsProvider);
     procedure MockInvalidSetup;
     procedure Reset;
 
@@ -429,8 +432,8 @@ begin
 
   FFileHistories := TDictionary<string, TFileAnalysisHistory>.Create;
   FFileStatuses := TDictionary<string, TFileAnalysisStatus>.Create;
-  FIssues := TObjectDictionary<string, TDictionary<Integer, ILiveIssue>>.Create;
-  FRules := TObjectDictionary<string, TRule>.Create;
+  FIssues := TObjectDictionary<string, TDictionary<Integer, ILiveIssue>>.Create([doOwnsValues]);
+  FRules := TObjectDictionary<string, TRule>.Create([doOwnsValues]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -574,7 +577,7 @@ begin
   Path := NormalizePath(Path);
   FIssues.AddOrSetValue(
     Path,
-    TObjectDictionary<Integer, ILiveIssue>.Create([TPair<Integer, ILiveIssue>.Create(Line, Issue)]));
+    TDictionary<Integer, ILiveIssue>.Create([TPair<Integer, ILiveIssue>.Create(Line, Issue)]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -584,7 +587,7 @@ var
   I: Integer;
 begin
   Path := NormalizePath(Path);
-  FIssues.AddOrSetValue(Path, TObjectDictionary<Integer, ILiveIssue>.Create);
+  FIssues.AddOrSetValue(Path, TDictionary<Integer, ILiveIssue>.Create);
 
   for I := 0 to Length(Issues) - 1 do begin
     FIssues[Path].AddOrSetValue(Issues[I].StartLine, Issues[I]);
@@ -656,24 +659,35 @@ end;
 
 procedure TMockLintContext.Init;
 begin
-  FProjectOptionsList := TObjectDictionary<string, TLintProjectOptions>.Create;
+  if FInited then begin
+    Exit;
+  end;
+
+  FProjectOptionsProviders := TDictionary<string, TProjectOptionsProvider>.Create;
   FSetupValid := True;
+  FInited := True;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TMockLintContext.Deinit;
 begin
+  if not FInited then begin
+    Exit;
+  end;
+
   FAnalyzer := nil;
   FPlugin := nil;
   FreeAndNil(FSettings);
   FIDEServices := nil;
-  FreeAndNil(FProjectOptionsList);
+  FreeAndNil(FProjectOptionsProviders);
 
   if FTempSettingsFile <> '' then begin
     TFile.Delete(FTempSettingsFile);
     FTempSettingsFile := '';
   end;
+
+  FInited := False;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -714,11 +728,11 @@ end;
 function TMockLintContext.GetProjectOptions(ProjectFile: string): TLintProjectOptions;
 begin
   ProjectFile := NormalizePath(ProjectFile);
-  if not FProjectOptionsList.ContainsKey(ProjectFile) then begin
+  if not FProjectOptionsProviders.ContainsKey(ProjectFile) then begin
     raise EMockError.CreateFmt('Project options for file ''%s'' have not been mocked', [ProjectFile]);
   end;
 
-  Result := FProjectOptionsList[ProjectFile];
+  Result := FProjectOptionsProviders[ProjectFile]();
 end;
 
 //______________________________________________________________________________________________________________________
@@ -762,9 +776,9 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TMockLintContext.MockProjectOptions(ProjectFile: string; ProjectOptions: TLintProjectOptions);
+procedure TMockLintContext.MockProjectOptions(ProjectFile: string; Provider: TProjectOptionsProvider);
 begin
-  FProjectOptionsList.AddOrSetValue(NormalizePath(ProjectFile), ProjectOptions);
+  FProjectOptionsProviders.AddOrSetValue(NormalizePath(ProjectFile), Provider);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -867,7 +881,7 @@ begin
   FMacros := TDictionary<string, string>.Create;
   FStyleColors := TDictionary<TStyleColor, TColor>.Create;
   FSystemColors := TDictionary<TColor, TColor>.Create;
-  FToolBars := TObjectDictionary<string, TToolBar>.Create;
+  FToolBars := TObjectDictionary<string, TToolBar>.Create([doOwnsValues]);
   FModules := TList<IIDEModule>.Create;
 end;
 
@@ -931,7 +945,8 @@ procedure TMockIDEServices.AddPluginBitmap(const Caption: string; Image: TBitmap
   const LicenseStatus: string; const Version: string);
 begin
   FIDE.PluginTitle := Caption;
-  FIDE.PluginIcon := Image;
+  FIDE.PluginIcon := TBitmap.Create;
+  FIDE.PluginIcon.Assign(Image);
   FIDE.PluginLicenseStatus := LicenseStatus;
   FIDE.PluginVersion := Version;
   FIDE.PluginRegistered := not IsUnregistered;
@@ -940,10 +955,15 @@ end;
 //______________________________________________________________________________________________________________________
 
 function TMockIDEServices.AddPluginInfo(const Title: string; const Description: string; Image: TBitmap): Integer;
+var
+  ImageCopy: TBitmap;
 begin
   Result := FNextId;
   Inc(FNextId);
-  FIDE.PluginInfos.Add(Result, TMockPluginInfo.Create(Title, Description, Image));
+
+  ImageCopy := TBitmap.Create;
+  ImageCopy.Assign(Image);
+  FIDE.PluginInfos.Add(Result, TMockPluginInfo.Create(Title, Description, ImageCopy));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -1137,9 +1157,11 @@ begin
   FActions := TList<TCustomAction>.Create;
   FIDEInsightActions := TList<TCustomActionList>.Create;
   FEditorNotifiers := TDictionary<Integer, IIDEEditorHandler>.Create;
-  FMenus := TObjectDictionary<string, TMenuItem>.Create;
-  FPluginInfos := TObjectDictionary<Integer, TMockPluginInfo>.Create;
+  FMenus := TDictionary<string, TMenuItem>.Create;
+  FPluginInfos := TObjectDictionary<Integer, TMockPluginInfo>.Create([doOwnsValues]);
 end;
+
+//______________________________________________________________________________________________________________________
 
 destructor TMockIDE.Destroy;
 begin
