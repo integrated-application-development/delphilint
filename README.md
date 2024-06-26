@@ -44,6 +44,9 @@ Installation steps:
 2. Unzip the folder and run the included `install.bat` script.
 3. Done!
 
+> [!NOTE]
+> Using the precompiled BPLs in different minor versions from which they were compiled can cause compatibility problems in some circumstances. If you encounter issues, please [build from source](#building-from-source).
+
 ### Installing the VS Code companion
 
 1. Download the .vsix extension file from [the latest release](https://github.com/integrated-application-development/delphilint/releases/latest),
