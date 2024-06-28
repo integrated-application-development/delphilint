@@ -31,9 +31,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,13 +97,21 @@ public class HttpSonarApi implements SonarApi {
     return getText(url + HttpUtils.buildParamString(params));
   }
 
-  private <T> T getResponse(String url, BodyHandler<T> handler) throws SonarHostException {
-    var reqBuilder = HttpRequest.newBuilder(URI.create(url));
-
-    if (!this.token.isEmpty()) {
-      reqBuilder.header("Authorization", "Bearer " + token);
+  private Optional<String> getAuthorizationHeader() {
+    if (token.isEmpty()) {
+      return Optional.empty();
     }
 
+    // While SonarQube 10.0 and up support the Bearer authentication scheme, SonarQube 9.9 only
+    // supports Basic authentication. Tokens should be supplied via the user field.
+    var userPass = token + ":";
+    var credentials = Base64.getEncoder().encodeToString(userPass.getBytes(StandardCharsets.UTF_8));
+    return Optional.of("Basic " + credentials);
+  }
+
+  private <T> T getResponse(String url, BodyHandler<T> handler) throws SonarHostException {
+    var reqBuilder = HttpRequest.newBuilder(URI.create(url));
+    getAuthorizationHeader().ifPresent(value -> reqBuilder.header("Authorization", value));
     HttpRequest request = reqBuilder.build();
 
     try {
