@@ -67,9 +67,9 @@ object LintOptionsForm: TLintOptionsForm
         Width = 234
         Height = 23
         Anchors = [akLeft, akTop, akRight]
-        EditLabel.Width = 56
+        EditLabel.Width = 61
         EditLabel.Height = 15
-        EditLabel.Caption = 'Server URL'
+        EditLabel.Caption = 'Server URL*'
         TabOrder = 0
         Text = ''
         OnChange = SonarHostUrlEditChange
@@ -93,9 +93,9 @@ object LintOptionsForm: TLintOptionsForm
         Width = 234
         Height = 23
         Anchors = [akLeft, akTop, akRight]
-        EditLabel.Width = 58
+        EditLabel.Width = 63
         EditLabel.Height = 15
-        EditLabel.Caption = 'Project key'
+        EditLabel.Caption = 'Project key*'
         TabOrder = 1
         Text = ''
         OnChange = SonarHostProjectKeyEditChange
