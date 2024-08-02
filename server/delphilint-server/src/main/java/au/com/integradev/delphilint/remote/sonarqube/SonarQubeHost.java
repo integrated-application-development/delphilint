@@ -31,6 +31,7 @@ import au.com.integradev.delphilint.remote.SoftwareQuality;
 import au.com.integradev.delphilint.remote.SonarCharacteristics;
 import au.com.integradev.delphilint.remote.SonarHost;
 import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.SonarHostForbiddenException;
 import au.com.integradev.delphilint.remote.UncheckedSonarHostException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -109,10 +110,10 @@ public class SonarQubeHost implements SonarHost {
   }
 
   public SonarCharacteristics getCharacteristics() throws SonarHostException {
-    if (this.characteristics == null) {
-      this.characteristics = calculateCharacteristics();
+    if (characteristics == null) {
+      characteristics = calculateCharacteristics();
     }
-    return this.characteristics;
+    return characteristics;
   }
 
   public SonarQubeQualityProfile getQualityProfile() throws SonarHostException {
@@ -417,6 +418,14 @@ public class SonarQubeHost implements SonarHost {
           remoteHotspots.add(sqIssueToRemote(sqHotspot));
         }
       } catch (UncheckedSonarHostException e) {
+        if (e.getCause() instanceof SonarHostForbiddenException) {
+          // SonarQube has a bug that causes /api/hotspots/search to only be accessible when
+          // using a user token, counter to their documentation. We must recover gracefully
+          // from this situation so that analysis and project tokens remain mostly supported.
+          LOG.warn(e);
+          return Collections.emptySet();
+        }
+
         throw (SonarHostException) e.getCause();
       }
     }
