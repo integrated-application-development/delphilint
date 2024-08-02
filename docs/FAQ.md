@@ -3,6 +3,7 @@
 - [General](#general)
   - [How do I supply custom options to the Java Virtual Machine?](#how-do-i-supply-custom-options-to-the-java-virtual-machine)
   - [How do I uninstall DelphiLint?](#how-do-i-uninstall-delphilint)
+  - [How do I authenticate with a SonarQube instance in Connected Mode?](#how-do-i-authenticate-with-a-sonarqube-instance-in-connected-mode)
 - [Troubleshooting](#troubleshooting)
   - [When I go to analyze a file, it says "File not analyzable" and analysis is greyed out.](#when-i-go-to-analyze-a-file-it-says-file-not-analyzable-and-analysis-is-greyed-out)
   - ["Analyze All Open Files" does not analyze my `.dpr` or `.dpk` file, even though it is open.](#analyze-all-open-files-does-not-analyze-my-dpr-or-dpk-file-even-though-it-is-open)
@@ -35,6 +36,22 @@ To totally remove all traces of DelphiLint from your system, delete the folder `
 > [!NOTE]
 > When upgrading to a new DelphiLint version, the install script automatically uninstalls any other versions -
 > there is no need to perform a manual uninstall beforehand.
+
+### How do I authenticate with a SonarQube instance in Connected Mode?
+
+Unless "Force user authentication" is disabled on the SonarQube instance, you will require a SonarQube token.
+SonarQube allows you to generate three types of tokens:
+
+* User tokens, which authenticate as a certain user
+* Project analysis tokens, which can be used to run analyses on the project it was generated for
+* Global analysis tokens, which can be used to run analyses on every project
+
+While DelphiLint supports all three token types, it is highly recommended that you provide **user** tokens if possible.
+Due to an undocumented limitation in SonarQube's API, project analysis tokens and global analysis tokens are unable to
+access information about project security hotspots.
+
+For more information about generating and using tokens, see the
+[SonarQube documentation](https://docs.sonarsource.com/sonarqube/latest/user-guide/user-account/generating-and-using-tokens/).
 
 ## Troubleshooting
 
