@@ -74,6 +74,7 @@ type
 
     procedure UpdateControls;
     procedure UpdateTokenInfo;
+    function Validate: Boolean;
   public
     procedure RefreshOptions;
     procedure RefreshTheme;
@@ -137,7 +138,6 @@ begin
     SonarHostDownloadPluginCheckBox.Checked := FProjectOptions.SonarHostDownloadPlugin;
     AnalysisBaseDirEdit.Text := FProjectOptions.AnalysisBaseDir;
     AnalysisReadPropertiesCheckBox.Checked := FProjectOptions.AnalysisReadProperties;
-    SaveButton.Enabled := True;
 
     ProjectName := TPath.GetFileName(FProjectFile);
     ProjectNameLabel.Caption := 'DelphiLint: ' + ProjectName;
@@ -149,12 +149,12 @@ begin
     SonarHostDownloadPluginCheckBox.Checked := False;
     AnalysisBaseDirEdit.Text := '';
     AnalysisReadPropertiesCheckBox.Checked := False;
-    SaveButton.Enabled := False;
 
     ProjectNameLabel.Caption := 'DelphiLint: (no project)';
     Caption := 'DelphiLint Project Options (no project)';
   end;
 
+  SaveButton.Enabled := Validate;
   UpdateTokenInfo;
 end;
 
@@ -242,6 +242,7 @@ begin
     FProjectOptions.SonarHostUrl := SonarHostUrlEdit.Text;
     UpdateTokenInfo;
   end;
+  SaveButton.Enabled := Validate;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -261,6 +262,7 @@ begin
   if Assigned(FProjectOptions) then begin
     FProjectOptions.SonarHostProjectKey := SonarHostProjectKeyEdit.Text;
   end;
+  SaveButton.Enabled := Validate;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -320,6 +322,18 @@ begin
     IsConnectedMode
     and (FProjectOptions.SonarHostProjectKey <> '')
     and IsUrl(FProjectOptions.SonarHostUrl);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintOptionsForm.Validate: Boolean;
+begin
+  if IsConnectedMode then begin
+    Result := (SonarHostUrlEdit.Text <> '') and (SonarHostProjectKeyEdit.Text <> '');
+  end
+  else begin
+    Result := True;
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
