@@ -1,10 +1,10 @@
 object LintSettingsFrame: TLintSettingsFrame
   Left = 0
   Top = 0
-  Width = 439
+  Width = 772
   Height = 340
   Constraints.MinHeight = 340
-  Constraints.MinWidth = 400
+  Constraints.MinWidth = 420
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBtnText
   Font.Height = -12
@@ -13,14 +13,14 @@ object LintSettingsFrame: TLintSettingsFrame
   ParentFont = False
   TabOrder = 0
   DesignSize = (
-    439
+    772
     340)
   object TopPageControl: TPageControl
     Left = 3
     Top = 3
-    Width = 433
+    Width = 769
     Height = 332
-    ActivePage = GeneralSheet
+    ActivePage = ConnectedSheet
     Anchors = [akLeft, akTop, akRight, akBottom]
     RaggedRight = True
     TabOrder = 0
@@ -30,7 +30,7 @@ object LintSettingsFrame: TLintSettingsFrame
       object GeneralPanel: TPanel
         Left = 0
         Top = 0
-        Width = 425
+        Width = 761
         Height = 302
         Align = alClient
         BevelOuter = bvNone
@@ -114,7 +114,7 @@ object LintSettingsFrame: TLintSettingsFrame
       object StandalonePanel: TPanel
         Left = 0
         Top = 0
-        Width = 425
+        Width = 761
         Height = 302
         Align = alClient
         BevelOuter = bvNone
@@ -122,7 +122,7 @@ object LintSettingsFrame: TLintSettingsFrame
         object StandaloneRulesListBox: TCheckListBox
           Left = 0
           Top = 185
-          Width = 425
+          Width = 761
           Height = 117
           Align = alClient
           ItemHeight = 15
@@ -132,7 +132,7 @@ object LintSettingsFrame: TLintSettingsFrame
         object Panel1: TPanel
           Left = 0
           Top = 0
-          Width = 425
+          Width = 761
           Height = 185
           Align = alTop
           BevelOuter = bvNone
@@ -219,7 +219,7 @@ object LintSettingsFrame: TLintSettingsFrame
         object PlaceholderStandaloneRulesPanel: TPanel
           Left = 0
           Top = 185
-          Width = 425
+          Width = 761
           Height = 117
           Align = alClient
           BevelOuter = bvNone
@@ -242,16 +242,16 @@ object LintSettingsFrame: TLintSettingsFrame
       object ConnectedPanel: TPanel
         Left = 0
         Top = 0
-        Width = 425
+        Width = 761
         Height = 302
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
         object TokensGrid: TDBGrid
           Left = 25
-          Top = 33
-          Width = 400
-          Height = 269
+          Top = 73
+          Width = 736
+          Height = 229
           Align = alClient
           DataSource = TokensDataSource
           Options = [dgEditing, dgTitles, dgIndicator, dgRowLines, dgTabs, dgCancelOnExit]
@@ -284,15 +284,18 @@ object LintSettingsFrame: TLintSettingsFrame
               Visible = True
             end>
         end
-        object Panel2: TPanel
+        object ConnectedTopPanel: TPanel
           Left = 0
           Top = 0
-          Width = 425
-          Height = 33
+          Width = 761
+          Height = 73
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          object Label3: TLabel
+          DesignSize = (
+            761
+            73)
+          object AuthHeaderLabel: TLabel
             Left = 13
             Top = 8
             Width = 166
@@ -305,12 +308,60 @@ object LintSettingsFrame: TLintSettingsFrame
             Font.Style = []
             ParentFont = False
           end
+          object TokenNotePanel: TPanel
+            AlignWithMargins = True
+            Left = 25
+            Top = 33
+            Width = 736
+            Height = 32
+            Margins.Left = 10
+            Margins.Top = 10
+            Margins.Right = 10
+            Margins.Bottom = 10
+            Anchors = [akLeft, akTop, akRight]
+            BevelOuter = bvNone
+            Padding.Left = 4
+            Padding.Top = 4
+            Padding.Right = 4
+            Padding.Bottom = 4
+            ParentBackground = False
+            TabOrder = 0
+            object TokenNoteLabel: TLabel
+              AlignWithMargins = True
+              Left = 9
+              Top = 8
+              Width = 620
+              Height = 20
+              Margins.Left = 5
+              Margins.Top = 4
+              Align = alClient
+              Caption = 
+                'User-level tokens (squ_...) are recommended for full compatibility.'
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clBtnText
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+            end
+            object LearnMoreButton: TButton
+              Left = 632
+              Top = 4
+              Width = 100
+              Height = 24
+              Margins.Left = 5
+              Align = alRight
+              Caption = 'Learn more...'
+              TabOrder = 0
+              OnClick = LearnMoreButtonClick
+            end
+          end
         end
         object Panel3: TPanel
           Left = 0
-          Top = 33
+          Top = 73
           Width = 25
-          Height = 269
+          Height = 229
           Align = alLeft
           BevelOuter = bvNone
           TabOrder = 2
@@ -335,8 +386,8 @@ object LintSettingsFrame: TLintSettingsFrame
   end
   object TokensDataSource: TDataSource
     DataSet = TokensDataSet
-    Left = 268
-    Top = 74
+    Left = 124
+    Top = 178
   end
   object TokensDataSet: TClientDataSet
     Aggregates = <>

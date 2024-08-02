@@ -56,14 +56,14 @@ type
     GeneralSheet: TTabSheet;
     StandaloneSheet: TTabSheet;
     ConnectedSheet: TTabSheet;
-    Label3: TLabel;
+    AuthHeaderLabel: TLabel;
     Label4: TLabel;
     ConnectedPanel: TPanel;
     GeneralPanel: TPanel;
     StandalonePanel: TPanel;
     Label2: TLabel;
     VersionRefreshButton: TButton;
-    Panel2: TPanel;
+    ConnectedTopPanel: TPanel;
     Panel3: TPanel;
     Label5: TLabel;
     StandaloneRulesRadioGroup: TRadioGroup;
@@ -73,6 +73,9 @@ type
     EnableAll: TMenuItem;
     DisableAll: TMenuItem;
     PlaceholderStandaloneRulesPanel: TPanel;
+    TokenNoteLabel: TLabel;
+    TokenNotePanel: TPanel;
+    LearnMoreButton: TButton;
     procedure ComponentsButtonClick(Sender: TObject);
     procedure SonarDelphiVersionRadioGroupClick(Sender: TObject);
     procedure VersionRefreshButtonClick(Sender: TObject);
@@ -80,6 +83,7 @@ type
     procedure EnableAllClick(Sender: TObject);
     procedure DisableAllClick(Sender: TObject);
     procedure PlaceholderStandaloneRulesPanelClick(Sender: TObject);
+    procedure LearnMoreButtonClick(Sender: TObject);
   private
     FOnReleasesRetrieved: TThreadSafeEventNotifier<TArray<string>>;
     FReleasesRetrieved: Boolean;
@@ -120,6 +124,9 @@ uses
   , DelphiLint.SetupForm
   , DelphiLint.Context
   , DelphiLint.Settings
+  , DelphiLint.ExternalConsts
+  , Winapi.ShellAPI
+  , Winapi.Windows
   ;
 
 {$R *.dfm}
@@ -251,6 +258,16 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+procedure TLintSettingsFrame.LearnMoreButtonClick(Sender: TObject);
+var
+  Url: string;
+begin
+  Url := DelphiLint.ExternalConsts.CTokenInfoUrl;
+  ShellExecute(0, 'open', PChar(Url), nil, nil, SW_SHOWNORMAL);
+end;
+
+//______________________________________________________________________________________________________________________
+
 procedure TLintSettingsFrame.PlaceholderStandaloneRulesPanelClick(Sender: TObject);
 begin
   if (StandaloneRulesRadioGroup.ItemIndex = 1) and not Assigned(FStandaloneRules) then begin
@@ -340,8 +357,6 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TLintSettingsFrame.RetrieveReleases;
-const
-  CApiUrl = 'https://api.github.com/repos/integrated-application-development/sonar-delphi/releases';
 var
   Http: THTTPClient;
   Response: IHTTPResponse;
@@ -353,10 +368,12 @@ begin
   Http := THTTPClient.Create;
   try
     try
-      Response := Http.Get(CApiUrl);
+      Response := Http.Get(DelphiLint.ExternalConsts.CReleasesApiUrl);
     except
       on E: ENetHTTPClientException do begin
-        Log.Warn('Could not retrieve SonarDelphi releases from %s: %s', [CApiUrl, E.Message]);
+        Log.Warn(
+          'Could not retrieve SonarDelphi releases from %s: %s',
+          [DelphiLint.ExternalConsts.CReleasesApiUrl, E.Message]);
         FOnReleasesRetrieved.Notify([]);
         Exit;
       end;

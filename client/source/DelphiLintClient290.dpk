@@ -67,7 +67,8 @@ contains
   DelphiLint.ExtWebView2 in 'DelphiLint.ExtWebView2.pas',
   DelphiLint.LiveData in 'DelphiLint.LiveData.pas',
   DelphiLint.IssueActions in 'DelphiLint.IssueActions.pas',
-  DelphiLint.PopupHook in 'DelphiLint.PopupHook.pas';
+  DelphiLint.PopupHook in 'DelphiLint.PopupHook.pas',
+  DelphiLint.ExternalConsts in 'DelphiLint.ExternalConsts.pas';
 
 {$R DelphiLintClientAdditional.res}
 
