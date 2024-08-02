@@ -21,6 +21,7 @@ import au.com.integradev.delphilint.remote.JsonHttpHandler;
 import au.com.integradev.delphilint.remote.SonarHostBadRequestException;
 import au.com.integradev.delphilint.remote.SonarHostConnectException;
 import au.com.integradev.delphilint.remote.SonarHostException;
+import au.com.integradev.delphilint.remote.SonarHostForbiddenException;
 import au.com.integradev.delphilint.remote.SonarHostStatusCodeException;
 import au.com.integradev.delphilint.remote.SonarHostUnauthorizedException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -123,6 +124,8 @@ public class HttpSonarApi implements SonarApi {
         throw new SonarHostBadRequestException();
       } else if (response.statusCode() == 401) {
         throw new SonarHostUnauthorizedException();
+      } else if (response.statusCode() == 403) {
+        throw new SonarHostForbiddenException();
       } else {
         throw new SonarHostStatusCodeException(response.statusCode());
       }

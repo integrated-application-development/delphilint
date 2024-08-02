@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Incompatibility with SonarQube 9.9, by using the HTTP Basic authentication scheme instead of the Bearer scheme.
+* Incompatibility with SonarQube project and global analysis tokens in Connected Mode.
 
 ## [1.1.1] - 2024-06-11
 
