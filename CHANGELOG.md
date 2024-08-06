@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 * Project Options now prevents a blank server URL or project key when in Connected Mode.
+* The default SonarDelphi version is now [1.8.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.8.0).
 
 ### Fixed
 
