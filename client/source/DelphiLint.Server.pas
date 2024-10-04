@@ -925,7 +925,7 @@ begin
     while not Terminated do begin
       AcquireServerPossibleUninit;
       try
-        if Assigned(FServer) and (not Terminated) and not (FServer.Process) then begin
+        if Assigned(FServer) and (not Terminated) and not FServer.Process then begin
           FServer := nil;
           Break;
         end;
