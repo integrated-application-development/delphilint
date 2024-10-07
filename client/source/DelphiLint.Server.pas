@@ -64,7 +64,7 @@ type
 
   TResponseAction = reference to procedure (const Message: TLintMessage);
   TInitializeResultAction = reference to procedure;
-  TAnalyzeResultAction = reference to procedure(Issues: TObjectList<TLintIssue>);
+  TAnalyzeResultAction = reference to procedure(Issues: TObjectList<TLintIssue>; LogMessages: TArray<string>);
   TRuleRetrieveResultAction = reference to procedure(Rules: TObjectDictionary<string, TRule>);
   TErrorAction = reference to procedure(Message: string);
 
@@ -518,8 +518,19 @@ procedure TLintServer.OnAnalyzeResponse(
     end;
   end;
 
+  function ParseLogMessages(Json: TJSONArray): TArray<string>;
+  var
+    Index: Integer;
+  begin
+    SetLength(Result, Json.Count);
+    for Index := 0 to Json.Count - 1 do begin
+      Result[Index] := Json[Index].Value;
+    end;
+  end;
+
 var
   Issues: TObjectList<TLintIssue>;
+  LogMessages: TArray<string>;
   ErrorMsg: string;
   ErrorCat: Byte;
 begin
@@ -532,9 +543,10 @@ begin
   end
   else begin
     Issues := ParseIssues(Response.Data.GetValue<TJSONArray>('issues'));
+    LogMessages := ParseLogMessages(Response.Data.GetValue<TJSONArray>('logMessages'));
 
     Log.Info('Analysis returned %d issues', [Issues.Count]);
-    OnResult(Issues);
+    OnResult(Issues, LogMessages);
   end;
 end;
 

@@ -126,6 +126,7 @@ uses
   , DelphiLint.SetupForm
   , DelphiLint.Version
   , DelphiLint.Resources
+  , DelphiLint.LogViewer
   ;
 
 //______________________________________________________________________________________________________________________
@@ -345,6 +346,9 @@ begin
   // Setup form
   LintContext.IDEServices.RegisterFormClass(TLintSetupForm);
   FEnabled := LintContext.ValidateSetup;
+
+  // Log viewer form
+  LintContext.IDEServices.RegisterFormClass(TLogViewerForm);
 
   RefreshAnalysisActions;
 end;

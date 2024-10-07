@@ -23,6 +23,8 @@ const
   CReleasesApiUrl = 'https://api.github.com/repos/integrated-application-development/sonar-delphi/releases';
   CFaqUrl = 'https://github.com/integrated-application-development/delphilint/blob/master/docs/FAQ.md';
   CTokenInfoUrl = CFaqUrl + '#how-do-i-authenticate-with-a-sonarqube-instance-in-connected-mode';
+  CSonarDelphiUrl = 'https://github.com/integrated-application-development/sonar-delphi';
+  CReportSonarDelphiIssueUrl = CSonarDelphiUrl + '/issues/new?assignees=&labels=bug%2Ctriage&template=bug_report.yml';
 
 implementation
 

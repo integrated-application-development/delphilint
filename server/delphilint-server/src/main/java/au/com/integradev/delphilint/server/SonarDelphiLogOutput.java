@@ -17,29 +17,24 @@
  */
 package au.com.integradev.delphilint.server;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.sonarsource.sonarlint.core.commons.log.ClientLogOutput;
 
-public class SonarDelphiLogOutput implements ClientLogOutput {
+class SonarDelphiLogOutput implements ClientLogOutput {
   private static final Logger LOG = LogManager.getLogger(SonarDelphiLogOutput.class);
-
-  private String errorMessage = "";
-
-  public boolean containsError() {
-    return !errorMessage.isEmpty();
-  }
-
-  public String getError() {
-    return errorMessage;
-  }
+  private final List<String> messages = new ArrayList<>();
 
   @Override
   public void log(String s, Level level) {
-    LOG.debug("[{}] {}", level, s);
+    String message = "[" + level + "] " + s;
+    LOG.debug(message);
+    messages.add(message);
+  }
 
-    if (level == Level.ERROR) {
-      errorMessage = s;
-    }
+  public List<String> getMessages() {
+    return messages;
   }
 }

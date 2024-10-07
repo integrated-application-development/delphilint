@@ -33,16 +33,19 @@ import java.util.stream.Collectors;
 
 public final class ResponseAnalyzeResult {
   @JsonProperty private Set<IssueData> issues;
+  @JsonProperty private List<String> logMessages;
 
-  private ResponseAnalyzeResult(Set<IssueData> issues) {
+  private ResponseAnalyzeResult(Set<IssueData> issues, List<String> logMessages) {
     this.issues = issues;
+    this.logMessages = logMessages;
   }
 
   public void convertPathsToAbsolute(Path baseDir) {
     issues.forEach(issue -> issue.setFile(baseDir.resolve(issue.getFile()).toString()));
   }
 
-  public static ResponseAnalyzeResult fromIssueSet(Collection<DelphiIssue> delphiIssues) {
+  public static ResponseAnalyzeResult fromIssueSet(
+      Collection<DelphiIssue> delphiIssues, List<String> logMessages) {
     Set<IssueData> issues =
         delphiIssues.stream()
             .map(
@@ -56,7 +59,7 @@ public final class ResponseAnalyzeResult {
                         transformQuickFixes(delphiIssue.getQuickFixes())))
             .collect(Collectors.toSet());
 
-    return new ResponseAnalyzeResult(issues);
+    return new ResponseAnalyzeResult(issues, logMessages);
   }
 
   private static TextRange transformRange(TextRange range) {

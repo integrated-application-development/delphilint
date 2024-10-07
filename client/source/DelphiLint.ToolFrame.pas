@@ -41,6 +41,9 @@ uses
   , DelphiLint.Utils
   , DelphiLint.Context
   , DelphiLint.LiveData
+  , Vcl.Buttons
+  , System.ImageList
+  , Vcl.ImgList
   ;
 
 type
@@ -82,6 +85,13 @@ type
     IssueImage: TImage;
     IssueMetaLabel: TLabel;
     IssueContextMenu: TPopupMenu;
+    ErrorImageList: TImageList;
+    ErrorButton: TSpeedButton;
+    ErrorButtonPanel: TPanel;
+    WarningButtonPanel: TPanel;
+    WarningButton: TSpeedButton;
+    Separator2: TMenuItem;
+    ViewLogItem: TMenuItem;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -93,6 +103,7 @@ type
     procedure IssueControlListItemClick(Sender: TObject);
     procedure IssueControlListItemDblClick(Sender: TObject);
     procedure IssueControlListContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+    procedure ViewLogClick(Sender: TObject);
   private const
     CIssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -110,6 +121,8 @@ type
     FCurrentPath: string;
     FIssues: TObjectList<TWrapper<ILiveIssue>>;
     FRuleHtmls: TDictionary<string, string>;
+    FLastAnalysisLogs: TArray<string>;
+    FLastAnalysisTime: TDateTime;
     FVisibleRule: string;
     FNavigationAllowed: Boolean;
     FRuleHtmlGenerator: TRuleHtmlGenerator;
@@ -134,6 +147,8 @@ type
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
     procedure UpdateAnalysisStatus(Msg: string; ShowProgress: Boolean = False);
     procedure UpdateAnalysisStatusForFile(const Path: string);
+
+    procedure SetLogMessages(LogMessages: TArray<string>);
 
     function CreateIssuePopup(Index: Integer): TPopupMenu;
   public
@@ -168,6 +183,7 @@ uses
   , DelphiLint.Resources
   , DelphiLint.ExtWebView2
   , DelphiLint.IssueActions
+  , DelphiLint.LogViewer
   ;
 
 {$R *.dfm}
@@ -201,6 +217,8 @@ begin
   else begin
     UpdateAnalysisStatus('Idle');
   end;
+
+  SetLogMessages([]);
 
   LintContext.Plugin.OnActiveFileChanged.AddListener(ChangeActiveFile);
 
@@ -265,6 +283,21 @@ begin
   FreeAndNil(FRuleHtmlGenerator);
   FreeAndNil(FIssues);
   inherited;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.ViewLogClick(Sender: TObject);
+var
+  Form: TLogViewerForm;
+begin
+  Form := TLogViewerForm.Create(nil, FLastAnalysisTime, FLastAnalysisLogs);
+  try
+    LintContext.IDEServices.ApplyTheme(Form);
+    Form.ShowModal;
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -335,6 +368,7 @@ begin
       OnAnalysisStarted(StateChange.Files);
     end;
     ascSucceeded: begin
+      SetLogMessages(StateChange.LogMessages);
       OnAnalysisFinished(StateChange.Files, True);
     end;
     ascFailed: begin
@@ -355,8 +389,8 @@ procedure TLintToolFrame.OnAnalysisFinished(const Paths: TArray<string>; const S
 begin
     UpdateAnalysisStatus(
       Format(
-        'Idle (last analysis %s at %s)',
-        [IfThen(Succeeded, 'succeeded', 'failed'), FormatDateTime('h:nnam/pm', Now)]));
+        'Idle (last analysis%s at %s)',
+        [IfThen(Succeeded, '', 'failed'), FormatDateTime('h:nnam/pm', Now)]));
     RefreshActiveFile;
 end;
 
@@ -820,6 +854,40 @@ begin
     SplitPanel.Visible := False;
     RulePanel.Visible := False;
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.SetLogMessages(LogMessages: TArray<string>);
+var
+  Log: string;
+  ErrorCount: Integer;
+  WarningCount: Integer;
+begin
+  FLastAnalysisLogs := LogMessages;
+  FLastAnalysisTime := Now;
+
+  ErrorCount := 0;
+  WarningCount := 0;
+  for Log in LogMessages do begin
+    if StartsStr('[ERROR]', Log) then begin
+      Inc(ErrorCount);
+    end
+    else if StartsStr('[WARN]', Log) then begin
+      Inc(WarningCount);
+    end;
+  end;
+
+  if ErrorCount > 0 then begin
+    ErrorButton.Caption := Format('%d error%s', [ErrorCount, IfThen(ErrorCount = 1, '', 's')]);
+  end
+  else if WarningCount > 0 then begin
+    WarningButton.Caption := Format('%d warning%s', [WarningCount, IfThen(WarningCount = 1, '', 's')]);
+  end;
+
+  ErrorButtonPanel.Visible := ErrorCount > 0;
+  WarningButtonPanel.Visible := (ErrorCount = 0) and (WarningCount > 0);
+  ViewLogItem.Enabled := Length(LogMessages) > 0;
 end;
 
 //______________________________________________________________________________________________________________________

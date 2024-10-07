@@ -19,7 +19,6 @@ package au.com.integradev.delphilint.server;
 
 import au.com.integradev.delphilint.analysis.AnalysisOrchestrator;
 import au.com.integradev.delphilint.analysis.EngineStartupConfiguration;
-import au.com.integradev.delphilint.analysis.SonarDelphiUtils;
 import au.com.integradev.delphilint.maintenance.FallbackPluginProvider;
 import au.com.integradev.delphilint.maintenance.FallbackPluginProviderException;
 import au.com.integradev.delphilint.maintenance.SonarDelphiDownloader;
@@ -122,15 +121,10 @@ public class AnalysisServer {
               sonarHost,
               properties);
 
-      if (logOutput.containsError()) {
-        LOG.error("Error logged during SonarDelphi analysis: {}", logOutput.getError());
-        String friendlyError = SonarDelphiUtils.convertSonarDelphiError(logOutput.getError());
-        sendMessage.accept(LintMessage.analyzeError(friendlyError));
-      } else {
-        ResponseAnalyzeResult result = ResponseAnalyzeResult.fromIssueSet(issues);
-        result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
-        sendMessage.accept(LintMessage.analyzeResult(result));
-      }
+      ResponseAnalyzeResult result =
+          ResponseAnalyzeResult.fromIssueSet(issues, logOutput.getMessages());
+      result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
+      sendMessage.accept(LintMessage.analyzeResult(result));
     } catch (SonarHostUnauthorizedException e) {
       LOG.warn("API returned an unauthorized response", e);
       sendMessage.accept(
