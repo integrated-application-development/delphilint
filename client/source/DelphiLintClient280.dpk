@@ -68,7 +68,8 @@ contains
   DelphiLint.LiveData in 'DelphiLint.LiveData.pas',
   DelphiLint.IssueActions in 'DelphiLint.IssueActions.pas',
   DelphiLint.PopupHook in 'DelphiLint.PopupHook.pas',
-  DelphiLint.ExternalConsts in 'DelphiLint.ExternalConsts.pas';
+  DelphiLint.ExternalConsts in 'DelphiLint.ExternalConsts.pas',
+  DelphiLint.LogViewer in 'DelphiLint.LogViewer.pas' {LogViewerForm};
 
 {$R DelphiLintClientAdditional.res}
 

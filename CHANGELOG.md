@@ -9,12 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+* View Last Analysis Log option in the main DelphiLint window, which displays the analysis logs produced by SonarDelphi
+  for the most recent analysis.
+* Status indicator in the main DelphiLint window, which prominently displays whether errors or warnings have been
+  produced in the most recent analysis.
 * Support for wildcard project keys when configuring authorization tokens.
 
 ### Changed
 
 * Project Options now prevents a blank server URL or project key when in Connected Mode.
 * The default SonarDelphi version is now [1.10.0](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.10.0).
+* DelphiLint no longer treats SonarDelphi analysis errors as fatal errors, supporting partial analysis in much the
+  same way as a normal SonarDelphi scan.
 
 ### Fixed
 

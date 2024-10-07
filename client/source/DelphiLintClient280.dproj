@@ -140,6 +140,10 @@ $(PreBuildEvent)]]>
         <DCCReference Include="DelphiLint.IssueActions.pas"/>
         <DCCReference Include="DelphiLint.PopupHook.pas"/>
         <DCCReference Include="DelphiLint.ExternalConsts.pas"/>
+        <DCCReference Include="DelphiLint.LogViewer.pas">
+            <Form>LogViewerForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
             <ResourceType>BITMAP</ResourceType>
             <ResourceId>DL_SPLASH</ResourceId>

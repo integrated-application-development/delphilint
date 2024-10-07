@@ -60,6 +60,7 @@ type
 
   TAnalysisStateChangeContext = record
     Files: TArray<string>;
+    LogMessages: TArray<string>;
     Change: TAnalysisStateChange;
   end;
 

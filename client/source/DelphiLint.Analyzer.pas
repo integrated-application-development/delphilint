@@ -44,7 +44,7 @@ type
     FOnAnalysisStateChanged: TEventNotifier<TAnalysisStateChangeContext>;
     FServerTerminateEvent: TEvent;
 
-    procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
+    procedure OnAnalyzeResult(Issues: TObjectList<TLintIssue>; LogMessages: TArray<string>);
     procedure OnAnalyzeError(Message: string);
     procedure SaveIssues(Issues: TObjectList<TLintIssue>; IssuesHaveMetadata: Boolean = False);
     function TryRefreshRules: Boolean;
@@ -432,7 +432,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TAnalyzerImpl.OnAnalyzeResult(Issues: TObjectList<TLintIssue>);
+procedure TAnalyzerImpl.OnAnalyzeResult(Issues: TObjectList<TLintIssue>; LogMessages: TArray<string>);
 var
   HasMetadata: Boolean;
   ProjectFile: string;
@@ -461,6 +461,7 @@ begin
       end;
 
       StateChange.Files := FCurrentAnalysis.Paths;
+      StateChange.LogMessages := LogMessages;
       StateChange.Change := ascSucceeded;
       FreeAndNil(FCurrentAnalysis);
       FOnAnalysisStateChanged.Notify(StateChange);
