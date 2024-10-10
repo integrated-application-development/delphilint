@@ -236,6 +236,7 @@ begin
   ServerJarIndicator.Caption := LintContext.Settings.ServerJar;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
   UpdateValidState(ServerJarIndicator, IsValidValue(LintContext.Settings.ServerJar));
+  UpdateOkButton;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -257,8 +258,6 @@ begin
     Indicator.Color := clMaroon;
     Indicator.Font.Color := clWhite;
   end;
-
-  UpdateOkButton;
 end;
 
 //______________________________________________________________________________________________________________________
