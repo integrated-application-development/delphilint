@@ -61,6 +61,8 @@ type
     [Test]
     procedure TestSonarHostTokensMigrationPath;
     [Test]
+    procedure TestSonarHostTokensWildcard;
+    [Test]
     procedure TestDisabledRules;
     [Test]
     procedure TestServerJvmOptions;
@@ -391,6 +393,38 @@ begin
       'project2@https://sonar.foo.bar=token2,' +
       'project3@https://foo.sonar.baz=token3',
     GetSetting(CCategory, CName + '_0'));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TSettingsTest.TestSonarHostTokensWildcard;
+const
+  CCategory = 'SonarHost';
+  CName = 'Tokens';
+begin
+  SetSetting(CCategory, CName + '_Size', '1');
+  SetSetting(
+    CCategory,
+    CName + '_0',
+    'project1@https://sonar.example.com=token1,'
+    + '*@https://sonar.foo.bar=token2,'
+    + 'project3@https://sonar.foo.bar=token3,'
+    + 'project4@https://sonar.foo.bar=');
+
+  FSettings.Load;
+  Assert.AreEqual(4, FSettings.SonarHostTokensMap.Count);
+  Assert.AreEqual(
+    'token1',
+    FSettings.GetSonarHostToken('https://sonar.example.com', 'project1'));
+  Assert.AreEqual(
+    'token2',
+    FSettings.GetSonarHostToken('https://sonar.foo.bar', 'any project name'));
+  Assert.AreEqual(
+    'token3',
+    FSettings.GetSonarHostToken('https://sonar.foo.bar', 'project3'));
+  Assert.AreEqual(
+    '',
+    FSettings.GetSonarHostToken('https://sonar.foo.bar', 'project4'));
 end;
 
 //______________________________________________________________________________________________________________________

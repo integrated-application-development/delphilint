@@ -147,10 +147,15 @@ async function retrieveEffectiveConfiguration(
       config.sonarHostUrl = projectOptions.sonarHostUrl();
       config.projectKey = projectOptions.projectKey();
       console.log(settings.getSonarTokens());
+
+      let sonarTokens = settings.getSonarTokens();
+
       config.apiToken =
-        settings.getSonarTokens()?.[projectOptions.sonarHostUrl()]?.[
+        sonarTokens[projectOptions.sonarHostUrl()]?.[
           projectOptions.projectKey()
-        ] ?? "";
+        ] ??
+        sonarTokens[projectOptions.sonarHostUrl()]?.["*"] ??
+        "";
     }
   } else {
     config.baseDir = path.dirname(projectFile);
