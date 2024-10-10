@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Support for wildcard project keys when configuring authorization tokens.
+
 ### Changed
 
 * Project Options now prevents a blank server URL or project key when in Connected Mode.

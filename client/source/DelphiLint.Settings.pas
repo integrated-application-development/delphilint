@@ -292,6 +292,12 @@ begin
   Result := '';
   if FTokensMap.ContainsKey(Key) then begin
     Result := FTokensMap[Key];
+  end
+  else begin
+    Key.ProjectKey := '*';
+    if FTokensMap.ContainsKey(Key) then begin
+      Result := FTokensMap[Key];
+    end;
   end;
 end;
 
