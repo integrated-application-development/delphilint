@@ -221,6 +221,8 @@ begin
   FJavaExeOverride := '';
   JavaExeIndicator.Caption := GetJavaExeCaption;
   JavaExeClearButton.Enabled := False;
+  UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
+  UpdateOkButton;
 end;
 
 //______________________________________________________________________________________________________________________
