@@ -121,8 +121,7 @@ public class AnalysisServer {
               sonarHost,
               properties);
 
-      ResponseAnalyzeResult result =
-          ResponseAnalyzeResult.fromIssueSet(issues, logOutput.getMessages());
+      var result = ResponseAnalyzeResult.fromIssueSet(issues, logOutput.getMessages());
       result.convertPathsToAbsolute(requestAnalyze.getBaseDir());
       sendMessage.accept(LintMessage.analyzeResult(result));
     } catch (SonarHostUnauthorizedException e) {

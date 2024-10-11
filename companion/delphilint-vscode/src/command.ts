@@ -148,7 +148,7 @@ async function retrieveEffectiveConfiguration(
       config.projectKey = projectOptions.projectKey();
       console.log(settings.getSonarTokens());
 
-      let sonarTokens = settings.getSonarTokens();
+      const sonarTokens = settings.getSonarTokens();
 
       config.apiToken =
         sonarTokens[projectOptions.sonarHostUrl()]?.[
