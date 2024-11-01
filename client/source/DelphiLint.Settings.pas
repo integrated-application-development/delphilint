@@ -215,7 +215,6 @@ var
 begin
   FTokensMap.Clear;
 
-  Log.Info(SonarHostTokens);
   HostTokenPairs := SplitString(SonarHostTokens, ',');
   for Pair in HostTokenPairs do begin
     SplitPair := SplitString(Pair, '=');
