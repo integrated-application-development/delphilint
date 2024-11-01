@@ -271,7 +271,6 @@ begin
   FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
   FSettings := TLintSettings.Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
 
-  Log.Info('-------------------------------------------------');
   Log.Info('DelphiLint started at %s', [DateToISO8601(Now)]);
 end;
 

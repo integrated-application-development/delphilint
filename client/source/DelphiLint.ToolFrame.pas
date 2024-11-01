@@ -791,9 +791,6 @@ begin
     Color.B := GetBValue(DelphiColor);
     Color.A := 255;
     Controller2.Put_DefaultBackgroundColor(Color);
-
-    Controller2.Get_DefaultBackgroundColor(Color);
-    Log.Info('Default background is now rgba(%d, %d, %d, %d)', [Color.R, Color.G, Color.B, Color.A]);
   end;
 end;
 

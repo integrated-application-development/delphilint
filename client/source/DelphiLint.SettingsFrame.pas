@@ -240,11 +240,10 @@ begin
   FOnReleasesRetrieved := TThreadSafeEventNotifier<TArray<string>>.Create;
   FOnReleasesRetrieved.AddListener(
     procedure(const Releases: TArray<string>) begin
-      Log.Info('%d releases retrieved', [Length(Releases)]);
       TThread.Synchronize(
         TThread.Current,
         procedure begin
-          Log.Info('%d releases retrieved (sync)', [Length(Releases)]);
+          Log.Info('%d releases retrieved', [Length(Releases)]);
           PopulateSonarDelphiVersionConfig(Releases);
         end);
     end);
