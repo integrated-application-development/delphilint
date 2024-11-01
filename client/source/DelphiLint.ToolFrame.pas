@@ -92,6 +92,7 @@ type
     WarningButton: TSpeedButton;
     Separator2: TMenuItem;
     ViewLogItem: TMenuItem;
+    WebViewInitTimer: TTimer;
     procedure SplitPanelMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer);
     procedure SplitPanelMouseMove(Sender: TObject; Shift: TShiftState; X: Integer; Y: Integer);
@@ -104,6 +105,7 @@ type
     procedure IssueControlListItemDblClick(Sender: TObject);
     procedure IssueControlListContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
     procedure ViewLogClick(Sender: TObject);
+    procedure WebViewInitTimerTimer(Sender: TObject);
   private const
     CIssueStatusStrs: array[TIssueStatus] of string = (
       'Open',
@@ -140,8 +142,8 @@ type
     procedure OnAnalysisStarted(const Paths: TArray<string>);
     procedure OnAnalysisFinished(const Paths: TArray<string>; const Succeeded: Boolean);
 
-    procedure SetupRuleView;
     procedure RefreshRuleView;
+    procedure DirtyWebView;
 
     function GetStatusCaption(Status: TCurrentFileStatus; NumIssues: Integer): string;
     procedure UpdateFileStatus(Status: TCurrentFileStatus; NumIssues: Integer = -1);
@@ -218,19 +220,12 @@ begin
     UpdateAnalysisStatus('Idle');
   end;
 
+  RuleBrowser.UserDataFolder := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bds.exe.WebView2');
+  DirtyWebView;
+
   SetLogMessages([]);
 
   LintContext.Plugin.OnActiveFileChanged.AddListener(ChangeActiveFile);
-
-  TThread.ForceQueue(TThread.Current, SetupRuleView);
-end;
-
-//______________________________________________________________________________________________________________________
-
-procedure TLintToolFrame.SetupRuleView;
-begin
-  RuleBrowser.UserDataFolder := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bds.exe.WebView2');
-  RuleBrowser.CreateWebView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -308,9 +303,7 @@ begin
     RulePanel.Width := Width div 2;
   end;
 
-  if not RuleBrowser.WebViewCreated then begin
-    RuleBrowser.ReinitializeWebView;
-  end;
+  DirtyWebView;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -632,6 +625,25 @@ begin
   if not Issue.IsTethered then begin
     Result := Format('%s • %s', [Result, 'Potentially resolved']);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.WebViewInitTimerTimer(Sender: TObject);
+begin
+  WebViewInitTimer.Enabled := False;
+
+  if not RuleBrowser.WebViewCreated then begin
+    Log.Debug('Passively initializing web view...');
+    RuleBrowser.ReinitializeWebView;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TLintToolFrame.DirtyWebView;
+begin
+  WebViewInitTimer.Enabled := True;
 end;
 
 //______________________________________________________________________________________________________________________

@@ -618,4 +618,10 @@ object LintToolFrame: TLintToolFrame
       FE7FFE7FFE7FFE7FFE7FFE7FFE7FFE7F00000000000000000000000000000000
       000000000000}
   end
+  object WebViewInitTimer: TTimer
+    Interval = 100
+    OnTimer = WebViewInitTimerTimer
+    Left = 504
+    Top = 16
+  end
 end
