@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Highlight.js has been updated to 11.10.0, improving rule description syntax highlighting for numeric literals
+  and character strings.
+
 ### Fixed
 
 * Intermittent embedded browser error on IDE startup with certain system configurations.
