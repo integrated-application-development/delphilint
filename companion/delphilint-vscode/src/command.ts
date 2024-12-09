@@ -289,7 +289,7 @@ export async function analyzeAllOpenFiles(
       .filter((tab) => tab !== undefined)
   );
 
-  const openTextEditors = uris.map((uri) => (uri as vscode.Uri).fsPath);
+  const openTextEditors = uris.map((uri) => uri.fsPath);
 
   if (openTextEditors.length === 0) {
     display.showError("There are no open files for DelphiLint to analyze.");
