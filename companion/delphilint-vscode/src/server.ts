@@ -75,11 +75,13 @@ export type LintMessage = {
 export type LintResponseAction = (message: LintMessage) => void;
 
 class ExtServer {
+  private readonly _jar: string;
+  private readonly _javaExe: string;
+  private readonly _workingDir: string;
+  private readonly _onLogMessage: (msg: string) => void;
   private _process?: ChildProcess;
   private readonly _socket: Socket;
-  private _ready: boolean;
   private _exited: boolean;
-  private readonly _readyListeners: (() => void)[];
   private readonly _exitListeners: (() => void)[];
 
   constructor(
@@ -89,13 +91,15 @@ class ExtServer {
     onLogMessage: (msg: string) => void,
     onReceiveMessage: (buffer: Buffer) => void
   ) {
-    this._ready = false;
+    this._jar = jar;
+    this._javaExe = javaExe;
+    this._workingDir = workingDir;
+    this._onLogMessage = onLogMessage;
+
     this._exited = false;
-    this._readyListeners = [];
     this._exitListeners = [];
     this._socket = new Socket();
     this._socket.on("data", onReceiveMessage);
-    this.setup(jar, javaExe, workingDir, onLogMessage);
 
     this.onProcessExit.bind(this);
   }
@@ -109,12 +113,7 @@ class ExtServer {
     this._exitListeners.forEach((listener) => listener());
   }
 
-  async setup(
-    jar: string,
-    javaExe: string,
-    workingDir: string,
-    onLogMessage: (msg: string) => void
-  ) {
+  async setup() {
     const port = await new Promise<number>((resolve, reject) => {
       const portFile = tmp.fileSync().name;
 
@@ -125,38 +124,22 @@ class ExtServer {
         fs.rmSync(portFile);
       });
 
-      this._process = spawn(javaExe, ["-jar", jar, portFile], {
-        cwd: workingDir,
+      this._process = spawn(this._javaExe, ["-jar", this._jar, portFile], {
+        cwd: this._workingDir,
       });
 
       this._process.on("error", (err) => reject(err));
       this._process.on("exit", this.onProcessExit);
       this._process.stdout?.on("data", (data) => {
-        onLogMessage(data.toString());
+        this._onLogMessage(data.toString());
       });
     });
 
     this._socket.connect(port);
-    this._ready = true;
-    this._readyListeners.forEach((listener) => listener());
-  }
-
-  ready(): boolean {
-    return this._ready;
   }
 
   exited(): boolean {
     return this._exited;
-  }
-
-  readyWait(): Promise<void> {
-    return new Promise<void>((resolve, _reject) => {
-      if (this._ready) {
-        resolve();
-      } else {
-        this._readyListeners.push(resolve);
-      }
-    });
   }
 
   destroy() {
@@ -204,8 +187,8 @@ export class LintServer {
   }
 
   private async externalServer(): Promise<ExtServer> {
-    if (this._extServer) {
-      return this._extServer;
+    if (this._extServer && !this._extServer.exited()) {
+      return Promise.resolve(this._extServer);
     } else {
       return this.startExternalServer();
     }
@@ -232,13 +215,13 @@ export class LintServer {
       this.onReceiveMessage
     );
 
-    await this._extServer.readyWait();
+    await this._extServer.setup();
     return this._extServer;
   }
 
-  stopExternalServer(): Promise<void> {
-    return new Promise<void>((resolve, _reject) => {
-      if (this._extServer) {
+  async stopExternalServer() {
+    await new Promise<void>((resolve, _reject) => {
+      if (this._extServer && !this._extServer.exited()) {
         this._extServer.addExitListener(() => {
           this._extServer = undefined;
           resolve();
