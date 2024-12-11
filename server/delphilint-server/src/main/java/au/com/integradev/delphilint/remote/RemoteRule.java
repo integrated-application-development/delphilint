@@ -20,21 +20,21 @@ package au.com.integradev.delphilint.remote;
 public class RemoteRule {
   private final String key;
   private final String name;
-  private final String htmlDesc;
   private final RuleSeverity severity;
   private final RuleType type;
   private final RemoteCleanCode defaultCleanCode;
+  private final RemoteRuleDescription ruleDescription;
 
   public RemoteRule(
       String key,
       String name,
-      String htmlDesc,
+      RemoteRuleDescription ruleDescription,
       RuleSeverity severity,
       RuleType type,
       RemoteCleanCode cleanCode) {
     this.key = key;
     this.name = name;
-    this.htmlDesc = htmlDesc;
+    this.ruleDescription = ruleDescription;
     this.severity = severity;
     this.type = type;
     this.defaultCleanCode = cleanCode;
@@ -48,8 +48,8 @@ public class RemoteRule {
     return name;
   }
 
-  public String getHtmlDesc() {
-    return htmlDesc;
+  public RemoteRuleDescription getRuleDescription() {
+    return ruleDescription;
   }
 
   public RuleSeverity getSeverity() {

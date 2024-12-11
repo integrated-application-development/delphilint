@@ -175,7 +175,7 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
+                    + "&f=name%2CdescriptionSections%2Cseverity%2CcleanCodeAttribute",
                 responseFile));
 
     var host = buildSonarHost(api);
@@ -266,7 +266,7 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name%2ChtmlDesc%2Cseverity",
+                    + "&f=name%2CdescriptionSections%2Cseverity",
                 "rulesSingularOk.json"));
 
     var host = buildSonarHost(api);
@@ -277,7 +277,8 @@ class SonarQubeHostTest {
     assert rule != null;
     assertEquals("key1", rule.getKey());
     assertEquals("name1", rule.getName());
-    assertEquals("html1", rule.getHtmlDesc());
+    assertEquals("root_cause1", rule.getRuleDescription().getRootCauseSection());
+    assertEquals("how_to_fix1", rule.getRuleDescription().getHowToFixSection());
     assertEquals(RuleSeverity.MAJOR, rule.getSeverity());
     assertEquals(RuleType.BUG, rule.getType());
     assertNull(rule.getCleanCode());
@@ -293,7 +294,7 @@ class SonarQubeHostTest {
                 QP_OK_JSON,
                 "/api/rules/search?ps=500&activation=true&languages=delphi&qprofile="
                     + QP_KEY
-                    + "&f=name%2ChtmlDesc%2Cseverity%2CcleanCodeAttribute",
+                    + "&f=name%2CdescriptionSections%2Cseverity%2CcleanCodeAttribute",
                 "rulesSingularCleanCodeOk.json"));
 
     var host = buildSonarHost(api);
@@ -304,7 +305,8 @@ class SonarQubeHostTest {
     assert rule != null;
     assertEquals("key1", rule.getKey());
     assertEquals("name1", rule.getName());
-    assertEquals("html1", rule.getHtmlDesc());
+    assertEquals("root_cause1", rule.getRuleDescription().getRootCauseSection());
+    assertEquals("how_to_fix1", rule.getRuleDescription().getHowToFixSection());
     assertEquals(RuleSeverity.MAJOR, rule.getSeverity());
     assertEquals(RuleType.BUG, rule.getType());
     assertNotNull(rule.getCleanCode());

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class RuleData {
   @JsonProperty private String key;
   @JsonProperty private String name;
-  @JsonProperty private String desc;
+  @JsonProperty private RuleDescriptionData description;
   @JsonProperty private RuleSeverity severity;
   @JsonProperty private RuleType type;
   @JsonProperty private CleanCodeData cleanCode;
@@ -33,7 +33,7 @@ public class RuleData {
   public RuleData(RemoteRule rule) {
     key = rule.getKey();
     name = rule.getName();
-    desc = rule.getHtmlDesc();
+    description = new RuleDescriptionData(rule.getRuleDescription());
     severity = rule.getSeverity();
     type = rule.getType();
 
@@ -50,8 +50,8 @@ public class RuleData {
     return name;
   }
 
-  public String getDesc() {
-    return desc;
+  public RuleDescriptionData getDescription() {
+    return description;
   }
 
   public RuleSeverity getSeverity() {

@@ -25,6 +25,7 @@ import au.com.integradev.delphilint.remote.RemoteCleanCode;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
+import au.com.integradev.delphilint.remote.RemoteRuleDescription;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
 import au.com.integradev.delphilint.remote.SoftwareQuality;
@@ -200,9 +201,9 @@ public class SonarQubeHost implements SonarHost {
     params.put(PARAM_QUALITY_PROFILE, profile.getKey());
 
     if (getCharacteristics().usesCodeAttributes()) {
-      params.put(PARAM_FIELDS, "name,htmlDesc,severity,cleanCodeAttribute");
+      params.put(PARAM_FIELDS, "name,descriptionSections,severity,cleanCodeAttribute");
     } else {
-      params.put(PARAM_FIELDS, "name,htmlDesc,severity");
+      params.put(PARAM_FIELDS, "name,descriptionSections,severity");
     }
 
     var rootNode = api.getJson(URL_RULES_SEARCH, params);
@@ -218,26 +219,7 @@ public class SonarQubeHost implements SonarHost {
       try {
         SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
 
-        RemoteCleanCode cleanCode = null;
-
-        if (sonarQubeRule.getCleanCodeAttribute() != null) {
-          Map<SoftwareQuality, ImpactSeverity> impacts =
-              sonarQubeRule.getImpacts().stream()
-                  .collect(
-                      Collectors.toMap(
-                          SonarQubeQualityImpact::getSoftwareQuality,
-                          SonarQubeQualityImpact::getSeverity));
-          cleanCode = new RemoteCleanCode(sonarQubeRule.getCleanCodeAttribute(), impacts);
-        }
-
-        ruleSet.add(
-            new RemoteRule(
-                sonarQubeRule.getKey(),
-                sonarQubeRule.getName(),
-                sonarQubeRule.getHtmlDesc(),
-                RuleSeverity.fromSonarLintIssueSeverity(sonarQubeRule.getSeverity()),
-                RuleType.fromSonarLintRuleType(sonarQubeRule.getType()),
-                cleanCode));
+        ruleSet.add(convertSonarQubeRuleToRemoteRule(sonarQubeRule));
       } catch (JsonProcessingException e) {
         LOG.error(e);
         throw new SonarHostException(
@@ -246,6 +228,31 @@ public class SonarQubeHost implements SonarHost {
     }
 
     return ruleSet;
+  }
+
+  private static RemoteRule convertSonarQubeRuleToRemoteRule(SonarQubeRule rule) {
+    RemoteCleanCode cleanCode = null;
+
+    if (rule.getCleanCodeAttribute() != null) {
+      Map<SoftwareQuality, ImpactSeverity> impacts =
+          rule.getImpacts().stream()
+              .collect(
+                  Collectors.toMap(
+                      SonarQubeQualityImpact::getSoftwareQuality,
+                      SonarQubeQualityImpact::getSeverity));
+      cleanCode = new RemoteCleanCode(rule.getCleanCodeAttribute(), impacts);
+    }
+
+    return new RemoteRule(
+        rule.getKey(),
+        rule.getName(),
+        RemoteRuleDescription.fromDescriptionSections(
+            rule.getDescriptionSections(),
+            SonarQubeDescriptionSection::getKey,
+            SonarQubeDescriptionSection::getContent),
+        RuleSeverity.fromSonarLintIssueSeverity(rule.getSeverity()),
+        RuleType.fromSonarLintRuleType(rule.getType()),
+        cleanCode);
   }
 
   private static List<String> joinStringsWithLimit(

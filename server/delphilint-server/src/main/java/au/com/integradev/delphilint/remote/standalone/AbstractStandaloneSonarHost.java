@@ -24,6 +24,7 @@ import au.com.integradev.delphilint.remote.RemoteCleanCode;
 import au.com.integradev.delphilint.remote.RemoteIssue;
 import au.com.integradev.delphilint.remote.RemotePlugin;
 import au.com.integradev.delphilint.remote.RemoteRule;
+import au.com.integradev.delphilint.remote.RemoteRuleDescription;
 import au.com.integradev.delphilint.remote.RuleSeverity;
 import au.com.integradev.delphilint.remote.RuleType;
 import au.com.integradev.delphilint.remote.SoftwareQuality;
@@ -41,6 +42,7 @@ import org.sonarsource.sonarlint.core.commons.Language;
 import org.sonarsource.sonarlint.core.plugin.commons.LoadedPlugins;
 import org.sonarsource.sonarlint.core.rule.extractor.RulesDefinitionExtractor;
 import org.sonarsource.sonarlint.core.rule.extractor.SonarLintRuleDefinition;
+import org.sonarsource.sonarlint.core.rule.extractor.SonarLintRuleDescriptionSection;
 
 public abstract class AbstractStandaloneSonarHost implements SonarHost {
   private Set<RemoteActiveRule> activeRules;
@@ -66,7 +68,10 @@ public abstract class AbstractStandaloneSonarHost implements SonarHost {
                     new RemoteRule(
                         ruleDef.getKey(),
                         ruleDef.getName(),
-                        ruleDef.getHtmlDescription(),
+                        RemoteRuleDescription.fromDescriptionSections(
+                            ruleDef.getDescriptionSections(),
+                            SonarLintRuleDescriptionSection::getKey,
+                            SonarLintRuleDescriptionSection::getHtmlContent),
                         RuleSeverity.fromSonarLintIssueSeverity(ruleDef.getDefaultSeverity()),
                         RuleType.fromSonarLintRuleType(ruleDef.getType()),
                         ruleDef.getCleanCodeAttribute().isPresent()

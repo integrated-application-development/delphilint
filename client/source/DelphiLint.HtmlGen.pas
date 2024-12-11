@@ -47,6 +47,8 @@ type
 
     function BuildHtmlPage(BodyHtml: string; BodyClass: string = ''): string;
     procedure CreateReadOnlyFile(Path: string; Text: string);
+
+    function GenerateRuleDescriptionHtml(Description: TRuleDescription): string;
   public
     class function GetRuleTypeStr(RuleType: TRuleType): string;
     class function GetRuleSeverityStr(Severity: TRuleSeverity): string;
@@ -187,19 +189,13 @@ var
   Quality: TSoftwareQuality;
   ImpactSeverity: TImpactSeverity;
   RuleSeverityHtml: string;
-  ProcessedRuleDesc: string;
 begin
-  // Old SonarDelphi versions automatically wrapped the rule in a <p> tag, but newer
-  // ones (beginning with a heading) are meant to be displayed directly.
-  if StartsText('<h', Trim(Rule.Desc)) then begin
-    ProcessedRuleDesc := Rule.Desc;
-  end
-  else begin
-    ProcessedRuleDesc := THtmlUtils.WrapHtml(Rule.Desc, 'p');
-  end;
-
   if Assigned(Rule.CleanCode) then begin
-    for Quality in Rule.CleanCode.Impacts.Keys do begin
+    for Quality := Low(TSoftwareQuality) to High(TSoftwareQuality) do begin
+      if not Rule.CleanCode.Impacts.ContainsKey(Quality) then begin
+        Continue;
+      end;
+
       ImpactSeverity := Rule.CleanCode.Impacts[Quality];
       ImpactsHtml := ImpactsHtml + Format(
         '<span class="impact %s" title="%s">%s <img src="%s"/></span>',
@@ -215,17 +211,17 @@ begin
       '<span class="subheading cleancode" title="%s">' +
         '<strong>%s rule</strong> | %s' +
       '</span>' +
-      '<h1>%s</h1>' +
-      '<hr/>' +
+      '<h1 title="%s">%s</h1>' +
       '<div class="impacts">%s</div>' +
       '%s',
       [
         GetAttributeTooltip(Rule.CleanCode.Attribute),
         GetCleanCodeCategoryStr(Rule.CleanCode.Category),
         GetCleanCodeAttributeStr(Rule.CleanCode.Attribute),
+        Rule.RuleKey,
         Rule.Name,
         ImpactsHtml,
-        ProcessedRuleDesc
+        GenerateRuleDescriptionHtml(Rule.Description)
       ]);
 
     Result := BuildHtmlPage(BodyHtml, 'cleancode');
@@ -241,19 +237,91 @@ begin
     end;
 
     BodyHtml := Format(
-      '  <h1>%s</h1>' +
-      '  <hr/>' +
+      '  <h1 title="%s">%s</h1>' +
       '  <span class="subheading"><img src="%s"/>%s%s</span>' +
       '  %s',
       [
+        Rule.RuleKey,
         Rule.Name,
         THtmlUtils.ImageToBase64(LintResources.RuleTypeIcon(Rule.RuleType)),
         GetRuleTypeStr(Rule.RuleType),
         RuleSeverityHtml,
-        ProcessedRuleDesc
+        GenerateRuleDescriptionHtml(Rule.Description)
       ]);
 
     Result := BuildHtmlPage(BodyHtml);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TRuleHtmlGenerator.GenerateRuleDescriptionHtml(Description: TRuleDescription): string;
+
+  function EnsureWrapped(Content: string): string;
+  begin
+    // Old SonarDelphi versions automatically wrapped the rule in a <p> tag, but newer
+    // ones (beginning with a heading) are meant to be displayed directly.
+    //
+    // In addition, custom rules are generally not wrapped in HTML tags.
+    if StartsText('<', Trim(Content)) then begin
+      Result := Content;
+    end
+    else begin
+      Result := THtmlUtils.WrapHtml(Content, 'p');
+    end;
+  end;
+
+  function GenerateButtonHtml(ContentId: string; Text: string; Active: Boolean): string;
+  begin
+    Result := Format(
+      '<div class="tab-btn%s" data-content-id="%s">%s</div>',
+      [IfThen(Active, ' active', ''), ContentId, Text]);
+  end;
+
+  function GenerateContentHtml(ContentId: string; Content: string; Active: Boolean): string;
+  begin
+    Result := Format(
+      '<div class="tab-content%s" id="%s">%s</div>',
+      [IfThen(Active, ' active', ''), ContentId, EnsureWrapped(Content)]);
+  end;
+
+var
+  NoTabs: Boolean;
+  ButtonsHtml: string;
+  ContentHtml: string;
+begin
+  ButtonsHtml := '<div class="tab-buttons">';
+  ContentHtml := '<div class="tab-contents">';
+  NoTabs := True;
+
+  if Description.RootCause <> '' then begin
+    ButtonsHtml := ButtonsHtml + GenerateButtonHtml('desc-root-cause', 'Why is this an issue?', NoTabs);
+    ContentHtml := ContentHtml + GenerateContentHtml('desc-root-cause', Description.RootCause, NoTabs);
+    NoTabs := False;
+  end;
+
+  if Description.HowToFix <> '' then begin
+    ButtonsHtml := ButtonsHtml + GenerateButtonHtml('desc-how-to-fix', 'How can I fix it?', NoTabs);
+    ContentHtml := ContentHtml + GenerateContentHtml('desc-how-to-fix', Description.HowToFix, NoTabs);
+    NoTabs := False;
+  end;
+
+  if Description.Resources <> '' then begin
+    ButtonsHtml := ButtonsHtml + GenerateButtonHtml('desc-more-info', 'More info', NoTabs);
+    ContentHtml := ContentHtml + GenerateContentHtml(
+      'desc-more-info',
+      '<h2>Resources</h2>' + EnsureWrapped(Description.Resources),
+      NoTabs);
+  end;
+
+  ButtonsHtml := ButtonsHtml + '</div>';
+  ContentHtml := ContentHtml + '</div>';
+
+  if Description.Introduction <> '' then begin
+    Result := EnsureWrapped(Description.Introduction);
+  end;
+  if not NoTabs then begin
+    Result := Result + ButtonsHtml + ContentHtml;
   end;
 end;
 
@@ -284,8 +352,9 @@ begin
     'html { color: %s; background-color: %s; }' +
     'body::-webkit-scrollbar { background-color: %s; padding: 1em; }' +
     'body::-webkit-scrollbar-thumb { background-color: %s; }' +
-    'a { color: %s; }',
-    [FTextColor, FBgColor, FBgColor, FScrollbarColor, FLinkColor]);
+    'a { color: %s; }' +
+    '.tab-buttons, .tab-btn { border-color: %s; }',
+    [FTextColor, FBgColor, FBgColor, FScrollbarColor, FLinkColor, FTextColor]);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -130,6 +130,10 @@ begin
     Css,
     'CSS HTML text color should be the hex code for clBtnText');
   Assert.IsMatch(
+    '.tab-buttons\s*,\s*.tab-btn\s*{[^}]*?border-color:\s*#FF0000',
+    Css,
+    'CSS tab border color should be the hex code for clBtnText');
+  Assert.IsMatch(
     'html\s*{[^}]*?background-color:\s*#00FF00',
     Css,
     'CSS HTML background color should be the hex code for clWindow');
@@ -151,7 +155,10 @@ end;
 
 procedure TRuleHtmlGeneratorTest.TestWrapsOldStyleDescriptions;
 const
-  CDescription = 'My <strong>HTML</strong> description';
+  CIntro = 'My <strong>intro</strong>';
+  CRootCause = 'My <strong>root cause</strong>';
+  CHowToFix = 'My <strong>How to fix</strong>';
+  CResources = 'My <strong>resources</strong>';
 var
   Rule: TRule;
   HtmlText: string;
@@ -159,14 +166,17 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    CDescription,
+    TRuleDescription.Create(CIntro, CRootCause, CHowToFix, CResources),
     rsMajor,
     rtCodeSmell,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<p>' + CDescription + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CIntro + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CRootCause + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CHowToFix + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CResources + '</p>');
   finally
     FreeAndNil(Rule);
   end;
@@ -184,7 +194,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    CDescription,
+    TRuleDescription.Create('', CDescription, '', ''),
     rsMajor,
     rtCodeSmell,
     nil
@@ -208,7 +218,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    'My desc',
+    TRuleDescription.Create('','','',''),
     rsMajor,
     rtCodeSmell,
     nil
@@ -322,7 +332,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(
@@ -352,7 +362,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(
@@ -383,7 +393,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtSecurityHotspot,
     nil
@@ -407,7 +417,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     nil
@@ -433,14 +443,14 @@ begin
   Rule := TRule.Create(
     'rk1',
     CRuleName,
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<h1>' + CRuleName + '</h1>');
+    Assert.Contains(HtmlText, '<h1 title="rk1">' + CRuleName + '</h1>');
   finally
     FreeAndNil(Rule);
   end;
@@ -458,14 +468,14 @@ begin
   Rule := TRule.Create(
     'rk1',
     CRuleName,
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(ccaClear, cccIntentional, TDictionary<TSoftwareQuality, TImpactSeverity>.Create)
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<h1>' + CRuleName + '</h1>');
+    Assert.Contains(HtmlText, '<h1 title="rk1">' + CRuleName + '</h1>');
   finally
     FreeAndNil(Rule);
   end;
