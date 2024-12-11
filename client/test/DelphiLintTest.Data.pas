@@ -65,7 +65,8 @@ end;
 
 procedure TDataJsonParseTest.TestCreateRuleNoCleanCode;
 const
-  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule","desc":"My description for the rule",'
+  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule",'
+    + '"description":{"introduction":"foo intro","rootCause":"","howToFix":"bar howToFix","resources":"flarp res"},'
     + '"severity":"MAJOR","type":"CODE_SMELL"}';
 var
   JsonObject: TJSONObject;
@@ -76,7 +77,10 @@ begin
     Rule := TRule.CreateFromJson(JsonObject);
     Assert.AreEqual('myrulekey', Rule.RuleKey);
     Assert.AreEqual('My Rule', Rule.Name);
-    Assert.AreEqual('My description for the rule', Rule.Desc);
+    Assert.AreEqual('foo intro', Rule.Description.Introduction);
+    Assert.AreEqual('', Rule.Description.RootCause);
+    Assert.AreEqual('bar howToFix', Rule.Description.HowToFix);
+    Assert.AreEqual('flarp res', Rule.Description.Resources);
     Assert.AreEqual(rsMajor, Rule.Severity);
     Assert.AreEqual(rtCodeSmell, Rule.RuleType);
     Assert.IsNull(Rule.CleanCode);
@@ -93,7 +97,7 @@ const
   CRuleJsonStr: string = '{' +
       '"key":"myrulekey",' +
       '"name":"My Rule",' +
-      '"desc":"My description for the rule",' +
+      '"description":{"introduction":"foo intro","rootCause":"","howToFix":"bar howToFix","resources":"flarp res"},' +
       '"severity":"MAJOR",' +
       '"type":"CODE_SMELL",' +
       '"cleanCode":{"attribute":"COMPLETE","category":"INTENTIONAL","impacts":{"SECURITY":"HIGH"}}' +
@@ -107,7 +111,10 @@ begin
     Rule := TRule.CreateFromJson(JsonObject);
     Assert.AreEqual('myrulekey', Rule.RuleKey);
     Assert.AreEqual('My Rule', Rule.Name);
-    Assert.AreEqual('My description for the rule', Rule.Desc);
+    Assert.AreEqual('foo intro', Rule.Description.Introduction);
+    Assert.AreEqual('', Rule.Description.RootCause);
+    Assert.AreEqual('bar howToFix', Rule.Description.HowToFix);
+    Assert.AreEqual('flarp res', Rule.Description.Resources);
     Assert.AreEqual(rsMajor, Rule.Severity);
     Assert.AreEqual(rtCodeSmell, Rule.RuleType);
     Assert.IsNotNull(Rule.CleanCode);
@@ -160,7 +167,13 @@ end;
 
 procedure TDataJsonParseTest.TestParseRuleSeverity(Str: string; Value: TRuleSeverity);
 const
-  CRuleJsonFormatStr: string = '{"key":"","name":"","desc":"","severity":"%s","type":"CODE_SMELL"}';
+  CRuleJsonFormatStr: string = '{' +
+    '"key":"",' +
+    '"name":"",' +
+    '"description":{"introduction":"","rootCause":"","howToFix":"","resources":""},' +
+    '"severity":"%s",' +
+    '"type":"CODE_SMELL"' +
+    '}';
 var
   JsonObject: TJSONObject;
   Rule: TRule;
@@ -179,7 +192,13 @@ end;
 
 procedure TDataJsonParseTest.TestParseRuleType(Str: string; Value: TRuleType);
 const
-  CRuleJsonFormatStr: string = '{"key":"","name":"","desc":"","severity":"MAJOR","type":"%s"}';
+  CRuleJsonFormatStr: string = '{' +
+    '"key":"",' +
+    '"name":"",' +
+    '"description":{"introduction":"","rootCause":"","howToFix":"","resources":""},' +
+    '"severity":"MAJOR",' +
+    '"type":"%s"' +
+    '}';
 var
   JsonObject: TJSONObject;
   Rule: TRule;

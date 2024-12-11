@@ -28,7 +28,7 @@ import org.sonarsource.sonarlint.core.commons.RuleType;
 public class SonarQubeRule {
   @JsonProperty private String key;
   @JsonProperty private String name;
-  @JsonProperty private String htmlDesc;
+  @JsonProperty private List<SonarQubeDescriptionSection> descriptionSections;
   @JsonProperty private IssueSeverity severity;
   @JsonProperty private RuleType type;
   @JsonProperty private CleanCodeAttribute cleanCodeAttribute;
@@ -42,8 +42,8 @@ public class SonarQubeRule {
     return name;
   }
 
-  public String getHtmlDesc() {
-    return htmlDesc;
+  public List<SonarQubeDescriptionSection> getDescriptionSections() {
+    return descriptionSections;
   }
 
   public IssueSeverity getSeverity() {

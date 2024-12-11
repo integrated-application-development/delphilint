@@ -237,11 +237,28 @@ type
     property Impacts: TDictionary<TSoftwareQuality, TImpactSeverity> read FImpacts;
   end;
 
+  TRuleDescription = class(TObject)
+  private
+    FIntroduction: string;
+    FRootCause: string;
+    FHowToFix: string;
+    FResources: string;
+
+  public
+    constructor Create(Introduction: string; RootCause: string; HowToFix: string; Resources: string);
+    constructor CreateFromJson(Json: TJSONObject);
+
+    property Introduction: string read FIntroduction;
+    property RootCause: string read FRootCause;
+    property HowToFix: string read FHowToFix;
+    property Resources: string read FResources;
+  end;
+
   TRule = class(TObject)
   private
     FRuleKey: string;
     FName: string;
-    FDesc: string;
+    FDescription: TRuleDescription;
     FSeverity: TRuleSeverity;
     FType: TRuleType;
     FCleanCode: TRuleCleanCode;
@@ -250,7 +267,7 @@ type
     constructor Create(
       RuleKey: string;
       Name: string;
-      Desc: string;
+      Description: TRuleDescription;
       Severity: TRuleSeverity;
       RuleType: TRuleType;
       CleanCode: TRuleCleanCode = nil
@@ -260,7 +277,7 @@ type
 
     property RuleKey: string read FRuleKey;
     property Name: string read FName;
-    property Desc: string read FDesc;
+    property Description: TRuleDescription read FDescription;
     property Severity: TRuleSeverity read FSeverity;
     property RuleType: TRuleType read FType;
     property CleanCode: TRuleCleanCode read FCleanCode;
@@ -450,7 +467,7 @@ end;
 constructor TRule.Create(
   RuleKey: string;
   Name: string;
-  Desc: string;
+  Description: TRuleDescription;
   Severity: TRuleSeverity;
   RuleType: TRuleType;
   CleanCode: TRuleCleanCode
@@ -460,7 +477,7 @@ begin
 
   FRuleKey := RuleKey;
   FName := Name;
-  FDesc := Desc;
+  FDescription := Description;
   FSeverity := Severity;
   FType := RuleType;
   FCleanCode := CleanCode;
@@ -475,11 +492,9 @@ const
 var
   CleanCodeJson: TJSONObject;
 begin
-  inherited;
-
   FRuleKey := Json.GetValue<string>('key');
   FName := Json.GetValue<string>('name');
-  FDesc := Json.GetValue<string>('desc');
+  FDescription := TRuleDescription.CreateFromJson(Json.GetValue<TJSONObject>('description'));
   FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), CSeverities));
   FType := TRuleType(IndexStr(Json.GetValue<string>('type'), CRuleTypes));
   FCleanCode := nil;
@@ -493,6 +508,7 @@ end;
 
 destructor TRule.Destroy;
 begin
+  FreeAndNil(FDescription);
   FreeAndNil(FCleanCode);
   inherited;
 end;
@@ -522,8 +538,6 @@ const
     'REVIEWED'
   ];
 begin
-  inherited;
-
   FAssignee := Json.GetValue<string>('assignee');
   FCreationDate := Json.GetValue<string>('creationDate');
   FStatus := TIssueStatus(IndexStr(Json.GetValue<string>('status'), CStatuses));
@@ -648,5 +662,27 @@ begin
   FreeAndNil(FTextEdits);
   inherited;
 end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TRuleDescription.Create(Introduction, RootCause, HowToFix, Resources: string);
+begin
+  FIntroduction := Introduction;
+  FRootCause := RootCause;
+  FHowToFix := HowToFix;
+  FResources := Resources;
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TRuleDescription.CreateFromJson(Json: TJSONObject);
+begin
+  FIntroduction := Json.GetValue<string>('introduction');
+  FRootCause := Json.GetValue<string>('rootCause');
+  FHowToFix := Json.GetValue<string>('howToFix');
+  FResources := Json.GetValue<string>('resources');
+end;
+
+//______________________________________________________________________________________________________________________
 
 end.

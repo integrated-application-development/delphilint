@@ -6,7 +6,16 @@
     {
       "key": "key1",
       "name": "name1",
-      "htmlDesc": "html1",
+      "descriptionSections": [
+        {
+          "key": "root_cause",
+          "content": "root_cause1"
+        },
+        {
+          "key": "how_to_fix",
+          "content": "how_to_fix1"
+        }
+      ],
       "severity": "MAJOR",
       "type": "BUG",
       "cleanCodeAttributeCategory": "RESPONSIBLE",
