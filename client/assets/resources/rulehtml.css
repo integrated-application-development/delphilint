@@ -19,6 +19,39 @@ body::-webkit-scrollbar {
   width: 17px;
 }
 
+.tab-buttons {
+  user-select: none;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  margin-top: 6px;
+}
+
+.tab-btn {
+  display: inline-block;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: initial;
+  font-weight: bold;
+}
+
+.tab-btn:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: 3px solid;
+}
+
+.tab-btn.active {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 3px solid;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 .content {
   margin: 8px;
 }
@@ -74,8 +107,9 @@ code {
 }
 
 .impacts {
-  font-size: 11px;
-  margin-bottom: 0;
+  font-size: 12px;
+  margin-bottom: 8px;
+  margin-top: 4px;
 }
 
 p {
