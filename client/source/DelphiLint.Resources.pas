@@ -161,9 +161,11 @@ end;
 function TLintResources.ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
 const
   CImpactSeverityResourceNames: array[TImpactSeverity] of string = (
+    'sonar_icon\impact\info.png',
     'sonar_icon\impact\low.png',
     'sonar_icon\impact\medium.png',
-    'sonar_icon\impact\high.png'
+    'sonar_icon\impact\high.png',
+    'sonar_icon\impact\blocker.png'
   );
 begin
   Result := LoadPng(AssetName(CImpactSeverityResourceNames[Severity]));

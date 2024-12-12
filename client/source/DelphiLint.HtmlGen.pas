@@ -435,6 +435,8 @@ begin
     imsLow: Result := 'low';
     imsMedium: Result := 'medium';
     imsHigh: Result := 'high';
+    imsInfo: Result := 'info';
+    imsBlocker: Result := 'blocker';
   end;
 end;
 
@@ -446,9 +448,11 @@ var
   QualityWord: string;
 begin
   case Severity of
-    imsLow: SeverityWord := 'low';
-    imsMedium: SeverityWord := 'medium';
-    imsHigh: SeverityWord := 'high';
+    imsLow: SeverityWord := 'has a low';
+    imsMedium: SeverityWord := 'has a medium';
+    imsHigh: SeverityWord := 'has a high';
+    imsInfo: SeverityWord := 'may have an';
+    imsBlocker: SeverityWord := 'has a very high (blocking)';
   end;
 
   case Quality of
@@ -458,7 +462,7 @@ begin
   end;
 
   Result := Format(
-    'This has a %s impact on the %s of your code.',
+    'This %s impact on the %s of your code.',
     [SeverityWord, QualityWord]);
 end;
 
