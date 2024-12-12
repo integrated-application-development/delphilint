@@ -129,6 +129,7 @@ type
     FNavigationAllowed: Boolean;
     FRuleHtmlGenerator: TRuleHtmlGenerator;
     FWebViewNeverFailed: Boolean;
+    FBrowserHwnd: HWND;
 
     function GetSelectedIssue: ILiveIssue;
     procedure UpdateFileNameLabel(NewText: string = '');
@@ -203,6 +204,7 @@ begin
   FRuleHtmlGenerator := TRuleHtmlGenerator.Create;
   FIssues := TObjectList<TWrapper<ILiveIssue>>.Create;
   FWebViewNeverFailed := True;
+  FBrowserHwnd := RuleBrowser.Handle;
 
   Analyzer.OnAnalysisStateChanged.AddListener(OnAnalysisStateChanged);
 
@@ -634,15 +636,35 @@ begin
   WebViewInitTimer.Enabled := False;
 
   if not RuleBrowser.WebViewCreated then begin
-    Log.Debug('Passively initializing web view...');
-    RuleBrowser.ReinitializeWebView;
+    Log.Debug('Dirty check found uninitialized web view - initializing');
+  end
+  else if FBrowserHwnd <> RuleBrowser.Handle then begin
+    // Docking or undocking the DelphiLint frame sometimes "detaches" the web view from the control, resulting in
+    // a blank white control. The browser handle changes when the frame is docker or undocked, and it seems like
+    // the only reliable indicator that this could have happened. There are many false positives with this approach,
+    // but since the effect isn't too disruptive it's an acceptable solution.
+
+    Log.Debug('Dirty check found change in handle (%x to %x) - initializing', [FBrowserHwnd, RuleBrowser.Handle]);
+  end
+  else begin
+    Exit;
   end;
+
+  FBrowserHwnd := RuleBrowser.Handle;
+  RuleBrowser.ReinitializeWebView;
 end;
 
 //______________________________________________________________________________________________________________________
 
 procedure TLintToolFrame.DirtyWebView;
 begin
+  // Starting the IDE with a window layout including a docked DelphiLint can sometimes cause the web view to fail
+  // to initialize (likely because the windows are not properly registered with Windows yet). This initializes the
+  // web view after a short delay managed by the VCL event loop instead, circumventing this issue.
+  //
+  // Also, since DirtyWebView is called on frame resize, delaying a short period helps prevent excessive web view
+  // reinitializations.
+
   WebViewInitTimer.Enabled := True;
 end;
 
@@ -790,7 +812,7 @@ begin
     Exit;
   end;
 
-  Log.Info('Rule browser successfully initialized');
+  Log.Debug('Rule browser successfully initialized');
 
   RuleBrowser.SettingsInterface.Set_AreDevToolsEnabled({$IFDEF DEBUG}1{$ELSE}0{$ENDIF});
   RuleBrowser.SettingsInterface.Set_AreDefaultContextMenusEnabled(0);
