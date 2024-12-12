@@ -31,9 +31,9 @@ public class CleanCodeData {
   @JsonProperty private Map<SoftwareQuality, ImpactSeverity> impacts;
 
   public CleanCodeData(RemoteCleanCode cleanCode) {
-    this.attribute = cleanCode.getAttribute();
-    this.category = this.attribute.getCategory();
-    this.impacts = cleanCode.getImpactedQualities();
+    attribute = cleanCode.getAttribute();
+    category = attribute.getCategory();
+    impacts = cleanCode.getImpactedQualities();
   }
 
   public CleanCodeAttribute getAttribute() {

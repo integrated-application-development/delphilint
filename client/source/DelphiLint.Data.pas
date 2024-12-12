@@ -206,15 +206,17 @@ type
   );
 
   TSoftwareQuality = (
+    sqaMaintainability,
     sqaSecurity,
-    sqaReliability,
-    sqaMaintainability
+    sqaReliability
   );
 
   TImpactSeverity = (
+    imsInfo,
     imsLow,
     imsMedium,
-    imsHigh
+    imsHigh,
+    imsBlocker
   );
 
   TRuleCleanCode = class(TObject)
@@ -429,11 +431,11 @@ end;
 
 constructor TRuleCleanCode.CreateFromJson(Json: TJSONObject);
 const
-  CAttributes: array of string = ['FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
-    'COMPLETE', 'EFFICIENT', 'FOCUSED', 'DISTINCT', 'MODULAR', 'TESTED', 'LAWFUL', 'TRUSTWORTHY', 'RESPECTFUL'];
-  CCategories: array of string = ['CONSISTENT', 'INTENTIONAL', 'ADAPTABLE', 'RESPONSIBLE'];
-  CSoftwareQualities: array of string = ['SECURITY', 'RELIABILITY', 'MAINTAINABILITY'];
-  CImpactSeverities: array of string = ['LOW', 'MEDIUM', 'HIGH'];
+  CAttributes: array[TCleanCodeAttribute] of string = ('FORMATTED', 'CONVENTIONAL', 'IDENTIFIABLE', 'CLEAR', 'LOGICAL',
+    'COMPLETE', 'EFFICIENT', 'FOCUSED', 'DISTINCT', 'MODULAR', 'TESTED', 'LAWFUL', 'TRUSTWORTHY', 'RESPECTFUL');
+  CCategories: array[TCleanCodeAttributeCategory] of string = ('CONSISTENT', 'INTENTIONAL', 'ADAPTABLE', 'RESPONSIBLE');
+  CSoftwareQualities: array[TSoftwareQuality] of string = ('MAINTAINABILITY', 'SECURITY', 'RELIABILITY');
+  CImpactSeverities: array[TImpactSeverity] of string = ('INFO', 'LOW', 'MEDIUM', 'HIGH', 'BLOCKER');
 var
   Impacts: TJSONObject;
   Index: Integer;
@@ -487,8 +489,8 @@ end;
 
 constructor TRule.CreateFromJson(Json: TJSONObject);
 const
-  CSeverities: array of string = ['INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER'];
-  CRuleTypes: array of string = ['CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT'];
+  CSeverities: array[TRuleSeverity] of string = ('INFO', 'MINOR', 'MAJOR', 'CRITICAL', 'BLOCKER');
+  CRuleTypes: array[TRuleType] of string = ('CODE_SMELL', 'BUG', 'VULNERABILITY', 'SECURITY_HOTSPOT');
 var
   CleanCodeJson: TJSONObject;
 begin
@@ -527,7 +529,7 @@ end;
 
 constructor TIssueMetadata.CreateFromJson(Json: TJSONObject);
 const
-  CStatuses: array of string = [
+  CStatuses: array[TIssueStatus] of string = (
     'OPEN',
     'CONFIRMED',
     'REOPENED',
@@ -536,7 +538,7 @@ const
     'ACCEPTED',
     'TO_REVIEW',
     'REVIEWED'
-  ];
+  );
 begin
   FAssignee := Json.GetValue<string>('assignee');
   FCreationDate := Json.GetValue<string>('creationDate');

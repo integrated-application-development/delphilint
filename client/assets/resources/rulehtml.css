@@ -119,27 +119,46 @@ p {
 .impact {
   display: inline-block;
   margin-right: 5px;
-  padding: 3px 5px;
+  padding: 4px 8px 3px 10px;
   border-radius: 12px;
+  border: 1px solid black;
+  font-weight: bold;
+  cursor: default;
 }
 
 .impact img {
   display: inline;
   vertical-align: middle;
+  margin-top: -2px;
+}
+
+.impact.info {
+  color: rgb(49, 108, 146);
+  border-color: rgb(143, 202, 234);
+  background-color: rgb(245, 251, 255);
 }
 
 .impact.low {
-  color: rgb(49, 108, 146);
-  background-color: rgb(233, 244, 251);
+  color: rgb(140, 94, 30);
+  border-color: rgb(250, 220, 121);
+  background-color: rgb(252, 245, 228);
 }
 
 .impact.medium {
-  color: rgb(140, 94, 30);
-  background-color: rgb(254, 245, 208);
+  color: rgb(147, 55, 13);
+  border-color: rgb(254, 150, 75);
+  background-color: rgb(255, 240, 235);
 }
 
 .impact.high {
+  color: rgb(180, 35, 24);
+  border-color: rgb(217, 45, 32);
+  background-color: rgb(254, 243, 242);
+}
+
+.impact.blocker {
   color: rgb(128, 27, 20);
+  border-color: rgb(128, 27, 20);
   background-color: rgb(254, 228, 226);
 }
 

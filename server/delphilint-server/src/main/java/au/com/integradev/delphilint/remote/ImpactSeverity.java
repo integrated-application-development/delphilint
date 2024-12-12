@@ -20,9 +20,11 @@ package au.com.integradev.delphilint.remote;
 import org.apache.commons.lang3.NotImplementedException;
 
 public enum ImpactSeverity {
+  INFO,
   LOW,
   MEDIUM,
-  HIGH;
+  HIGH,
+  BLOCKER;
 
   public static ImpactSeverity fromSonarLintImpactSeverity(
       org.sonarsource.sonarlint.core.commons.ImpactSeverity severity) {
