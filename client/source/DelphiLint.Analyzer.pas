@@ -673,6 +673,7 @@ begin
     end;
 
     if DoTryRetrieveRules(SonarOptions, DownloadPlugin, TempRules) then begin
+      FreeAndNil(FRules);
       FRules := TempRules;
       Result := True;
     end;
@@ -746,6 +747,7 @@ var
   FuncRules: TObjectDictionary<string, TRule>;
 begin
   TimedOut := False;
+  FuncRules := nil;
   RulesRetrievedEvent := TEvent.Create;
   try
     ExecuteWithServer(
@@ -776,6 +778,7 @@ begin
         );
       end,
       procedure(Msg: string) begin
+        Log.Warn('Rule retrieval failed: %s', [Msg]);
         TaskMessageDlg(
           CServerAcquireErrorMsg,
           Format('%s.', [Msg]),
@@ -787,8 +790,14 @@ begin
     );
 
     if RulesRetrievedEvent.WaitFor(10000) = TWaitResult.wrSignaled then begin
-      Rules := FuncRules;
-      Result := True;
+      if Assigned(FuncRules) then begin
+        Rules := FuncRules;
+        Result := True;
+      end
+      else begin
+        Result := False;
+        Log.Warn('Rule retrieval failed');
+      end;
     end
     else begin
       TimedOut := True;
