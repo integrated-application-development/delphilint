@@ -86,21 +86,22 @@ class SonarQubeHostTest {
     assertTrue(host.getCharacteristics().isSupported());
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(strings = {"9.9", "11.2.0.0.01923", "11.5.3"})
   void testRecognisesNonCleanCodeVersion() throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version("9.9"), Collections.emptyMap());
 
     var host = buildSonarHost(api);
-    assertFalse(host.getCharacteristics().usesCodeAttributes());
+    assertFalse(host.getCharacteristics().usesCodeAttributesUnconditionally());
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"10.2", "11.2.0.0.01923", "11.5.3"})
+  @ValueSource(strings = {"10.2", "10.5", "10.7"})
   void testRecognisesCleanCodeVersion(String versionStr) throws SonarHostException {
     var api = new ResourceBackedSonarApi(new Version(versionStr), Collections.emptyMap());
 
     var host = buildSonarHost(api);
-    assertTrue(host.getCharacteristics().usesCodeAttributes());
+    assertTrue(host.getCharacteristics().usesCodeAttributesUnconditionally());
   }
 
   @Test
@@ -185,7 +186,7 @@ class SonarQubeHostTest {
   }
 
   @Test
-  void testParsesIssueWithoutCleanCode() throws SonarHostException {
+  void testParsesPre10_2IssueWithoutCleanCode() throws SonarHostException {
     var api =
         new ResourceBackedSonarApi(
             new Version("10.1"),
@@ -231,6 +232,82 @@ class SonarQubeHostTest {
                 "issuesSingularCleanCodeOk.json",
                 "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
                 "issuesSingularCleanCodeOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    var issueOpt =
+        host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).stream()
+            .filter(issue -> issue.getLikeType() == IssueLikeType.ISSUE)
+            .findFirst();
+
+    assertTrue(issueOpt.isPresent());
+
+    RemoteIssue issue = issueOpt.get();
+
+    assertEquals("key1", issue.getRuleKey());
+    assertEquals("msg1", issue.getMessage());
+    assertEquals(RuleSeverity.MINOR, issue.getSeverity());
+    assertEquals(RuleType.CODE_SMELL, issue.getType());
+    assertEquals("e141e75692a375ca2a38daa5e01f38bd", issue.getLineHash());
+    assertNotNull(issue.getCleanCode());
+    assertEquals(CleanCodeAttribute.CLEAR, issue.getCleanCode().getAttribute());
+    assertEquals(
+        CleanCodeAttributeCategory.INTENTIONAL, issue.getCleanCode().getAttribute().getCategory());
+    assertEquals(
+        ImpactSeverity.HIGH,
+        issue.getCleanCode().getImpactedQualities().get(SoftwareQuality.MAINTAINABILITY));
+  }
+
+  @Test
+  void testParsesStandardExperienceIssueWithoutCleanCode() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            new Version("10.8"),
+            Map.of(
+                "/api/qualityprofiles/search?language=delphi&project=MyProject",
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject&status=REVIEWED",
+                "resolvedHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
+                "issuesSingularCleanCodeOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "issuesSingularCleanCodeOk.json",
+                "/api/v2/clean-code-policy/mode",
+                "taxonomyStandardOk.json"));
+
+    var host = buildSonarHost(api, "MyProject");
+    var issueOpt =
+        host.getResolvedIssues(Set.of("UnitA.pas"), Collections.emptySet()).stream()
+            .filter(issue -> issue.getLikeType() == IssueLikeType.ISSUE)
+            .findFirst();
+
+    assertTrue(issueOpt.isPresent());
+
+    RemoteIssue issue = issueOpt.get();
+
+    assertEquals("key1", issue.getRuleKey());
+    assertEquals("msg1", issue.getMessage());
+    assertEquals(RuleSeverity.MINOR, issue.getSeverity());
+    assertEquals(RuleType.CODE_SMELL, issue.getType());
+    assertEquals("e141e75692a375ca2a38daa5e01f38bd", issue.getLineHash());
+    assertNull(issue.getCleanCode());
+  }
+
+  @Test
+  void testParsesMqrIssueWithCleanCode() throws SonarHostException {
+    var api =
+        new ResourceBackedSonarApi(
+            new Version("10.8"),
+            Map.of(
+                "/api/qualityprofiles/search?language=delphi&project=MyProject",
+                QP_OK_JSON,
+                "/api/hotspots/search?files=UnitA.pas%2C&project=MyProject&status=REVIEWED",
+                "resolvedHotspotsOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true",
+                "issuesSingularCleanCodeOk.json",
+                "/api/issues/search?components=MyProject%3AUnitA.pas%2C&resolved=true&p=1",
+                "issuesSingularCleanCodeOk.json",
+                "/api/v2/clean-code-policy/mode",
+                "taxonomyMqrOk.json"));
 
     var host = buildSonarHost(api, "MyProject");
     var issueOpt =
