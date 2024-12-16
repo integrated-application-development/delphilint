@@ -29,10 +29,20 @@ class SonarCharacteristicsTest {
   }
 
   @Test
-  void testUsesCodeAttributes() {
-    assertFalse(characteristicsFor("10.1").usesCodeAttributes());
-    assertTrue(characteristicsFor("10.2").usesCodeAttributes());
-    assertTrue(characteristicsFor("10.3").usesCodeAttributes());
+  void testHasConfigurableTaxonomyMode() {
+    assertFalse(characteristicsFor("10.7").hasConfigurableTaxonomyMode());
+    assertTrue(characteristicsFor("10.8").hasConfigurableTaxonomyMode());
+    assertTrue(characteristicsFor("24.12").hasConfigurableTaxonomyMode());
+  }
+
+  @Test
+  void testUsesCodeAttributesUnconditionally() {
+    assertFalse(characteristicsFor("10.1").usesCodeAttributesUnconditionally());
+    assertTrue(characteristicsFor("10.2").usesCodeAttributesUnconditionally());
+    assertTrue(characteristicsFor("10.3").usesCodeAttributesUnconditionally());
+    assertTrue(characteristicsFor("10.7").usesCodeAttributesUnconditionally());
+    assertFalse(characteristicsFor("10.8").usesCodeAttributesUnconditionally());
+    assertFalse(characteristicsFor("24.12").usesCodeAttributesUnconditionally());
   }
 
   @Test

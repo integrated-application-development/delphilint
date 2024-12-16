@@ -23,8 +23,8 @@ public class SonarCharacteristics {
   private static final Version FIRST_SUPPORTED_VERSION = new Version("7.9");
   private static final Version FIRST_CODE_ATTRIBUTES_VERSION = new Version("10.2");
   private static final Version FIRST_PLUGIN_REQUIRED_FOR_LANGUAGES_VERSION = new Version("10.4");
-  private static final Version EARLIEST_ALL_FEATURES_VERSION =
-      FIRST_PLUGIN_REQUIRED_FOR_LANGUAGES_VERSION;
+  private static final Version FIRST_CONFIGURABLE_TAXONOMY_VERSION = new Version("10.8");
+  private static final Version EARLIEST_ALL_FEATURES_VERSION = FIRST_CONFIGURABLE_TAXONOMY_VERSION;
   private static final Version VERSION_10_2 = new Version("10.2");
   private static final Version VERSION_10_4 = new Version("10.4");
 
@@ -34,8 +34,14 @@ public class SonarCharacteristics {
     this.version = version;
   }
 
-  public boolean usesCodeAttributes() {
-    return version.compareTo(FIRST_CODE_ATTRIBUTES_VERSION) >= 0;
+  public boolean hasConfigurableTaxonomyMode() {
+    // MQR / Standard Experience toggle was added in E-10.8 / C-24.12.
+    return version.compareTo(FIRST_CONFIGURABLE_TAXONOMY_VERSION) >= 0;
+  }
+
+  public boolean usesCodeAttributesUnconditionally() {
+    return version.compareTo(FIRST_CODE_ATTRIBUTES_VERSION) >= 0
+        && version.compareTo(FIRST_CONFIGURABLE_TAXONOMY_VERSION) < 0;
   }
 
   public boolean supportsPluginRequiredForLanguages() {

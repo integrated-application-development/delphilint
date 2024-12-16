@@ -67,6 +67,7 @@ public class SonarQubeHost implements SonarHost {
   private static final String URL_COMPONENTS_TREE = "/api/components/tree";
   private static final String URL_ISSUES_SEARCH = "/api/issues/search";
   private static final String URL_HOTSPOTS_SEARCH = "/api/hotspots/search";
+  private static final String URL_V2_CLEAN_CODE_POLICY_MODE = "/api/v2/clean-code-policy/mode";
 
   private static final String PARAM_PAGE_SIZE = "ps";
   private static final String PARAM_LANGUAGE = "language";
@@ -97,7 +98,7 @@ public class SonarQubeHost implements SonarHost {
     this.languageKey = languageKey;
     this.pluginKey = pluginKey;
     this.pluginKeyDiscriminator = pluginKeyDiscriminator;
-    this.jsonMapper = new ObjectMapper();
+    jsonMapper = new ObjectMapper();
   }
 
   public String getName() {
@@ -191,6 +192,34 @@ public class SonarQubeHost implements SonarHost {
     return ruleMap;
   }
 
+  private Taxonomy getTaxonomy() throws SonarHostException {
+    if (getCharacteristics().usesCodeAttributesUnconditionally()) {
+      // 10.2 to 10.7 (inclusive) enforce the use of the clean code taxonomy
+      LOG.info("Taxonomy determined: clean code (by version)");
+      return Taxonomy.CLEAN_CODE;
+    } else if (!getCharacteristics().hasConfigurableTaxonomyMode()) {
+      // 10.1 and below only support the standard experience
+      LOG.info("Taxonomy determined: standard (by version)");
+      return Taxonomy.STANDARD;
+    }
+
+    // 10.8 and above (and all Community Build versions) allow you to configure your preference
+    var rootNode = api.getJson(URL_V2_CLEAN_CODE_POLICY_MODE);
+    if (rootNode == null) {
+      throw new SonarHostException("No JSON response from SonarQube for instance mode");
+    } else if (!rootNode.has("mode")) {
+      throw new SonarHostException("Malformed instance mode response from SonarQube: " + rootNode);
+    }
+
+    if (rootNode.get("mode").asText().equals("MQR")) {
+      LOG.info("Taxonomy determined: clean code (by instance mode)");
+      return Taxonomy.CLEAN_CODE;
+    } else {
+      LOG.info("Taxonomy determined: standard (by instance mode)");
+      return Taxonomy.STANDARD;
+    }
+  }
+
   public Set<RemoteRule> getRules() throws SonarHostException {
     SonarQubeQualityProfile profile = getQualityProfile();
 
@@ -200,7 +229,9 @@ public class SonarQubeHost implements SonarHost {
     params.put(PARAM_LANGUAGES, languageKey);
     params.put(PARAM_QUALITY_PROFILE, profile.getKey());
 
-    if (getCharacteristics().usesCodeAttributes()) {
+    var useCleanCode = getTaxonomy() == Taxonomy.CLEAN_CODE;
+
+    if (useCleanCode) {
       params.put(PARAM_FIELDS, "name,descriptionSections,severity,cleanCodeAttribute");
     } else {
       params.put(PARAM_FIELDS, "name,descriptionSections,severity");
@@ -219,7 +250,7 @@ public class SonarQubeHost implements SonarHost {
       try {
         SonarQubeRule sonarQubeRule = jsonMapper.treeToValue(rule, SonarQubeRule.class);
 
-        ruleSet.add(convertSonarQubeRuleToRemoteRule(sonarQubeRule));
+        ruleSet.add(convertSonarQubeRuleToRemoteRule(sonarQubeRule, useCleanCode));
       } catch (JsonProcessingException e) {
         LOG.error(e);
         throw new SonarHostException(
@@ -230,10 +261,11 @@ public class SonarQubeHost implements SonarHost {
     return ruleSet;
   }
 
-  private static RemoteRule convertSonarQubeRuleToRemoteRule(SonarQubeRule rule) {
+  private static RemoteRule convertSonarQubeRuleToRemoteRule(
+      SonarQubeRule rule, boolean useCleanCode) {
     RemoteCleanCode cleanCode = null;
 
-    if (rule.getCleanCodeAttribute() != null) {
+    if (useCleanCode && rule.getCleanCodeAttribute() != null) {
       Map<SoftwareQuality, ImpactSeverity> impacts =
           rule.getImpacts().stream()
               .collect(
@@ -277,7 +309,7 @@ public class SonarQubeHost implements SonarHost {
     return strings;
   }
 
-  private static RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue) {
+  private static RemoteIssue sqIssueToRemote(SonarQubeIssueLike sqIssue, boolean useCleanCode) {
     var issueBuilder =
         new RemoteIssue.Builder()
             .withRuleKey(sqIssue.getRuleKey())
@@ -290,7 +322,7 @@ public class SonarQubeHost implements SonarHost {
             .withLikeType(sqIssue.getLikeType())
             .withResolution(sqIssue.getResolution());
 
-    if (sqIssue.getCleanCodeAttribute() != null) {
+    if (useCleanCode && sqIssue.getCleanCodeAttribute() != null) {
       Map<SoftwareQuality, ImpactSeverity> impacts =
           sqIssue.getImpacts().stream()
               .collect(
@@ -353,13 +385,16 @@ public class SonarQubeHost implements SonarHost {
       return Collections.emptySet();
     }
 
-    Set<RemoteIssue> issues = getIssues(relativeFilePaths, issueParams);
-    issues.addAll(getHotspots(relativeFilePaths, hotspotParams));
+    var useCleanCode = getTaxonomy() == Taxonomy.CLEAN_CODE;
+
+    Set<RemoteIssue> issues = getIssues(relativeFilePaths, issueParams, useCleanCode);
+    issues.addAll(getHotspots(relativeFilePaths, hotspotParams, useCleanCode));
     return issues;
   }
 
   private Set<RemoteIssue> getIssues(
-      Collection<String> relativeFilePaths, Collection<String> params) throws SonarHostException {
+      Collection<String> relativeFilePaths, Collection<String> params, boolean useCleanCode)
+      throws SonarHostException {
     Set<RemoteIssue> remoteIssues = new HashSet<>();
 
     List<String> componentKeyBatches =
@@ -385,7 +420,7 @@ public class SonarQubeHost implements SonarHost {
                 SonarQubeIssue.class);
 
         for (SonarQubeIssue sqIssue : serverIssues) {
-          remoteIssues.add(sqIssueToRemote(sqIssue));
+          remoteIssues.add(sqIssueToRemote(sqIssue, useCleanCode));
         }
       } catch (UncheckedSonarHostException e) {
         throw (SonarHostException) e.getCause();
@@ -396,7 +431,8 @@ public class SonarQubeHost implements SonarHost {
   }
 
   private Set<RemoteIssue> getHotspots(
-      Collection<String> relativeFilePaths, Collection<String> params) throws SonarHostException {
+      Collection<String> relativeFilePaths, Collection<String> params, boolean useCleanCode)
+      throws SonarHostException {
     Set<RemoteIssue> remoteHotspots = new HashSet<>();
 
     List<String> filePathBatches = joinStringsWithLimit(relativeFilePaths, s -> s, 1500);
@@ -422,7 +458,7 @@ public class SonarQubeHost implements SonarHost {
                 SonarQubeHotspot.class);
 
         for (SonarQubeHotspot sqHotspot : resolvedHotspots) {
-          remoteHotspots.add(sqIssueToRemote(sqHotspot));
+          remoteHotspots.add(sqIssueToRemote(sqHotspot, useCleanCode));
         }
       } catch (UncheckedSonarHostException e) {
         if (e.getCause() instanceof SonarHostForbiddenException) {
