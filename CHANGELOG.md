@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+* Support for the rule taxonomy mode selection in SonarQube 10.8.
+* Support for INFO and BLOCKER severity impacts when using the multi-quality-rule mode.
+
 ### Changed
 
 * Highlight.js has been updated to 11.10.0, improving rule description syntax highlighting for numeric literals
   and character strings.
 * The default SonarDelphi version is now [1.12.1](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.12.1).
+* Icons, styling, and the rule description user interface have been updated to mirror SonarQube 10.8. 
 
 ### Fixed
 
@@ -19,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Blank rule view in certain situations after docking or undocking the DelphiLint window.
 * Unhandled exception when retrieval of rules from a remote SonarQube server fails.
 * Plugin information in Help > About persisting after the plugin is disabled.
+* Rule descriptions not loading from a Connected Mode SonarQube 10.8+ / Community Build 24.12+ instance.
 
 ## [1.2.0] - 2024-10-14
 
