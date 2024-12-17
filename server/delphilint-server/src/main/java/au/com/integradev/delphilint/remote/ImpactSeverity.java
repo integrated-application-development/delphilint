@@ -22,7 +22,9 @@ import org.apache.commons.lang3.NotImplementedException;
 public enum ImpactSeverity {
   LOW,
   MEDIUM,
-  HIGH;
+  HIGH,
+  INFO,
+  BLOCKER;
 
   public static ImpactSeverity fromSonarLintImpactSeverity(
       org.sonarsource.sonarlint.core.commons.ImpactSeverity severity) {

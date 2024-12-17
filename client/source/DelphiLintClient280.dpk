@@ -1,7 +1,6 @@
 ﻿package DelphiLintClient280;
 
 {$R *.res}
-{$R *.dres}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -71,6 +70,6 @@ contains
   DelphiLint.ExternalConsts in 'DelphiLint.ExternalConsts.pas',
   DelphiLint.LogViewer in 'DelphiLint.LogViewer.pas' {LogViewerForm};
 
-{$R DelphiLintClientAdditional.res}
+{$R *Additional.res}
 
 end.

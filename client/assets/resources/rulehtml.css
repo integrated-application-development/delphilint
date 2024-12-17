@@ -19,6 +19,39 @@ body::-webkit-scrollbar {
   width: 17px;
 }
 
+.tab-buttons {
+  user-select: none;
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+  margin-top: 6px;
+}
+
+.tab-btn {
+  display: inline-block;
+  padding: 6px 10px;
+  cursor: pointer;
+  user-select: initial;
+  font-weight: bold;
+}
+
+.tab-btn:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-bottom: 3px solid;
+}
+
+.tab-btn.active {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 3px solid;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
 .content {
   margin: 8px;
 }
@@ -74,8 +107,9 @@ code {
 }
 
 .impacts {
-  font-size: 11px;
-  margin-bottom: 0;
+  font-size: 12px;
+  margin-bottom: 8px;
+  margin-top: 4px;
 }
 
 p {
@@ -85,28 +119,65 @@ p {
 .impact {
   display: inline-block;
   margin-right: 5px;
-  padding: 3px 5px;
+  padding: 4px 6px 4px 9px;
   border-radius: 12px;
+  border: 1px solid black;
+  font-weight: bold;
+  cursor: default;
+}
+
+.impact.standard img:first-child, .impact.hotspot img:first-child {
+  margin-right: 4px;
 }
 
 .impact img {
   display: inline;
   vertical-align: middle;
+  margin-top: -4px;
+  margin-left: 4px;
+}
+
+.impact.info {
+  color: rgb(49, 108, 146);
+  border-color: rgb(143, 202, 234);
+  background-color: rgb(245, 251, 255);
 }
 
 .impact.low {
-  color: rgb(49, 108, 146);
-  background-color: rgb(233, 244, 251);
+  color: rgb(140, 94, 30);
+  border-color: rgb(250, 220, 121);
+  background-color: rgb(252, 245, 228);
 }
 
 .impact.medium {
-  color: rgb(140, 94, 30);
-  background-color: rgb(254, 245, 208);
+  color: rgb(147, 55, 13);
+  border-color: rgb(254, 150, 75);
+  background-color: rgb(255, 240, 235);
 }
 
 .impact.high {
+  color: rgb(180, 35, 24);
+  border-color: rgb(217, 45, 32);
+  background-color: rgb(254, 243, 242);
+}
+
+.impact.blocker {
   color: rgb(128, 27, 20);
+  border-color: rgb(128, 27, 20);
   background-color: rgb(254, 228, 226);
+}
+
+.impact.standard {
+  padding-left: 4px;
+  background-color: white;
+}
+
+.impact.hotspot {
+  padding-left: 4px;
+  padding-right: 10px;
+  border-color: rgb(35, 106, 151);
+  color: rgb(35, 106, 151);
+  background-color: white;
 }
 
 .code-added, .code-removed {
