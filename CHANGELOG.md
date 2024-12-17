@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Highlight.js has been updated to 11.10.0, improving rule description syntax highlighting for numeric literals
   and character strings.
+* The default SonarDelphi version is now [1.12.1](https://github.com/integrated-application-development/sonar-delphi/releases/tag/v1.12.1).
 
 ### Fixed
 

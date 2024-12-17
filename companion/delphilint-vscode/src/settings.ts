@@ -129,7 +129,7 @@ export function getSonarDelphiVersion(): string {
   if (override) {
     return override;
   } else {
-    return "1.10.0";
+    return "1.12.1";
   }
 }
 
