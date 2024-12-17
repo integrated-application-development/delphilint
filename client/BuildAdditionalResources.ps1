@@ -2,6 +2,7 @@ param(
   [string]$ProjectName
 )
 
+$AssetsDir = Join-Path $PSScriptRoot "assets\resources"
 $ResourceFile = "${ProjectName}Additional.rc"
 
 function Invoke-Webpack {
@@ -16,13 +17,34 @@ function Invoke-Webpack {
   }
 }
 
-function Add-Resources {
+function Get-Hash([string]$Text) {
+  $Stream = [System.IO.MemoryStream]::new([byte[]][char[]]$Text)
+  Get-FileHash -InputStream $Stream -Algorithm SHA256
+}
+
+function Get-AssetResources {
+  $RcData = @{}
+
+  Push-Location $AssetsDir
+  try {
+    Get-ChildItem . -Recurse -File | ForEach-Object {
+      $RelativePath = ((Resolve-Path -Relative $_.FullName) -replace "^\.\\").ToUpper()
+      $Key = "DL_ASSET_" + (Get-Hash $RelativePath).Hash
+      $RcData[$Key] = $_.FullName
+    }
+  }
+  finally {
+    Pop-Location
+  }
+
+  $RcData
+}
+
+function New-Rc([hashtable]$RcData) {
   Write-Host "Generating additional .rc file..."
-  @{
-    "DL_HTML_SCRIPT" = "..\jslib\dist\compiled.js"
-  }.GetEnumerator() |
-    ForEach-Object { "$($_.Key) RCDATA `"$($_.Value)`"" } |
-    Out-File $ResourceFile -Encoding ascii
+  $RcData.GetEnumerator() | ForEach-Object {
+    "$($_.Key) RCDATA `"$($_.Value)`""
+  } | Out-File $ResourceFile -Encoding ascii
 }
 
 function Invoke-Brcc32 {
@@ -31,5 +53,7 @@ function Invoke-Brcc32 {
 }
 
 Invoke-Webpack
-Add-Resources
+New-Rc (@{
+  "DL_GENERATED_JS" = Join-Path $PSScriptRoot "jslib\dist\compiled.js"
+} + (Get-AssetResources))
 Invoke-Brcc32
