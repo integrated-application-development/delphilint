@@ -1,3 +1,7 @@
+param(
+  [string]$ProjectName
+)
+
 function Expand-CommitMacro {
   Write-Host "Expanding commit macro..."
   $IncFile = Join-Path $PSScriptRoot "dlversion.inc"
@@ -16,5 +20,5 @@ function Expand-CommitMacro {
   }
 }
 
-& ..\BuildAdditionalResources.ps1 "DelphiLintClient"
+& ..\BuildAdditionalResources.ps1 $ProjectName
 Expand-CommitMacro

@@ -37,6 +37,7 @@ type
     function LoadPng(ResourceName: string): TPngImage;
     function LoadBitmap(ResourceName: string): TBitmap;
     function LoadFileString(ResourceName: string): string;
+    function AssetName(Path: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -60,6 +61,7 @@ uses
     System.SysUtils
   , System.Classes
   , System.Types
+  , System.Hash
   ;
 
 var
@@ -74,6 +76,13 @@ begin
   end;
 
   Result := G_LintResources;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintResources.AssetName(Path: string): string;
+begin
+  Result := 'DL_ASSET_' + UpperCase(THashSHA2.GetHashString(UpperCase(Path)));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -101,21 +110,21 @@ end;
 
 function TLintResources.DelphiLintIcon: TBitmap;
 begin
-  Result := LoadBitmap('DL_ICON');
+  Result := LoadBitmap(AssetName('delphilint_icon_48x48.bmp'));
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.DelphiLintSplash: TBitmap;
 begin
-  Result := LoadBitmap('DL_SPLASH');
+  Result := LoadBitmap(AssetName('delphilint_icon_24x24.bmp'));
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.RuleHtmlCss: string;
 begin
-  Result := LoadFileString('DL_HTML_CSS');
+  Result := LoadFileString(AssetName('rulehtml.css'));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -123,14 +132,14 @@ end;
 function TLintResources.RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
 const
   CRuleSeverityResourceNames: array[TRuleSeverity] of string = (
-    'DL_RS_INFO',
-    'DL_RS_MINOR',
-    'DL_RS_MAJOR',
-    'DL_RS_CRITICAL',
-    'DL_RS_BLOCKER'
+    'sonar_icon\severity\info.png',
+    'sonar_icon\severity\minor.png',
+    'sonar_icon\severity\major.png',
+    'sonar_icon\severity\critical.png',
+    'sonar_icon\severity\blocker.png'
   );
 begin
-  Result := LoadPng(CRuleSeverityResourceNames[RuleType]);
+  Result := LoadPng(AssetName(CRuleSeverityResourceNames[RuleType]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -138,13 +147,13 @@ end;
 function TLintResources.RuleTypeIcon(RuleType: TRuleType): TGraphic;
 const
   CRuleTypeResourceNames: array[TRuleType] of string = (
-    'DL_RT_CODESMELL',
-    'DL_RT_BUG',
-    'DL_RT_VULNERABILITY',
-    'DL_RT_HOTSPOT'
+    'sonar_icon\type\code_smell.png',
+    'sonar_icon\type\bug.png',
+    'sonar_icon\type\vulnerability.png',
+    'sonar_icon\type\hotspot.png'
   );
 begin
-  Result := LoadPng(CRuleTypeResourceNames[RuleType]);
+  Result := LoadPng(AssetName(CRuleTypeResourceNames[RuleType]));
 end;
 
 //______________________________________________________________________________________________________________________
@@ -152,19 +161,19 @@ end;
 function TLintResources.ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
 const
   CImpactSeverityResourceNames: array[TImpactSeverity] of string = (
-    'DL_IS_LOW',
-    'DL_IS_MEDIUM',
-    'DL_IS_HIGH'
+    'sonar_icon\impact\low.png',
+    'sonar_icon\impact\medium.png',
+    'sonar_icon\impact\high.png'
   );
 begin
-  Result := LoadPng(CImpactSeverityResourceNames[Severity]);
+  Result := LoadPng(AssetName(CImpactSeverityResourceNames[Severity]));
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.JsLibScript: string;
 begin
-  Result := LoadFileString('DL_HTML_SCRIPT');
+  Result := LoadFileString('DL_GENERATED_JS');
 end;
 
 //______________________________________________________________________________________________________________________
@@ -172,26 +181,33 @@ end;
 function TLintResources.LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
 const
   CFileStatusResourceNames: array[TCurrentFileStatus] of string = (
-    'DL_LINT_DISABLED',
-    'DL_LINT_DISABLED',
-    'DL_LINT_WORK',
-    'DL_LINT_FAIL',
-    'DL_LINT_SUCCESS',
-    'DL_LINT_SUCCESSOUT',
-    'DL_LINT_WARN',
-    'DL_LINT_WARNOUT'
+    'status_icon\lint_disabled.png',
+    'status_icon\lint_disabled.png',
+    'status_icon\lint_work.png',
+    'status_icon\lint_fail.png',
+    'status_icon\lint_success.png',
+    'status_icon\lint_success_outdated.png',
+    'status_icon\lint_warn.png',
+    'status_icon\lint_warn_outdated.png'
   );
 begin
-  Result := LoadPng(CFileStatusResourceNames[FileStatus]);
+  Result := LoadPng(AssetName(CFileStatusResourceNames[FileStatus]));
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TLintResources.LoadBitmap(ResourceName: string): TBitmap;
+var
+  Stream: TResourceStream;
 begin
   if not FLoadedBitmaps.ContainsKey(ResourceName) then begin
-    FLoadedBitmaps.Add(ResourceName, TBitmap.Create);
-    FLoadedBitmaps[ResourceName].LoadFromResourceName(HInstance, ResourceName);
+    Stream := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
+    try
+      FLoadedBitmaps.Add(ResourceName, TBitmap.Create);
+      FLoadedBitmaps[ResourceName].LoadFromStream(Stream);
+    finally
+      FreeAndNil(Stream);
+    end;
   end;
 
   Result := FLoadedBitmaps[ResourceName];
@@ -200,10 +216,17 @@ end;
 //______________________________________________________________________________________________________________________
 
 function TLintResources.LoadPng(ResourceName: string): TPngImage;
+var
+  Stream: TResourceStream;
 begin
   if not FLoadedPngs.ContainsKey(ResourceName) then begin
-    FLoadedPngs.Add(ResourceName, TPngImage.Create);
-    FLoadedPngs[ResourceName].LoadFromResourceName(HInstance, ResourceName);
+    Stream := TResourceStream.Create(HInstance, ResourceName, RT_RCDATA);
+    try
+      FLoadedPngs.Add(ResourceName, TPngImage.Create);
+      FLoadedPngs[ResourceName].LoadFromStream(Stream);
+    finally
+      FreeAndNil(Stream);
+    end;
   end;
 
   Result := FLoadedPngs[ResourceName];

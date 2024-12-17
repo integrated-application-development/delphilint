@@ -52,7 +52,7 @@ $(PostBuildEvent)]]>
         </PostBuildEvent>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
         <PreBuildEvent>
-            <![CDATA[powershell -NoProfile -File PreBuild.ps1
+            <![CDATA[powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)
 $(PreBuildEvent)]]>
         </PreBuildEvent>
         <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
@@ -145,95 +145,6 @@ $(PreBuildEvent)]]>
             <Form>LogViewerForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <RcItem Include="..\assets\delphilint_icon_24x24.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>DL_SPLASH</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\delphilint_icon_48x48.bmp">
-            <ResourceType>BITMAP</ResourceType>
-            <ResourceId>DL_ICON</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\type\code_smell.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RT_CODESMELL</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\severity\blocker.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RS_BLOCKER</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\type\bug.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RT_BUG</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\severity\critical.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RS_CRITICAL</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\type\hotspot.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RT_HOTSPOT</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\severity\info.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RS_INFO</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\severity\major.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RS_MAJOR</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\severity\minor.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RS_MINOR</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\type\vulnerability.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_RT_VULNERABILITY</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_warn.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_WARN</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_fail.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_FAIL</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_success.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_SUCCESS</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_work.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_WORK</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_disabled.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_DISABLED</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_success_outdated.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_SUCCESSOUT</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\linticons\lint_warn_outdated.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_LINT_WARNOUT</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\impactseverity\high.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_IS_HIGH</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\impactseverity\low.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_IS_LOW</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\issueicons\impactseverity\medium.png">
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_IS_MEDIUM</ResourceId>
-        </RcItem>
-        <RcItem Include="..\assets\rulehtml.css">
-            <ContainerId>ResourceItem</ContainerId>
-            <ResourceType>RCDATA</ResourceType>
-            <ResourceId>DL_HTML_CSS</ResourceId>
-        </RcItem>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -268,7 +179,7 @@ $(PreBuildEvent)]]>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
@@ -276,7 +187,7 @@ $(PreBuildEvent)]]>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
-        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1</PreBuildEvent>
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
