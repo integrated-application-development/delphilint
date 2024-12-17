@@ -21,9 +21,8 @@ body::-webkit-scrollbar {
 
 .tab-buttons {
   user-select: none;
-  border-top: 1px solid;
+  margin-top: 12px;
   border-bottom: 1px solid;
-  margin-top: 6px;
 }
 
 .tab-btn {
@@ -32,16 +31,6 @@ body::-webkit-scrollbar {
   cursor: pointer;
   user-select: initial;
   font-weight: bold;
-}
-
-.tab-btn:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-bottom: 3px solid;
-}
-
-.tab-btn.active {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-bottom: 3px solid;
 }
 
 .tab-content {
@@ -119,17 +108,22 @@ p {
 .impact {
   display: inline-block;
   margin-right: 5px;
-  padding: 4px 8px 3px 10px;
+  padding: 4px 6px 4px 9px;
   border-radius: 12px;
   border: 1px solid black;
   font-weight: bold;
   cursor: default;
 }
 
+.impact.standard img:first-child, .impact.hotspot img:first-child {
+  margin-right: 4px;
+}
+
 .impact img {
   display: inline;
   vertical-align: middle;
-  margin-top: -2px;
+  margin-top: -4px;
+  margin-left: 4px;
 }
 
 .impact.info {
@@ -160,6 +154,19 @@ p {
   color: rgb(128, 27, 20);
   border-color: rgb(128, 27, 20);
   background-color: rgb(254, 228, 226);
+}
+
+.impact.standard {
+  padding-left: 4px;
+  background-color: white;
+}
+
+.impact.hotspot {
+  padding-left: 4px;
+  padding-right: 10px;
+  border-color: rgb(35, 106, 151);
+  color: rgb(35, 106, 151);
+  background-color: white;
 }
 
 .code-added, .code-removed {
