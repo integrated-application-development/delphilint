@@ -432,7 +432,7 @@ begin
     'Code analyzer powered by SonarDelphi',
     VersionStr);
 
-  IDEServices.AddPluginInfo(
+  FInfoIndex := IDEServices.AddPluginInfo(
     'DelphiLint ' + VersionStr,
     'Free and open source Delphi code linter, powered by the SonarDelphi code analysis tool for SonarQube.'
     + #13#10#13#10'Copyright © 2023 Integrated Application Development',
