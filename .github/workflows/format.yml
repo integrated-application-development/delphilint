@@ -17,6 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: maven
       - uses: axel-op/googlejavaformat-action@v3
+        name: Format
         with:
           args: "--set-exit-if-changed --dry-run"
