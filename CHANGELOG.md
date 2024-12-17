@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Intermittent embedded browser error on IDE startup with certain system configurations.
+* Blank rule view in certain situations after docking or undocking the DelphiLint window.
+* Unhandled exception when retrieval of rules from a remote SonarQube server fails.
+* Plugin information in Help > About persisting after the plugin is disabled.
 
 ## [1.2.0] - 2024-10-14
 
