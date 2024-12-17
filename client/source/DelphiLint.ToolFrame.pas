@@ -704,7 +704,7 @@ begin
     IssueImage.Picture.Graphic := LintResources.ImpactSeverityIcon(MaxImpactSeverity);
   end
   else begin
-    IssueImage.Picture.Graphic := LintResources.RuleTypeIcon(Rule.RuleType);
+    IssueImage.Picture.Graphic := LintResources.RuleTypeIcon(Rule.RuleType, Rule.Severity);
   end;
 end;
 

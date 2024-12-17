@@ -111,8 +111,8 @@ object LintToolFrame: TLintToolFrame
       object IssueImage: TImage
         Left = 4
         Top = 4
-        Width = 14
-        Height = 14
+        Width = 16
+        Height = 16
       end
       object IssueMetaLabel: TLabel
         Left = 24
