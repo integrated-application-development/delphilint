@@ -119,17 +119,22 @@ p {
 .impact {
   display: inline-block;
   margin-right: 5px;
-  padding: 4px 8px 3px 10px;
+  padding: 4px 6px 4px 9px;
   border-radius: 12px;
   border: 1px solid black;
   font-weight: bold;
   cursor: default;
 }
 
+.impact.standard img:first-child, .impact.hotspot img:first-child {
+  margin-right: 4px;
+}
+
 .impact img {
   display: inline;
   vertical-align: middle;
-  margin-top: -2px;
+  margin-top: -4px;
+  margin-left: 4px;
 }
 
 .impact.info {
@@ -160,6 +165,19 @@ p {
   color: rgb(128, 27, 20);
   border-color: rgb(128, 27, 20);
   background-color: rgb(254, 228, 226);
+}
+
+.impact.standard {
+  padding-left: 4px;
+  background-color: white;
+}
+
+.impact.hotspot {
+  padding-left: 4px;
+  padding-right: 10px;
+  border-color: rgb(35, 106, 151);
+  color: rgb(35, 106, 151);
+  background-color: white;
 }
 
 .code-added, .code-removed {

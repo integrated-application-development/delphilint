@@ -43,7 +43,7 @@ type
     destructor Destroy; override;
 
     function LintStatusIcon(FileStatus: TCurrentFileStatus): TGraphic;
-    function RuleTypeIcon(RuleType: TRuleType): TGraphic;
+    function RuleTypeIcon(RuleType: TRuleType; Severity: TRuleSeverity): TGraphic;
     function RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
     function ImpactSeverityIcon(Severity: TImpactSeverity): TGraphic;
     function DelphiLintIcon: TBitmap;
@@ -132,11 +132,11 @@ end;
 function TLintResources.RuleSeverityIcon(RuleType: TRuleSeverity): TGraphic;
 const
   CRuleSeverityResourceNames: array[TRuleSeverity] of string = (
-    'sonar_icon\severity\info.png',
-    'sonar_icon\severity\minor.png',
-    'sonar_icon\severity\major.png',
-    'sonar_icon\severity\critical.png',
-    'sonar_icon\severity\blocker.png'
+    'sonar_icon\impact\info.png',
+    'sonar_icon\impact\low.png',
+    'sonar_icon\impact\medium.png',
+    'sonar_icon\impact\high.png',
+    'sonar_icon\impact\blocker.png'
   );
 begin
   Result := LoadPng(AssetName(CRuleSeverityResourceNames[RuleType]));
@@ -144,16 +144,31 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-function TLintResources.RuleTypeIcon(RuleType: TRuleType): TGraphic;
+function TLintResources.RuleTypeIcon(RuleType: TRuleType; Severity: TRuleSeverity): TGraphic;
 const
   CRuleTypeResourceNames: array[TRuleType] of string = (
-    'sonar_icon\type\code_smell.png',
-    'sonar_icon\type\bug.png',
-    'sonar_icon\type\vulnerability.png',
-    'sonar_icon\type\hotspot.png'
+    'sonar_icon\codeSmell\codeSmell',
+    'sonar_icon\bug\bug',
+    'sonar_icon\vulnerability\vulnerability',
+    'sonar_icon\hotspot.png'
   );
+  CSeveritySuffixes: array[TRuleSeverity] of string = (
+    'Info.png',
+    'Low.png',
+    'Medium.png',
+    'High.png',
+    'Blocker.png'
+  );
+var
+  AssetPath: string;
 begin
-  Result := LoadPng(AssetName(CRuleTypeResourceNames[RuleType]));
+  AssetPath := CRuleTypeResourceNames[RuleType];
+  if RuleType <> rtSecurityHotspot then begin
+    // Security hotspots should not show an associated severity
+    AssetPath := AssetPath + CSeveritySuffixes[Severity];
+  end;
+
+  Result := LoadPng(AssetName(AssetPath));
 end;
 
 //______________________________________________________________________________________________________________________
