@@ -222,6 +222,7 @@ var
   Project: IIDEProject;
   FileList: TStringList;
   I: Integer;
+  Discard: Boolean;
 begin
   Project := LintContext.IDEServices.GetActiveProject;
 
@@ -230,33 +231,36 @@ begin
   end;
 
   FileList := TStringList.Create;
-  Project.GetCompleteFileList(FileList);
+  try
+    Project.GetCompleteFileList(FileList);
 
-  for I := FileList.Count - 1 downto 0 do begin
-    if not (IsDelphiSource(FileList[I]) or IsProjectFile(FileList[I])) then begin
-      FileList.Delete(I);
+    for I := FileList.Count - 1 downto 0 do begin
+      Discard := not (
+        IsDelphiSource(FileList[I])
+        or (IsProjectFile(FileList[I]) and SameText(FileList[I], Project.FileName)));
+
+      if Discard then begin
+        FileList.Delete(I);
+      end;
     end;
-  end;
 
-  Result := FileList.ToStringArray;
+    Result := FileList.ToStringArray;
+  finally
+    FreeAndNil(FileList);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________
 
 function TryGetProjectFile(out ProjectFile: string): Boolean;
 var
-  AllFiles: TArray<string>;
-  FilePath: string;
+  Project: IIDEProject;
 begin
-  Result := False;
+  Project := LintContext.IDEServices.GetActiveProject;
 
-  AllFiles := GetAllFiles;
-  for FilePath in AllFiles do begin
-    if IsProjectFile(FilePath) then begin
-     ProjectFile := FilePath;
-     Result := True;
-     Exit;
-    end;
+  Result := Assigned(Project);
+  if Result then begin
+    ProjectFile := Project.FileName;
   end;
 end;
 
