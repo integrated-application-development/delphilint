@@ -72,13 +72,13 @@ type
     [Test]
     procedure TestAllQualitiesHaveImpactTooltip;
     [Test]
+    procedure TestAllRuleTypesHaveTooltip;
+    [Test]
     procedure TestAllImpactSeveritiesHaveClassName;
     [Test]
     procedure TestAllCleanCodeCategoriesHaveStr;
     [Test]
     procedure TestAllCleanCodeAttributesHaveStr;
-    [Test]
-    procedure TestAllSeveritiesHaveStr;
     [Test]
     procedure TestAllRuleTypesHaveStr;
     [Test]
@@ -130,6 +130,10 @@ begin
     Css,
     'CSS HTML text color should be the hex code for clBtnText');
   Assert.IsMatch(
+    '.tab-buttons\s*,\s*.tab-btn\s*{[^}]*?border-color:\s*#FF0000',
+    Css,
+    'CSS tab border color should be the hex code for clBtnText');
+  Assert.IsMatch(
     'html\s*{[^}]*?background-color:\s*#00FF00',
     Css,
     'CSS HTML background color should be the hex code for clWindow');
@@ -151,7 +155,10 @@ end;
 
 procedure TRuleHtmlGeneratorTest.TestWrapsOldStyleDescriptions;
 const
-  CDescription = 'My <strong>HTML</strong> description';
+  CIntro = 'My <strong>intro</strong>';
+  CRootCause = 'My <strong>root cause</strong>';
+  CHowToFix = 'My <strong>How to fix</strong>';
+  CResources = 'My <strong>resources</strong>';
 var
   Rule: TRule;
   HtmlText: string;
@@ -159,14 +166,17 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    CDescription,
+    TRuleDescription.Create(CIntro, CRootCause, CHowToFix, CResources),
     rsMajor,
     rtCodeSmell,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<p>' + CDescription + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CIntro + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CRootCause + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CHowToFix + '</p>');
+    Assert.Contains(HtmlText, '<p>' + CResources + '</p>');
   finally
     FreeAndNil(Rule);
   end;
@@ -184,7 +194,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    CDescription,
+    TRuleDescription.Create('', CDescription, '', ''),
     rsMajor,
     rtCodeSmell,
     nil
@@ -208,7 +218,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'RuleName1',
-    'My desc',
+    TRuleDescription.Create('','','',''),
     rsMajor,
     rtCodeSmell,
     nil
@@ -303,12 +313,15 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TRuleHtmlGeneratorTest.TestAllSeveritiesHaveStr;
+procedure TRuleHtmlGeneratorTest.TestAllRuleTypesHaveTooltip;
 var
-  Value: TRuleSeverity;
+  RuleType: TRuleType;
+  Severity: TRuleSeverity;
 begin
-  for Value := Low(TRuleSeverity) to High(TRuleSeverity) do begin
-    Assert.IsNotEmpty(TRuleHtmlGenerator.GetRuleSeverityStr(Value));
+  for RuleType := Low(TRuleType) to High(TRuleType) do begin
+    for Severity := Low(TRuleSeverity) to High(TRuleSeverity) do begin
+      Assert.IsNotEmpty(TRuleHtmlGenerator.GetRuleTypeTooltip(RuleType, Severity));
+    end;
   end;
 end;
 
@@ -322,7 +335,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(
@@ -352,7 +365,7 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(
@@ -383,15 +396,15 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtSecurityHotspot,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, 'Security hotspot');
-    Assert.DoesNotContain(HtmlText, 'Major');
+    Assert.Contains(HtmlText, 'Security Hotspot');
+    Assert.Contains(HtmlText, 'class="impact hotspot"');
   finally
     FreeAndNil(Rule);
   end;
@@ -407,15 +420,15 @@ begin
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, 'Code smell');
-    Assert.Contains(HtmlText, 'Major');
+    Assert.Contains(HtmlText, 'Code Smell');
+    Assert.Contains(HtmlText, 'class="impact standard medium"');
   finally
     FreeAndNil(Rule);
   end;
@@ -433,14 +446,14 @@ begin
   Rule := TRule.Create(
     'rk1',
     CRuleName,
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     nil
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<h1>' + CRuleName + '</h1>');
+    Assert.Contains(HtmlText, '<h1 title="rk1">' + CRuleName + '</h1>');
   finally
     FreeAndNil(Rule);
   end;
@@ -458,14 +471,14 @@ begin
   Rule := TRule.Create(
     'rk1',
     CRuleName,
-    'My <strong>HTML</strong> description',
+    TRuleDescription.Create('', '', '', ''),
     rsMajor,
     rtCodeSmell,
     TRuleCleanCode.Create(ccaClear, cccIntentional, TDictionary<TSoftwareQuality, TImpactSeverity>.Create)
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<h1>' + CRuleName + '</h1>');
+    Assert.Contains(HtmlText, '<h1 title="rk1">' + CRuleName + '</h1>');
   finally
     FreeAndNil(Rule);
   end;
@@ -505,16 +518,15 @@ end;
 procedure THtmlUtilsTest.TestImageToBase64;
 const
   CRuleSeverityIconBase64 = 'data:image/png;base64,'
-    + 'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAACXBIWXMAAAzrAAAM6wHl1kTSAAAA'#13#10
-    + 'GXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAbtJREFUeNp9kr9LQlEUx88xDSvs'#13#10
-    + 'h01BoQ3RD2oKGlqCImqLBi9GENYUFOHg0l/QEhFks1Mm1ymnihpaGoImIYuGMlqCsl9oz8h3+15R'#13#10
-    + 'eZF14XHPO+d87vfccw8rpajaSs7Otuh9YGfnuVqcreC9EO6CUgvMPAFvEWSiDHIOssyRPikzv8A7'#13#10
-    + 'IfpMok0kuqspIOuJbbagJxZLVUCt9EUU+wExG4iZ8NVb4RzRjFYugmmfL4REvwW6ziq11AizwLxN'#13#10
-    + 'SnWVQzaiaIeUG4xT+M7nO1BlNaVSjczLLVK+6t9nIZrelNrGYT0l1Yw3Hp/gm0CgmbPZo1Ijkh/5'#13#10
-    + '/Er33t47yh/SvnYpz66mplx1TucWquvXPlQyVgE15DCMpbZEIofSh6GwXqog5InHTx/m5hryhhGG'#13#10
-    + '4kARLJdaIAp3Spm4FWIEh6wBqS1d6xM5q14pT9JCTMNeRKmT1uaM4jsn0xzHbv/5FgpNp2M8xyDy'#13#10
-    + 'Dz3F5gC8wHOg57tQaqV/Fgbj8dVun9HTVBmAtN/fq0xz8y9YQ2ZNTdAbjV7+Gjmt7CIK4L6T5WHQ'#13#10
-    + '7Ye9/+ZwRKxzy38N+e38fLPevZHIS7X4N8rH1D8ZgltdAAAAAElFTkSuQmCC';
+  + 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAA'#13#10
+  + 'GXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAWlJREFUeNqlk8FKw0AQhmd2RQQv'#13#10
+  + '+ggmRdRWfJBSL9FHEMRDpSli6VlERRPwIIKPoBVFxPdoaYq2qY/gqSBidpy0SU3TpBQ6EHZ3MvPN'#13#10
+  + '7j+7SEQwi2EqwNQ3PYRVfyoJPsByG1MBvLK2jYTnPF2LhbYI1LG0ui+pAGVqVXad+P6UHfvBVWG5'#13#10
+  + 'Z2OAoPLThOQhhFMK0nZfRwDK1Fvj2041h3eR/QewYAqgHgv6IcS9IOiOh/noTwEiB1a72Qd4Zd1A'#13#10
+  + 'gofRZNqV1mdfMM9cKfDx7qMQQtiRV24tCfDLyYafrEraTb+a3T0IIDVezg2EAIN1eBwc4TCTU5Ia'#13#10
+  + 'YbtEb2lLLX5d82I/gN6K3nKRffVQJyFEFi7bTkTEjMPc9SDhm7+FmCZRX5NFzI220dQKCPg8XRsx'#13#10
+  + 'L+3OW8JF0is8nE68SIQVYXcuxi5SaF5JzyOCH7ARS25y5aOwcipgaCysJ2jwmFC8+z1PCsNZn/Mf'#13#10
+  + '+JG24UBLkDYAAAAASUVORK5CYII=';
 begin
   Assert.AreEqual(CRuleSeverityIconBase64, THtmlUtils.ImageToBase64(LintResources.RuleSeverityIcon(rsMajor)));
 end;

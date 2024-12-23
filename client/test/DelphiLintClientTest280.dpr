@@ -1,7 +1,7 @@
 ﻿program DelphiLintClientTest280;
 
 {$R *.res}
-{$R *.dres}
+
 {$IFDEF TESTGUI}
 {$APPTYPE GUI}
 {$ELSE}
@@ -36,7 +36,7 @@ uses
   DelphiLintTest.IssueActions in 'DelphiLintTest.IssueActions.pas',
   DelphiLintTest.Properties in 'DelphiLintTest.Properties.pas';
 
-{$R DelphiLintClientTestAdditional.res}
+{$R *Additional.res}
 
 {$IFDEF TESTINSIGHT}
 begin

@@ -69,11 +69,25 @@ function generateExampleDiffs() {
   }
 }
 
+
+function registerTabs() {
+  for(const tabBtn of document.querySelectorAll(".tab-btn")) {
+    tabBtn.addEventListener("click", e => {
+      document.querySelectorAll(".tab-btn.active").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".tab-content.active").forEach(c => c.classList.remove("active"));
+
+      e.target.classList.add("active");
+      document.getElementById(e.target.dataset.contentId).classList.add("active");
+    });
+  }
+}
+
 function main() {
   hljs.registerLanguage("delphi", delphi);
   highlightTag("pre");
   highlightTag("code");
   generateExampleDiffs();
+  registerTabs();
 }
 
 main();
