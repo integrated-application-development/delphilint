@@ -170,12 +170,15 @@ type
   TMockProject = class(TMockIDEObject, IIDEProject)
   private
     FFileList: TList<string>;
+    FFileName: string;
   public
     constructor Create;
     destructor Destroy; override;
 
+    function GetFileName: string;
     procedure GetCompleteFileList(FileList: TStrings);
     property MockedFileList: TList<string> read FFileList write FFileList;
+    property FileName: string read GetFileName write FFileName;
   end;
 
   TModuleCallType = (mdcSave);
@@ -1347,6 +1350,11 @@ begin
   for FileName in FFileList do begin
     FileList.Add(FileName);
   end;
+end;
+
+function TMockProject.GetFileName: string;
+begin
+  Result := FFileName;
 end;
 
 //______________________________________________________________________________________________________________________

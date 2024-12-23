@@ -183,6 +183,7 @@ type
 
   TToolsApiProject = class(TToolsApiWrapper<IOTAProject>, IIDEProject)
   public
+    function GetFileName: string;
     procedure GetCompleteFileList(FileList: TStrings);
   end;
 
@@ -756,6 +757,13 @@ end;
 procedure TToolsApiProject.GetCompleteFileList(FileList: TStrings);
 begin
   FRaw.GetCompleteFileList(FileList);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TToolsApiProject.GetFileName: string;
+begin
+  Result := FRaw.FileName;
 end;
 
 //______________________________________________________________________________________________________________________

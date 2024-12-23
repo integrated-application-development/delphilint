@@ -90,7 +90,10 @@ type
   IIDEProject = interface
     ['{323288E1-A17D-441D-8BA7-5C4290C6F6FD}']
     procedure GetCompleteFileList(FileList: TStrings);
+    function GetFileName: string;
     function Raw: IInterface; // IOTAProject
+
+    property FileName: string read GetFileName;
   end;
 
   IIDEModule = interface;

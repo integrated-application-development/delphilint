@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Blank rule view in certain situations after docking or undocking the DelphiLint window.
 * Unhandled exception when retrieval of rules from a remote SonarQube server fails.
 * Plugin information in Help > About persisting after the plugin is disabled.
+* Incorrect detection of project file (.dproj) when another .dproj file is included as a resource.
 
 ## [1.2.0] - 2024-10-14
 

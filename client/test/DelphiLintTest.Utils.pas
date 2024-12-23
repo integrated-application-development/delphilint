@@ -157,9 +157,11 @@ begin
 
   MockedFiles := TList<string>.Create;
   Project.MockedFileList := MockedFiles;
+  Project.FileName := 'myproject.dproj';
   MockedFiles.Add('abc.pas');
   MockedFiles.Add('def.dfm');
   MockedFiles.Add('ghi.dpk');
+  MockedFiles.Add('myproject.dproj');
   MockedFiles.Add('jkl.dpr');
   MockedFiles.Add('mno.dproj');
   MockedFiles.Add('pqr.txt');
@@ -169,8 +171,8 @@ begin
   Assert.AreEqual(4, Length(AllFiles));
   Assert.AreEqual('abc.pas', AllFiles[0]);
   Assert.AreEqual('ghi.dpk', AllFiles[1]);
-  Assert.AreEqual('jkl.dpr', AllFiles[2]);
-  Assert.AreEqual('mno.dproj', AllFiles[3]);
+  Assert.AreEqual('myproject.dproj', AllFiles[2]);
+  Assert.AreEqual('jkl.dpr', AllFiles[3]);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -342,9 +344,7 @@ begin
 
   Project := TMockProject.Create;
   IDEServices.MockActiveProject(Project);
-
-  Project.MockedFileList := TList<string>.Create;
-  Project.MockedFileList.Add('C:\abc\def\ghi.dproj');
+  Project.FileName := 'C:\abc\def\ghi.dproj';
 
   Assert.IsTrue(TryGetProjectDirectory(ProjectDir, False));
   Assert.AreEqual('C:\abc\def', ProjectDir);
@@ -374,9 +374,7 @@ begin
 
   Project := TMockProject.Create;
   IDEServices.MockActiveProject(Project);
-
-  Project.MockedFileList := TList<string>.Create;
-  Project.MockedFileList.Add(CProjectFile);
+  Project.FileName := CProjectFile;
 
   Assert.IsTrue(TryGetProjectDirectory(ProjectDir, True));
   Assert.AreEqual(CProjectDir, ProjectDir);
@@ -405,6 +403,7 @@ begin
 
   Project := TMockProject.Create;
   IDEServices.MockActiveProject(Project);
+  Project.FileName := 'stu.dproj';
 
   Project.MockedFileList := TList<string>.Create;
   Project.MockedFileList.Add('abc.pas');
@@ -413,9 +412,10 @@ begin
   Project.MockedFileList.Add('jkl.dpr');
   Project.MockedFileList.Add('mno.dproj');
   Project.MockedFileList.Add('pqr.txt');
+  Project.MockedFileList.Add('stu.dproj');
 
   Assert.IsTrue(TryGetProjectFile(ProjectFile));
-  Assert.AreEqual('mno.dproj', ProjectFile);
+  Assert.AreEqual('stu.dproj', ProjectFile);
 end;
 
 //______________________________________________________________________________________________________________________
