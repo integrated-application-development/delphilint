@@ -105,8 +105,9 @@ begin
   MockIDEServices := TMockIDEServices.Create;
   MockIDEServices.MockSystemColor(clBtnText, $0000FF); // Text color
   MockIDEServices.MockSystemColor(clWindow, $00FF00); // Background color
-  MockIDEServices.MockSystemColor(clBtnFace, $FF0000); // Scrollbar color
+  MockIDEServices.MockSystemColor(clBtnFace, $FF0000); // Scrollbar color, tab hover color
   MockIDEServices.MockSystemColor(clHotLight, $00FFFF); // Link color
+  MockIDEServices.MockSystemColor(clBtnHighlight, $F0F0F0); // Tab selected color
   MockContext.MockIDEServices(MockIDEServices);
   FHtmlGenerator := TRuleHtmlGenerator.Create;
 end;
@@ -130,7 +131,7 @@ begin
     Css,
     'CSS HTML text color should be the hex code for clBtnText');
   Assert.IsMatch(
-    '.tab-buttons\s*,\s*.tab-btn\s*{[^}]*?border-color:\s*#FF0000',
+    '.tab-buttons\s*{[^}]*?border-color:\s*#FF0000',
     Css,
     'CSS tab border color should be the hex code for clBtnText');
   Assert.IsMatch(
@@ -149,6 +150,14 @@ begin
     'a\s*{[^}]*?color:\s*#FFFF00',
     Css,
     'CSS link color should be the hex code for clHotLight');
+  Assert.IsMatch(
+    '.tab-btn:hover\s*{[^}]*?background-color:\s*#0000FF',
+    Css,
+    'CSS tab hover background color should be the hex code for clBtnFace');
+  Assert.IsMatch(
+    '.tab-btn.active\s*{[^}]*?background-color:\s*#F0F0F0',
+    Css,
+    'CSS tab active background color should be the hex code for clBtnHighlight');
 end;
 
 //______________________________________________________________________________________________________________________
