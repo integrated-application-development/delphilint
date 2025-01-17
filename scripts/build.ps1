@@ -159,10 +159,17 @@ function Assert-ClientVersion([string]$Version, [string]$Message) {
   }
 }
 
+function Assert-ExitCode([string]$Desc) {
+  if($LASTEXITCODE) {
+    throw "$Desc failed with code $LASTEXITCODE"
+  }
+}
+
 function Invoke-ClientCompile([PackagingConfig]$Config) {
   Push-Location (Join-Path $PSScriptRoot ..\client\source)
   try {
     & cmd /c "`"$($Config.Delphi.InstallationPath)\\bin\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`""
+    Assert-ExitCode "Delphi compile"
   }
   finally {
     Pop-Location
@@ -183,7 +190,9 @@ function Invoke-VscCompanionCompile {
   Push-Location (Join-Path $PSScriptRoot ..\companion\delphilint-vscode)
   try {
     & npm install
+    Assert-ExitCode "VS Code companion npm install"
     & npx -y @vscode/vsce package --skip-license
+    Assert-ExitCode "VS Code companion build"
   }
   finally {
     Pop-Location
