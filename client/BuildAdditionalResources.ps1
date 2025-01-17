@@ -10,7 +10,13 @@ function Invoke-Webpack {
   Push-Location (Join-Path $PSScriptRoot jslib)
   try {
     & npm install
+    if($LASTEXITCODE) {
+      throw "npm install failed with code $LASTEXITCODE"
+    }
     & npx webpack
+    if($LASTEXITCODE) {
+      throw "Webpack failed with code $LASTEXITCODE"
+    }
   }
   finally {
     Pop-Location
@@ -50,6 +56,9 @@ function New-Rc([hashtable]$RcData) {
 function Invoke-Brcc32 {
   Write-Host "Compiling additional resources..."
   & brcc32.exe $ResourceFile
+  if($LASTEXITCODE) {
+    throw "brcc32 failed with code $LASTEXITCODE"
+  }
 }
 
 Invoke-Webpack
