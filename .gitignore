@@ -26,7 +26,6 @@ dlversion.inc.orig
 __recovery/
 
 # JavaScript
-package-lock.json
 node_modules/
 out/
 *.vsix
