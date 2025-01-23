@@ -75,17 +75,17 @@
     "lint": "eslint src --ext ts"
   },
   "devDependencies": {
-    "@types/ini": "4.1.1",
-    "@types/node": "22.10.7",
-    "@types/tmp": "0.2.6",
-    "@types/vscode": "1.95.0",
-    "@typescript-eslint/eslint-plugin": "8.20.0",
-    "@typescript-eslint/parser": "8.20.0",
-    "eslint": "9.18.0",
-    "typescript": "5.7.3"
+    "@types/ini": "^4.1.1",
+    "@types/node": "^22.10.7",
+    "@types/tmp": "^0.2.6",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3"
   },
   "dependencies": {
-    "ini": "5.0.0",
-    "tmp": "0.2.3"
+    "ini": "^5.0.0",
+    "tmp": "^0.2.3"
   }
 }
