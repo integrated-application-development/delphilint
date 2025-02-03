@@ -17,7 +17,6 @@
  */
 package au.com.integradev.delphilint.remote;
 
-import java.util.List;
 import java.util.function.Function;
 
 public class RemoteRuleDescription {
@@ -38,7 +37,7 @@ public class RemoteRuleDescription {
   }
 
   public static <T> RemoteRuleDescription fromDescriptionSections(
-      List<T> sections, Function<T, String> getKey, Function<T, String> getContent) {
+      Iterable<T> sections, Function<T, String> getKey, Function<T, String> getContent) {
     var introDesc = "";
     var causeDesc = "";
     var fixDesc = "";
@@ -59,7 +58,8 @@ public class RemoteRuleDescription {
         case "resources":
           resourcesDesc = getContent.apply(section);
           break;
-        default: // Ignore other sections
+        default:
+          // Ignore other sections
       }
     }
 
