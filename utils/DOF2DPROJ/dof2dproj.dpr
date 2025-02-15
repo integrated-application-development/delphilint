@@ -40,7 +40,7 @@ type
 
     procedure InitializeTagMappings;
     function GetDofValue(const Section, Key: string; const Default: string = ''): string;
-    function GenerateGuid: string;
+    function GenerateGUID: string;
     procedure ParseDprFile(const DprFileName: string);
     procedure ProcessTemplate;
     function GetValueForTag(const TagName: string): string;
@@ -108,8 +108,7 @@ begin
   FForms.Free;
   FTagMappings.Free;
   FFormInfos.Free;
-  if Assigned(FDofFile) then
-    FDofFile.Free;
+  FreeAndNil(FDofFile);
   inherited;
 end;
 
@@ -198,12 +197,12 @@ begin
     Result := Default;
 end;
 
-function TProjectConverter.GenerateGuid: string;
+function TProjectConverter.GenerateGUID: string;
 var
-  Guid: TGUID;
+  GUID: TGUID;
 begin
-  if CreateGuid(Guid) = S_OK then
-    Result := GuidToString(Guid)
+  if CreateGUID(GUID) = S_OK then
+    Result := GUIDToString(GUID)
   else
     Result := '{00000000-0000-0000-0000-000000000000}';
 end;
@@ -224,7 +223,7 @@ var
 begin
   // Special cases that don't come from DOF file
   if TagName = 'ProjectGuid' then
-    Result := GenerateGuid
+    Result := GenerateGUID
   else if TagName = 'MainSource' then
     Result := FOnlyDprName + '.dpr'
   else if TagName = 'SanitizedProjectName' then
@@ -269,7 +268,7 @@ var
   TagName: string;
   Value: string;
   FormatSpecifier: string;
-  i: Integer;
+  I: Integer;
   StringBuilder: TStringBuilder;
 begin
   Result := Line;
@@ -280,17 +279,12 @@ begin
     begin
       StringBuilder := TStringBuilder.Create;
       try
-        for i := 0 to FFormInfos.Count - 1 do
+        for I := 0 to FFormInfos.Count - 1 do
         begin
-          // if i = 0 then
-          // StringBuilder.AppendLine(Format(Line, [FFormInfos[i].UnitName]))
-          // else
-          // begin
           // Create the same format as template but with proper indentation
-          StringBuilder.AppendLine(Format('        <DCCReference Include="%s">', [FFormInfos[i].UnitName]));
-          StringBuilder.AppendLine('            <Form>' + FFormInfos[i].FormName + '</Form>');
+          StringBuilder.AppendLine(Format('        <DCCReference Include="%s">', [FFormInfos[I].UnitName]));
+          StringBuilder.AppendLine('            <Form>' + FFormInfos[I].FormName + '</Form>');
           StringBuilder.AppendLine('        </DCCReference>');
-          // end;
         end;
         Result := StringBuilder.ToString.TrimRight;
         Exit;
@@ -439,7 +433,7 @@ end;
 
 procedure TProjectConverter.ParseDprFile(const DprFileName: string);
 var
-  i: Integer;
+  I: Integer;
   InUsesClause: Boolean;
   Line: string;
 begin
@@ -453,9 +447,9 @@ begin
   InUsesClause := False;
   WriteLn('Starting to parse DPR file...');
 
-  for i := 0 to FDprContent.Count - 1 do
+  for I := 0 to FDprContent.Count - 1 do
   begin
-    Line := Trim(FDprContent[i]);
+    Line := Trim(FDprContent[I]);
     WriteLn('Processing line: ', Line);
 
     // Start of uses clause
@@ -498,7 +492,7 @@ begin
       end;
 
       // End of uses clause
-      if FDprContent[i].Contains(';') then
+      if FDprContent[I].Contains(';') then
       begin
         InUsesClause := False;
         WriteLn('End of uses clause');
@@ -511,22 +505,22 @@ end;
 
 procedure TProjectConverter.ProcessTemplate;
 var
-  i: Integer;
+  I: Integer;
   Line: string;
 begin
   if FTemplateContent.Count = 0 then
     raise Exception.Create('Template file is empty');
 
   WriteLn('Processing template lines...');
-  for i := 0 to FTemplateContent.Count - 1 do
+  for I := 0 to FTemplateContent.Count - 1 do
   begin
     try
-      Line := ProcessLine(FTemplateContent[i]);
+      Line := ProcessLine(FTemplateContent[I]);
       if Line <> '' then // Only add non-empty lines
         FOutputContent.Add(Line);
     except
       on E: Exception do
-        raise Exception.CreateFmt('Error processing template line %d: %s', [i + 1, E.Message]);
+        raise Exception.CreateFmt('Error processing template line %d: %s', [I + 1, E.Message]);
     end;
   end;
   WriteLn('Template processing completed.');
@@ -577,13 +571,6 @@ begin
     end;
     WriteLn('DOF file found and validated: ', DofFileName);
 
-    WriteLn('>>>>>>>>> Reading DOF values:');
-    WriteLn('>>>>>>>>> MapFile = ', GetDofValue('Linker', 'MapFile'));
-    WriteLn('>>>>>>>>> OutputDir = ', GetDofValue('Directories', 'OutputDir'));
-    WriteLn('>>>>>>>>> UnitOutputDir = ', GetDofValue('Directories', 'UnitOutputDir'));
-    WriteLn('>>>>>>>>> SearchPath = ', GetDofValue('Directories', 'SearchPath'));
-    WriteLn('>>>>>>>>> Packages = ', GetDofValue('Directories', 'Packages'));
-
     DprFileName := FindDprFile(DofFileName);
     WriteLn('DPR file found: ', DprFileName);
 
@@ -625,7 +612,7 @@ end;
 var
   Converter: TProjectConverter;
   ForceOverwrite: Boolean;
-  i: Integer;
+  I: Integer;
   Param: string;
   TemplateFile: string;
   DofFile: string;
@@ -636,9 +623,9 @@ begin
     ForceOverwrite := False;
     DofFile := '';
 
-    for i := 1 to ParamCount do
+    for I := 1 to ParamCount do
     begin
-      Param := ParamStr(i);
+      Param := ParamStr(I);
       if (Param = '-f') or (Param = '--force') then
         ForceOverwrite := True
       else if DofFile = '' then
