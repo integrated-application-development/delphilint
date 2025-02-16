@@ -609,6 +609,133 @@ begin
   end;
 end;
 
+function IsPathAbsolute(const APath: string): Boolean;
+begin
+  Result := False;
+  if APath = '' then
+    Exit;
+{$IFDEF LINUX}
+  Result := (APath[1] = PathDelim) or (APath[1] = '~');
+{$ELSE}
+  Result := (Pos(DriveDelim, APath) > 1) or (Pos('\\', APath) = 1);
+{$ENDIF LINUX}
+end;
+
+function IsFileInSearchPath(const AFilePath, ADprojPath: string): Boolean;
+var
+  LFileContent: TStringList;
+  LSearchPaths: string;
+  LPath: string;
+  LPaths: TStringList;
+  LNormalizedFilePath: string;
+  LNormalizedSearchPath: string;
+  LNormalizedDprojPath: string;
+  LMatch: TMatch;
+  i: Integer;
+begin
+  Result := False;
+
+  // Нормализуем все пути
+  LNormalizedFilePath := ExtractFilePath(ExpandFileName(AFilePath));
+  LNormalizedDprojPath := ExtractFilePath(ExpandFileName(ADprojPath));
+
+  // Проверяем сначала относительно пути к dproj
+  if AnsiStartsText(LNormalizedDprojPath, LNormalizedFilePath) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  LFileContent := TStringList.Create;
+  LPaths := TStringList.Create;
+  try
+    // Загружаем DPROJ как текст
+    LFileContent.LoadFromFile(ADprojPath);
+
+    // Ищем DCC_UnitSearchPath через регулярку
+    LMatch := TRegEx.Match(LFileContent.Text, '<DCC_UnitSearchPath>(.*?)</DCC_UnitSearchPath>', [roSingleLine]);
+
+    if not LMatch.Success then
+      Exit;
+
+    LSearchPaths := LMatch.Groups[1].Value;
+
+    // Разбиваем пути
+    LPaths.Delimiter := ';';
+    LPaths.DelimitedText := LSearchPaths;
+
+    // Проверяем каждый путь
+    for i := 0 to Pred(LPaths.Count) do
+    begin
+      LPath := LPaths[i];
+      if LPath = '' then
+        Continue;
+
+      // Обрабатываем относительные пути от dproj
+      if not IsPathAbsolute(LPath) then
+        LPath := LNormalizedDprojPath + LPath;
+
+      // Нормализуем путь поиска
+      LNormalizedSearchPath := IncludeTrailingPathDelimiter(ExpandFileName(LPath));
+
+      // Проверяем вхождение
+      if AnsiStartsText(LNormalizedSearchPath, LNormalizedFilePath) then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+
+  finally
+    LFileContent.Free;
+    LPaths.Free;
+  end;
+end;
+
+procedure TestSearchPaths;
+var
+  ProjectPath: string;
+  TestPaths: array of record FilePath: string;
+  Expected: Boolean;
+end;
+I:
+Integer;
+ActualResult:
+Boolean;
+
+begin
+  WriteLn('=== Testing Search Paths ===');
+
+  ProjectPath := 'C:\Users\Artur\Desktop\Code Check Format\colibri_parse_dfm\colibri_utilities\programs\dfm_parser\parse_dfm\p_parse_dfm.dproj';
+
+  SetLength(TestPaths, 4);
+  // Тест 1: Файл в директории проекта
+  TestPaths[0].FilePath := 'C:\Users\Artur\Desktop\Code Check Format\colibri_parse_dfm\colibri_utilities\programs\dfm_parser\parse_dfm\u_parse_dfm.pas';
+  TestPaths[0].Expected := True;
+
+  // Тест 2: Файл в относительном пути colibri_helpers
+  TestPaths[1].FilePath := 'C:\Users\Artur\Desktop\Code Check Format\colibri_parse_dfm\colibri_helpers\units\u_strings.pas';
+  TestPaths[1].Expected := True;
+
+  // Тест 3: Выдуманный файл
+  TestPaths[2].FilePath := 'C:\Users\Artur\Desktop\Code Check Format\2u_strings.pas';
+  TestPaths[2].Expected := False;
+
+  // Тест 5: Файл в units
+  TestPaths[3].FilePath := 'C:\Users\Artur\Desktop\Code Check Format\colibri_parse_dfm\colibri_helpers\classes\u_c_line.pas';
+  TestPaths[3].Expected := True;
+
+  for I := 0 to High(TestPaths) do
+  begin
+    ActualResult := IsFileInSearchPath(TestPaths[I].FilePath, ProjectPath);
+    WriteLn(Format('Test %d: File=%s', [I + 1, TestPaths[I].FilePath]));
+    WriteLn(Format('Expected: %s, Got: %s', [BoolToStr(TestPaths[I].Expected, True), BoolToStr(ActualResult, True)]));
+    WriteLn('---');
+  end;
+
+  WriteLn('=== Test Complete ===');
+end;
+
 var
   Converter: TProjectConverter;
   ForceOverwrite: Boolean;
@@ -619,6 +746,7 @@ var
 
 begin
   try
+    TestSearchPaths;
     // Parse command line parameters
     ForceOverwrite := False;
     DofFile := '';
