@@ -162,7 +162,6 @@ begin
       SourceEditor.Module.Save(True);
     end;
     Analyzer.AnalyzeFiles([SourceEditor.FileName, ProjectFile], ProjectFile);
-    Exit;
   end;
 end;
 
