@@ -339,3 +339,9 @@ export async function clearThisFile(
     issueCollection.set(activeTextEditor.document.uri, undefined);
   }
 }
+
+export async function clearAllIssues(
+  issueCollection: vscode.DiagnosticCollection
+) {
+  issueCollection.clear();
+}

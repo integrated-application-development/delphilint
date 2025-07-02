@@ -21,6 +21,7 @@ import {
   analyzeAllOpenFiles,
   analyzeThisFile,
   chooseActiveProject,
+  clearAllIssues,
   clearThisFile,
 } from "./command";
 import { getStatusItem } from "./display";
@@ -85,6 +86,12 @@ export function activate(context: vscode.ExtensionContext) {
     () => clearThisFile(lintIssueCollection)
   );
   context.subscriptions.push(clearThisFileCommand);
+
+  const clearAllIssuesCommand = vscode.commands.registerCommand(
+    "delphilint-vscode.clearAllIssues",
+    () => clearAllIssues(lintIssueCollection)
+  );
+  context.subscriptions.push(clearAllIssuesCommand);
 
   const chooseActiveProjectCommand = vscode.commands.registerCommand(
     "delphilint-vscode.chooseActiveProject",

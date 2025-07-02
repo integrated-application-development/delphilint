@@ -46,6 +46,10 @@
       {
         "command": "delphilint-vscode.clearThisFile",
         "title": "DelphiLint: Clear Issues For This File"
+      },
+      {
+        "command": "delphilint-vscode.clearAllIssues",
+        "title": "DelphiLint: Clear All Issues"
       }
     ],
     "configuration": {
