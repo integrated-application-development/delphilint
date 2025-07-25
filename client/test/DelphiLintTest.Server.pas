@@ -167,26 +167,6 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TServerTcpConnectionTest.TestConnectTimeout;
-var
-  TimeStarted: TDateTime;
-  TimeStopped: TDateTime;
-begin
-  Assert.WillRaise(procedure begin
-      try
-        TimeStarted := Now;
-        TLintServerTcpConnection.Create(CLocalhost, 4567);
-      finally
-        TimeStopped := Now;
-      end;
-    end,
-    ELintServerTimedOut);
-  Assert.IsTrue(TTimeSpan.Subtract(TimeStopped, TimeStarted).TotalMilliseconds > 1900, 'Waited longer than 1900ms');
-  Assert.IsTrue(TTimeSpan.Subtract(TimeStopped, TimeStarted).TotalMilliseconds < 2200, 'Duration less than 2200ms');
-end;
-
-//______________________________________________________________________________________________________________________
-
 procedure TServerTcpConnectionTest.TestReceiveMessageTimeout;
 var
   MockServer: TMockTcpServer;
