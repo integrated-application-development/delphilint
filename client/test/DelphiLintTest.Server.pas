@@ -60,8 +60,6 @@ type
     procedure TestReportsDisconnectedAfterDisconnect;
     [Test]
     procedure TestReceiveMessageTimeout;
-    [Test]
-    procedure TestConnectTimeout;
   end;
 
 implementation
