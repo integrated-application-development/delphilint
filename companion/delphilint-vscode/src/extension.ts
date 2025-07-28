@@ -32,9 +32,7 @@ let serverOutputChannel: vscode.OutputChannel | undefined;
 
 async function getServer() {
   if (!server) {
-    if (!serverPromise) {
-      serverPromise = createServer();
-    }
+    serverPromise ??= createServer();
     const s = await serverPromise;
     serverPromise = undefined;
     return s;
@@ -44,10 +42,8 @@ async function getServer() {
 }
 
 async function createServer(): Promise<LintServer> {
-  if (!serverOutputChannel) {
-    serverOutputChannel =
-      vscode.window.createOutputChannel("DelphiLint Server");
-  }
+  serverOutputChannel ??=
+    vscode.window.createOutputChannel("DelphiLint Server");
 
   const s = new LintServer(
     settings.getServerJar(),
