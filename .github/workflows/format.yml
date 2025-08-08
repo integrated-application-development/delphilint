@@ -1,5 +1,8 @@
 name: Format
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -23,7 +26,7 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           cache: maven
-      - uses: axel-op/googlejavaformat-action@v3
+      - uses: axel-op/googlejavaformat-action@dbff853fb823671ec5781365233bf86543b13215
         name: Format
         with:
           args: "--set-exit-if-changed --dry-run"
