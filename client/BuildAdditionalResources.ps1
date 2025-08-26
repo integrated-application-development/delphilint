@@ -9,11 +9,11 @@ function Invoke-Webpack {
   Write-Host "Building JS libraries..."
   Push-Location (Join-Path $PSScriptRoot jslib)
   try {
-    & npm install
+    npm install
     if($LASTEXITCODE) {
       throw "npm install failed with code $LASTEXITCODE"
     }
-    & npx webpack
+    npx webpack
     if($LASTEXITCODE) {
       throw "Webpack failed with code $LASTEXITCODE"
     }

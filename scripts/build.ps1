@@ -189,9 +189,9 @@ function Invoke-ServerCompile() {
 function Invoke-VscCompanionCompile {
   Push-Location (Join-Path $PSScriptRoot ..\companion\delphilint-vscode)
   try {
-    & npm install
+    npm install
     Assert-ExitCode "VS Code companion npm install"
-    & npx -y @vscode/vsce package --skip-license
+    npx -y @vscode/vsce package --skip-license
     Assert-ExitCode "VS Code companion build"
   }
   finally {
