@@ -188,7 +188,7 @@ export class LintServer {
 
   private async externalServer(): Promise<ExtServer> {
     if (this._extServer && !this._extServer.exited()) {
-      return Promise.resolve(this._extServer);
+      return this._extServer;
     } else {
       return this.startExternalServer();
     }
