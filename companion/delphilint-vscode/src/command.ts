@@ -28,7 +28,7 @@ import {
 } from "./delphiProjectUtils";
 import { LintStatusItem } from "./statusBar";
 
-const DELPHI_SOURCE_EXTENSIONS = [".pas", ".dpk", ".dpr"];
+const DELPHI_SOURCE_EXTENSIONS = new Set([".pas", ".dpk", ".dpr"]);
 
 let inAnalysis: boolean = false;
 
@@ -36,7 +36,7 @@ export type ServerSupplier = () => Promise<LintServer>;
 export type LoggerFunction = (msg: string) => void;
 
 function isFileDelphiSource(filePath: string): boolean {
-  return DELPHI_SOURCE_EXTENSIONS.includes(path.extname(filePath));
+  return DELPHI_SOURCE_EXTENSIONS.has(path.extname(filePath));
 }
 
 function isFileInProject(filePath: string, baseDir: string): boolean {
