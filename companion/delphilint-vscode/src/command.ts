@@ -49,7 +49,7 @@ function isFileInProject(filePath: string, baseDir: string): boolean {
 function getDefaultBaseDir(inputFiles: string[]): string {
   const workspaces = inputFiles
     .map((file) => vscode.workspace.getWorkspaceFolder(vscode.Uri.file(file)))
-    .filter((dir) => dir) as vscode.WorkspaceFolder[];
+    .filter(dir => dir !== undefined);
 
   if (workspaces.length === 0) {
     throw new NoAnalyzableFileError(
