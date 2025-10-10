@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 import * as vscode from "vscode";
-import * as path from "path";
+import * as path from "node:path";
 import { ProjectChoice } from "./delphiProjectUtils";
 
 export class LintStatusItem {

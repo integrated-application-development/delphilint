@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 import * as vscode from "vscode";
-import * as path from "path";
+import * as path from "node:path";
 import { LintServer, RequestAnalyze } from "./server";
 import * as display from "./display";
 import * as settings from "./settings";

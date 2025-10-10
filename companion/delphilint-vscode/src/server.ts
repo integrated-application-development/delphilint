@@ -15,11 +15,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-import { Socket } from "net";
-import { TextEncoder } from "util";
-import { spawn, ChildProcess } from "child_process";
+import { Socket } from "node:net";
+import { TextEncoder } from "node:util";
+import { spawn, ChildProcess } from "node:child_process";
 import * as tmp from "tmp";
-import * as fs from "fs";
+import * as fs from "node:fs";
 import {
   AnalyzeError,
   InitializeError,

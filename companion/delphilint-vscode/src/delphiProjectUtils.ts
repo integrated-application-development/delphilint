@@ -16,8 +16,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { ProjectOptions } from "./projectOptions";
 
 export type ProjectChoice = string | false;

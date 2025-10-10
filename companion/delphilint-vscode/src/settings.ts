@@ -15,9 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-import * as path from "path";
+import * as path from "node:path";
 import * as ini from "ini";
-import * as fs from "fs";
+import * as fs from "node:fs";
 import * as vscode from "vscode";
 import { NoServerJarError } from "./error";
 
