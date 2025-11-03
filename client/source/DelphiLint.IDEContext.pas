@@ -254,8 +254,10 @@ var
   LogDir: string;
   LogPath: string;
   StartDate: string;
+  ProductVersion: string;  
 begin
-  LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\logs');
+  ProductVersion := (BorlandIDEServices as IOTAServices).ExpandRootMacro('$(ProductVersion)');
+  LogDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\' + ProductVersion + '\logs');
   TDirectory.CreateDirectory(LogDir);
   DateTimeToString(StartDate, 'yyyy-mm-dd-hh-mm-ss', Now);
   LogPath := TPath.Combine(LogDir, Format('delphilint-client-%s.log', [StartDate]));
@@ -265,11 +267,15 @@ end;
 //______________________________________________________________________________________________________________________
 
 constructor TIDELintContext.Create;
+var
+  ProductVersion: string;
 begin
   inherited;
   FPlugin := TIDEPlugin.Create(GetIDEServices);
 
-  FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint');
+  ProductVersion := FIDEServices.ExpandRootMacro('$(ProductVersion)');
+
+  FSettingsDir := TPath.Combine(TPath.GetHomePath, 'DelphiLint\' + ProductVersion);
   FSettings := TLintSettings.Create(TPath.Combine(FSettingsDir, 'delphilint.ini'));
 
   Log.Info('DelphiLint started at %s', [DateToISO8601(Now)]);

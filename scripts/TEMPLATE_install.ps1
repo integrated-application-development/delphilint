@@ -6,7 +6,7 @@ $ProgressPreference = "SilentlyContinue"
 Write-Host -ForegroundColor Red "This script is a template. Do not run it directly."
 Exit 1
 ##{ENDREPLACE}##
-$DelphiLintFolder = Join-Path $env:APPDATA "DelphiLint"
+$DelphiLintFolder = Join-Path $env:APPDATA "DelphiLint\$RegistryVersion\"
 $BinFolder = (Join-Path $DelphiLintFolder "bin")
 
 function New-AppDataPath {
