@@ -156,6 +156,8 @@ object LintSetupForm: TLintSetupForm
       Caption = 'ServerJarIndicator'
       Color = clLime
       ParentBackground = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 2
       StyleElements = []
     end
@@ -171,6 +173,8 @@ object LintSetupForm: TLintSetupForm
       Caption = 'JavaExeIndicator'
       Color = clLime
       ParentBackground = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       StyleElements = []
     end

@@ -208,6 +208,7 @@ begin
   if ExeOpenDialog.Execute then begin
     FJavaExeOverride := ExeOpenDialog.FileName;
     JavaExeIndicator.Caption := GetJavaExeCaption;
+    JavaExeIndicator.Hint    := JavaExeIndicator.Caption;
     JavaExeClearButton.Enabled := FJavaExeOverride <> '';
   end;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
@@ -220,6 +221,7 @@ procedure TLintSetupForm.JavaExeClearButtonClick(Sender: TObject);
 begin
   FJavaExeOverride := '';
   JavaExeIndicator.Caption := GetJavaExeCaption;
+  JavaExeIndicator.Hint    := JavaExeIndicator.Caption;
   JavaExeClearButton.Enabled := False;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
   UpdateOkButton;
@@ -233,7 +235,9 @@ begin
   JavaExeClearButton.Enabled := (FJavaExeOverride <> '');
 
   JavaExeIndicator.Caption := GetJavaExeCaption;
+  JavaExeIndicator.Hint    := JavaExeIndicator.Caption;
   ServerJarIndicator.Caption := LintContext.Settings.ServerJar;
+  ServerJarIndicator.Hint    := ServerJarIndicator.Caption;
   UpdateValidState(JavaExeIndicator, IsValidValue(GetEffectiveJavaExe));
   UpdateValidState(ServerJarIndicator, IsValidValue(LintContext.Settings.ServerJar));
   UpdateOkButton;
