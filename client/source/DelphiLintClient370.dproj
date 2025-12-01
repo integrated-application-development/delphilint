@@ -1,0 +1,230 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Base>True</Base>
+        <AppType>Package</AppType>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>DelphiLintClient370.dpk</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{26783A2A-7221-40E7-AD37-9319A2677FB0}</ProjectGuid>
+        <ProjectName Condition="'$(ProjectName)'==''">DelphiLintClient370</ProjectName>
+        <ProjectVersion>20.3</ProjectVersion>
+        <TargetedPlatforms>1</TargetedPlatforms>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>DelphiLintClient370</SanitizedProjectName>
+        <DCC_BplOutput>.\target\370\$(Config)</DCC_BplOutput>
+        <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
+        <DCC_DcpOutput>.\target\370\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\370\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_Define>TOOLSAPI;$(DCC_Define)</DCC_Define>
+        <DCC_ExeOutput>.\290\$(Config)</DCC_ExeOutput>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
+        <GenDll>true</GenDll>
+        <GenPackage>true</GenPackage>
+        <PostBuildEvent><![CDATA[move /y dlversion.inc.orig dlversion.inc
+$(PostBuildEvent)]]></PostBuildEvent>
+        <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
+        <PreBuildEvent><![CDATA[powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)
+$(PreBuildEvent)]]></PreBuildEvent>
+        <VerInfo_Keys>FileVersion=1.0.0.0</VerInfo_Keys>
+        <VerInfo_Locale>2057</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_Description>DelphiLint</DCC_Description>
+        <DCC_UsePackage>vcl;rtl;IndyProtocols;vclie;vcledge;dbrtl;vcldb;dsnap;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
+        <DCC_Warnings>error</DCC_Warnings>
+        <Debugger_HostApplication>$(BDSBIN)\bds.exe</Debugger_HostApplication>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclie.dcp"/>
+        <DCCReference Include="vcledge.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="IndyProtocols.dcp"/>
+        <DCCReference Include="dbrtl.dcp"/>
+        <DCCReference Include="vcldb.dcp"/>
+        <DCCReference Include="dsnap.dcp"/>
+        <DCCReference Include="DelphiLint.Handlers.pas"/>
+        <DCCReference Include="DelphiLint.Server.pas"/>
+        <DCCReference Include="DelphiLint.Data.pas"/>
+        <DCCReference Include="DelphiLint.FileLogger.pas"/>
+        <DCCReference Include="DelphiLint.IDEBaseTypes.pas"/>
+        <DCCReference Include="DelphiLint.Events.pas"/>
+        <DCCReference Include="DelphiLint.Settings.pas"/>
+        <DCCReference Include="DelphiLint.ProjectOptions.pas"/>
+        <DCCReference Include="DelphiLint.Analyzer.pas"/>
+        <DCCReference Include="DelphiLint.Plugin.pas">
+            <Form>PluginCore</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.ToolFrame.pas">
+            <Form>LintToolFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>T</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Utils.pas"/>
+        <DCCReference Include="DelphiLint.SettingsFrame.pas">
+            <Form>LintSettingsFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.OptionsForm.pas">
+            <Form>LintOptionsForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Properties.pas"/>
+        <DCCReference Include="DelphiLint.SetupForm.pas">
+            <Form>LintSetupForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="DelphiLint.Version.pas"/>
+        <DCCReference Include="DelphiLint.Resources.pas"/>
+        <DCCReference Include="DelphiLint.Context.pas"/>
+        <DCCReference Include="DelphiLint.IDEContext.pas"/>
+        <DCCReference Include="DelphiLint.HtmlGen.pas"/>
+        <DCCReference Include="DelphiLint.ExtWebView2.pas"/>
+        <DCCReference Include="DelphiLint.LiveData.pas"/>
+        <DCCReference Include="DelphiLint.IssueActions.pas"/>
+        <DCCReference Include="DelphiLint.PopupHook.pas"/>
+        <DCCReference Include="DelphiLint.ExternalConsts.pas"/>
+        <DCCReference Include="DelphiLint.LogViewer.pas">
+            <Form>LogViewerForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">DelphiLintClient370.dpk</Source>
+                </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Projectos\OptiAssist\bin\bpl\core\Win32\Release\CORE.bpl">File C:\Projectos\OptiAssist\bin\bpl\core\Win32\Release\CORE.bpl not found</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+                <Platform value="Win64x">False</Platform>
+            </Platforms>
+            <Deployment Version="5"/>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64x'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64x'">
+        <PreBuildEvent>powershell -NoProfile -File PreBuild.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>move /y dlversion.inc.orig dlversion.inc</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+</Project>
