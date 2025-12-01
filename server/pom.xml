@@ -14,6 +14,11 @@
     <module>sonarlint-core-overrides</module>
   </modules>
   
+  <properties>
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <maven.compiler.release>17</maven.compiler.release>
+</properties>
+  
   <name>DelphiLint Server</name>
   <description>SonarDelphi-powered code analysis server</description>
   <inceptionYear>2023</inceptionYear>
@@ -67,19 +72,33 @@
       <plugins>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.3.2</version>
+		  <configuration>
+			<release>${maven.compiler.release}</release> <!-- 11, inherited from <properties> -->
+			<encoding>${project.build.sourceEncoding}</encoding>
+		  </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
         </plugin>
         <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>
-        </plugin>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-compiler-plugin</artifactId>
+		  <version>3.11.0</version>
+		  <configuration>
+		    <release>17</release>
+			<source>17</source>
+			<target>17</target>
+			<encoding>UTF-8</encoding>
+		</configuration>
+		</plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.1.2</version>
+          <version>3.2.5</version>
+		  <configuration>
+			<useModulePath>false</useModulePath>
+		  </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
@@ -104,7 +123,7 @@
           <configuration>
             <java>
               <googleJavaFormat>
-                <version>1.22.0</version>
+                <version>1.32.0</version>
                 <style>GOOGLE</style>
                 <reflowLongStrings>true</reflowLongStrings>
               </googleJavaFormat>
