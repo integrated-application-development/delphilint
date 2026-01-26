@@ -37,6 +37,7 @@ Import-Module "$PSScriptRoot/common" -Force
 $Global:DelphiVersionMap = @{
   "280" = [DelphiVersion]::new("11", "Alexandria", "280", "22.0")
   "290" = [DelphiVersion]::new("12", "Athens", "290", "23.0")
+  "370" = [DelphiVersion]::new("13", "Florence", "370", "37.0")
 }
 
 class DelphiVersion {
