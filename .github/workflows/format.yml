@@ -29,4 +29,5 @@ jobs:
       - uses: axel-op/googlejavaformat-action@dbff853fb823671ec5781365233bf86543b13215
         name: Format
         with:
+          release-name: v1.28.0
           args: "--set-exit-if-changed --dry-run"
