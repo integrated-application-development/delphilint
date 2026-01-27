@@ -26,7 +26,8 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
           cache: maven
-      - uses: axel-op/googlejavaformat-action@dbff853fb823671ec5781365233bf86543b13215
+        # Pinned to axel-op/googlejavaformat-action@v4.0.0
+      - uses: axel-op/googlejavaformat-action@c1134ebd196c4cbffb077f9476585b0be8b6afcd
         name: Format
         with:
           release-name: v1.28.0
