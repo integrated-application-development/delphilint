@@ -162,7 +162,7 @@ var
   WindowColor: TColor;
 begin
   LintContext.IDEServices.ApplyTheme(Self);
-  WindowColor := StyleServices(Self).GetSystemColor(clWindow);
+  WindowColor := StyleServices.GetSystemColor(clWindow);
   RightPanel.Color := WindowColor;
 end;
 

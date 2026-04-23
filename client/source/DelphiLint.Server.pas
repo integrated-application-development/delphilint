@@ -222,6 +222,11 @@ type
     procedure RefreshServer;
     procedure ReleaseServer;
   end;
+//______________________________________________________________________________________________________________________
+
+{$IF CompilerVersion < 33.0}
+function EscapedString(AValue: string): string;
+{$ENDIF}
 
 //______________________________________________________________________________________________________________________
 
@@ -514,7 +519,7 @@ procedure TLintServer.OnAnalyzeResponse(
   begin
     Result := TObjectList<TLintIssue>.Create;
     for Index := 0 to Json.Count - 1 do begin
-      Result.Add(TLintIssue.CreateFromJson(Json[Index] as TJSONObject));
+      Result.Add(TLintIssue.CreateFromJson(Json.Items[Index] as TJSONObject));
     end;
   end;
 
@@ -524,7 +529,7 @@ procedure TLintServer.OnAnalyzeResponse(
   begin
     SetLength(Result, Json.Count);
     for Index := 0 to Json.Count - 1 do begin
-      Result[Index] := Json[Index].Value;
+      Result[Index] := Json.Items[Index].Value;
     end;
   end;
 
@@ -607,7 +612,7 @@ var
   Rules: TObjectDictionary<string, TRule>;
 begin
   if Response.Category <> CRuleRetrieveResult then begin
-    ErrorMsg := Response.Data.AsType<string>;
+    ErrorMsg := (Response.Data as TJSONString).Value;
     ErrorCat := Response.Category;
 
     Log.Warn('Rule retrieve returned error (%d): %s', [ErrorCat, ErrorMsg]);
@@ -1009,7 +1014,7 @@ begin
 
   DataBuffer := TBytes(IdDataBuffer);
 
-  DataJsonValue := TJSONValue.ParseJSONValue(DataBuffer, 0, Length, True);
+  DataJsonValue := TJSONObject.ParseJSONValue(DataBuffer, 0, Length, True);
   Result := TTaggedMessage.Create(TLintMessage.Create(Category, DataJsonValue), Id);
 end;
 
@@ -1027,7 +1032,11 @@ begin
   Message := Msg.Extract;
 
   if Assigned(Message.Data) then begin
+{$IF CompilerVersion < 33.0}
+    DataBytes := TEncoding.UTF8.GetBytes(EscapedString(Message.Data.ToString));
+{$ELSE}
     DataBytes := TEncoding.UTF8.GetBytes(Message.Data.ToString);
+{$ENDIF}
 
     FTcpClient.IOHandler.Write(Length(DataBytes));
     for DataByte in DataBytes do begin
@@ -1122,5 +1131,26 @@ begin
   Result := FMessage;
   FMessage := nil;
 end;
+
+//______________________________________________________________________________________________________________________
+
+{$IF CompilerVersion < 33.0}
+function EscapedString(AValue: string): string;
+begin
+  if AValue.StartsWith('"') then
+    AValue := AValue.Substring(1, AValue.Length-2);
+
+  // Handle these special characters: \, ", #$8, #$9, #$a, #$c, #$d
+  Result := AValue
+    .Replace('\', '\\')
+    .Replace(#$8, '\b')
+    .Replace(#$9, '\t')
+    .Replace(#$a, '\n')
+    .Replace(#$c, '\f')
+    .Replace(#$d, '\r');
+
+  Log.Info('ToString: ' + Result);
+end;
+{$ENDIF}
 
 end.

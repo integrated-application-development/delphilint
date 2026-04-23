@@ -66,7 +66,7 @@ begin
   FLock := TMutex.Create;
 
   if not TFile.Exists(FLogPath) then begin
-    FreeAndNil(TFile.Create(FLogPath));
+    TFile.Create(FLogPath).Free;
   end;
 end;
 

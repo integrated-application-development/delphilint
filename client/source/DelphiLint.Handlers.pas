@@ -319,7 +319,7 @@ begin
   // Although these hooks are owned by the context menu, we need to free them when the plugin is disabled
   for Hook in FPopupHooks.Values do begin
     Hook.OnFreed.RemoveListener(OnHookFreed);
-    FreeAndNil(Hook);
+    Hook.Free;
   end;
   FreeAndNil(FPopupHooks);
 

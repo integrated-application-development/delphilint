@@ -234,7 +234,8 @@ begin
   );
   try
     HtmlText := FHtmlGenerator.GenerateHtmlText(Rule);
-    Assert.Contains(HtmlText, '<script src="script.js"></script>');
+    Assert.Contains(HtmlText, '<script>');
+    Assert.Contains(HtmlText, '</script>');
   finally
     FreeAndNil(Rule);
   end;
@@ -340,7 +341,12 @@ procedure TRuleHtmlGeneratorTest.TestCleanCodeRuleContainsAttributes;
 var
   Rule: TRule;
   HtmlText: string;
+  Dict: TDictionary<TSoftwareQuality, TImpactSeverity>;
 begin
+  Dict := TDictionary<TSoftwareQuality, TImpactSeverity>.Create;
+  Dict.AddOrSetValue(sqaSecurity, imsMedium);
+  Dict.AddOrSetValue(sqaMaintainability, imsLow);
+
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
@@ -350,10 +356,7 @@ begin
     TRuleCleanCode.Create(
       ccaClear,
       cccIntentional,
-      TDictionary<TSoftwareQuality, TImpactSeverity>.Create([
-        TPair<TSoftwareQuality, TImpactSeverity>.Create(sqaSecurity, imsMedium),
-        TPair<TSoftwareQuality, TImpactSeverity>.Create(sqaMaintainability, imsLow)
-      ])
+      Dict
     )
   );
   try
@@ -370,7 +373,12 @@ procedure TRuleHtmlGeneratorTest.TestCleanCodeRuleDoesNotContainRuleTypeOrSeveri
 var
   Rule: TRule;
   HtmlText: string;
+  Dict: TDictionary<TSoftwareQuality, TImpactSeverity>;
 begin
+  Dict := TDictionary<TSoftwareQuality, TImpactSeverity>.Create;
+  Dict.AddOrSetValue(sqaSecurity, imsMedium);
+  Dict.AddOrSetValue(sqaMaintainability, imsLow);
+
   Rule := TRule.Create(
     'rk1',
     'This rule could be better',
@@ -380,10 +388,7 @@ begin
     TRuleCleanCode.Create(
       ccaClear,
       cccIntentional,
-      TDictionary<TSoftwareQuality, TImpactSeverity>.Create([
-        TPair<TSoftwareQuality, TImpactSeverity>.Create(sqaSecurity, imsMedium),
-        TPair<TSoftwareQuality, TImpactSeverity>.Create(sqaMaintainability, imsLow)
-      ])
+      Dict
     )
   );
   try

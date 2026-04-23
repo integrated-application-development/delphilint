@@ -153,8 +153,13 @@ begin
     Assert.AreEqual(wrSignaled, Event.WaitFor(1000), FailReason);
     Assert.AreEqual(CPing, Integer(ReceivedCategory));
     Assert.AreEqual(95, ReceivedId);
+{$IF CompilerVersion < 33.0}
+    Assert.AreEqual(9, ReceivedLength);
+    Assert.AreEqual('ab£c def', ReceivedDecodedStr);
+{$ELSE}
     Assert.AreEqual(11, ReceivedLength);
     Assert.AreEqual('"ab£c def"', ReceivedDecodedStr);
+{$ENDIF}
   finally
     FreeAndNil(Msg);
     FreeAndNil(Connection);

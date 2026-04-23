@@ -76,7 +76,7 @@ end;
 
 function TFileLoggerTest.GetLog: TArray<string>;
 begin
-  Result := TFile.ReadAllLines(FLogPath);
+  Result := TArray<string>(TFile.ReadAllLines(FLogPath));
 end;
 
 //______________________________________________________________________________________________________________________

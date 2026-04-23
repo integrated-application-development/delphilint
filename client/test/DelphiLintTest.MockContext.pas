@@ -576,11 +576,13 @@ end;
 //______________________________________________________________________________________________________________________
 
 procedure TMockAnalyzer.MockFileIssue(Path: string; Line: Integer; Issue: ILiveIssue);
+var
+  Dict: TDictionary<Integer, ILiveIssue>;
 begin
   Path := NormalizePath(Path);
-  FIssues.AddOrSetValue(
-    Path,
-    TDictionary<Integer, ILiveIssue>.Create([TPair<Integer, ILiveIssue>.Create(Line, Issue)]));
+  Dict := TDictionary<Integer, ILiveIssue>.Create();
+  Dict.AddOrSetValue(Line, Issue);
+  FIssues.AddOrSetValue(Path, Dict);
 end;
 
 //______________________________________________________________________________________________________________________
