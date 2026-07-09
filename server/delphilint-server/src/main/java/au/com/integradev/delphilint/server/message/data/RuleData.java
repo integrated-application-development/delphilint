@@ -29,6 +29,7 @@ public class RuleData {
   @JsonProperty private RuleSeverity severity;
   @JsonProperty private RuleType type;
   @JsonProperty private CleanCodeData cleanCode;
+  @JsonProperty private boolean defaultEnabled;
 
   public RuleData(RemoteRule rule) {
     key = rule.getKey();
@@ -36,6 +37,7 @@ public class RuleData {
     description = new RuleDescriptionData(rule.getRuleDescription());
     severity = rule.getSeverity();
     type = rule.getType();
+    defaultEnabled = rule.isDefaultEnabled();
 
     if (rule.getCleanCode() != null) {
       cleanCode = new CleanCodeData(rule.getCleanCode());
@@ -60,5 +62,9 @@ public class RuleData {
 
   public RuleType getType() {
     return type;
+  }
+
+  public boolean isDefaultEnabled() {
+    return defaultEnabled;
   }
 }

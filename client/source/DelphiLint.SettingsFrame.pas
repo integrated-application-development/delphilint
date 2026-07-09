@@ -324,6 +324,7 @@ var
   SortedRules: TArray<TRule>;
   Rule: TRule;
   DisabledRules: TArray<string>;
+  UseDefaultSelection: Boolean;
 begin
   if not Assigned(FStandaloneRules) then begin
     FStandaloneRules := LintContext.Analyzer.GetStandaloneRules;
@@ -337,6 +338,11 @@ begin
 
   DisabledRules := SplitString(LintContext.Settings.StandaloneDisabledRules, ',');
 
+  // When no custom ruleset has been configured before, the default ruleset is a better starting point
+  // for fine-tuning than having every rule selected
+  UseDefaultSelection := LintContext.Settings.StandaloneUseDefaultRules
+    and (LintContext.Settings.StandaloneDisabledRules = '');
+
   SortedRules := FStandaloneRules.Values.ToArray;
   TArray.Sort<TRule>(SortedRules, TComparer<TRule>.Construct(
     function(const Left: TRule; const Right: TRule): Integer
@@ -347,8 +353,13 @@ begin
   StandaloneRulesListBox.Items.Clear;
   for Rule in SortedRules do begin
     StandaloneRulesListBox.Items.AddObject(Format('%s (%s)', [Rule.Name, StripRepository(Rule.RuleKey)]), Rule);
-    StandaloneRulesListBox.Checked[StandaloneRulesListBox.Items.Count - 1] :=
-      (IndexStr(Rule.RuleKey, DisabledRules) = -1);
+    if UseDefaultSelection then begin
+      StandaloneRulesListBox.Checked[StandaloneRulesListBox.Items.Count - 1] := Rule.DefaultEnabled;
+    end
+    else begin
+      StandaloneRulesListBox.Checked[StandaloneRulesListBox.Items.Count - 1] :=
+        (IndexStr(Rule.RuleKey, DisabledRules) = -1);
+    end;
   end;
   UpdateStandaloneRulesEnabled;
 end;

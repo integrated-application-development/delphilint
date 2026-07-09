@@ -284,7 +284,9 @@ public class SonarQubeHost implements SonarHost {
             SonarQubeDescriptionSection::getContent),
         RuleSeverity.fromSonarLintIssueSeverity(rule.getSeverity()),
         RuleType.fromSonarLintRuleType(rule.getType()),
-        cleanCode);
+        cleanCode,
+        // Rules retrieved from a SonarQube server all belong to its active quality profile
+        true);
   }
 
   private static List<String> joinStringsWithLimit(

@@ -264,6 +264,7 @@ type
     FSeverity: TRuleSeverity;
     FType: TRuleType;
     FCleanCode: TRuleCleanCode;
+    FDefaultEnabled: Boolean;
 
   public
     constructor Create(
@@ -272,7 +273,8 @@ type
       Description: TRuleDescription;
       Severity: TRuleSeverity;
       RuleType: TRuleType;
-      CleanCode: TRuleCleanCode = nil
+      CleanCode: TRuleCleanCode = nil;
+      DefaultEnabled: Boolean = False
     );
     constructor CreateFromJson(Json: TJSONObject);
     destructor Destroy; override;
@@ -283,6 +285,7 @@ type
     property Severity: TRuleSeverity read FSeverity;
     property RuleType: TRuleType read FType;
     property CleanCode: TRuleCleanCode read FCleanCode;
+    property DefaultEnabled: Boolean read FDefaultEnabled;
   end;
 
 //______________________________________________________________________________________________________________________
@@ -472,7 +475,8 @@ constructor TRule.Create(
   Description: TRuleDescription;
   Severity: TRuleSeverity;
   RuleType: TRuleType;
-  CleanCode: TRuleCleanCode
+  CleanCode: TRuleCleanCode;
+  DefaultEnabled: Boolean
 );
 begin
   inherited Create;
@@ -483,6 +487,7 @@ begin
   FSeverity := Severity;
   FType := RuleType;
   FCleanCode := CleanCode;
+  FDefaultEnabled := DefaultEnabled;
 end;
 
 //______________________________________________________________________________________________________________________
@@ -499,6 +504,7 @@ begin
   FDescription := TRuleDescription.CreateFromJson(Json.GetValue<TJSONObject>('description'));
   FSeverity := TRuleSeverity(IndexStr(Json.GetValue<string>('severity'), CSeverities));
   FType := TRuleType(IndexStr(Json.GetValue<string>('type'), CRuleTypes));
+  FDefaultEnabled := Json.GetValue<Boolean>('defaultEnabled', False);
   FCleanCode := nil;
 
   if Json.TryGetValue<TJSONObject>('cleanCode', CleanCodeJson) and Assigned(CleanCodeJson) then begin

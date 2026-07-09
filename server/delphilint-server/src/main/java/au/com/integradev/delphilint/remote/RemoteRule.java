@@ -24,6 +24,7 @@ public class RemoteRule {
   private final RuleType type;
   private final RemoteCleanCode defaultCleanCode;
   private final RemoteRuleDescription ruleDescription;
+  private final boolean defaultEnabled;
 
   public RemoteRule(
       String key,
@@ -31,13 +32,15 @@ public class RemoteRule {
       RemoteRuleDescription ruleDescription,
       RuleSeverity severity,
       RuleType type,
-      RemoteCleanCode cleanCode) {
+      RemoteCleanCode cleanCode,
+      boolean defaultEnabled) {
     this.key = key;
     this.name = name;
     this.ruleDescription = ruleDescription;
     this.severity = severity;
     this.type = type;
     this.defaultCleanCode = cleanCode;
+    this.defaultEnabled = defaultEnabled;
   }
 
   public String getKey() {
@@ -62,5 +65,9 @@ public class RemoteRule {
 
   public RemoteCleanCode getCleanCode() {
     return defaultCleanCode;
+  }
+
+  public boolean isDefaultEnabled() {
+    return defaultEnabled;
   }
 }
