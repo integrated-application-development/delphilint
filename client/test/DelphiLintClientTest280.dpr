@@ -34,7 +34,8 @@ uses
   DelphiLintTest.Settings in 'DelphiLintTest.Settings.pas',
   DelphiLintTest.LiveData in 'DelphiLintTest.LiveData.pas',
   DelphiLintTest.IssueActions in 'DelphiLintTest.IssueActions.pas',
-  DelphiLintTest.Properties in 'DelphiLintTest.Properties.pas';
+  DelphiLintTest.Properties in 'DelphiLintTest.Properties.pas',
+  DelphiLintTest.VersionControl in 'DelphiLintTest.VersionControl.pas';
 
 {$R *Additional.res}
 

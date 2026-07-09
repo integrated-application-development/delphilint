@@ -74,6 +74,7 @@ type
     AnalyzePopupMenu: TPopupMenu;
     AnalyzeCurrentFile1: TMenuItem;
     AnalyzeOpenFiles1: TMenuItem;
+    AnalyzeChangedFiles1: TMenuItem;
     StatusPanel: TPanel;
     ProgLabel: TLabel;
     ResizeIndicatorPanel: TPanel;

@@ -116,6 +116,7 @@ $(PreBuildEvent)]]>
             <DesignClass>T</DesignClass>
         </DCCReference>
         <DCCReference Include="DelphiLint.Utils.pas"/>
+        <DCCReference Include="DelphiLint.VersionControl.pas"/>
         <DCCReference Include="DelphiLint.SettingsFrame.pas">
             <Form>LintSettingsFrame</Form>
             <FormType>dfm</FormType>
