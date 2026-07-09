@@ -58,6 +58,7 @@ type
   private
     FEditor: TEditorHandler;
     FEditorNotifier: Integer;
+    FThemeNotifier: Integer;
     FActionListIndex: Integer;
     FMainMenu: TMenuItem;
     FAnalysisActionsEnabled: Boolean;
@@ -75,6 +76,7 @@ type
 
     procedure OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
     procedure OnActiveFileChanged(const Path: string);
+    procedure OnThemeChanged;
 
     procedure SetAnalysisActionsEnabled(Value: Boolean);
 
@@ -321,6 +323,9 @@ begin
   FEditorNotifier := LintContext.IDEServices.AddEditorNotifier(FEditor);
   FEditor.OnActiveFileChanged.AddListener(OnActiveFileChanged);
 
+  // Theme change notifier
+  FThemeNotifier := LintContext.IDEServices.AddThemeChangeNotifier(TThemeChangeHandler.Create(OnThemeChanged));
+
   // Main menu
   FActionListIndex := LintContext.IDEServices.AddActionListToIDEInsight(LintActions);
   CreateMainMenu;
@@ -360,6 +365,7 @@ begin
   RemoveToolbarActions(IDEServices);
   FreeAndNil(FMainMenu);
   IDEServices.RemoveEditorNotifier(FEditorNotifier);
+  IDEServices.RemoveThemeChangeNotifier(FThemeNotifier);
   IDEServices.UnregisterDockableForm(FToolFormInfo);
   IDEServices.RemovePluginInfo(FInfoIndex);
   IDEServices.UnregisterAddInOptions(FAddInOptions);
@@ -371,6 +377,15 @@ end;
 procedure TPluginCore.OnAnalysisStateChanged(const StateChange: TAnalysisStateChangeContext);
 begin
   RefreshAnalysisActions;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TPluginCore.OnThemeChanged;
+begin
+  if Assigned(FToolForm) then begin
+    LintContext.IDEServices.ApplyTheme(FToolForm);
+  end;
 end;
 
 //______________________________________________________________________________________________________________________

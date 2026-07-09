@@ -47,6 +47,8 @@ type
     procedure RegisterFormClass(FormClass: TCustomFormClass);
     function GetStyleColor(Color: TStyleColor): TColor;
     function GetSystemColor(Color: TColor): TColor;
+    function AddThemeChangeNotifier(Notifier: IIDEThemeChangeHandler): Integer;
+    procedure RemoveThemeChangeNotifier(const Index: Integer);
 
     // From IOTAServices
     function GetRootDirectory: string;
@@ -240,6 +242,11 @@ type
     procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
   end;
 
+  TToolsApiThemeNotifier = class(TToolsApiNotifier<IIDEThemeChangeHandler>, INTAIDEThemingServicesNotifier)
+    procedure ChangingTheme;
+    procedure ChangedTheme;
+  end;
+
 //______________________________________________________________________________________________________________________
 
 procedure Register;
@@ -374,6 +381,20 @@ end;
 function TToolsApiServices.GetSystemColor(Color: TColor): TColor;
 begin
   Result := (BorlandIDEServices as IOTAIDEThemingServices).StyleServices.GetSystemColor(Color);
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TToolsApiServices.AddThemeChangeNotifier(Notifier: IIDEThemeChangeHandler): Integer;
+begin
+  Result := (BorlandIDEServices as IOTAIDEThemingServices).AddNotifier(TToolsApiThemeNotifier.Create(Notifier));
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiServices.RemoveThemeChangeNotifier(const Index: Integer);
+begin
+  (BorlandIDEServices as IOTAIDEThemingServices).RemoveNotifier(Index);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -966,6 +987,20 @@ end;
 procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
 begin
   FHandler.OnLineChanged(OldLine, NewLine, Data);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiThemeNotifier.ChangingTheme;
+begin
+  // Only theme changes that have completed are relevant
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TToolsApiThemeNotifier.ChangedTheme;
+begin
+  FHandler.OnThemeChanged;
 end;
 
 initialization

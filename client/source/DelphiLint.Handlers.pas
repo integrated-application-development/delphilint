@@ -62,6 +62,18 @@ type
 
 //______________________________________________________________________________________________________________________
 
+  TOnThemeChanged = reference to procedure;
+
+  TThemeChangeHandler = class(THandler, IIDEThemeChangeHandler)
+  private
+    FOnThemeChanged: TOnThemeChanged;
+  public
+    constructor Create(OnThemeChanged: TOnThemeChanged);
+    procedure OnThemeChanged;
+  end;
+
+//______________________________________________________________________________________________________________________
+
   TLineTracker = class;
 
   TChangedLine = record
@@ -286,6 +298,21 @@ end;
 procedure TEditLineHandler.OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
 begin
   FOnLineChanged(OldLine, NewLine, Data);
+end;
+
+//______________________________________________________________________________________________________________________
+
+constructor TThemeChangeHandler.Create(OnThemeChanged: TOnThemeChanged);
+begin
+  inherited Create;
+  FOnThemeChanged := OnThemeChanged;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TThemeChangeHandler.OnThemeChanged;
+begin
+  FOnThemeChanged;
 end;
 
 //______________________________________________________________________________________________________________________
