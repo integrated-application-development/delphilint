@@ -224,6 +224,15 @@ function New-SetupScript([string]$Path, [PackagingConfig]$Config) {
   Set-Content -Path $Path -Value $Content
 }
 
+function New-PackageReadme([string]$Path, [PackagingConfig]$Config) {
+  $DelphiName = "$($Config.Delphi.Version.ProductVersion) $($Config.Delphi.Version.Name)"
+
+  $Content = Get-Content -Raw (Join-Path $PSScriptRoot TEMPLATE_README.md)
+  $Content = $Content -replace "\{\{VERSION\}\}",$Config.Version
+  $Content = $Content -replace "\{\{DELPHI_NAME\}\}",$DelphiName
+  Set-Content -Path $Path -Value $Content
+}
+
 function New-PackageFolder([PackagingConfig]$Config, [hashtable]$Artifacts) {
   $Path = (Join-Path $TargetDir $Config.GetPackageFolderName())
   New-Item -ItemType Directory $Path -Force
@@ -235,6 +244,8 @@ function New-PackageFolder([PackagingConfig]$Config, [hashtable]$Artifacts) {
   $InstallScriptPath = (Join-Path $Path "install.ps1")
   New-SetupScript -Path $InstallScriptPath -Config $Config
   New-BatchScript -Path (Join-Path $Path "install.bat") -PSScriptPath "install.ps1"
+  New-PackageReadme -Path (Join-Path $Path "README.md") -Config $Config
+  Copy-Item (Join-Path $PSScriptRoot "..\LICENSE.txt") -Destination (Join-Path $Path "LICENSE.txt")
 }
 
 function Get-PackageFolder([string]$DelphiVersion) {
