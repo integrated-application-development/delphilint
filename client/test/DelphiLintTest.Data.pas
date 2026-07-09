@@ -39,6 +39,8 @@ type
     [Test]
     procedure TestCreateRuleCleanCode;
     [Test]
+    procedure TestCreateRuleDefaultEnabled;
+    [Test]
     procedure TestParseRuleTypes;
     [Test]
     procedure TestParseRuleSeverities;
@@ -84,6 +86,29 @@ begin
     Assert.AreEqual(rsMajor, Rule.Severity);
     Assert.AreEqual(rtCodeSmell, Rule.RuleType);
     Assert.IsNull(Rule.CleanCode);
+    Assert.IsFalse(Rule.DefaultEnabled);
+  finally
+    FreeAndNil(Rule);
+    FreeAndNil(JsonObject);
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TDataJsonParseTest.TestCreateRuleDefaultEnabled;
+const
+  CRuleJsonStr: string = '{"key":"myrulekey","name":"My Rule",'
+    + '"description":{"introduction":"foo intro","rootCause":"","howToFix":"bar howToFix","resources":"flarp res"},'
+    + '"severity":"MAJOR","type":"CODE_SMELL","defaultEnabled":true}';
+var
+  JsonObject: TJSONObject;
+  Rule: TRule;
+begin
+  JsonObject := Parse<TJSONObject>(CRuleJsonStr);
+  try
+    Rule := TRule.CreateFromJson(JsonObject);
+    Assert.AreEqual('myrulekey', Rule.RuleKey);
+    Assert.IsTrue(Rule.DefaultEnabled);
   finally
     FreeAndNil(Rule);
     FreeAndNil(JsonObject);

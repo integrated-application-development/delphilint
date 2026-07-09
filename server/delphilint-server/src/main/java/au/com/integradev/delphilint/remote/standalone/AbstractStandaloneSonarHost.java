@@ -87,7 +87,8 @@ public abstract class AbstractStandaloneSonarHost implements SonarHost {
                                             e ->
                                                 ImpactSeverity.fromSonarLintImpactSeverity(
                                                     e.getValue()))))
-                            : null))
+                            : null,
+                        ruleDef.isActiveByDefault()))
             .collect(Collectors.toSet());
   }
 
