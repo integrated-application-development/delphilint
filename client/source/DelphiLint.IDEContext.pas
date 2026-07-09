@@ -237,7 +237,7 @@ type
   end;
 
   TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineHandler>, IOTAEditLineNotifier)
-    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -963,9 +963,10 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
 begin
-  FHandler.OnLineChanged(OldLine, NewLine, Data);
+  // Data is only ever used to hold tracked line numbers, so it can safely be narrowed on Win64
+  FHandler.OnLineChanged(OldLine, NewLine, Integer(Data));
 end;
 
 initialization
