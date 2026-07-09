@@ -324,6 +324,9 @@ object LintToolFrame: TLintToolFrame
     object AnalyzeOpenFiles1: TMenuItem
       Action = PluginCore.ActionAnalyzeOpenFiles
     end
+    object AnalyzeChangedFiles1: TMenuItem
+      Action = PluginCore.ActionAnalyzeChangedFiles
+    end
     object Separator1: TMenuItem
       Caption = '-'
     end

@@ -46,12 +46,14 @@ type
     ActionOpenProjectOptions: TAction;
     ActionOpenSettings: TAction;
     ActionAnalyzeOpenFiles: TAction;
+    ActionAnalyzeChangedFiles: TAction;
     ActionRestartServer: TAction;
     ActionClearActiveFile: TAction;
     procedure ActionShowToolWindowExecute(Sender: TObject);
     procedure ActionAnalyzeActiveFileExecute(Sender: TObject);
     procedure ActionRestartServerExecute(Sender: TObject);
     procedure ActionAnalyzeOpenFilesExecute(Sender: TObject);
+    procedure ActionAnalyzeChangedFilesExecute(Sender: TObject);
     procedure ActionOpenSettingsExecute(Sender: TObject);
     procedure ActionOpenProjectOptionsExecute(Sender: TObject);
     procedure ActionClearActiveFileExecute(Sender: TObject);
@@ -119,10 +121,12 @@ uses
     System.SysUtils
   , System.UITypes
   , System.IOUtils
+  , System.StrUtils
   , Vcl.ComCtrls
   , Vcl.Dialogs
   , Winapi.Windows
   , DelphiLint.Utils
+  , DelphiLint.VersionControl
   , DelphiLint.SetupForm
   , DelphiLint.Version
   , DelphiLint.Resources
@@ -222,6 +226,83 @@ begin
       [mbOK],
       0);
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TPluginCore.ActionAnalyzeChangedFilesExecute(Sender: TObject);
+var
+  ProjectFile: string;
+  ProjectDir: string;
+  ChangedFiles: TArray<string>;
+  NormalizedChangedFiles: TArray<string>;
+  Files: TArray<string>;
+  Module: IIDEModule;
+begin
+  if LintContext.Settings.ClientAutoShowToolWindow then begin
+    ShowToolWindow;
+  end;
+
+  if not TryGetProjectFile(ProjectFile) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze changed files.',
+      'There is no open Delphi project.',
+      mtWarning,
+      [mbOK],
+      0);
+    Exit;
+  end;
+
+  if not TryGetProjectDirectory(ProjectDir) then begin
+    ProjectDir := TPath.GetDirectoryName(ProjectFile);
+  end;
+
+  if not TryGetChangedDelphiFiles(ProjectDir, ChangedFiles) then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze changed files.',
+      'The project is not in a Git repository, or Git could not be run.',
+      mtWarning,
+      [mbOK],
+      0);
+    Exit;
+  end;
+
+  if Length(ChangedFiles) = 0 then begin
+    TaskMessageDlg(
+      'DelphiLint cannot analyze changed files.',
+      'There are no changed files that can be analyzed.',
+      mtWarning,
+      [mbOK],
+      0);
+    Exit;
+  end;
+
+  if LintContext.Settings.ClientSaveBeforeAnalysis then begin
+    NormalizedChangedFiles := TArrayUtils.Map<string, string>(
+      ChangedFiles,
+      function(Path: string): string
+      begin
+        Result := NormalizePath(Path);
+      end);
+
+    for Module in DelphiLint.Utils.GetOpenSourceModules do begin
+      if IndexStr(NormalizePath(Module.FileName), NormalizedChangedFiles) <> -1 then begin
+        try
+          Module.Save(True);
+        except
+          on E: Exception do begin
+            Log.Warn('Module %s could not be saved', [Module.FileName]);
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  Files := Copy(ChangedFiles);
+  SetLength(Files, Length(Files) + 1);
+  Files[Length(Files) - 1] := ProjectFile;
+
+  Analyzer.AnalyzeFiles(Files, ProjectFile);
 end;
 
 //______________________________________________________________________________________________________________________
@@ -406,6 +487,7 @@ begin
   AddSeparator;
   AddItem(ActionAnalyzeActiveFile);
   AddItem(ActionAnalyzeOpenFiles);
+  AddItem(ActionAnalyzeChangedFiles);
   AddSeparator;
   AddItem(ActionClearActiveFile);
   AddSeparator;
@@ -469,6 +551,7 @@ begin
     ActionAnalyzeActiveFile.Enabled := True;
     ActionAnalyzeShort.Enabled := True;
     ActionAnalyzeOpenFiles.Enabled := True;
+    ActionAnalyzeChangedFiles.Enabled := True;
     ActionClearActiveFile.Enabled := TryGetCurrentSourceEditor(SourceEditor)
       and (Length(Analyzer.GetIssues(SourceEditor.FileName)) > 0);
   end
@@ -476,6 +559,7 @@ begin
     ActionAnalyzeActiveFile.Enabled := False;
     ActionAnalyzeShort.Enabled := False;
     ActionAnalyzeOpenFiles.Enabled := False;
+    ActionAnalyzeChangedFiles.Enabled := False;
     ActionClearActiveFile.Enabled := False;
   end;
 end;
@@ -511,6 +595,7 @@ begin
   for ToolBar in CToolBars do begin
     RemoveAction(ActionAnalyzeActiveFile, IDEServices.GetToolBar(ToolBar));
     RemoveAction(ActionAnalyzeOpenFiles, IDEServices.GetToolBar(ToolBar));
+    RemoveAction(ActionAnalyzeChangedFiles, IDEServices.GetToolBar(ToolBar));
     RemoveAction(ActionShowToolWindow, IDEServices.GetToolBar(ToolBar));
     RemoveAction(ActionOpenProjectOptions, IDEServices.GetToolBar(ToolBar));
     RemoveAction(ActionOpenSettings, IDEServices.GetToolBar(ToolBar));

@@ -305,6 +305,13 @@ object PluginCore: TPluginCore
       ShortCut = 57420
       OnExecute = ActionAnalyzeOpenFilesExecute
     end
+    object ActionAnalyzeChangedFiles: TAction
+      Category = 'DelphiLint'
+      Caption = 'Analyze &Changed Files'
+      Hint = 'Analyze all files with uncommitted version control changes'
+      ImageIndex = 2
+      OnExecute = ActionAnalyzeChangedFilesExecute
+    end
     object ActionAnalyzeShort: TAction
       Caption = 'Analyze'
       ImageIndex = 3
