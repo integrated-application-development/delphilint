@@ -140,6 +140,7 @@ function GetOpenSourceModules: TArray<IIDEModule>;
 var
   Index: Integer;
   Module: IIDEModule;
+  SourceEditor: IIDESourceEditor;
   Files: TList<IIDEModule>;
 begin
   Files := TList<IIDEModule>.Create;
@@ -147,7 +148,9 @@ begin
     for Index := 0 to LintContext.IDEServices.GetModuleCount - 1 do begin
       Module := LintContext.IDEServices.GetModule(Index);
 
-      if IsPasFile(Module.FileName) then begin
+      // Modules can outlive their editors, e.g. when a file has recently been closed
+      SourceEditor := Module.SourceEditor;
+      if IsPasFile(Module.FileName) and Assigned(SourceEditor) and (SourceEditor.EditViewCount > 0) then begin
         Files.Add(Module);
       end;
     end;

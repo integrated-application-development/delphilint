@@ -53,6 +53,8 @@ type
     [Test]
     procedure TestGetOpenSourceModulesGetsOnlyPasFiles;
     [Test]
+    procedure TestGetOpenSourceModulesExcludesModulesWithoutOpenEditors;
+    [Test]
     procedure TestGetAllFilesReturnsEmptyWhenNotInProject;
     [Test]
     procedure TestGetAllFilesFiltersOutNonDelphiFiles;
@@ -193,9 +195,15 @@ end;
 procedure TUtilsTest.TestGetOpenSourceModulesGetsOnlyPasFiles;
 
   function MockModule(FileName: string): TMockModule;
+  var
+    SourceEditor: TMockSourceEditor;
   begin
+    SourceEditor := TMockSourceEditor.Create;
+    SourceEditor.MockedEditViews.Add(TMockEditView.Create);
+
     Result := TMockModule.Create;
     Result.MockedFileName := FileName;
+    Result.MockedSourceEditor := SourceEditor;
   end;
 
 var
@@ -217,6 +225,45 @@ begin
   Assert.AreEqual(2, Length(OpenSourceModules));
   Assert.AreEqual('abc.pas', OpenSourceModules[0].FileName);
   Assert.AreEqual('jkl.pas', OpenSourceModules[1].FileName);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TUtilsTest.TestGetOpenSourceModulesExcludesModulesWithoutOpenEditors;
+var
+  OpenSourceModules: TArray<IIDEModule>;
+  IDEServices: TMockIDEServices;
+  Modules: TList<IIDEModule>;
+  NoEditorModule: TMockModule;
+  NoViewsModule: TMockModule;
+  OpenModule: TMockModule;
+  SourceEditor: TMockSourceEditor;
+begin
+  MockIDEServices(IDEServices);
+
+  Modules := TList<IIDEModule>.Create;
+  IDEServices.MockModules(Modules);
+
+  NoEditorModule := TMockModule.Create;
+  NoEditorModule.MockedFileName := 'closed.pas';
+  Modules.Add(NoEditorModule);
+
+  NoViewsModule := TMockModule.Create;
+  NoViewsModule.MockedFileName := 'hidden.pas';
+  NoViewsModule.MockedSourceEditor := TMockSourceEditor.Create;
+  Modules.Add(NoViewsModule);
+
+  SourceEditor := TMockSourceEditor.Create;
+  SourceEditor.MockedEditViews.Add(TMockEditView.Create);
+
+  OpenModule := TMockModule.Create;
+  OpenModule.MockedFileName := 'open.pas';
+  OpenModule.MockedSourceEditor := SourceEditor;
+  Modules.Add(OpenModule);
+
+  OpenSourceModules := GetOpenSourceModules;
+  Assert.AreEqual(1, Length(OpenSourceModules));
+  Assert.AreEqual('open.pas', OpenSourceModules[0].FileName);
 end;
 
 //______________________________________________________________________________________________________________________
