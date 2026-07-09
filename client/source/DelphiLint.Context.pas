@@ -193,6 +193,11 @@ type
     procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
   end;
 
+  IIDEThemeChangeHandler = interface(IIDEHandler)
+    ['{677285CF-D165-4CA1-9565-FECA44CF9748}']
+    procedure OnThemeChanged;
+  end;
+
   IIDEEditLineTracker = interface
     ['{0E41ADA7-FE27-42BD-8153-EBBF96260385}']
     function GetFileName: string;
@@ -211,6 +216,8 @@ type
     procedure RegisterFormClass(FormClass: TCustomFormClass);
     function GetStyleColor(Color: TStyleColor): TColor;
     function GetSystemColor(Color: TColor): TColor;
+    function AddThemeChangeNotifier(Notifier: IIDEThemeChangeHandler): Integer;
+    procedure RemoveThemeChangeNotifier(const Index: Integer);
 
     // From IOTAServices
     function GetRootDirectory: string;

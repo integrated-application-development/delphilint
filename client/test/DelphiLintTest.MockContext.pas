@@ -248,6 +248,7 @@ type
     FActions: TList<TCustomAction>;
     FIDEInsightActions: TList<TCustomActionList>;
     FEditorNotifiers: TDictionary<Integer, IIDEEditorHandler>;
+    FThemeChangeNotifiers: TDictionary<Integer, IIDEThemeChangeHandler>;
     FMenus: TDictionary<string, TMenuItem>;
     FPluginInfos: TObjectDictionary<Integer, TMockPluginInfo>;
     FPluginTitle: string;
@@ -264,6 +265,7 @@ type
     property Actions: TList<TCustomAction> read FActions;
     property IDEInsightActions: TList<TCustomActionList> read FIDEInsightActions;
     property EditorNotifiers: TDictionary<Integer, IIDEEditorHandler> read FEditorNotifiers;
+    property ThemeChangeNotifiers: TDictionary<Integer, IIDEThemeChangeHandler> read FThemeChangeNotifiers;
     property Menus: TDictionary<string, TMenuItem> read FMenus;
     property PluginInfos: TObjectDictionary<Integer, TMockPluginInfo> read FPluginInfos;
 
@@ -307,6 +309,8 @@ type
     procedure RegisterFormClass(FormClass: TCustomFormClass);
     function GetStyleColor(Color: TStyleColor): TColor;
     function GetSystemColor(Color: TColor): TColor;
+    function AddThemeChangeNotifier(Notifier: IIDEThemeChangeHandler): Integer;
+    procedure RemoveThemeChangeNotifier(const Index: Integer);
 
     // From IOTAServices
     function GetRootDirectory: string;
@@ -928,6 +932,23 @@ end;
 
 //______________________________________________________________________________________________________________________
 
+function TMockIDEServices.AddThemeChangeNotifier(Notifier: IIDEThemeChangeHandler): Integer;
+begin
+  Result := FNextId;
+  Inc(FNextId);
+
+  FIDE.ThemeChangeNotifiers.Add(Result, Notifier);
+end;
+
+//______________________________________________________________________________________________________________________
+
+procedure TMockIDEServices.RemoveThemeChangeNotifier(const Index: Integer);
+begin
+  FIDE.ThemeChangeNotifiers.Remove(Index);
+end;
+
+//______________________________________________________________________________________________________________________
+
 function TMockIDEServices.AddImages(const ImageList: TImageList): Integer;
 begin
   // TODO apply image list to mock IDE
@@ -1160,6 +1181,7 @@ begin
   FActions := TList<TCustomAction>.Create;
   FIDEInsightActions := TList<TCustomActionList>.Create;
   FEditorNotifiers := TDictionary<Integer, IIDEEditorHandler>.Create;
+  FThemeChangeNotifiers := TDictionary<Integer, IIDEThemeChangeHandler>.Create;
   FMenus := TDictionary<string, TMenuItem>.Create;
   FPluginInfos := TObjectDictionary<Integer, TMockPluginInfo>.Create([doOwnsValues]);
 end;
@@ -1171,6 +1193,7 @@ begin
   FreeAndNil(FActions);
   FreeAndNil(FIDEInsightActions);
   FreeAndNil(FEditorNotifiers);
+  FreeAndNil(FThemeChangeNotifiers);
   FreeAndNil(FMenus);
   FreeAndNil(FPluginInfos);
   FreeAndNil(FPluginIcon);
