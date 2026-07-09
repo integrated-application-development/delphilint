@@ -29,10 +29,13 @@ type
     FDir: string;
     function GetProjectBaseDirAbsolute: string;
     function GetProjectPropertiesPath: string;
+    function ReadPropertiesProjectKey: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
   public
     constructor Create(Path: string; LoadOnCreate: Boolean = True);
+
+    function EffectiveSonarHostProjectKey: string;
 
     property SonarHostProjectKey: string index 0 read GetValueStr write SetValueStr;
     property SonarHostUrl: string index 1 read GetValueStr write SetValueStr;
@@ -48,7 +51,8 @@ type
 implementation
 
 uses
-    System.IOUtils
+    System.SysUtils
+  , System.IOUtils
   , DelphiLint.Utils
   ;
 
@@ -81,6 +85,44 @@ begin
   Result := '';
   if AnalysisReadProperties then begin
     Result := TPath.Combine(AnalysisBaseDirAbsolute, 'sonar-project.properties');
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintProjectOptions.EffectiveSonarHostProjectKey: string;
+begin
+  Result := SonarHostProjectKey;
+  if Result = '' then begin
+    Result := ReadPropertiesProjectKey;
+  end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintProjectOptions.ReadPropertiesProjectKey: string;
+var
+  Line: string;
+  TrimmedLine: string;
+  SeparatorPos: Integer;
+begin
+  Result := '';
+
+  if (ProjectPropertiesPath = '') or not TFile.Exists(ProjectPropertiesPath) then begin
+    Exit;
+  end;
+
+  for Line in TFile.ReadAllLines(ProjectPropertiesPath) do begin
+    TrimmedLine := Trim(Line);
+    if (TrimmedLine = '') or (TrimmedLine[1] = '#') or (TrimmedLine[1] = '!') then begin
+      Continue;
+    end;
+
+    SeparatorPos := Pos('=', TrimmedLine);
+    if (SeparatorPos <> 0) and (Trim(Copy(TrimmedLine, 1, SeparatorPos - 1)) = 'sonar.projectKey') then begin
+      Result := Trim(Copy(TrimmedLine, SeparatorPos + 1, Length(TrimmedLine)));
+      Exit;
+    end;
   end;
 end;
 

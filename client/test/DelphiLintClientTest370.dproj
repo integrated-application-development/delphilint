@@ -150,6 +150,7 @@ $(PreBuildEvent)]]></PreBuildEvent>
         <DCCReference Include="DelphiLintTest.LiveData.pas"/>
         <DCCReference Include="DelphiLintTest.IssueActions.pas"/>
         <DCCReference Include="DelphiLintTest.Properties.pas"/>
+        <DCCReference Include="DelphiLintTest.ProjectOptions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
