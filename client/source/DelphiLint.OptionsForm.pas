@@ -314,13 +314,13 @@ var
 begin
   TokenText := LintContext.Settings.GetSonarHostToken(
     SonarHostUrlEdit.Text,
-    SonarHostProjectKeyEdit.Text);
+    FProjectOptions.EffectiveSonarHostProjectKey);
 
   SonarHostTokenEdit.Text := IfThen(TokenText = '', '(no token)', TokenText);
 
   ManageTokensButton.Enabled :=
     IsConnectedMode
-    and (FProjectOptions.SonarHostProjectKey <> '')
+    and (FProjectOptions.EffectiveSonarHostProjectKey <> '')
     and IsUrl(FProjectOptions.SonarHostUrl);
 end;
 
@@ -329,7 +329,8 @@ end;
 function TLintOptionsForm.Validate: Boolean;
 begin
   if IsConnectedMode then begin
-    Result := (SonarHostUrlEdit.Text <> '') and (SonarHostProjectKeyEdit.Text <> '');
+    Result := (SonarHostUrlEdit.Text <> '')
+      and ((SonarHostProjectKeyEdit.Text <> '') or (FProjectOptions.EffectiveSonarHostProjectKey <> ''));
   end
   else begin
     Result := True;
