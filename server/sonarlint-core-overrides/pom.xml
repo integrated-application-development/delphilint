@@ -17,8 +17,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <compiler.languageLevel>11</compiler.languageLevel>
-    <maven.compiler.release>11</maven.compiler.release>
+    <compiler.languageLevel>17</compiler.languageLevel>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencies>
