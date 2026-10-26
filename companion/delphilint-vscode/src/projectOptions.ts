@@ -19,6 +19,8 @@ import * as path from "node:path";
 import * as ini from "ini";
 import * as fs from "node:fs";
 
+// Property names mirror the section and key names in the .delphilint options file
+/* eslint-disable @typescript-eslint/naming-convention */
 type ProjectOptionsIni = {
   SonarHost: {
     ProjectKey: string;
@@ -31,6 +33,7 @@ type ProjectOptionsIni = {
     ConnectedMode: "0" | "1";
   };
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export class ProjectOptions {
   private readonly optionsIni: ProjectOptionsIni;

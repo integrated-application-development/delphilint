@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 24.x
       - name: Compile Extension
         working-directory: ./companion/delphilint-vscode
         run: npm install && npm run compile

@@ -33,6 +33,8 @@ export function registerVersion(ver: string) {
   version = ver;
 }
 
+// Property names mirror the section and key names in delphilint.ini
+/* eslint-disable @typescript-eslint/naming-convention */
 type LintSettingsIni = {
   Resources?: {
     JavaExeOverride?: string;
@@ -44,6 +46,7 @@ type LintSettingsIni = {
   };
   Standalone?: { [key: string]: any };
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 function getSettings(path: string): LintSettingsIni {
   const settingsStr = fs.readFileSync(path, "utf8");
