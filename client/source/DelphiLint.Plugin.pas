@@ -29,7 +29,11 @@ uses
   , Vcl.Menus
   , Vcl.Forms
   , DelphiLint.Handlers
+{$IF CompilerVersion < 33.0}
+  , DelphiLint.ToolFrame.Legacy
+{$ELSE}
   , DelphiLint.ToolFrame
+{$ENDIF}
   , DelphiLint.SettingsFrame
   , DelphiLint.OptionsForm
   , DelphiLint.Context

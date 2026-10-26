@@ -1,0 +1,226 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Base>True</Base>
+        <AppType>Console</AppType>
+        <Config Condition="'$(Config)'==''">TestInsight</Config>
+        <FrameworkType>None</FrameworkType>
+        <MainSource>DelphiLintClientTest250.dpr</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{602BACA7-000B-4E3A-AD44-97865D89E115}</ProjectGuid>
+        <ProjectVersion>18.4</ProjectVersion>
+        <TargetedPlatforms>1</TargetedPlatforms>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='GUI' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='TestInsight' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Console' or '$(Cfg_3)'!=''">
+        <Cfg_3>true</Cfg_3>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_3)'=='true') or '$(Cfg_3_Win32)'!=''">
+        <Cfg_3_Win32>true</Cfg_3_Win32>
+        <CfgParent>Cfg_3</CfgParent>
+        <Cfg_3>true</Cfg_3>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='CI' or '$(Cfg_4)'!=''">
+        <Cfg_4>true</Cfg_4>
+        <CfgParent>Cfg_3</CfgParent>
+        <Cfg_3>true</Cfg_3>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_4)'=='true') or '$(Cfg_4_Win32)'!=''">
+        <Cfg_4_Win32>true</Cfg_4_Win32>
+        <CfgParent>Cfg_4</CfgParent>
+        <Cfg_4>true</Cfg_4>
+        <Cfg_3>true</Cfg_3>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>DelphiLintClientTest250</SanitizedProjectName>
+        <DCC_DcpOutput>.\target\250\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\target\250\$(Config)\dcu</DCC_DcuOutput>
+        <DCC_ExeOutput>.\target\250\$(Config)</DCC_ExeOutput>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>$(DUnitX);..\source;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <PreBuildEvent><![CDATA[pwsh -NoProfile -File ..\BuildAdditionalResources.ps1 $(PROJECTNAME)
+$(PreBuildEvent)]]></PreBuildEvent>
+        <UsingDelphiRTL>true</UsingDelphiRTL>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>2057</VerInfo_Locale>
+        <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_RunTimeTypeInfo>true</DCC_RunTimeTypeInfo>
+        <DCC_UsePackage>dxPSdxSpreadSheetLnkRS28;vclwinx;fmx;vclie;DbxCommonDriver;bindengine;VCLRESTComponents;FireDACCommonODBC;cxGridEMFRS28;cxExportRS28;FireDACCommonDriver;dxPSPrVwRibbonRS28;appanalytics;IndyProtocols;vclx;dbxcds;vcledge;dxCloudServiceLibraryRS28;cxLibraryRS28;bindcompvclwinx;FmxTeeUI;dxGDIPlusRS28;bindcompfmx;dxCoreRS28;inetdb;dxSpreadSheetCoreRS28;dxPSCoreRS28;FireDACSqliteDriver;DbxClientDriver;dxSpreadSheetRS28;dxTabbedMDIRS28;Tee;soapmidas;dxBarRS28;vclactnband;TeeUI;dxWizardControlRS28;fmxFireDAC;dbexpress;dxADOServerModeRS28;Jcl;CEF4DelphiVCLRTL;DBXMySQLDriver;VclSmp;inet;sbridge280;dxServerModeRS28;dxPSdxLCLnkRS28;vcltouch;fmxase;cxTreeListRS28;dxBarDBNavRS28;dbrtl;dxPSLnksRS28;omDDControlsAlex;fmxdae;TeeDB;dxPScxCommonRS28;omUtilsAlex;FireDACMSAccDriver;AdRockSuiteAlex;CustomIPTransport;dxNavBarRS28;omIDEWizardsAlex;CEF4DelphiFMXRTL;dxSpreadSheetReportDesignerRS28;vcldsnap;dxComnRS28;DBXInterBaseDriver;IndySystem;dxSpreadSheetConditionalFormattingDialogsRS28;vcldb;dxDBXServerModeRS28;dxPSDBTeeChartRS28;dxmdsRS28;dxPsPrVwAdvRS28;dxRibbonRS28;VirtualTreesR;dxPScxExtCommonRS28;vclFireDAC;omWebComponentsAlex;bindcomp;FireDACCommon;dxPScxGridLnkRS28;IndyCore;RESTBackendComponents;dxRibbonCustomizationFormRS28;dxBarExtDBItemsRS28;bindcompdbx;cxTreeListdxBarPopupMenuRS28;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;RichViewActionsD11;DBXSqliteDriver;vcl;dsnapxml;adortl;dsnapcon;dxBarExtItemsRS28;dxPSTeeChartRS28;dxSpreadSheetCoreConditionalFormattingDialogsRS28;RVHunSpellPkgD11;cxGridRS28;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;dxEMFRS28;CloudService;dxPScxTLLnkRS28;fmxobj;bindcompvclsmp;FMXTee;dxPScxPCProdRS28;RVPkgD11;soaprtl;Spring.Data;Markdown;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <Manifest_File>(None)</Manifest_File>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_Define>DEBUG;TESTGUI;$(DCC_Define)</DCC_Define>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_UnitSearchPath>$(BDS)\source\DunitX;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_OutputDRCFile>true</DCC_OutputDRCFile>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_3)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_3_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4)'!=''">
+        <DCC_Define>CI;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="DelphiLintTest.Events.pas"/>
+        <DCCReference Include="DelphiLintTest.Data.pas"/>
+        <DCCReference Include="DelphiLintTest.MockUtils.pas"/>
+        <DCCReference Include="DelphiLintTest.Handlers.pas"/>
+        <DCCReference Include="DelphiLintTest.MockContext.pas"/>
+        <DCCReference Include="DelphiLintTest.Plugin.pas"/>
+        <DCCReference Include="DelphiLintTest.Utils.pas"/>
+        <DCCReference Include="DelphiLintTest.Server.pas"/>
+        <DCCReference Include="DelphiLintTest.FileLogger.pas"/>
+        <DCCReference Include="DelphiLintTest.HtmlGen.pas"/>
+        <DCCReference Include="DelphiLintTest.Settings.pas"/>
+        <DCCReference Include="DelphiLintTest.LiveData.pas"/>
+        <DCCReference Include="DelphiLintTest.IssueActions.pas"/>
+        <DCCReference Include="DelphiLintTest.Properties.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="CI">
+            <Key>Cfg_4</Key>
+            <CfgParent>Cfg_3</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="TestInsight">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="GUI">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Console">
+            <Key>Cfg_3</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Application</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">DelphiLintClientTest250.dpr</Source>
+                </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='GUI' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>pwsh -NoProfile -File ..\BuildAdditionalResources.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent/>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='TestInsight' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>pwsh -NoProfile -File ..\BuildAdditionalResources.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent/>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Console' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>pwsh -NoProfile -File ..\BuildAdditionalResources.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent/>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='CI' And '$(Platform)'=='Win32'">
+        <PreBuildEvent>pwsh -NoProfile -File ..\BuildAdditionalResources.ps1 $(PROJECTNAME)</PreBuildEvent>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent/>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+</Project>

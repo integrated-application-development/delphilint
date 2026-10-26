@@ -24,7 +24,11 @@ uses
   , Vcl.Graphics
   , Vcl.Imaging.pngimage
   , DelphiLint.Data
+{$IF CompilerVersion < 33.0}
+  , DelphiLint.ToolFrame.Legacy
+{$ELSE}
   , DelphiLint.ToolFrame
+{$ENDIF}
   ;
 
 type

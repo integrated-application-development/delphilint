@@ -107,8 +107,8 @@ public class AnalysisOrchestrator implements AutoCloseable {
   }
 
   private static Charset getConfiguredCharset(Map<String, String> properties) {
-    if (properties.containsKey("sonar.encoding")) {
-      return Charset.forName(properties.get("sonar.encoding"));
+    if (properties.containsKey("sonar.sourceEncoding")) {
+      return Charset.forName(properties.get("sonar.sourceEncoding"));
     } else {
       return Charset.defaultCharset();
     }

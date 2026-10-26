@@ -268,10 +268,10 @@ end;
 
 destructor TPropertiesFile.Destroy;
 var
-  Field: TPropFieldBase;
+  I: Integer;
 begin
-  for Field in FFields do begin
-    FreeAndNil(Field);
+  for I := 0 to Length(FFields) - 1 do begin
+    FreeAndNil(FFields[I]);
   end;
 
   inherited;

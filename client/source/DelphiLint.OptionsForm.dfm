@@ -176,7 +176,6 @@ object LintOptionsForm: TLintOptionsForm
         Items.Strings = (
           'Standalone'
           'Connected (SonarQube)')
-        ShowFrame = False
         TabOrder = 0
         OnClick = AnalysisModeGroupClick
       end

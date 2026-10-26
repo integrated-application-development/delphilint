@@ -335,7 +335,7 @@ begin
     Exit;
   end;
 
-  DisabledRules := SplitString(LintContext.Settings.StandaloneDisabledRules, ',');
+  DisabledRules := TArray<string>(SplitString(LintContext.Settings.StandaloneDisabledRules, ','));
 
   SortedRules := FStandaloneRules.Values.ToArray;
   TArray.Sort<TRule>(SortedRules, TComparer<TRule>.Construct(
@@ -384,7 +384,7 @@ begin
         SetLength(Releases, Json.Count);
 
         for Index := 0 to Json.Count - 1 do begin
-          ReleaseVersion := Json[Index].GetValue<string>('tag_name');
+          ReleaseVersion := Json.Items[Index].GetValue<string>('tag_name');
 
           if StartsStr('v', ReleaseVersion) and (Length(ReleaseVersion) > 1) then begin
             ReleaseVersion := Copy(ReleaseVersion, 2);

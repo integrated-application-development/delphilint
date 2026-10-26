@@ -158,7 +158,7 @@ begin
     end
     else if not LintContext.Settings.StandaloneUseDefaultRules then begin
       AnalyzeOptions.UseDefaultRules := False;
-      AnalyzeOptions.DisabledRules := SplitString(LintContext.Settings.StandaloneDisabledRules, ',');
+      AnalyzeOptions.DisabledRules := TArray<string>(SplitString(LintContext.Settings.StandaloneDisabledRules, ','));
     end;
 
     DoAnalyzeFiles(AnalyzeOptions, ProjectOptions.SonarHostDownloadPlugin);

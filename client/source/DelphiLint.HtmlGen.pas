@@ -354,6 +354,59 @@ end;
 //______________________________________________________________________________________________________________________
 
 function TRuleHtmlGenerator.BuildHtmlPage(BodyHtml: string; BodyClass: string): string;
+
+  function GetLegacyScript: string;
+  begin
+    Result :=
+      'function hasClass(element, className) {' +
+      '  return element.className && element.className.indexOf(className) !== -1;' +
+      '}' +
+      'function addClass(element, className) {' +
+      '  if (!hasClass(element, className)) { element.className += " " + className }' +
+      '}' +
+      'function removeClass(element, className) {' +
+      '  if (!hasClass(element, className)) { return }' +
+      '  element.className = element.className.replace(" " + className, "").replace(className, "");' +
+      '}' +
+      'function getElementsWithClass(className) {' +
+      '  var elements = [];' +
+      '  var allElements = document.getElementsByTagName("*");' +
+      '  for (var i = 0; i < allElements.length; i++) {' +
+      '    if (hasClass(allElements[i], className)) { elements.push(allElements[i]) }' +
+      '  }' +
+      '  return elements;' +
+      '}' +
+      'function highlightTag(tagName) {' +
+      '  var preElements = document.getElementsByTagName(tagName);' +
+      '  for (var i = 0; i < preElements.length; i++) {' +
+      '    var pre = preElements[i];' +
+      '    if (pre.getAttribute("data-diff-type")) {' +
+      '      addClass(pre, "hljs");' +
+      '    }' +
+      '  }' +
+      '};' +
+      'function registerTabs() {' +
+      '  var tabBtns = getElementsWithClass("tab-btn");' +
+      '  for (var i = 0; i < tabBtns.length; i++) {' +
+      '    tabBtns[i].onclick = function () {' +
+      '      var activeButtons  = getElementsWithClass("tab-btn active");' +
+      '      var activeContents = getElementsWithClass("tab-content active");' +
+      '      for (var j = 0; j < activeButtons.length ; j++) { removeClass(activeButtons[j], "active") }' +
+      '      for (var k = 0; k < activeContents.length; k++) { removeClass(activeContents[k], "active") }' +
+      '      addClass(this, "active");' +
+      '      var targetId = this.getAttribute("data-content-id");' +
+      '      var targetContent = document.getElementById(targetId);' +
+      '      if (targetContent) { addClass(targetContent, "active") }' +
+      '    };' +
+      '  }' +
+      '};' +
+      'function initLegacy() {' +
+      '  highlightTag("pre");' +
+      '  registerTabs();' +
+      '};' +
+      'setTimeout(initLegacy, 100);';
+  end;
+
 begin
   Result := Format(
     '<!DOCTYPE html>' +
@@ -364,7 +417,15 @@ begin
     '</head>' +
     '<body class="%s">' +
     '  <div class="content">%s</div>' +
-    '  <script src="script.js"></script>' +
+    '  <script>' +
+    '    if (Object.defineProperty) {' +
+    '      var script = document.createElement(''script'');' +
+    '      script.src = ''script.js'';' +
+    '      document.body.appendChild(script);' +
+    '    } else {' +
+           GetLegacyScript +
+    '    }' +
+    '  </script>' +
     '</body>' +
     '</html>',
     [GenerateCss, BodyClass, BodyHtml]);

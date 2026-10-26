@@ -215,16 +215,16 @@ var
 begin
   FTokensMap.Clear;
 
-  HostTokenPairs := SplitString(SonarHostTokens, ',');
+  HostTokenPairs := TArray<string>(SplitString(SonarHostTokens, ','));
   for Pair in HostTokenPairs do begin
-    SplitPair := SplitString(Pair, '=');
+    SplitPair := TArray<string>(SplitString(Pair, '='));
 
     if Length(SplitPair) <> 2 then begin
       Log.Warn('Skipping invalid value ''%s'' in Sonar token mapping', [Pair]);
       Continue;
     end;
 
-    SplitIdent := SplitString(SplitPair[0], '@');
+    SplitIdent := TArray<string>(SplitString(SplitPair[0], '@'));
 
     if Length(SplitPair) <> 2 then begin
       Log.Warn('Skipping invalid value for key ''%s'' in Sonar token mapping', [SplitPair[0]]);
