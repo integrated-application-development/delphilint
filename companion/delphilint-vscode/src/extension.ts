@@ -91,8 +91,8 @@ export function activate(context: vscode.ExtensionContext) {
   getStatusItem();
 }
 
-export function deactivate() {
+export async function deactivate() {
   if (server) {
-    server.quit();
+    await server.quit();
   }
 }
