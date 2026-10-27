@@ -226,7 +226,7 @@ export class LintServer {
           this._extServer = undefined;
           resolve();
         });
-        this.sendMessage(LintMessageType.quit, null, (_err) => {});
+        void this.sendMessage(LintMessageType.quit, null, (_err) => {});
 
         setTimeout(() => {
           const process = this._extServer
@@ -236,6 +236,8 @@ export class LintServer {
             process.kill();
           }
         }, 2000);
+      } else {
+        resolve();
       }
     });
   }
@@ -312,7 +314,7 @@ export class LintServer {
 
   async initialize(msg: RequestInitialize): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this.sendMessage(LintMessageType.initialize, msg, reject, (msg) => {
+      void this.sendMessage(LintMessageType.initialize, msg, reject, (msg) => {
         if (msg.category === LintMessageType.initialized) {
           resolve();
         } else if (msg.category === LintMessageType.initializeError) {
@@ -320,13 +322,13 @@ export class LintServer {
         } else {
           reject(new ServerError("Unknown category " + msg.category.valueOf()));
         }
-      });
+      }).catch(reject);
     });
   }
 
   async analyze(msg: RequestAnalyze): Promise<LintIssue[]> {
     return new Promise<LintIssue[]>((resolve, reject) => {
-      this.sendMessage(LintMessageType.analyze, msg, reject, (msg) => {
+      void this.sendMessage(LintMessageType.analyze, msg, reject, (msg) => {
         if (msg.category === LintMessageType.analyzeResult) {
           resolve(msg.data.issues);
         } else if (msg.category === LintMessageType.analyzeError) {
@@ -334,11 +336,11 @@ export class LintServer {
         } else {
           reject(new ServerError("Unknown category " + msg.category.valueOf()));
         }
-      });
+      }).catch(reject);
     });
   }
 
-  quit() {
-    this.stopExternalServer();
+  async quit() {
+    await this.stopExternalServer();
   }
 }

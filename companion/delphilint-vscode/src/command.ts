@@ -326,7 +326,7 @@ export async function analyzeAllOpenFiles(
 
 export async function chooseActiveProject() {
   const activeProject = await promptActiveProject();
-  display.getStatusItem().with(async (resource) => {
+  await display.getStatusItem().with(async (resource) => {
     resource.setActiveProject(activeProject);
   });
 }
