@@ -144,11 +144,11 @@ For more information, see this [blog post](https://chancharles.medium.com/java-c
 ### DelphiLint fails, saying that the server failed to communicate the port.
 
 This is usually due to the server failing to start on the provided Java version. Please ensure that the version
-of Java that is being used is version 11 or higher, since DelphiLint uses Java 11 features and is compiled with
-Java 11.
+of Java that is being used is version 17 or higher, since DelphiLint uses Java 17 features and is compiled with
+Java 17.
 
 If multiple Java installations are installed and DelphiLint is choosing the wrong one, it is recommended to manually
-specify the path to the desired Java 11+ executable
+specify the path to the desired Java 17+ executable
 (see [below](#delphilint-cant-find-my-java-executable--is-using-the-wrong-java-executable)).
 
 ### DelphiLint can't find my Java executable / is using the wrong Java executable.
