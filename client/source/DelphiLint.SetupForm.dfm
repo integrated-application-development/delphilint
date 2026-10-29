@@ -51,7 +51,7 @@ object LintSetupForm: TLintSetupForm
         'to DelphiLint: the IDE plugin itself, a companion Java server that ' +
         'runs in the background, and the SonarDelphi plugin, which the server ' +
         'uses to carry out analysis.'#13#10#13#10'While SonarDelphi is automatically ' +
-        'downloaded, the server and a Java 11 or above executable must be ' +
+        'downloaded, the server and a Java 17 or above executable must be ' +
         'manually installed.'#13#10#13#10'Please ensure all resources are installed ' +
         'and configured correctly. For more detailed installation instructions, ' +
         'please refer to the DelphiLint README on GitHub.'
@@ -79,7 +79,7 @@ object LintSetupForm: TLintSetupForm
       Top = 48
       Width = 114
       Height = 30
-      Caption = 'Java 11+ executable'#13#10
+      Caption = 'Java 17+ executable'#13#10
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
