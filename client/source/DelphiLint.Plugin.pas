@@ -307,7 +307,8 @@ procedure TPluginCore.OnRegister;
 var
   NewPath: string;
 begin
-  NewPath := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bin') + ';' + GetEnvironmentVariable('PATH');
+  NewPath := TPath.Combine(LintContext.Settings.SettingsDirectory, CWebViewBinDir) + ';'
+    + GetEnvironmentVariable('PATH');
   SetEnvironmentVariable(PWideChar('PATH'), PWideChar(NewPath));
 
   // Editor notifier

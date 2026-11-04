@@ -25,6 +25,10 @@ uses
   , DelphiLint.Context
   ;
 
+const
+  // WebView2Loader.dll must match the IDE's architecture, so 64-bit builds use a separate directory
+  CWebViewBinDir = {$IFDEF WIN64}'bin\win64'{$ELSE}'bin'{$ENDIF};
+
 // Project utils
 function ToAbsolutePath(const RelativePath: string; const BaseDir: string): string;
 function NormalizePath(const Path: string): string;

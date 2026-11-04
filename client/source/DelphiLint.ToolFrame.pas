@@ -799,7 +799,7 @@ begin
         Format(
           'Please ensure that Microsoft Edge 79.0.309 or above is installed, and ' +
           'WebView2Loader.dll exists in %s.'#13#10#13#10'Error code %x',
-          [TPath.Combine(LintContext.Settings.SettingsDirectory, 'bin'), AResult]
+          [TPath.Combine(LintContext.Settings.SettingsDirectory, CWebViewBinDir), AResult]
         ),
         mtError,
         [mbOK],
