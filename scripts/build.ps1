@@ -35,9 +35,9 @@ $ErrorActionPreference = "Stop"
 Import-Module "$PSScriptRoot/common" -Force
 
 $Global:DelphiVersionMap = @{
-  "280" = [DelphiVersion]::new("11", "Alexandria", "280", "22.0")
-  "290" = [DelphiVersion]::new("12", "Athens", "290", "23.0")
-  "370" = [DelphiVersion]::new("13", "Florence", "370", "37.0")
+  "280" = [DelphiVersion]::new("11", "Alexandria", "280", "22.0", $false)
+  "290" = [DelphiVersion]::new("12", "Athens", "290", "23.0", $false)
+  "370" = [DelphiVersion]::new("13", "Florence", "370", "37.0", $true)
 }
 
 class DelphiVersion {
@@ -45,12 +45,20 @@ class DelphiVersion {
   [string]$Name
   [string]$PackageVersion
   [string]$RegistryVersion
+  [bool]$SupportsWin64
 
-  DelphiVersion([string]$ProductVersion, [string]$Name, [string]$PackageVersion, [string]$RegistryVersion) {
+  DelphiVersion(
+    [string]$ProductVersion,
+    [string]$Name,
+    [string]$PackageVersion,
+    [string]$RegistryVersion,
+    [bool]$SupportsWin64
+  ) {
     $this.ProductVersion = $ProductVersion
     $this.Name = $Name
     $this.PackageVersion = $PackageVersion
     $this.RegistryVersion = $RegistryVersion
+    $this.SupportsWin64 = $SupportsWin64
   }
 }
 
@@ -80,13 +88,23 @@ class PackagingConfig {
     $this.Version = Get-Version
   }
 
-  [string] GetOutputBplName() {
-    return "DelphiLintClient-$($this.Version)-$($this.Delphi.Version.Name).bpl"
+  [string[]] GetPlatforms() {
+    if ($this.Delphi.Version.SupportsWin64) {
+      return @("Win32", "Win64")
+    } else {
+      return @("Win32")
+    }
   }
 
-  [string] GetInputBplPath() {
+  [string] GetOutputBplName([string]$Platform) {
+    $Suffix = if ($Platform -eq "Win64") { "-Win64" } else { "" }
+    return "DelphiLintClient-$($this.Version)-$($this.Delphi.Version.Name)$Suffix.bpl"
+  }
+
+  [string] GetInputBplPath([string]$Platform) {
     $Ver = $this.Delphi.Version.PackageVersion
-    return Join-Path $PSScriptRoot "../client/source/target/$Ver/Release/DelphiLintClient$Ver.bpl"
+    $PlatformDir = if ($Platform -eq "Win64") { "Win64/" } else { "" }
+    return Join-Path $PSScriptRoot "../client/source/target/$Ver/${PlatformDir}Release/DelphiLintClient$Ver.bpl"
   }
 
   [string] GetPackageFolderName() {
@@ -166,10 +184,10 @@ function Assert-ExitCode([string]$Desc) {
   }
 }
 
-function Invoke-ClientCompile([PackagingConfig]$Config) {
+function Invoke-ClientCompile([PackagingConfig]$Config, [string]$Platform) {
   Push-Location (Join-Path $PSScriptRoot ..\client\source)
   try {
-    & cmd /c "`"$($Config.Delphi.InstallationPath)\\bin\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`""
+    & cmd /c "`"$($Config.Delphi.InstallationPath)\\bin\\rsvars.bat`" && msbuild DelphiLintClient$($Config.Delphi.Version.PackageVersion).dproj /p:config=`"Release`" /p:platform=`"$Platform`""
     Assert-ExitCode "Delphi compile"
   }
   finally {
@@ -216,7 +234,12 @@ function New-BatchScript([string]$Path, [string]$PSScriptPath) {
 }
 
 function New-SetupScript([string]$Path, [PackagingConfig]$Config) {
-  $MacroContents = "`$Version = '$($Config.Version)'`n`$VersionName = '$($Config.Delphi.Version.Name)'`n`$RegistryVersion = '$($Config.Delphi.Version.RegistryVersion)'`n"
+  $MacroContents = "
+  `$Version = '$($Config.Version)'
+  `$VersionName = '$($Config.Delphi.Version.Name)'
+  `$RegistryVersion = '$($Config.Delphi.Version.RegistryVersion)'
+  `$IncludeWin64 = `$$($Config.Delphi.Version.SupportsWin64)
+  "
 
   Copy-Item (Join-Path $PSScriptRoot TEMPLATE_install.ps1) $Path
   $Content = Get-Content -Raw $Path
@@ -290,14 +313,20 @@ $Projects = @(
     }
     "Build" = {
       $PackagingConfigs | ForEach-Object {
-        Invoke-ClientCompile -Config $_
-        $_.Artifacts.Add($_.GetInputBplPath(), $_.GetOutputBplName())
-        Write-Host "Built for Delphi $($_.Delphi.Version.Name) ($($_.Delphi.Version.PackageVersion))."
+        $Config = $_
+        $Config.GetPlatforms() | ForEach-Object {
+          Invoke-ClientCompile -Config $Config -Platform $_
+          $Config.Artifacts.Add($Config.GetInputBplPath($_), $Config.GetOutputBplName($_))
+          Write-Host "Built for Delphi $($Config.Delphi.Version.Name) ($($Config.Delphi.Version.PackageVersion), $_)."
+        }
       }
     }
     "Postrequisite" = {
       $PackagingConfigs | ForEach-Object {
-        Assert-Exists $_.GetInputBplPath()
+        $Config = $_
+        $Config.GetPlatforms() | ForEach-Object {
+          Assert-Exists $Config.GetInputBplPath($_)
+        }
       }
     }
   },

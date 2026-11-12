@@ -1029,7 +1029,7 @@ begin
   if Assigned(Message.Data) then begin
     DataBytes := TEncoding.UTF8.GetBytes(Message.Data.ToString);
 
-    FTcpClient.IOHandler.Write(Length(DataBytes));
+    FTcpClient.IOHandler.Write(Integer(Length(DataBytes)));
     for DataByte in DataBytes do begin
       FTcpClient.IOHandler.Write(DataByte);
     end;

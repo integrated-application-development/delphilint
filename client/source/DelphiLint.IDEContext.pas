@@ -237,7 +237,7 @@ type
   end;
 
   TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineHandler>, IOTAEditLineNotifier)
-    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -963,7 +963,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
 begin
   FHandler.OnLineChanged(OldLine, NewLine, Data);
 end;

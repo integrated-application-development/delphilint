@@ -190,7 +190,7 @@ type
 
   IIDEEditLineHandler = interface(IIDEHandler)
     ['{E7168514-2EDB-41FB-8F30-A9D6704488B7}']
-    procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
   end;
 
   IIDEEditLineTracker = interface
