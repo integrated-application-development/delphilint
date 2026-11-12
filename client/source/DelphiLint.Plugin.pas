@@ -307,7 +307,7 @@ procedure TPluginCore.OnRegister;
 var
   NewPath: string;
 begin
-  NewPath := TPath.Combine(LintContext.Settings.SettingsDirectory, 'bin') + ';' + GetEnvironmentVariable('PATH');
+  NewPath := LintContext.Settings.BinDirectory + ';' + GetEnvironmentVariable('PATH');
   SetEnvironmentVariable(PWideChar('PATH'), PWideChar(NewPath));
 
   // Editor notifier

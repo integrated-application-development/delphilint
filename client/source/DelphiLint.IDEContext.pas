@@ -236,8 +236,14 @@ type
     procedure EndPaint(const View: IOTAEditView);
   end;
 
+{$IF CompilerVersion >= 36.0}
+  TOTAEditLineData = IntPtr;
+{$ELSE}
+  TOTAEditLineData = Integer;
+{$ENDIF}
+
   TToolsApiEditLineNotifier = class(TToolsApiNotifier<IIDEEditLineHandler>, IOTAEditLineNotifier)
-    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure LineChanged(OldLine: Integer; NewLine: Integer; Data: TOTAEditLineData);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -963,7 +969,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TToolsApiEditLineNotifier.LineChanged(OldLine: Integer; NewLine: Integer; Data: TOTAEditLineData);
 begin
   FHandler.OnLineChanged(OldLine, NewLine, Data);
 end;

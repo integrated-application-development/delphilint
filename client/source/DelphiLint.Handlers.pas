@@ -48,7 +48,7 @@ type
 
 //______________________________________________________________________________________________________________________
 
-  TOnEditorLineChanged = reference to procedure(OldLine: Integer; NewLine: Integer; Data: Integer);
+  TOnEditorLineChanged = reference to procedure(OldLine: Integer; NewLine: Integer; Data: IntPtr);
 
 //______________________________________________________________________________________________________________________
 
@@ -57,7 +57,7 @@ type
     FOnLineChanged: TOnEditorLineChanged;
   public
     constructor Create(OnLineChanged: TOnEditorLineChanged);
-    procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure OnLineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
   end;
 
 //______________________________________________________________________________________________________________________
@@ -80,7 +80,7 @@ type
     FOnEditorClosed: TEventNotifier<TLineTracker>;
     FOnLineChanged: TEventNotifier<TChangedLine>;
 
-    procedure OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
+    procedure OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: IntPtr);
   public
     constructor Create(Tracker: IIDEEditLineTracker);
     destructor Destroy; override;
@@ -256,7 +256,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TLineTracker.OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TLineTracker.OnNotifierTriggered(OldLine: Integer; NewLine: Integer; Data: IntPtr);
 var
   ChangedLine: TChangedLine;
 begin
@@ -283,7 +283,7 @@ end;
 
 //______________________________________________________________________________________________________________________
 
-procedure TEditLineHandler.OnLineChanged(OldLine: Integer; NewLine: Integer; Data: Integer);
+procedure TEditLineHandler.OnLineChanged(OldLine: Integer; NewLine: Integer; Data: IntPtr);
 begin
   FOnLineChanged(OldLine, NewLine, Data);
 end;
