@@ -9,16 +9,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@babel/cli": "^7.26.4",
-    "@babel/core": "^7.26.0",
-    "@babel/preset-env": "^7.26.0",
-    "babel-loader": "^9.2.1",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1"
+    "@babel/cli": "^8.0.6",
+    "@babel/core": "^8.0.7",
+    "@babel/preset-env": "^8.0.7",
+    "babel-loader": "^10.1.1",
+    "babel-plugin-polyfill-corejs3": "^1.0.0",
+    "webpack": "^5.112.1",
+    "webpack-cli": "^7.2.3"
   },
   "dependencies": {
-    "core-js": "^3.40.0",
-    "diff": "^7.0.0",
-    "highlight.js": "^11.11.1"
+    "core-js": "^3.51.0",
+    "diff": "^9.0.0",
+    "highlight.js": "^11.12.0"
   }
 }

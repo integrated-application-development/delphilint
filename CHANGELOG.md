@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+* Java 17 or above is now required to run the DelphiLint server.
+* The VS Code companion extension now requires VS Code 1.140 or above.
+
 ## [1.3.0] - 2025-01-21
 
 ### Added
