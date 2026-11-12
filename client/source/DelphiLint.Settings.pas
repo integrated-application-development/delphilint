@@ -44,6 +44,8 @@ type
     function GetDefaultSonarDelphiVersion: string;
     procedure SyncTokenMap;
     procedure SyncTokenString;
+
+    function GetBinDirectory: string;
   protected
     function RegisterFields: TArray<TPropFieldBase>; override;
 
@@ -75,6 +77,7 @@ type
     property SonarDelphiVersion: string index 7 read GetSonarDelphiVersion;
     property DefaultSonarDelphiVersion: string read GetDefaultSonarDelphiVersion;
     property SettingsDirectory: string read FSettingsDir;
+    property BinDirectory: string read GetBinDirectory;
     property SonarHostTokensMap: TDictionary<TSonarProjectIdentifier, string> read FTokensMap;
   end;
 
@@ -147,6 +150,13 @@ begin
   if Result = '' then begin
     Result := TPath.Combine(FSettingsDir, Format('delphilint-server-%s.jar', [DelphiLintVersion]));
   end;
+end;
+
+//______________________________________________________________________________________________________________________
+
+function TLintSettings.GetBinDirectory: string;
+begin
+  Result := TPath.Combine(FSettingsDir, {$IFDEF WIN64}'bin64'{$ELSE}'bin'{$ENDIF});
 end;
 
 //______________________________________________________________________________________________________________________
