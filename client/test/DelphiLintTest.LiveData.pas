@@ -382,7 +382,7 @@ begin
   try
     Assert.WillRaise(
       procedure begin
-        FreeAndNil(TLiveIssueImpl.Create(IssueData, ['abc', 'def'], False));
+        TLiveIssueImpl.Create(IssueData, ['abc', 'def'], False).Free;
       end
     );
   finally

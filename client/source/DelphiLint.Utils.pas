@@ -129,6 +129,9 @@ begin
   else if ProductVersion = '20.0' then begin
     Result := 'VER330';
   end
+  else if ProductVersion = '19.0' then begin
+    Result := 'VER320';
+  end
   else begin
     Result := 'VER360';
   end;

@@ -359,7 +359,7 @@ end;
 
 procedure TToolsApiServices.RegisterFormClass(FormClass: TCustomFormClass);
 begin
-  (BorlandIDEServices as IOTAIDEThemingServices).RegisterFormClass(FormClass);
+  (BorlandIDEServices as IOTAIDEThemingServices250).RegisterFormClass(FormClass);
 end;
 
 //______________________________________________________________________________________________________________________

@@ -24,7 +24,6 @@ object LintSettingsFrame: TLintSettingsFrame
     Anchors = [akLeft, akTop, akRight, akBottom]
     RaggedRight = True
     TabOrder = 0
-    StyleElements = [seFont, seClient]
     object GeneralSheet: TTabSheet
       Caption = 'General'
       object GeneralPanel: TPanel
@@ -169,19 +168,12 @@ object LintSettingsFrame: TLintSettingsFrame
             Top = 26
             Width = 453
             Height = 49
-            DefaultHeaderFont = False
             DoubleBuffered = False
-            HeaderFont.Charset = DEFAULT_CHARSET
-            HeaderFont.Color = clBtnText
-            HeaderFont.Height = -1
-            HeaderFont.Name = 'Segoe UI'
-            HeaderFont.Style = []
             ItemIndex = 0
             Items.Strings = (
               'Use the default version'
               'Use a specific version')
             ParentDoubleBuffered = False
-            ShowFrame = False
             TabOrder = 1
             OnClick = SonarDelphiVersionRadioGroupClick
           end
@@ -190,19 +182,12 @@ object LintSettingsFrame: TLintSettingsFrame
             Top = 130
             Width = 221
             Height = 49
-            DefaultHeaderFont = False
             DoubleBuffered = False
-            HeaderFont.Charset = DEFAULT_CHARSET
-            HeaderFont.Color = clBtnText
-            HeaderFont.Height = -1
-            HeaderFont.Name = 'Segoe UI'
-            HeaderFont.Style = []
             ItemIndex = 0
             Items.Strings = (
               'Use SonarDelphi'#39's default ruleset'
               'Use a custom ruleset')
             ParentDoubleBuffered = False
-            ShowFrame = False
             TabOrder = 2
             OnClick = StandaloneRulesRadioGroupClick
           end
