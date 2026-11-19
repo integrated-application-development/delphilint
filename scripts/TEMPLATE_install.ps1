@@ -15,8 +15,12 @@ function New-AppDataPath {
   Write-Host "Created DelphiLint folder."
 }
 
-function Clear-RegistryEntry {
-  $RegistryPath = "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages"
+function Clear-RegistryEntry([string]$PackagesKey) {
+  $RegistryPath = "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\$PackagesKey"
+
+  if (-not (Test-Path $RegistryPath)) {
+    return
+  }
 
   (Get-ItemProperty -Path $RegistryPath).PSObject.Properties `
     | Where-Object { $_.Value -eq "DelphiLint" } `
@@ -30,7 +34,12 @@ function Clear-RegistryEntry {
 }
 
 function Copy-BuildArtifacts {
-  @("DelphiLintClient-$Version-$VersionName.bpl", "delphilint-server-$Version.jar") | ForEach-Object {
+  $Artifacts = @("DelphiLintClient-$Version-$VersionName.bpl", "delphilint-server-$Version.jar")
+  if ($IncludeWin64) {
+    $Artifacts += "DelphiLintClient-$Version-$VersionName-Win64.bpl"
+  }
+
+  $Artifacts | ForEach-Object {
     Copy-Item -Path (Join-Path $PSScriptRoot $_) -Destination (Join-Path $DelphiLintFolder $_) -Force
   }
   Write-Host "Copied resources."
@@ -44,14 +53,21 @@ function Get-WebView2 {
 
   Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.2210.55" -OutFile $WebViewZip
 
+  $Extractions = @{ "build/native/x86/WebView2Loader.dll" = (Join-Path $BinFolder "WebView2Loader.dll") }
+  if ($IncludeWin64) {
+    $Win64BinFolder = Join-Path $BinFolder "win64"
+    New-Item -ItemType Directory $Win64BinFolder -Force -ErrorAction Ignore | Out-Null
+    $Extractions["build/native/x64/WebView2Loader.dll"] = (Join-Path $Win64BinFolder "WebView2Loader.dll")
+  }
+
   Add-Type -Assembly System.IO.Compression.FileSystem
   $Archive = [System.IO.Compression.ZipFile]::OpenRead($WebViewZip)
   try {
     $Archive.Entries |
-      Where-Object { $_.FullName -eq "build/native/x86/WebView2Loader.dll" } |
+      Where-Object { $Extractions.ContainsKey($_.FullName) } |
       ForEach-Object {
-        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, (Join-Path $BinFolder "WebView2Loader.dll"), $true)
-        Write-Host "Downloaded $($_.Name) from NuGet."
+        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $Extractions[$_.FullName], $true)
+        Write-Host "Downloaded $($_.FullName) from NuGet."
       }
   } finally {
     $Archive.Dispose()
@@ -60,10 +76,15 @@ function Get-WebView2 {
   Remove-Item $TempFolder -Recurse -Force -ErrorAction Continue
 }
 
-function Add-RegistryEntry {
-  $BplName = "DelphiLintClient-$Version-$VersionName.bpl"
+function Add-RegistryEntry([string]$BplName, [string]$PackagesKey) {
   $BplPath = Join-Path $DelphiLintFolder $BplName
-  New-ItemProperty -Path "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\Known Packages" `
+  $RegistryPath = "HKCU:\SOFTWARE\Embarcadero\BDS\$RegistryVersion\$PackagesKey"
+
+  if (-not (Test-Path $RegistryPath)) {
+    New-Item -Path $RegistryPath -Force | Out-Null
+  }
+
+  New-ItemProperty -Path $RegistryPath `
     -Name $BplPath `
     -Value 'DelphiLint' `
     -PropertyType String | Out-Null
@@ -73,8 +94,12 @@ function Add-RegistryEntry {
 
 Write-Host "Setting up DelphiLint $Version."
 New-AppDataPath
-Clear-RegistryEntry
+Clear-RegistryEntry "Known Packages"
+Clear-RegistryEntry "Known Packages x64"
 Copy-BuildArtifacts
 Get-WebView2
-Add-RegistryEntry
+Add-RegistryEntry "DelphiLintClient-$Version-$VersionName.bpl" "Known Packages"
+if ($IncludeWin64) {
+  Add-RegistryEntry "DelphiLintClient-$Version-$VersionName-Win64.bpl" "Known Packages x64"
+}
 Write-Host -ForegroundColor Green "Install completed for DelphiLint $Version."
